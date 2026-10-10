@@ -26,9 +26,13 @@ const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'st
 async function initStore() {
   if (process.env.DATABASE_URL) {
     const { Pool } = require('pg');
-    const cs = process.env.DATABASE_URL;
-    const external = /\.render\.com|sslmode=require/.test(cs);
-    pool = new Pool({ connectionString: cs, ssl: external ? { rejectUnauthorized: false } : false, max: 4 });
+    // Funguje s Neon (zdarma natrvalo), Render Postgres i lokálním Postgresem.
+    const u = new URL(process.env.DATABASE_URL.trim().replace(/^psql\s+'?|'$/g, ''));
+    const host = u.hostname;
+    const needSsl = host.includes('.') && host !== '127.0.0.1' && u.searchParams.get('sslmode') !== 'disable';
+    for (const p of ['sslmode', 'channel_binding', 'sslrootcert']) u.searchParams.delete(p);
+    pool = new Pool({ connectionString: u.toString(), ssl: needSsl ? { rejectUnauthorized: false } : false, max: 4, idleTimeoutMillis: 30000 });
+    pool.on('error', e => console.error('DB:', e.message));
     await pool.query(`CREATE TABLE IF NOT EXISTS kv (
       ns text NOT NULL, k text NOT NULL, v jsonb NOT NULL, u timestamptz NOT NULL DEFAULT now(),
       PRIMARY KEY (ns, k))`);
