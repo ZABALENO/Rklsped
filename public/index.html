@@ -11,7 +11,7 @@
   :root{
     --bg:#eef1f5; --panel:#fff; --ink:#0f1b2d; --muted:#5d6b80; --line:#dbe1ea;
     --navy:#123a6b; --navy-2:#0c2a4f; --accent:#f2a516; --ok:#16834a; --ok-bg:#e6f4ec;
-    --warn:#b4560c; --today:#fff6e0; --radius:10px;
+    --today:#fff6e0; --radius:10px;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -19,27 +19,18 @@
   .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
   header{background:var(--navy);color:#fff}
-  .bar{max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .bar{max-width:1320px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.2px}
   .brand small{display:block;font-weight:400;font-size:12px;opacity:.75;letter-spacing:0}
   .clock{margin-left:auto;font-size:13px;opacity:.85;text-align:right}
 
-  main{max-width:1280px;margin:0 auto;padding:18px 20px 60px}
+  main{max-width:1320px;margin:0 auto;padding:18px 20px 30px}
+  .banner{background:#fff4e5;border:1px solid #f5c98a;color:#7a4a00;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:14px}
+  .banner.err{background:#fdecec;border-color:#f1b3b3;color:#8a1c1c}
 
-  .src{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .src label{font-size:13px;color:var(--muted);font-weight:600}
-  .src input[type=url]{flex:1 1 380px;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:#f8fafc}
-  .src input[type=url]:focus{outline:2px solid #9cc0ee;border-color:#6d9fdc;background:#fff}
-  button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;font-weight:600;font-size:14px}
-  button.primary{background:var(--navy);border-color:var(--navy);color:#fff}
-  button.primary:hover{background:var(--navy-2)}
-  button:disabled{opacity:.55;cursor:default}
-  .status{font-size:12.5px;color:var(--muted);width:100%}
-  .status.err{color:#b42318}
-
-  .kpis{display:grid;grid-template-columns:minmax(200px,1fr) minmax(200px,1fr) minmax(280px,2fr);gap:12px;margin:14px 0}
+  .kpis{display:grid;grid-template-columns:minmax(200px,1fr) minmax(200px,1fr) minmax(280px,2fr);gap:12px;margin-bottom:14px}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
-  .kpi h3{margin:0 0 4px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .kpi h3,.card h2{margin:0 0 4px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
   .kpi .big{font-size:40px;font-weight:600;line-height:1.05}
   .kpi.sold{border-left:5px solid var(--ok)}
   .kpi.sold .big{color:var(--ok)}
@@ -48,15 +39,14 @@
   .week .d{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
   .week .b{width:100%;max-width:34px;background:#c9d6e8;border-radius:4px 4px 0 0;min-height:2px}
   .week .d.t .b{background:var(--ok)}
-  .week .v{font-size:11.5px;color:var(--ink)}
+  .week .v{font-size:11.5px}
   .week .l{font-size:11px;color:var(--muted)}
 
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-  .ph{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .ph{display:flex;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .ph h2{margin:0;font-size:16px}
   .ph .cnt{font-size:13px;color:var(--muted)}
-  .ph .opts{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px;color:var(--muted)}
-  .ph .opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+  .ph .upd{margin-left:auto;font-size:12.5px;color:var(--muted)}
 
   table{width:100%;border-collapse:collapse}
   thead th{background:#f5f7fa;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -66,9 +56,10 @@
   tbody tr.is-today{background:var(--today)}
   tbody tr.gone{transition:opacity .35s, transform .35s;opacity:0;transform:translateX(30px);background:var(--ok-bg)}
   th.c-chk,td.c-chk{width:96px}
-  td.c-date{white-space:nowrap;width:130px}
-  td.c-w{text-align:right;white-space:nowrap;width:120px}
+  td.c-date{white-space:nowrap;width:120px}
+  td.c-w{text-align:right;white-space:nowrap;width:110px}
   th.c-w{text-align:right}
+  td.c-note{width:24%;min-width:180px}
   .chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ok);user-select:none}
   .chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer;margin:0}
   .dow{display:block;font-size:12px;color:var(--muted)}
@@ -80,40 +71,84 @@
   .route .arr{color:var(--accent);font-weight:700;margin:0 5px}
   .ord{display:block;font-size:12px;color:var(--muted);font-weight:400}
   .goods{color:#2b3a50;word-break:break-word}
+  .note{width:100%;font:inherit;font-size:14px;padding:6px 9px;border:1px solid transparent;border-radius:7px;background:#f3f6fa;color:var(--ink);resize:none;min-height:34px;line-height:1.35;transition:border-color .2s, background .2s}
+  .note::placeholder{color:#9aa6b6}
+  .note:hover{border-color:var(--line)}
+  .note:focus{outline:none;border-color:#6d9fdc;background:#fff}
+  .note.has{background:#fffbea;border-color:#f3e2a6}
+  .note.saved{border-color:var(--ok)}
   .empty{padding:40px 20px;text-align:center;color:var(--muted)}
   .empty b{color:var(--ink)}
 
-  .soldlist{margin-top:14px}
-  .soldlist summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none}
-  .soldlist summary::-webkit-details-marker{display:none}
-  .soldlist summary::before{content:"▸";display:inline-block;width:16px;color:var(--muted)}
-  .soldlist[open] summary::before{content:"▾"}
-  .soldlist ul{list-style:none;margin:0;padding:0 16px 10px}
-  .soldlist li{display:flex;gap:12px;align-items:center;padding:7px 0;border-top:1px solid #edf0f4;font-size:14px}
-  .soldlist li .tm{color:var(--muted);width:44px}
-  .soldlist li .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .soldlist li button{padding:4px 10px;font-size:12.5px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
+  .card h2{margin-bottom:10px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;border-radius:0;padding:6px 12px;font-size:13px;background:#fff;font-weight:600;color:var(--muted)}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--navy);color:#fff}
+  .scoretools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .scoretools input,.scoretools select{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+  .score{list-style:none;margin:0;padding:0}
+  .score li{display:grid;grid-template-columns:90px 1fr 44px;gap:10px;align-items:center;padding:6px 0}
+  .score .nm{font-weight:600}
+  .score .tr{background:#eef2f7;border-radius:5px;height:14px;overflow:hidden}
+  .score .fl{height:100%;background:var(--navy);border-radius:5px}
+  .score li.lead .fl{background:var(--accent)}
+  .score .ct{text-align:right;font-weight:600}
+  .score .tot{border-top:1px solid var(--line);margin-top:4px;padding-top:9px;color:var(--muted)}
+  .score .tot .ct{color:var(--ink)}
+
+  .soldlist{list-style:none;margin:0;padding:0;max-height:330px;overflow:auto}
+  .soldlist li{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #edf0f4;font-size:14px}
+  .soldlist li:first-child{border-top:0}
+  .soldlist .tm{color:var(--muted);width:42px;flex:none}
+  .soldlist .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .soldlist .who{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8eef7;color:var(--navy)}
+  .soldlist .who.none{background:#f1f3f6;color:var(--muted);font-weight:500}
+  .soldlist button{padding:3px 9px;font-size:12px}
+
+  button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;font-weight:600;font-size:14px}
+  button.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  button.primary:hover{background:var(--navy-2)}
+  button:disabled{opacity:.55;cursor:default}
+
+  footer{max-width:1320px;margin:0 auto;padding:0 20px 40px}
+  .gear{border:0;background:transparent;padding:6px;opacity:.35;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px}
+  .gear:hover,.gear[aria-expanded=true]{opacity:.9}
+  .settings{display:none;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .settings.open{display:block}
+  .settings .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .settings label{font-size:13px;color:var(--muted);font-weight:600}
+  .settings input[type=url]{flex:1 1 380px;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:#f8fafc}
+  .settings .status{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .settings .status.err{color:#b42318}
+  .settings .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .settings .tools a,.settings .tools button{font-size:13px;padding:5px 10px}
+  .settings .tools a{color:var(--navy);font-weight:600;border:1px solid var(--line);border-radius:8px;text-decoration:none}
 
   .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:11px 14px 11px 18px;border-radius:10px;display:flex;gap:14px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.25);transition:transform .25s;max-width:calc(100% - 32px);z-index:10}
   .toast.show{transform:translateX(-50%) translateY(0)}
   .toast button{background:transparent;color:var(--accent);border-color:#3b4a61}
 
-  @media (max-width:860px){
+  @media (max-width:960px){
     .kpis{grid-template-columns:1fr 1fr}
     .kpi.weekk{grid-column:1/-1}
+    .two{grid-template-columns:1fr}
   }
-  @media (max-width:640px){
-    .bar,main{padding-left:16px;padding-right:16px}
+  @media (max-width:760px){
+    .bar,main,footer{padding-left:16px;padding-right:16px}
     .clock{display:none}
     thead{display:none}
     table,tbody,tr,td{display:block;width:100%}
     tbody tr{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
-    tbody td{padding:0;border:0;width:auto !important}
+    tbody td{padding:0;border:0;width:auto !important;min-width:0 !important}
     td.c-chk{grid-row:1/4;align-self:center}
     td.c-chk .chk span{display:none}
     td.c-date{grid-column:2}
     td.c-w{grid-column:3;grid-row:1;text-align:right}
-    td.c-route,td.c-goods{grid-column:2/4}
+    td.c-route,td.c-goods,td.c-note{grid-column:2/4}
+    td.c-note{margin-top:6px}
     .kpi .big{font-size:32px}
   }
 </style>
@@ -130,12 +165,7 @@
 </header>
 
 <main>
-  <section class="src">
-    <label for="url">Odkaz na tabulku</label>
-    <input type="url" id="url" placeholder="Vlož veřejný odkaz z Google Sheets nebo OneDrive / Excel online" autocomplete="off">
-    <button class="primary" id="load">Načíst</button>
-    <div class="status" id="status">Tabulka se nikam neukládá – načítá se vždy znovu z tvého odkazu (a obnovuje se každých 5 minut).</div>
-  </section>
+  <div class="banner" id="banner" hidden></div>
 
   <section class="kpis">
     <div class="kpi sold">
@@ -146,7 +176,7 @@
     <div class="kpi">
       <h3>V nabídce</h3>
       <div class="big num" id="kOpen">–</div>
-      <div class="sub" id="kOpenSub">načti tabulku</div>
+      <div class="sub" id="kOpenSub">načítám…</div>
     </div>
     <div class="kpi weekk">
       <h3>Prodáno – posledních 7 dní</h3>
@@ -158,152 +188,175 @@
     <div class="ph">
       <h2>Přepravy k prodeji</h2>
       <span class="cnt" id="cnt"></span>
-      <div class="opts">
-        <label><input type="checkbox" id="showPast"> i nakládky v minulosti</label>
-      </div>
+      <span class="upd" id="upd"></span>
     </div>
     <table>
-      <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th></tr></thead>
+      <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th><th>Poznámka</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
-    <div class="empty" id="empty"><b>Zatím žádná data.</b><br>Vlož nahoře veřejný odkaz na tabulku a klikni na Načíst.</div>
+    <div class="empty" id="empty"><b>Načítám…</b></div>
   </section>
 
-  <details class="panel soldlist" id="soldBox">
-    <summary>Dnes prodané přepravy (<span id="soldN">0</span>)</summary>
-    <ul id="soldList"></ul>
-  </details>
+  <section class="two">
+    <div class="card">
+      <h2>Skóre prodejců</h2>
+      <div class="scoretools">
+        <div class="seg" id="seg">
+          <button data-p="day" class="on">Den</button><button data-p="month">Měsíc</button><button data-p="all">Celé období</button>
+        </div>
+        <input type="date" id="pDay">
+        <select id="pMonth" hidden></select>
+      </div>
+      <ul class="score" id="score"></ul>
+    </div>
+    <div class="card">
+      <h2>Dnes prodané přepravy (<span id="soldN">0</span>)</h2>
+      <ul class="soldlist" id="soldList"></ul>
+    </div>
+  </section>
 </main>
+
+<footer>
+  <button class="gear" id="gear" aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+  <div class="settings" id="settings">
+    <div class="row">
+      <label for="url">Odkaz na tabulku</label>
+      <input type="url" id="url" placeholder="Veřejný odkaz z Google Sheets nebo OneDrive / Excel online" autocomplete="off">
+      <button class="primary" id="save">Uložit a načíst</button>
+    </div>
+    <div class="status" id="status">Tabulka se nikam neukládá – server ji vždy jen stáhne z odkazu (obnova každé 3 minuty). Zobrazují se řádky s „@@@“ ve sloupci CODE nakl.</div>
+    <div class="tools">
+      <span id="storage"></span>
+      <a href="/api/export" download>Stáhnout zálohu skóre a poznámek</a>
+      <button id="impBtn">Obnovit ze zálohy</button>
+      <input type="file" id="impFile" accept="application/json,.json" hidden>
+    </div>
+  </div>
+</footer>
 
 <div class="toast" id="toast"><span id="toastMsg"></span><button id="toastUndo">Vrátit</button></div>
 
 <script>
 (() => {
   const MAX_ROWS = 30;
-  const LS = { url: 'rkl_sheet_url', rec: 'rkl_records', past: 'rkl_show_past' };
   const $ = id => document.getElementById(id);
-  const ls = {
-    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
-  };
-
-  let rows = [];                       // data z tabulky – jen v paměti
-  let records = ls.get(LS.rec, {});    // stav Prodáno {key:{sold,at,u,label}}
-  let lastFetch = null;
-  let loading = false;
-
   const pad = n => String(n).padStart(2, '0');
   const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const isoMonth = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
   const todayIso = () => isoDay(new Date());
   const DOW = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+  const MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmtW = w => w == null ? '–' : new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(w) + ' kg';
   const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
+  const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const plural = n => n === 1 ? 'přeprava' : (n >= 2 && n <= 4 ? 'přepravy' : 'přeprav');
+  const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 
-  function setStatus(msg, err) { const s = $('status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+  let B = null;                 // poslední data ze serveru
+  const pendingNotes = {};      // rozepsané poznámky, které ještě nejsou uložené
+  let holdUntil = 0, holdTimer = null, lastSig = '';
+  let period = lsGet('rkl_period', 'day');
 
-  /* ---------- stav prodáno: lokálně + server ---------- */
-  function merge(a, b) {
-    const out = { ...a };
-    for (const [k, r] of Object.entries(b || {})) if (!out[k] || (r.u || '') > (out[k].u || '')) out[k] = r;
-    return out;
+  /* ---------- server ---------- */
+  async function api(path, body) {
+    const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+    const j = await r.json().catch(() => ({ error: 'Server neodpověděl.' }));
+    if (!r.ok) throw new Error(j.error || 'Chyba serveru');
+    return j;
   }
-  async function sync() {
+  async function poll(force) {
     try {
-      const r = await fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ records }) });
-      if (!r.ok) throw 0;
-      const s = await r.json();
-      const before = soldSig();
-      records = merge(records, s.records);
-      ls.set(LS.rec, records);
-      if (soldSig() !== before) render();
-    } catch { /* server spí / nedostupný – stav zůstává lokálně a odešle se příště */ }
-  }
-  function setSold(row, sold) {
-    const now = new Date().toISOString();
-    records[row.key] = { sold, at: sold ? now : null, u: now, label: `${fmtDate(row.date)} · ${row.route}` };
-    ls.set(LS.rec, records);
-    sync();
-  }
-  const isSold = k => !!(records[k] && records[k].sold);
-  const soldSig = () => Object.keys(records).filter(isSold).sort().join('\n');
-  let holdUntil = 0, holdTimer = null;   // během animace mizení řádku nepřekreslovat
-
-  /* ---------- načtení tabulky ---------- */
-  async function loadSheet(silent) {
-    const url = $('url').value.trim();
-    if (!url || loading) return;
-    loading = true; $('load').disabled = true;
-    if (!silent) setStatus('Načítám tabulku… (pokud server spal, může to trvat až minutu)');
-    try {
-      const r = await fetch('/api/sheet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
-      const j = await r.json().catch(() => ({ error: 'Server neodpověděl.' }));
-      if (!r.ok) throw new Error(j.error + (j.detail ? ` (${j.detail})` : ''));
-      rows = j.rows; lastFetch = new Date();
-      ls.set(LS.url, url);
-      const miss = Object.entries(j.columns).filter(([k, v]) => ['date', 'route', 'goods', 'weight'].includes(k) && !v).map(([k]) => ({ date: 'Datum nakl.', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost' }[k]));
-      setStatus(`Načteno ${rows.length} řádků z listu „${j.sheet}“ v ${pad(lastFetch.getHours())}:${pad(lastFetch.getMinutes())}.` + (miss.length ? ` Chybí sloupce: ${miss.join(', ')}.` : ''), miss.length > 0);
-      render();
+      const j = await api('/api/board' + (force ? '?force=1' : ''));
+      B = j; render();
     } catch (e) {
-      setStatus(e.message || 'Načtení selhalo.', true);
-    } finally { loading = false; $('load').disabled = false; }
+      if (!B) showBanner('Server se probouzí nebo není dostupný… zkusím to znovu.', false);
+    }
+  }
+
+  /* ---------- odvozená data ---------- */
+  function soldMap() {   // key -> {at, seller, label}
+    const out = {};
+    for (const [k, v] of Object.entries(B.sold)) out[k] = { at: v.at, label: v.label, seller: null };
+    for (const [k, at, seller, prepr, label] of B.sales) out[k] = { at, seller, prepr, label: (out[k] && out[k].label) || label };
+    return out;
   }
 
   /* ---------- vykreslení ---------- */
-  function routeHtml(route) {
-    const parts = String(route).split(/\s*\/\/\s*/);
-    return parts.map(esc).join('<span class="arr">→</span>');
-  }
+  function showBanner(msg, err) { const b = $('banner'); b.hidden = !msg; b.textContent = msg || ''; b.classList.toggle('err', !!err); }
+
+  function routeHtml(route) { return String(route).split(/\s*\/\/\s*/).map(esc).join('<span class="arr">→</span>'); }
   function dateHtml(iso, today) {
     if (!iso) return '<span class="dow">bez data</span>';
-    const d = new Date(iso + 'T12:00:00');
-    const t = new Date(today + 'T12:00:00');
+    const d = new Date(iso + 'T12:00:00'), t = new Date(today + 'T12:00:00');
     const diff = Math.round((d - t) / 864e5);
-    let tag = '';
-    if (diff === 0) tag = '<span class="tag t">DNES</span>';
-    else if (diff === 1) tag = '<span class="tag z">ZÍTRA</span>';
-    else if (diff < 0) tag = '<span class="tag p">PROŠLÉ</span>';
+    const tag = diff === 0 ? '<span class="tag t">DNES</span>' : diff === 1 ? '<span class="tag z">ZÍTRA</span>' : diff < 0 ? '<span class="tag p">PROŠLÉ</span>' : '';
     return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}.</span>${tag}<span class="dow">${DOW[d.getDay()]} ${d.getFullYear()}</span>`;
   }
+  function noteVal(k) { return k in pendingNotes ? pendingNotes[k] : (B.notes[k] || ''); }
 
-  function render() {
-    const wait = holdUntil - Date.now();
-    if (wait > 0) { clearTimeout(holdTimer); holdTimer = setTimeout(render, wait + 10); return; }
-    const today = todayIso();
-    const showPast = $('showPast').checked;
-    const open = rows.filter(r => !isSold(r.key) && (showPast || !r.date || r.date >= today));
-    open.sort((a, b) => (a.date || '9999') < (b.date || '9999') ? -1 : (a.date || '9999') > (b.date || '9999') ? 1 : 0);
-    const shown = open.slice(0, MAX_ROWS);
-
-    const tb = $('rows');
-    tb.innerHTML = shown.map(r => `
-      <tr data-key="${esc(r.key)}" class="${r.date === today ? 'is-today' : ''}">
-        <td class="c-chk"><label class="chk"><input type="checkbox" aria-label="Prodáno"><span>Prodáno</span></label></td>
+  function renderRows(today) {
+    const shown = B.offered.slice(0, MAX_ROWS);
+    const sig = today + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '')).join('\u0002');
+    if (sig === lastSig) return shown;
+    // zachovat rozepsanou poznámku (fokus + kurzor)
+    const ae = document.activeElement;
+    const focusKey = ae && ae.classList && ae.classList.contains('note') ? ae.closest('tr').dataset.key : null;
+    const sel = focusKey ? [ae.selectionStart, ae.selectionEnd] : null;
+    lastSig = sig;
+    $('rows').innerHTML = shown.map(r => {
+      const n = noteVal(r.key);
+      return `<tr data-key="${esc(r.key)}" class="${r.date === today ? 'is-today' : ''}">
+        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label></td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
         <td class="c-route"><span class="route">${routeHtml(r.route)}</span>${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
-      </tr>`).join('');
+        <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>
+      </tr>`;
+    }).join('');
+    $('rows').querySelectorAll('.note').forEach(autosize);
+    if (focusKey) {
+      const tr = [...$('rows').children].find(t => t.dataset.key === focusKey);
+      const ta = tr && tr.querySelector('.note');
+      if (ta) { ta.focus(); try { ta.setSelectionRange(sel[0], sel[1]); } catch {} }
+    }
+    return shown;
+  }
 
+  function render() {
+    if (!B) return;
+    const wait = holdUntil - Date.now();
+    if (wait > 0) { clearTimeout(holdTimer); holdTimer = setTimeout(render, wait + 10); return; }
+    const today = todayIso();
+
+    // stav zdroje
+    if (!B.configured) showBanner('Zatím není nastavený odkaz na tabulku – klikni na ozubené kolečko úplně dole na stránce.', false);
+    else if (B.error) showBanner('Tabulku se nepodařilo načíst: ' + B.error + (B.fetchedAt ? ' Zobrazuji poslední načtená data.' : ''), true);
+    else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', code: 'CODE nakl.', prepr: 'Přeprava' }[k])).join(', '), true);
+    else showBanner('');
+    $('upd').textContent = B.fetchedAt ? 'aktualizováno ' + hhmm(new Date(B.fetchedAt)) : '';
+
+    const shown = renderRows(today);
     const empty = $('empty');
-    if (!rows.length) { empty.style.display = ''; }
-    else if (!shown.length) {
-      empty.style.display = '';
-      empty.innerHTML = showPast ? '<b>Vše prodáno.</b> V tabulce nezbývá žádná přeprava k prodeji.'
-        : '<b>Žádné nakládky od dneška dál.</b><br>Zaškrtni „i nakládky v minulosti“, pokud chceš vidět i starší řádky.';
-    } else empty.style.display = 'none';
+    if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
+    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná neprodaná přeprava s „@@@“ ve sloupci CODE nakl.' : '<b>Načítám tabulku…</b>'; }
+    else empty.style.display = 'none';
 
-    $('kOpen').textContent = rows.length ? open.length : '–';
-    $('kOpenSub').textContent = rows.length ? (open.length > MAX_ROWS ? `zobrazeno prvních ${MAX_ROWS}` : 'přeprav čeká na prodej') : 'načti tabulku';
-    $('cnt').textContent = rows.length ? `${shown.length} z ${open.length}` : '';
+    const open = B.offered.length;
+    $('kOpen').textContent = B.fetchedAt ? open : '–';
+    $('kOpenSub').textContent = !B.configured ? 'není nastavená tabulka' : (open > MAX_ROWS ? `zobrazeno prvních ${MAX_ROWS}` : `${plural(open)} čeká na prodej`);
+    $('cnt').textContent = B.fetchedAt ? `${shown.length} z ${open}` : '';
 
-    // statistika prodejů
-    const soldRecs = Object.entries(records).filter(([, r]) => r.sold && r.at);
+    // prodeje
+    const sm = soldMap();
     const byDay = {};
-    for (const [, r] of soldRecs) { const d = isoDay(new Date(r.at)); byDay[d] = (byDay[d] || 0) + 1; }
-    const todayN = byDay[today] || 0;
-    $('kToday').textContent = todayN;
-    $('kTodaySub').textContent = todayN === 1 ? 'přeprava' : (todayN >= 2 && todayN <= 4 ? 'přepravy' : 'přeprav');
+    for (const v of Object.values(sm)) if (v.at) { const d = isoDay(new Date(v.at)); byDay[d] = (byDay[d] || 0) + 1; }
+    const tn = byDay[today] || 0;
+    $('kToday').textContent = tn; $('kTodaySub').textContent = plural(tn);
 
     const days = [];
     for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
@@ -313,64 +366,148 @@
       return `<div class="d ${k === today ? 't' : ''}" title="${d.getDate()}. ${d.getMonth() + 1}.: ${v}"><span class="v num">${v}</span><div class="b" style="height:${Math.round(v / max * 40) + 2}px"></div><span class="l">${k === today ? 'dnes' : DOW[d.getDay()]}</span></div>`;
     }).join('');
 
-    const todays = soldRecs.filter(([, r]) => isoDay(new Date(r.at)) === today).sort((a, b) => a[1].at < b[1].at ? 1 : -1);
+    const todays = Object.entries(sm).filter(([, v]) => v.at && isoDay(new Date(v.at)) === today).sort((a, b) => a[1].at < b[1].at ? 1 : -1);
     $('soldN').textContent = todays.length;
-    $('soldList').innerHTML = todays.length ? todays.map(([k, r]) => {
-      const t = new Date(r.at);
-      return `<li><span class="tm num">${pad(t.getHours())}:${pad(t.getMinutes())}</span><span class="lb" title="${esc(r.label)}">${esc(r.label)}</span><button data-undo="${esc(k)}">Vrátit</button></li>`;
+    $('soldList').innerHTML = todays.length ? todays.map(([k, v]) => {
+      const manual = B.sold[k] && !v.seller;
+      return `<li><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
+        (v.seller ? `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>` : `<span class="who none">čeká na č. přepravy</span>`) +
+        (manual ? `<button data-undo="${esc(k)}">Vrátit</button>` : '') + `</li>`;
     }).join('') : '<li><span class="lb" style="color:var(--muted)">Dnes zatím nic.</span></li>';
+
+    renderScore();
   }
 
-  /* ---------- události ---------- */
+  /* ---------- skóre prodejců ---------- */
+  function renderScore() {
+    const day = $('pDay').value || todayIso();
+    const month = $('pMonth').value || isoMonth(new Date());
+    // nabídka měsíců
+    const months = new Set([isoMonth(new Date())]);
+    for (const s of B.sales) months.add(isoMonth(new Date(s[1])));
+    const mlist = [...months].sort().reverse();
+    const mhtml = mlist.map(m => { const [y, mm] = m.split('-'); return `<option value="${m}">${MONTHS[+mm - 1]} ${y}</option>`; }).join('');
+    if ($('pMonth').dataset.h !== mhtml) { $('pMonth').innerHTML = mhtml; $('pMonth').dataset.h = mhtml; $('pMonth').value = mlist.includes(month) ? month : mlist[0]; }
+
+    $('pDay').hidden = period !== 'day'; $('pMonth').hidden = period !== 'month';
+    document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b.dataset.p === period));
+
+    const inPeriod = at => {
+      const d = new Date(at);
+      return period === 'all' || (period === 'day' ? isoDay(d) === day : isoMonth(d) === $('pMonth').value);
+    };
+    const cnt = Object.fromEntries(B.sellers.map(s => [s, 0]));
+    for (const [, at, seller] of B.sales) if (seller && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1;
+    const list = Object.entries(cnt);
+    const max = Math.max(1, ...list.map(x => x[1]));
+    const top = Math.max(...list.map(x => x[1]));
+    const total = list.reduce((a, x) => a + x[1], 0);
+    $('score').innerHTML = list.map(([n, c]) =>
+      `<li class="${c && c === top ? 'lead' : ''}"><span class="nm">${esc(n)}</span><span class="tr"><span class="fl" style="display:block;width:${c / max * 100}%"></span></span><span class="ct num">${c}</span></li>`
+    ).join('') + `<li class="tot"><span class="nm">Celkem</span><span></span><span class="ct num">${total}</span></li>`;
+  }
+  $('seg').addEventListener('click', e => { const p = e.target.dataset.p; if (!p) return; period = p; lsSet('rkl_period', p); renderScore(); });
+  $('pDay').value = todayIso();
+  $('pDay').onchange = renderScore;
+  $('pMonth').onchange = renderScore;
+
+  /* ---------- Prodáno ---------- */
   let toastTimer, lastSold = null;
   function toast(msg, row) {
-    lastSold = row;
-    $('toastMsg').textContent = msg;
-    $('toast').classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => $('toast').classList.remove('show'), 6000);
+    lastSold = row; $('toastMsg').textContent = msg; $('toast').classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 6000);
   }
-  $('toastUndo').onclick = () => {
-    if (lastSold) { setSold(lastSold, false); render(); }
-    $('toast').classList.remove('show');
-  };
-
+  async function setSold(key, sold, label) {
+    const now = new Date().toISOString();
+    if (sold) B.sold[key] = { sold: true, at: now, label };
+    else delete B.sold[key];
+    if (sold) B.offered = B.offered.filter(r => r.key !== key);
+    try { await api('/api/sold', { key, sold, label }); } catch (e) { alert('Uložení se nepovedlo: ' + e.message); }
+    poll(false);
+  }
   $('rows').addEventListener('change', e => {
-    if (!e.target.matches('input[type=checkbox]')) return;
+    if (!e.target.classList.contains('sold-chk')) return;
     const tr = e.target.closest('tr');
-    const row = rows.find(r => r.key === tr.dataset.key);
+    const row = B.offered.find(r => r.key === tr.dataset.key);
     if (!row) return;
     holdUntil = Date.now() + 380;
-    setSold(row, true);
     tr.classList.add('gone');
+    setSold(row.key, true, `${fmtDate(row.date)} · ${row.route}`);
     render();
     toast(`Prodáno: ${row.route}`, row);
   });
-  $('soldList').addEventListener('click', e => {
-    const k = e.target.dataset && e.target.dataset.undo;
-    if (!k) return;
-    const r = records[k];
-    records[k] = { ...r, sold: false, at: null, u: new Date().toISOString() };
-    ls.set(LS.rec, records); sync(); render();
-  });
-  $('load').onclick = () => loadSheet(false);
-  $('url').addEventListener('keydown', e => { if (e.key === 'Enter') loadSheet(false); });
-  $('showPast').checked = !!ls.get(LS.past, false);
-  $('showPast').onchange = () => { ls.set(LS.past, $('showPast').checked); render(); };
+  $('toastUndo').onclick = () => { if (lastSold) { setSold(lastSold.key, false); lastSig = ''; lastSold = null; } $('toast').classList.remove('show'); };
+  $('soldList').addEventListener('click', e => { const k = e.target.dataset && e.target.dataset.undo; if (k) { setSold(k, false); lastSig = ''; } });
 
+  /* ---------- poznámky ---------- */
+  function autosize(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight + 2, 160) + 'px'; }
+  const noteTimers = {};
+  async function saveNote(key, ta) {
+    clearTimeout(noteTimers[key]);
+    if (!(key in pendingNotes)) return;
+    const text = pendingNotes[key];
+    try {
+      await api('/api/note', { key, text });
+      if (text.trim()) B.notes[key] = text; else delete B.notes[key];
+      if (pendingNotes[key] === text) delete pendingNotes[key];
+      if (ta) { ta.classList.add('saved'); setTimeout(() => ta.classList.remove('saved'), 900); }
+      lastSig = '';
+    } catch (e) { /* zkusí se znovu při dalším psaní / opuštění pole */ }
+  }
+  $('rows').addEventListener('input', e => {
+    if (!e.target.classList.contains('note')) return;
+    const ta = e.target, key = ta.closest('tr').dataset.key;
+    pendingNotes[key] = ta.value; autosize(ta); ta.classList.toggle('has', !!ta.value.trim());
+    clearTimeout(noteTimers[key]); noteTimers[key] = setTimeout(() => saveNote(key, ta), 800);
+  });
+  $('rows').addEventListener('focusout', e => {
+    if (!e.target.classList.contains('note')) return;
+    saveNote(e.target.closest('tr').dataset.key, e.target);
+  });
+  $('rows').addEventListener('keydown', e => { if (e.target.classList.contains('note') && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } });
+
+  /* ---------- nastavení ---------- */
+  $('gear').onclick = () => {
+    const open = $('settings').classList.toggle('open');
+    $('gear').setAttribute('aria-expanded', open);
+    if (open) {
+      if (B) $('url').value = B.url || '';
+      $('storage').textContent = B ? (B.storage === 'db' ? 'Úložiště: databáze ✓' : 'Úložiště: dočasné (chybí databáze)') : '';
+      $('settings').scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  };
+  function setStatus(msg, err) { const s = $('status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+  $('save').onclick = async () => {
+    $('save').disabled = true; setStatus('Ukládám a načítám tabulku… (pokud server spal, může to trvat až minutu)');
+    try {
+      B = await api('/api/config', { url: $('url').value.trim() });
+      lastSig = ''; render();
+      setStatus(B.error ? 'Odkaz je uložený, ale tabulku se nepodařilo načíst: ' + B.error
+        : `Uloženo. Načteno ${B.totalRows} řádků z listu „${B.sheetName}“, k prodeji ${B.offered.length}.`, !!B.error);
+    } catch (e) { setStatus(e.message, true); }
+    $('save').disabled = false;
+  };
+  $('url').addEventListener('keydown', e => { if (e.key === 'Enter') $('save').click(); });
+  $('impBtn').onclick = () => $('impFile').click();
+  $('impFile').onchange = async () => {
+    const f = $('impFile').files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      const r = await api('/api/import', { data: j.data || j });
+      setStatus(`Obnoveno ${r.imported} záznamů ze zálohy.`); poll(false);
+    } catch (e) { setStatus('Zálohu se nepodařilo obnovit: ' + e.message, true); }
+    $('impFile').value = '';
+  };
+
+  /* ---------- start ---------- */
   function tick() {
     const d = new Date();
-    $('clock').textContent = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    $('clock').textContent = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + hhmm(d);
   }
-
-  // start
-  tick(); setInterval(() => { tick(); render(); }, 60 * 1000);
-  $('url').value = ls.get(LS.url, '');
-  render();
-  sync();
-  if ($('url').value) loadSheet(false);
-  setInterval(sync, 30 * 1000);
-  setInterval(() => loadSheet(true), 5 * 60 * 1000);
+  tick();
+  setInterval(() => { tick(); render(); }, 60 * 1000);
+  poll(false);
+  setInterval(() => poll(false), 30 * 1000);
 })();
 </script>
 </body>

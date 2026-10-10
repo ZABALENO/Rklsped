@@ -1,24 +1,25 @@
 # RKL Spedice – přepravy v prodeji
 
-Dashboard pro speditéry: zobrazí až 30 přeprav, které se aktuálně prodávají
-(datum nakládky, trasa, popis zboží, hmotnost). Zaškrtnutím **Prodáno** řádek zmizí
-a započítá se do denní statistiky prodaných přeprav.
+Dashboard pro speditéry na https://rklspedice.onrender.com
+
+- Zobrazuje až 30 přeprav z tabulky, které mají ve sloupci **CODE nakl.** znak `@@@`
+  a ještě nemají číslo přepravy (datum nakládky, trasa, popis zboží, hmotnost, poznámka).
+- **Prodáno** – zaškrtnutím řádek zmizí a započítá se do dnešních prodejů.
+- **Poznámka** – sdílená pro všechny, ukládá se do databáze.
+- **Skóre prodejců** – jakmile u nabízené přepravy přibude ve sloupci **Přeprava** číslo,
+  připíše se prodej podle prefixu: `PZ/26J` Jirka, `PZ/26G` Gabka, `PZ/26N` Pavel,
+  `PZ/26U` Petr, `PZ/26H` Robin (rok v čísle se ignoruje, velikost písmen nevadí).
+  Čas prodeje = zaškrtnutí „Prodáno“, jinak okamžik, kdy se číslo v tabulce poprvé objevilo.
+  Přehled za den, měsíc a celé období.
 
 ## Data
-Tabulka se do repozitáře ani na server **neukládá**. Do pole „Odkaz na tabulku“ se vloží
-veřejný odkaz (Google Sheets / Google Drive / OneDrive / SharePoint – „Kdokoli s odkazem“).
-Server soubor jen stáhne do paměti, vybere potřebné sloupce a pošle je prohlížeči.
-Odkaz si pamatuje jen prohlížeč. Data se obnovují každých 5 minut.
-
-Rozpoznávané sloupce: `Datum nakl.od`, `Trasa`, `Popis zboží`, `Hmotnost(kg)`, `Objednávka`
-(hlavička se hledá v prvních 15 řádcích, stačí list se sloupcem „Trasa“).
-
-Na serveru se ukládá jen stav „Prodáno“ (číslo objednávky, trasa, čas) – zároveň se drží
-i v prohlížeči, takže restart serveru na free plánu Renderu o statistiku nepřipraví.
+Tabulka se nikam neukládá. Odkaz (Google Sheets / Drive / OneDrive / SharePoint, „Kdokoli s odkazem“)
+se nastavuje pod ozubeným kolečkem dole na stránce; server tabulku stahuje do paměti (každé 3 min).
+Trvale se ukládá jen odkaz, stav „Prodáno“, poznámky a skóre – do Postgresu (`DATABASE_URL`),
+bez něj do dočasného souboru. Zálohu lze stáhnout/obnovit v nastavení (`/api/export`).
 
 ## Spuštění
 ```
 npm install
 npm start   # http://localhost:3000
 ```
-Render: Node web service, build `npm install`, start `node server.js`.

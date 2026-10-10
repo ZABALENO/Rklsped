@@ -1,259 +1,205 @@
 // RKL Spedice – dashboard přeprav v prodeji
-// Tabulka se NIKAM neukládá: server ji jen na požádání stáhne z veřejného odkazu,
-// v paměti vytáhne potřebné sloupce a pošle je prohlížeči.
-// Na serveru se ukládá pouze stav "Prodáno" (číslo objednávky, trasa, čas).
+// Tabulka se NIKAM neukládá: server ji jen stáhne z veřejného odkazu, v paměti
+// vybere řádky k prodeji a pošle je prohlížeči.
+// Trvale (Postgres, příp. soubor) se ukládá jen: odkaz na tabulku, stav „Prodáno“,
+// poznámky k přepravám a skóre prodejců (číslo objednávky, číslo přepravy, trasa, čas).
 
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const XLSX = require('xlsx');
+const { loadSheet, validUrl } = require('./lib/sheet');
 
-const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const STATE_FILE = path.join(DATA_DIR, 'state.json');
-const MAX_BYTES = 25 * 1024 * 1024;
+const OFFER_MARK = '@@@';                 // ve sloupci „CODE nakl.“ = přeprava je v prodeji
+const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
+const BG_REFRESH = 3 * 60 * 1000;         // obnova tabulky na pozadí
+const SELLERS = { J: 'Jirka', G: 'Gabka', N: 'Pavel', U: 'Petr', H: 'Robin' };
+const SELLER_ORDER = ['Jirka', 'Gabka', 'Pavel', 'Petr', 'Robin'];
 
-app.use(express.json({ limit: '2mb' }));
+/* ================= úložiště ================= */
+// mem[ns][key] = value; ns: cfg | sold | note | sale | track
+const NS = ['cfg', 'sold', 'note', 'sale', 'track'];
+const mem = Object.fromEntries(NS.map(n => [n, {}]));
+let pool = null;
+const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'store.json');
+
+async function initStore() {
+  if (process.env.DATABASE_URL) {
+    const { Pool } = require('pg');
+    const cs = process.env.DATABASE_URL;
+    const external = /\.render\.com|sslmode=require/.test(cs);
+    pool = new Pool({ connectionString: cs, ssl: external ? { rejectUnauthorized: false } : false, max: 4 });
+    await pool.query(`CREATE TABLE IF NOT EXISTS kv (
+      ns text NOT NULL, k text NOT NULL, v jsonb NOT NULL, u timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (ns, k))`);
+    const { rows } = await pool.query('SELECT ns, k, v FROM kv');
+    for (const r of rows) if (mem[r.ns]) mem[r.ns][r.k] = r.v;
+    console.log(`Úložiště: Postgres (${rows.length} záznamů)`);
+  } else {
+    try {
+      fs.mkdirSync(path.dirname(FILE), { recursive: true });
+      if (fs.existsSync(FILE)) Object.assign(mem, JSON.parse(fs.readFileSync(FILE, 'utf8')));
+      for (const n of NS) mem[n] = mem[n] || {};
+    } catch (e) { console.error('Soubor úložiště nelze načíst:', e.message); }
+    console.log('Úložiště: soubor (dočasné – nastav DATABASE_URL)');
+  }
+}
+
+let fileTimer = null;
+async function put(ns, k, v) {
+  if (v == null) delete mem[ns][k]; else mem[ns][k] = v;
+  if (pool) {
+    try {
+      if (v == null) await pool.query('DELETE FROM kv WHERE ns=$1 AND k=$2', [ns, k]);
+      else await pool.query(
+        `INSERT INTO kv (ns,k,v,u) VALUES ($1,$2,$3,now())
+         ON CONFLICT (ns,k) DO UPDATE SET v=EXCLUDED.v, u=now()`, [ns, k, JSON.stringify(v)]);
+    } catch (e) { console.error('DB zápis selhal:', e.message); }
+  } else {
+    clearTimeout(fileTimer);
+    fileTimer = setTimeout(() => { try { fs.writeFileSync(FILE, JSON.stringify(mem)); } catch (e) { console.error(e.message); } }, 300);
+  }
+}
+
+/* ================= tabulka + vyhodnocení prodejů ================= */
+let sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null };
+let inflight = null;
+
+function sellerOf(prepr) {
+  const m = String(prepr).match(/^\s*PZ\s*\/\s*\d{2}\s*([A-Z])/i);
+  if (!m) return null;
+  const L = m[1].toUpperCase();
+  return { letter: L, name: SELLERS[L] || `Ostatní (${L})` };
+}
+const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
+const labelOf = r => `${fmtDate(r.date)} · ${r.route}`.replace(/^ · /, '');
+
+async function evaluateSales(rows) {
+  const now = new Date().toISOString();
+  for (const r of rows) {
+    const offered = r.code.includes(OFFER_MARK);
+    if (offered && !r.prepr && !mem.track[r.key]) await put('track', r.key, { t: now, label: labelOf(r) });
+    if (!r.prepr) continue;
+    const s = sellerOf(r.prepr);
+    if (!s) continue;
+    const cur = mem.sale[r.key];
+    const known = offered || mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
+    if (!cur && known) {
+      const manual = mem.sold[r.key] && mem.sold[r.key].sold && mem.sold[r.key].at;
+      await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r) });
+    } else if (cur && cur.prepr !== r.prepr) {
+      await put('sale', r.key, { ...cur, prepr: r.prepr, seller: s.name });
+    }
+  }
+}
+
+async function refreshSheet(force) {
+  const url = mem.cfg.sheet && mem.cfg.sheet.url;
+  if (!url) { sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null }; return; }
+  const fresh = sheet.url === url && sheet.fetchedAt && Date.now() - Date.parse(sheet.fetchedAt) < SHEET_TTL;
+  if (!force && fresh) return;
+  if (inflight) return inflight;
+  inflight = (async () => {
+    try {
+      const out = await loadSheet(url);
+      sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
+      await evaluateSales(out.rows);
+    } catch (e) {
+      sheet = { ...sheet, error: e.message, url, fetchedAt: sheet.url === url ? sheet.fetchedAt : null, rows: sheet.url === url ? sheet.rows : [] };
+      sheet.errorAt = new Date().toISOString();
+    } finally { inflight = null; }
+  })();
+  return inflight;
+}
+
+function cleanup() {
+  const limit = new Date(Date.now() - 150 * 864e5).toISOString();
+  for (const [k, v] of Object.entries(mem.track)) if (v.t < limit) put('track', k, null);
+  for (const [k, v] of Object.entries(mem.sold)) if ((v.u || '') < limit) put('sold', k, null);
+  for (const [k, v] of Object.entries(mem.note)) if ((v.u || '') < limit) put('note', k, null);
+}
+
+function board() {
+  const offered = sheet.rows
+    .filter(r => r.code.includes(OFFER_MARK) && !r.prepr && !(mem.sold[r.key] && mem.sold[r.key].sold))
+    .map(({ key, order, date, route, goods, weight }) => ({ key, order, date, route, goods, weight }))
+    .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
+  const weekAgo = new Date(Date.now() - 9 * 864e5).toISOString();
+  const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') > weekAgo));
+  const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'code', 'prepr'].filter(k => !sheet.columns[k]) : [];
+  return {
+    configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
+    url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
+    fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
+    offered,
+    sold,
+    sales: Object.entries(mem.sale).map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label]),
+    notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),
+    sellers: SELLER_ORDER,
+    storage: pool ? 'db' : 'file',
+  };
+}
+
+/* ================= HTTP ================= */
+const app = express();
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
-/* ---------------- stav "Prodáno" ---------------- */
-// records: { [key]: { sold: bool, at: ISO (kdy prodáno), u: ISO (poslední změna), label: string } }
-let state = { records: {} };
-try {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (fs.existsSync(STATE_FILE)) state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-  if (!state.records) state.records = {};
-} catch (e) { console.error('Stav se nepodařilo načíst:', e.message); }
-
-let saveTimer = null;
-function saveState() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { fs.writeFileSync(STATE_FILE, JSON.stringify(state)); } catch (e) { console.error(e.message); }
-  }, 300);
-}
-
-function mergeRecords(incoming) {
-  if (!incoming || typeof incoming !== 'object') return;
-  for (const [k, r] of Object.entries(incoming)) {
-    if (!r || typeof r.u !== 'string' || k.length > 300) continue;
-    const cur = state.records[k];
-    if (!cur || r.u > cur.u) {
-      state.records[k] = {
-        sold: !!r.sold,
-        at: typeof r.at === 'string' ? r.at : null,
-        u: r.u,
-        label: typeof r.label === 'string' ? r.label.slice(0, 200) : '',
-      };
-    }
-  }
-  // úklid: záznamy starší než 120 dní
-  const limit = new Date(Date.now() - 120 * 864e5).toISOString();
-  for (const [k, r] of Object.entries(state.records)) if (r.u < limit) delete state.records[k];
-  saveState();
-}
-
-app.get('/api/state', (req, res) => res.json(state));
-app.post('/api/state', (req, res) => {
-  mergeRecords(req.body && req.body.records);
-  res.json(state);
+app.get('/api/board', async (req, res) => {
+  await refreshSheet(req.query.force === '1');
+  res.json(board());
 });
 
-/* ---------------- stažení tabulky z veřejného odkazu ---------------- */
-const ALLOWED_HOSTS = [
-  'docs.google.com', 'drive.google.com', 'drive.usercontent.google.com',
-  '.googleusercontent.com', 'onedrive.live.com', '1drv.ms', 'api.onedrive.com',
-  '.sharepoint.com', '.livefilestore.com', '.1drv.com', 'onedrive.com', '.onedrive.com',
-  'my.microsoftpersonalcontent.com', '.microsoftpersonalcontent.com',
-];
-function hostAllowed(u) {
-  try {
-    const { hostname, protocol } = new URL(u);
-    if (protocol !== 'https:') return false;
-    return ALLOWED_HOSTS.some(h => h.startsWith('.') ? hostname.endsWith(h) : hostname === h);
-  } catch { return false; }
-}
+app.post('/api/config', async (req, res) => {
+  const url = String((req.body && req.body.url) || '').trim();
+  if (url && !validUrl(url)) return res.status(400).json({ error: 'Podporované jsou veřejné odkazy z Google Sheets / Google Drive a OneDrive / SharePoint (Excel online).' });
+  await put('cfg', 'sheet', url ? { url, u: new Date().toISOString() } : null);
+  await refreshSheet(true);
+  res.json(board());
+});
 
-function b64url(s) {
-  return Buffer.from(s, 'utf8').toString('base64').replace(/=+$/, '').replace(/\//g, '_').replace(/\+/g, '-');
-}
+app.post('/api/sold', async (req, res) => {
+  const { key, sold, label } = req.body || {};
+  if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
+  const now = new Date().toISOString();
+  await put('sold', key, { sold: !!sold, at: sold ? now : null, u: now, label: String(label || '').slice(0, 200) });
+  res.json({ ok: true, at: now });
+});
 
-// Z odkazu, který uživatel vloží, udělá seznam adres, ze kterých se zkusí stáhnout soubor
-function candidateUrls(raw) {
-  const url = raw.trim();
-  const out = [];
-  let u;
-  try { u = new URL(url); } catch { return out; }
-  const h = u.hostname;
+app.post('/api/note', async (req, res) => {
+  const { key, text } = req.body || {};
+  if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
+  const t = String(text || '').slice(0, 500);
+  await put('note', key, t.trim() ? { text: t, u: new Date().toISOString() } : null);
+  res.json({ ok: true });
+});
 
-  if (h === 'docs.google.com' && u.pathname.includes('/spreadsheets/')) {
-    const pub = u.pathname.match(/\/spreadsheets\/d\/e\/([^/]+)/);
-    const id = u.pathname.match(/\/spreadsheets\/d\/([^/]+)/);
-    const gid = (u.hash.match(/gid=(\d+)/) || u.search.match(/gid=(\d+)/) || [])[1];
-    if (pub) {
-      out.push(`https://docs.google.com/spreadsheets/d/e/${pub[1]}/pub?output=xlsx`);
-      if (gid) out.push(`https://docs.google.com/spreadsheets/d/e/${pub[1]}/pub?gid=${gid}&single=true&output=csv`);
-    } else if (id) {
-      if (gid) out.push(`https://docs.google.com/spreadsheets/d/${id[1]}/export?format=csv&gid=${gid}`);
-      out.push(`https://docs.google.com/spreadsheets/d/${id[1]}/export?format=xlsx`);
-    }
-  } else if (h === 'drive.google.com') {
-    const id = (u.pathname.match(/\/file\/d\/([^/]+)/) || [])[1] || u.searchParams.get('id');
-    if (id) {
-      out.push(`https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`);
-      out.push(`https://drive.google.com/uc?export=download&id=${id}`);
-    }
-  } else if (h.endsWith('.sharepoint.com')) {
-    const d = new URL(url); d.searchParams.set('download', '1'); out.push(d.toString());
-    out.push(`https://api.onedrive.com/v1.0/shares/u!${b64url(url)}/root/content`);
-  } else if (h === '1drv.ms' || h.endsWith('onedrive.live.com') || h === 'onedrive.com' || h.endsWith('.onedrive.com')) {
-    out.push(`https://api.onedrive.com/v1.0/shares/u!${b64url(url)}/root/content`);
-    if (h.endsWith('onedrive.live.com')) {
-      out.push(url.replace('/redir?', '/download?').replace('/edit.aspx?', '/download.aspx?').replace('/view.aspx?', '/download.aspx?'));
-    }
-    out.push(url.includes('?') ? url + '&download=1' : url + '?download=1');
-  }
-  out.push(url);
-  return [...new Set(out)];
-}
-
-async function fetchFollow(url, hops = 0) {
-  if (hops > 8) throw new Error('Příliš mnoho přesměrování');
-  if (!hostAllowed(url)) throw new Error('Nepovolená adresa: ' + new URL(url).hostname);
-  const r = await fetch(url, {
-    redirect: 'manual',
-    headers: { 'User-Agent': 'Mozilla/5.0 (RKL Spedice dashboard)', Accept: '*/*' },
-    signal: AbortSignal.timeout(25000),
-  });
-  if (r.status >= 300 && r.status < 400 && r.headers.get('location')) {
-    return fetchFollow(new URL(r.headers.get('location'), url).toString(), hops + 1);
-  }
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const len = Number(r.headers.get('content-length') || 0);
-  if (len > MAX_BYTES) throw new Error('Soubor je příliš velký');
-  const buf = Buffer.from(await r.arrayBuffer());
-  if (buf.length > MAX_BYTES) throw new Error('Soubor je příliš velký');
-  return { buf, type: r.headers.get('content-type') || '' };
-}
-
-function looksLikeSheet(buf, type) {
-  if (buf[0] === 0x50 && buf[1] === 0x4b) return 'xlsx'; // ZIP (xlsx)
-  if (buf[0] === 0xd0 && buf[1] === 0xcf) return 'xls';
-  const head = buf.slice(0, 600).toString('utf8').toLowerCase();
-  if (head.includes('<html') || head.includes('<!doctype')) return null;
-  if (type.includes('csv') || type.includes('text/plain') || head.includes(';') || head.includes(',')) return 'csv';
-  return null;
-}
-
-/* ---------------- rozpoznání sloupců ---------------- */
-const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-const COLS = {
-  date: ['datum nakl.od', 'datum nakl', 'datum nakladky', 'nakladka datum', 'datum'],
-  route: ['trasa', 'relace trasa', 'route'],
-  goods: ['popis zbozi', 'zbozi', 'popis'],
-  weight: ['hmotnost(kg)', 'hmotnost (kg)', 'hmotnost', 'vaha', 'kg'],
-  order: ['objednavka', 'cislo objednavky', 'zakazka'],
-  from: ['mesto nakl.', 'mesto nakl', 'misto nakladky'],
-  to: ['mesto vykl.', 'mesto vykl', 'misto vykladky'],
-};
-function findCol(headers, names) {
-  for (const n of names) { const i = headers.findIndex(h => h === n); if (i >= 0) return i; }
-  for (const n of names) { const i = headers.findIndex(h => h.startsWith(n)); if (i >= 0) return i; }
-  return -1;
-}
-
-function toIsoDate(v) {
-  if (v == null || v === '') return null;
-  if (v instanceof Date && !isNaN(v)) {
-    return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`;
-  }
-  if (typeof v === 'number') {
-    const d = XLSX.SSF.parse_date_code(v);
-    if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-  }
-  const s = String(v).trim();
-  let m = s.match(/^(\d{1,2})[.\/-]\s*(\d{1,2})[.\/-]\s*(\d{2,4})/);
-  if (m) {
-    const y = m[3].length === 2 ? '20' + m[3] : m[3];
-    return `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-  }
-  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  return null;
-}
-function toNum(v) {
-  if (v == null || v === '') return null;
-  if (typeof v === 'number') return v;
-  const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.').replace(/[^\d.\-]/g, ''));
-  return isNaN(n) ? null : n;
-}
-
-function extractRows(wb) {
-  for (const name of wb.SheetNames) {
-    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: null });
-    // hlavička = první řádek (v prvních 15), kde je sloupec "Trasa"
-    let hi = -1;
-    for (let i = 0; i < Math.min(15, aoa.length); i++) {
-      const hs = (aoa[i] || []).map(norm);
-      if (findCol(hs, COLS.route) >= 0 && (findCol(hs, COLS.date) >= 0 || findCol(hs, COLS.goods) >= 0)) { hi = i; break; }
-    }
-    if (hi < 0) continue;
-    const hs = aoa[hi].map(norm);
-    const c = Object.fromEntries(Object.entries(COLS).map(([k, n]) => [k, findCol(hs, n)]));
-    const rows = [];
-    for (let i = hi + 1; i < aoa.length; i++) {
-      const r = aoa[i] || [];
-      const get = k => (c[k] >= 0 ? r[c[k]] : null);
-      let route = get('route');
-      if (!route && (get('from') || get('to'))) route = `${get('from') || '?'} // ${get('to') || '?'}`;
-      const goods = get('goods');
-      const date = toIsoDate(get('date'));
-      const weight = toNum(get('weight'));
-      if (!route && !goods && !date) continue;
-      const order = get('order') ? String(get('order')).trim() : '';
-      const key = order || ['h', date, route, goods, weight].map(x => String(x ?? '')).join('|');
-      rows.push({ key, order, date, route: route ? String(route).trim() : '', goods: goods ? String(goods).trim() : '', weight });
-    }
-    return { sheet: name, rows, columns: Object.fromEntries(Object.entries(c).map(([k, i]) => [k, i >= 0 ? aoa[hi][i] : null])) };
-  }
-  throw new Error('V tabulce jsem nenašel hlavičku se sloupcem „Trasa“.');
-}
-
-app.post('/api/sheet', async (req, res) => {
-  const url = req.body && typeof req.body.url === 'string' ? req.body.url : '';
-  if (!url) return res.status(400).json({ error: 'Chybí odkaz na tabulku.' });
-  // pouze pro lokální testování (na Renderu se nepoužívá)
-  if (process.env.DEV_SHEET_FILE && url === 'dev') {
-    const out = extractRows(XLSX.read(fs.readFileSync(process.env.DEV_SHEET_FILE), { type: 'buffer', cellDates: false }));
-    return res.json({ ...out, fetchedAt: new Date().toISOString() });
-  }
-  const cands = candidateUrls(url);
-  if (!cands.length || !cands.some(hostAllowed)) {
-    return res.status(400).json({ error: 'Podporované jsou veřejné odkazy z Google Sheets / Google Drive a OneDrive / SharePoint (Excel online).' });
-  }
-  const errors = [];
-  for (const cu of cands) {
-    try {
-      const { buf, type } = await fetchFollow(cu);
-      const kind = looksLikeSheet(buf, type);
-      if (!kind) { errors.push('nejde o tabulku'); continue; }
-      const wb = kind === 'csv'
-        ? XLSX.read(buf.toString('utf8'), { type: 'string', raw: true, cellDates: false })
-        : XLSX.read(buf, { type: 'buffer', cellDates: false });
-      const out = extractRows(wb);
-      return res.json({ ...out, fetchedAt: new Date().toISOString() });
-    } catch (e) {
-      errors.push(e.message);
+// záloha všech uložených dat (skóre, poznámky, prodáno)
+app.get('/api/export', (req, res) => {
+  res.setHeader('Content-Disposition', `attachment; filename="rklspedice-zaloha-${new Date().toISOString().slice(0, 10)}.json"`);
+  res.json({ exportedAt: new Date().toISOString(), data: mem });
+});
+// obnova ze zálohy – jen doplní, co chybí (nic nepřepíše)
+app.post('/api/import', async (req, res) => {
+  const data = req.body && req.body.data;
+  if (!data || typeof data !== 'object') return res.status(400).json({ error: 'Neplatný soubor zálohy' });
+  let n = 0;
+  for (const ns of ['sold', 'note', 'sale', 'track']) {
+    for (const [k, v] of Object.entries(data[ns] || {})) {
+      if (!mem[ns][k] && v && typeof v === 'object' && k.length <= 300) { await put(ns, k, v); n++; }
     }
   }
-  res.status(502).json({
-    error: 'Tabulku se nepodařilo stáhnout. Zkontroluj, že je odkaz veřejný („Kdokoli s odkazem“).',
-    detail: [...new Set(errors)].join(' · '),
-  });
+  res.json({ ok: true, imported: n });
 });
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-if (require.main === module) app.listen(PORT, () => console.log('RKL Spedice běží na portu ' + PORT));
-module.exports = { app, extractRows, candidateUrls };
+if (require.main === module) {
+  initStore().then(() => {
+    cleanup();
+    app.listen(PORT, () => console.log('RKL Spedice běží na portu ' + PORT));
+    refreshSheet(true);
+    setInterval(() => refreshSheet(true), BG_REFRESH);
+  }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
+}
+module.exports = { app, sellerOf, evaluateSales, mem };
