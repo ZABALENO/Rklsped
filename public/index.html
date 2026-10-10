@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RKL Spedice – přepravy v prodeji</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23123a6b'/><path d='M6 20h14v-8h4l3 4v4h-2' stroke='white' stroke-width='2.4' fill='none' stroke-linejoin='round'/><circle cx='11' cy='22' r='2.4' fill='white'/><circle cx='23' cy='22' r='2.4' fill='white'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef1f5; --panel:#fff; --ink:#0f1b2d; --muted:#5d6b80; --line:#dbe1ea;
+    --navy:#123a6b; --navy-2:#0c2a4f; --accent:#f2a516; --ok:#16834a; --ok-bg:#e6f4ec;
+    --warn:#b4560c; --today:#fff6e0; --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+  .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+  header{background:var(--navy);color:#fff}
+  .bar{max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.2px}
+  .brand small{display:block;font-weight:400;font-size:12px;opacity:.75;letter-spacing:0}
+  .clock{margin-left:auto;font-size:13px;opacity:.85;text-align:right}
+
+  main{max-width:1280px;margin:0 auto;padding:18px 20px 60px}
+
+  .src{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .src label{font-size:13px;color:var(--muted);font-weight:600}
+  .src input[type=url]{flex:1 1 380px;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:#f8fafc}
+  .src input[type=url]:focus{outline:2px solid #9cc0ee;border-color:#6d9fdc;background:#fff}
+  button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;font-weight:600;font-size:14px}
+  button.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  button.primary:hover{background:var(--navy-2)}
+  button:disabled{opacity:.55;cursor:default}
+  .status{font-size:12.5px;color:var(--muted);width:100%}
+  .status.err{color:#b42318}
+
+  .kpis{display:grid;grid-template-columns:minmax(200px,1fr) minmax(200px,1fr) minmax(280px,2fr);gap:12px;margin:14px 0}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
+  .kpi h3{margin:0 0 4px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .kpi .big{font-size:40px;font-weight:600;line-height:1.05}
+  .kpi.sold{border-left:5px solid var(--ok)}
+  .kpi.sold .big{color:var(--ok)}
+  .kpi .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .week{display:flex;align-items:flex-end;gap:8px;height:64px;margin-top:8px}
+  .week .d{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+  .week .b{width:100%;max-width:34px;background:#c9d6e8;border-radius:4px 4px 0 0;min-height:2px}
+  .week .d.t .b{background:var(--ok)}
+  .week .v{font-size:11.5px;color:var(--ink)}
+  .week .l{font-size:11px;color:var(--muted)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .ph{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .ph h2{margin:0;font-size:16px}
+  .ph .cnt{font-size:13px;color:var(--muted)}
+  .ph .opts{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px;color:var(--muted)}
+  .ph .opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#f5f7fa;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:10px 12px;border-bottom:1px solid #edf0f4;vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#f8fbff}
+  tbody tr.is-today{background:var(--today)}
+  tbody tr.gone{transition:opacity .35s, transform .35s;opacity:0;transform:translateX(30px);background:var(--ok-bg)}
+  th.c-chk,td.c-chk{width:96px}
+  td.c-date{white-space:nowrap;width:130px}
+  td.c-w{text-align:right;white-space:nowrap;width:120px}
+  th.c-w{text-align:right}
+  .chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ok);user-select:none}
+  .chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer;margin:0}
+  .dow{display:block;font-size:12px;color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:1px}
+  .tag.t{background:var(--accent);color:#3a2600}
+  .tag.z{background:#dce9fb;color:var(--navy)}
+  .tag.p{background:#fde3e3;color:#9b1c1c}
+  .route{font-weight:600}
+  .route .arr{color:var(--accent);font-weight:700;margin:0 5px}
+  .ord{display:block;font-size:12px;color:var(--muted);font-weight:400}
+  .goods{color:#2b3a50;word-break:break-word}
+  .empty{padding:40px 20px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--ink)}
+
+  .soldlist{margin-top:14px}
+  .soldlist summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none}
+  .soldlist summary::-webkit-details-marker{display:none}
+  .soldlist summary::before{content:"▸";display:inline-block;width:16px;color:var(--muted)}
+  .soldlist[open] summary::before{content:"▾"}
+  .soldlist ul{list-style:none;margin:0;padding:0 16px 10px}
+  .soldlist li{display:flex;gap:12px;align-items:center;padding:7px 0;border-top:1px solid #edf0f4;font-size:14px}
+  .soldlist li .tm{color:var(--muted);width:44px}
+  .soldlist li .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .soldlist li button{padding:4px 10px;font-size:12.5px}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:11px 14px 11px 18px;border-radius:10px;display:flex;gap:14px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.25);transition:transform .25s;max-width:calc(100% - 32px);z-index:10}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast button{background:transparent;color:var(--accent);border-color:#3b4a61}
+
+  @media (max-width:860px){
+    .kpis{grid-template-columns:1fr 1fr}
+    .kpi.weekk{grid-column:1/-1}
+  }
+  @media (max-width:640px){
+    .bar,main{padding-left:16px;padding-right:16px}
+    .clock{display:none}
+    thead{display:none}
+    table,tbody,tr,td{display:block;width:100%}
+    tbody tr{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+    tbody td{padding:0;border:0;width:auto !important}
+    td.c-chk{grid-row:1/4;align-self:center}
+    td.c-chk .chk span{display:none}
+    td.c-date{grid-column:2}
+    td.c-w{grid-column:3;grid-row:1;text-align:right}
+    td.c-route,td.c-goods{grid-column:2/4}
+    .kpi .big{font-size:32px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#f2a516"/><path d="M6 20h14v-8h4l3 4v4h-2" stroke="#123a6b" stroke-width="2.4" fill="none" stroke-linejoin="round"/><circle cx="11" cy="22" r="2.4" fill="#123a6b"/><circle cx="23" cy="22" r="2.4" fill="#123a6b"/></svg>
+      <div>RKL Spedice<small>Přepravy v prodeji</small></div>
+    </div>
+    <div class="clock" id="clock"></div>
+  </div>
+</header>
+
+<main>
+  <section class="src">
+    <label for="url">Odkaz na tabulku</label>
+    <input type="url" id="url" placeholder="Vlož veřejný odkaz z Google Sheets nebo OneDrive / Excel online" autocomplete="off">
+    <button class="primary" id="load">Načíst</button>
+    <div class="status" id="status">Tabulka se nikam neukládá – načítá se vždy znovu z tvého odkazu (a obnovuje se každých 5 minut).</div>
+  </section>
+
+  <section class="kpis">
+    <div class="kpi sold">
+      <h3>Dnes prodáno</h3>
+      <div class="big num" id="kToday">0</div>
+      <div class="sub" id="kTodaySub">přeprav</div>
+    </div>
+    <div class="kpi">
+      <h3>V nabídce</h3>
+      <div class="big num" id="kOpen">–</div>
+      <div class="sub" id="kOpenSub">načti tabulku</div>
+    </div>
+    <div class="kpi weekk">
+      <h3>Prodáno – posledních 7 dní</h3>
+      <div class="week" id="week"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph">
+      <h2>Přepravy k prodeji</h2>
+      <span class="cnt" id="cnt"></span>
+      <div class="opts">
+        <label><input type="checkbox" id="showPast"> i nakládky v minulosti</label>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty"><b>Zatím žádná data.</b><br>Vlož nahoře veřejný odkaz na tabulku a klikni na Načíst.</div>
+  </section>
+
+  <details class="panel soldlist" id="soldBox">
+    <summary>Dnes prodané přepravy (<span id="soldN">0</span>)</summary>
+    <ul id="soldList"></ul>
+  </details>
+</main>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastUndo">Vrátit</button></div>
+
+<script>
+(() => {
+  const MAX_ROWS = 30;
+  const LS = { url: 'rkl_sheet_url', rec: 'rkl_records', past: 'rkl_show_past' };
+  const $ = id => document.getElementById(id);
+  const ls = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+
+  let rows = [];                       // data z tabulky – jen v paměti
+  let records = ls.get(LS.rec, {});    // stav Prodáno {key:{sold,at,u,label}}
+  let lastFetch = null;
+  let loading = false;
+
+  const pad = n => String(n).padStart(2, '0');
+  const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayIso = () => isoDay(new Date());
+  const DOW = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmtW = w => w == null ? '–' : new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(w) + ' kg';
+  const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
+
+  function setStatus(msg, err) { const s = $('status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+
+  /* ---------- stav prodáno: lokálně + server ---------- */
+  function merge(a, b) {
+    const out = { ...a };
+    for (const [k, r] of Object.entries(b || {})) if (!out[k] || (r.u || '') > (out[k].u || '')) out[k] = r;
+    return out;
+  }
+  async function sync() {
+    try {
+      const r = await fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ records }) });
+      if (!r.ok) throw 0;
+      const s = await r.json();
+      const before = soldSig();
+      records = merge(records, s.records);
+      ls.set(LS.rec, records);
+      if (soldSig() !== before) render();
+    } catch { /* server spí / nedostupný – stav zůstává lokálně a odešle se příště */ }
+  }
+  function setSold(row, sold) {
+    const now = new Date().toISOString();
+    records[row.key] = { sold, at: sold ? now : null, u: now, label: `${fmtDate(row.date)} · ${row.route}` };
+    ls.set(LS.rec, records);
+    sync();
+  }
+  const isSold = k => !!(records[k] && records[k].sold);
+  const soldSig = () => Object.keys(records).filter(isSold).sort().join('\n');
+  let holdUntil = 0, holdTimer = null;   // během animace mizení řádku nepřekreslovat
+
+  /* ---------- načtení tabulky ---------- */
+  async function loadSheet(silent) {
+    const url = $('url').value.trim();
+    if (!url || loading) return;
+    loading = true; $('load').disabled = true;
+    if (!silent) setStatus('Načítám tabulku… (pokud server spal, může to trvat až minutu)');
+    try {
+      const r = await fetch('/api/sheet', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+      const j = await r.json().catch(() => ({ error: 'Server neodpověděl.' }));
+      if (!r.ok) throw new Error(j.error + (j.detail ? ` (${j.detail})` : ''));
+      rows = j.rows; lastFetch = new Date();
+      ls.set(LS.url, url);
+      const miss = Object.entries(j.columns).filter(([k, v]) => ['date', 'route', 'goods', 'weight'].includes(k) && !v).map(([k]) => ({ date: 'Datum nakl.', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost' }[k]));
+      setStatus(`Načteno ${rows.length} řádků z listu „${j.sheet}“ v ${pad(lastFetch.getHours())}:${pad(lastFetch.getMinutes())}.` + (miss.length ? ` Chybí sloupce: ${miss.join(', ')}.` : ''), miss.length > 0);
+      render();
+    } catch (e) {
+      setStatus(e.message || 'Načtení selhalo.', true);
+    } finally { loading = false; $('load').disabled = false; }
+  }
+
+  /* ---------- vykreslení ---------- */
+  function routeHtml(route) {
+    const parts = String(route).split(/\s*\/\/\s*/);
+    return parts.map(esc).join('<span class="arr">→</span>');
+  }
+  function dateHtml(iso, today) {
+    if (!iso) return '<span class="dow">bez data</span>';
+    const d = new Date(iso + 'T12:00:00');
+    const t = new Date(today + 'T12:00:00');
+    const diff = Math.round((d - t) / 864e5);
+    let tag = '';
+    if (diff === 0) tag = '<span class="tag t">DNES</span>';
+    else if (diff === 1) tag = '<span class="tag z">ZÍTRA</span>';
+    else if (diff < 0) tag = '<span class="tag p">PROŠLÉ</span>';
+    return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}.</span>${tag}<span class="dow">${DOW[d.getDay()]} ${d.getFullYear()}</span>`;
+  }
+
+  function render() {
+    const wait = holdUntil - Date.now();
+    if (wait > 0) { clearTimeout(holdTimer); holdTimer = setTimeout(render, wait + 10); return; }
+    const today = todayIso();
+    const showPast = $('showPast').checked;
+    const open = rows.filter(r => !isSold(r.key) && (showPast || !r.date || r.date >= today));
+    open.sort((a, b) => (a.date || '9999') < (b.date || '9999') ? -1 : (a.date || '9999') > (b.date || '9999') ? 1 : 0);
+    const shown = open.slice(0, MAX_ROWS);
+
+    const tb = $('rows');
+    tb.innerHTML = shown.map(r => `
+      <tr data-key="${esc(r.key)}" class="${r.date === today ? 'is-today' : ''}">
+        <td class="c-chk"><label class="chk"><input type="checkbox" aria-label="Prodáno"><span>Prodáno</span></label></td>
+        <td class="c-date">${dateHtml(r.date, today)}</td>
+        <td class="c-route"><span class="route">${routeHtml(r.route)}</span>${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
+        <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
+        <td class="c-w num">${fmtW(r.weight)}</td>
+      </tr>`).join('');
+
+    const empty = $('empty');
+    if (!rows.length) { empty.style.display = ''; }
+    else if (!shown.length) {
+      empty.style.display = '';
+      empty.innerHTML = showPast ? '<b>Vše prodáno.</b> V tabulce nezbývá žádná přeprava k prodeji.'
+        : '<b>Žádné nakládky od dneška dál.</b><br>Zaškrtni „i nakládky v minulosti“, pokud chceš vidět i starší řádky.';
+    } else empty.style.display = 'none';
+
+    $('kOpen').textContent = rows.length ? open.length : '–';
+    $('kOpenSub').textContent = rows.length ? (open.length > MAX_ROWS ? `zobrazeno prvních ${MAX_ROWS}` : 'přeprav čeká na prodej') : 'načti tabulku';
+    $('cnt').textContent = rows.length ? `${shown.length} z ${open.length}` : '';
+
+    // statistika prodejů
+    const soldRecs = Object.entries(records).filter(([, r]) => r.sold && r.at);
+    const byDay = {};
+    for (const [, r] of soldRecs) { const d = isoDay(new Date(r.at)); byDay[d] = (byDay[d] || 0) + 1; }
+    const todayN = byDay[today] || 0;
+    $('kToday').textContent = todayN;
+    $('kTodaySub').textContent = todayN === 1 ? 'přeprava' : (todayN >= 2 && todayN <= 4 ? 'přepravy' : 'přeprav');
+
+    const days = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+    const max = Math.max(1, ...days.map(d => byDay[isoDay(d)] || 0));
+    $('week').innerHTML = days.map(d => {
+      const k = isoDay(d), v = byDay[k] || 0;
+      return `<div class="d ${k === today ? 't' : ''}" title="${d.getDate()}. ${d.getMonth() + 1}.: ${v}"><span class="v num">${v}</span><div class="b" style="height:${Math.round(v / max * 40) + 2}px"></div><span class="l">${k === today ? 'dnes' : DOW[d.getDay()]}</span></div>`;
+    }).join('');
+
+    const todays = soldRecs.filter(([, r]) => isoDay(new Date(r.at)) === today).sort((a, b) => a[1].at < b[1].at ? 1 : -1);
+    $('soldN').textContent = todays.length;
+    $('soldList').innerHTML = todays.length ? todays.map(([k, r]) => {
+      const t = new Date(r.at);
+      return `<li><span class="tm num">${pad(t.getHours())}:${pad(t.getMinutes())}</span><span class="lb" title="${esc(r.label)}">${esc(r.label)}</span><button data-undo="${esc(k)}">Vrátit</button></li>`;
+    }).join('') : '<li><span class="lb" style="color:var(--muted)">Dnes zatím nic.</span></li>';
+  }
+
+  /* ---------- události ---------- */
+  let toastTimer, lastSold = null;
+  function toast(msg, row) {
+    lastSold = row;
+    $('toastMsg').textContent = msg;
+    $('toast').classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $('toast').classList.remove('show'), 6000);
+  }
+  $('toastUndo').onclick = () => {
+    if (lastSold) { setSold(lastSold, false); render(); }
+    $('toast').classList.remove('show');
+  };
+
+  $('rows').addEventListener('change', e => {
+    if (!e.target.matches('input[type=checkbox]')) return;
+    const tr = e.target.closest('tr');
+    const row = rows.find(r => r.key === tr.dataset.key);
+    if (!row) return;
+    holdUntil = Date.now() + 380;
+    setSold(row, true);
+    tr.classList.add('gone');
+    render();
+    toast(`Prodáno: ${row.route}`, row);
+  });
+  $('soldList').addEventListener('click', e => {
+    const k = e.target.dataset && e.target.dataset.undo;
+    if (!k) return;
+    const r = records[k];
+    records[k] = { ...r, sold: false, at: null, u: new Date().toISOString() };
+    ls.set(LS.rec, records); sync(); render();
+  });
+  $('load').onclick = () => loadSheet(false);
+  $('url').addEventListener('keydown', e => { if (e.key === 'Enter') loadSheet(false); });
+  $('showPast').checked = !!ls.get(LS.past, false);
+  $('showPast').onchange = () => { ls.set(LS.past, $('showPast').checked); render(); };
+
+  function tick() {
+    const d = new Date();
+    $('clock').textContent = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // start
+  tick(); setInterval(() => { tick(); render(); }, 60 * 1000);
+  $('url').value = ls.get(LS.url, '');
+  render();
+  sync();
+  if ($('url').value) loadSheet(false);
+  setInterval(sync, 30 * 1000);
+  setInterval(() => loadSheet(true), 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
