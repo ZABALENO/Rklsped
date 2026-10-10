@@ -9,6 +9,7 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.
 - **Leaderboard** (dříve Skóre prodejců) – přepravy s dopravcem obsahujícím „RKL“ se nepočítají
   (ani když se dopravce na RKL změní dodatečně); dispečeři seřazení od nejvíce prodaných.
+  Počítá se i úplně nový řádek, který se v tabulce objeví rovnou s číslem PZ a dopravcem bez „RKL“.
   jakmile u přepravy, která byla dřív bez čísla, přibude ve sloupci **Přeprava** číslo,
   připíše se prodej podle prefixu: `PZ/26J` Jirka, `PZ/26G` Gabka, `PZ/26N` Pavel,
   `PZ/26U` Petr, `PZ/26H` Robin (rok v čísle se ignoruje, velikost písmen nevadí).

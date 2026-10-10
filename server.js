@@ -12,6 +12,7 @@ const { loadSheet, validUrl } = require('./lib/sheet');
 const PORT = process.env.PORT || 3000;
 const HORIZON_WORKDAYS = 7;               // nabídka = nakládka nejpozději dnes + 7 pracovních dní
 const { pragueToday, addWorkdays } = require('./lib/workdays');
+const isRKL = c => /RKL/i.test(c || '');
 const hasPZ = prepr => /PZ\s*\//i.test(prepr || '');  // řádek má číslo přepravy = prodáno
 const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
 const BG_REFRESH = 3 * 60 * 1000;         // obnova tabulky na pozadí
@@ -82,6 +83,15 @@ const labelOf = r => `${fmtDate(r.date)} · ${r.route}`.replace(/^ · /, '');
 
 async function evaluateSales(rows) {
   const now = new Date().toISOString();
+  // Které řádky (objednávky) už jsme v tabulce někdy viděli. Při úplně prvním načtení se jen
+  // zapamatují (historie se do leaderboardu nepočítá). Když přibude víc než 30 % nových řádků
+  // najednou, jde nejspíš o jinou tabulku – i tehdy se jen zapamatují.
+  const seenDoc = mem.cfg.seen;
+  const seen = new Set(seenDoc ? seenDoc.keys : []);
+  const newKeys = rows.filter(r => !seen.has(r.key)).map(r => r.key);
+  const baseline = !seenDoc || newKeys.length > Math.max(100, rows.length * 0.3);
+  if (seenDoc && baseline) console.log(`Nových řádků ${newKeys.length} – bráno jako nová tabulka, do leaderboardu se nepočítají`);
+
   for (const r of rows) {
     // řádek bez čísla přepravy si zapamatujeme – až u něj číslo PZ/ přibude, připíše se prodej
     if (!hasPZ(r.prepr)) { if (!mem.track[r.key]) await put('track', r.key, { t: now, label: labelOf(r) }); continue; }
@@ -89,13 +99,19 @@ async function evaluateSales(rows) {
     if (!s) continue;
     const cur = mem.sale[r.key];
     const known = mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
-    if (!cur && known) {
+    // nový řádek, který už rovnou má číslo PZ a dopravce bez „RKL“ = prodej dispečera podle prefixu PZ
+    const newExternal = !baseline && !seen.has(r.key) && !isRKL(r.carrier);
+    if (!cur && (known || newExternal)) {
       const manual = mem.sold[r.key] && mem.sold[r.key].sold && mem.sold[r.key].at;
-      await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r), carrier: r.carrier });
+      await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r), carrier: r.carrier, via: known ? 'pz' : 'new' });
     } else if (cur && (cur.prepr !== r.prepr || (cur.carrier || '') !== r.carrier)) {
       // změna čísla přepravy nebo dopravce (např. na RKL) se promítne i zpětně
       await put('sale', r.key, { ...cur, prepr: r.prepr, seller: s.name, carrier: r.carrier });
     }
+  }
+  if (newKeys.length || !seenDoc) {
+    for (const k of newKeys) seen.add(k);
+    await put('cfg', 'seen', { keys: [...seen], u: now });
   }
 }
 
