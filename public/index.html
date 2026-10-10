@@ -35,7 +35,10 @@
   .banner{background:#fff4e5;border:1px solid #f5c98a;color:#7a4a00;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:14px}
   .banner.err{background:#fdecec;border-color:#f1b3b3;color:#8a1c1c}
 
-  .kpis{display:grid;grid-template-columns:minmax(200px,1fr) minmax(200px,1fr) minmax(280px,2fr);gap:12px;margin-bottom:14px}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .weekcard{margin-top:14px}
+  .weekcard .week{height:96px;gap:14px}
+  .weekcard .week .b{max-width:56px}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
   .kpi h3,.card h2{margin:0 0 4px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:600}
   .kpi .big{font-size:40px;font-weight:600;line-height:1.05}
@@ -139,8 +142,6 @@
   .toast button{background:transparent;color:var(--accent);border-color:#3b4a61}
 
   @media (max-width:960px){
-    .kpis{grid-template-columns:1fr 1fr}
-    .kpi.weekk{grid-column:1/-1}
     .two{grid-template-columns:1fr}
   }
   @media (max-width:760px){
@@ -185,10 +186,6 @@
       <div class="big num" id="kOpen">–</div>
       <div class="sub" id="kOpenSub">načítám…</div>
     </div>
-    <div class="kpi weekk">
-      <h3>Prodáno – posledních 7 dní</h3>
-      <div class="week" id="week"></div>
-    </div>
   </section>
 
   <section class="panel">
@@ -202,6 +199,11 @@
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
+  </section>
+
+  <section class="card weekcard">
+    <h2>Prodáno – posledních 7 dní</h2>
+    <div class="week" id="week"></div>
   </section>
 
   <section class="two">
@@ -372,7 +374,7 @@
     const max = Math.max(1, ...days.map(d => byDay[isoDay(d)] || 0));
     $('week').innerHTML = days.map(d => {
       const k = isoDay(d), v = byDay[k] || 0;
-      return `<div class="d ${k === today ? 't' : ''}" title="${d.getDate()}. ${d.getMonth() + 1}.: ${v}"><span class="v num">${v}</span><div class="b" style="height:${Math.round(v / max * 40) + 2}px"></div><span class="l">${k === today ? 'dnes' : DOW[d.getDay()]}</span></div>`;
+      return `<div class="d ${k === today ? 't' : ''}" title="${d.getDate()}. ${d.getMonth() + 1}.: ${v}"><span class="v num">${v}</span><div class="b" style="height:${Math.round(v / max * 64) + 2}px"></div><span class="l">${k === today ? 'dnes' : DOW[d.getDay()]}</span></div>`;
     }).join('');
 
     const todays = Object.entries(sm).filter(([, v]) => v.at && isoDay(new Date(v.at)) === today).sort((a, b) => a[1].at < b[1].at ? 1 : -1);
