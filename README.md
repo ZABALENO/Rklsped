@@ -12,6 +12,10 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
   Čas prodeje = zaškrtnutí „Prodáno“, jinak okamžik, kdy se číslo v tabulce poprvé objevilo.
   Přehled za den, měsíc a celé období.
 
+## Přístup
+Stránka je chráněná heslem z proměnné prostředí `APP_PASSWORD` (nastavené na Renderu, v kódu není).
+Přihlášení vydrží v prohlížeči 180 dní, odhlásit jde odkazem „Odhlásit“ dole na stránce.
+
 ## Data
 Tabulka se nikam neukládá. Odkaz (Google Sheets / Drive / OneDrive / SharePoint, „Kdokoli s odkazem“)
 se nastavuje pod ozubeným kolečkem dole na stránce; server tabulku stahuje do paměti (každé 3 min).

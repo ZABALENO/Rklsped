@@ -147,6 +147,7 @@ function board() {
 /* ================= HTTP ================= */
 const app = express();
 app.use(express.json({ limit: '5mb' }));
+require('./lib/auth').setup(app);   // heslo z APP_PASSWORD – bez přihlášení nic nezobrazí
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
 app.get('/api/board', async (req, res) => {
