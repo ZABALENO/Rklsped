@@ -4,23 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RKL Spedice – přepravy v prodeji</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23123a6b'/><path d='M6 20h14v-8h4l3 4v4h-2' stroke='white' stroke-width='2.4' fill='none' stroke-linejoin='round'/><circle cx='11' cy='22' r='2.4' fill='white'/><circle cx='23' cy='22' r='2.4' fill='white'/></svg>">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#eef1f5; --panel:#fff; --ink:#0f1b2d; --muted:#5d6b80; --line:#dbe1ea;
-    --navy:#123a6b; --navy-2:#0c2a4f; --accent:#f2a516; --ok:#16834a; --ok-bg:#e6f4ec;
+    --navy:#1d388f; --navy-2:#152a6e; --accent:#f2a516; --ok:#16834a; --ok-bg:#e6f4ec;
     --today:#fff6e0; --radius:10px;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+  body{background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif;min-height:100vh}
+  /* fotka areálu jako pozadí – rozmazaná a překrytá světlým závojem, aby nerušila čitelnost */
+  body::before{content:"";position:fixed;inset:-24px;background:url(/bg.jpg) center 40%/cover no-repeat;filter:blur(3px) saturate(1.1);z-index:-2}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;
+    background:linear-gradient(180deg,rgba(21,42,110,.45) 0,rgba(238,241,245,.62) 320px,rgba(238,241,245,.74) 700px,rgba(238,241,245,.80) 100%)}
+  .panel,.kpi,.card,.settings{box-shadow:0 1px 2px rgba(15,27,45,.06),0 6px 20px rgba(15,27,45,.07)}
   .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
-  header{background:var(--navy);color:#fff}
+  header{background:rgba(29,56,143,.86);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
   .bar{max-width:1320px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.2px}
+  .brand .logo{width:40px;height:40px;border-radius:8px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
   .brand small{display:block;font-weight:400;font-size:12px;opacity:.75;letter-spacing:0}
   .clock{margin-left:auto;font-size:13px;opacity:.85;text-align:right}
 
@@ -114,7 +121,7 @@
   button:disabled{opacity:.55;cursor:default}
 
   footer{max-width:1320px;margin:0 auto;padding:0 20px 40px}
-  .gear{border:0;background:transparent;padding:6px;opacity:.35;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px}
+  .gear{border:0;background:rgba(255,255,255,.75);border-radius:8px;padding:6px 8px;opacity:.75;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px}
   .gear:hover,.gear[aria-expanded=true]{opacity:.9}
   .settings{display:none;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
   .settings.open{display:block}
@@ -157,7 +164,7 @@
 <header>
   <div class="bar">
     <div class="brand">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#f2a516"/><path d="M6 20h14v-8h4l3 4v4h-2" stroke="#123a6b" stroke-width="2.4" fill="none" stroke-linejoin="round"/><circle cx="11" cy="22" r="2.4" fill="#123a6b"/><circle cx="23" cy="22" r="2.4" fill="#123a6b"/></svg>
+      <img class="logo" src="/logo.jpg" alt="RKL" width="40" height="40">
       <div>RKL Spedice<small>Přepravy v prodeji</small></div>
     </div>
     <div class="clock" id="clock"></div>
