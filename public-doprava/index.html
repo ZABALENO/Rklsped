@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RKL Doprava – dnes</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0f1b2d;--muted:#5d6b80;--line:#dbe1ea;--navy:#1d388f;--navy-2:#152a6e;--accent:#f2a516;--ok:#16834a;--radius:10px}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#eef1f5;color:var(--ink);font:14px/1.4 "IBM Plex Sans",system-ui,sans-serif;min-height:100vh}
+  body::before{content:"";position:fixed;inset:-24px;background:url(/bg.jpg) center 40%/cover no-repeat;filter:blur(3px) saturate(1.1);z-index:-2}
+  body::after{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(21,42,110,.45) 0,rgba(238,241,245,.62) 260px,rgba(238,241,245,.76) 640px,rgba(238,241,245,.82) 100%)}
+  .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+  header{background:rgba(29,56,143,.88);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .bar{max-width:1400px;margin:0 auto;padding:7px 20px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;line-height:1.15}
+  .brand img{width:34px;height:34px;border-radius:7px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+  .brand small{display:block;font-weight:400;font-size:12px;opacity:.8}
+  .clock{font-size:12.5px;opacity:.9;text-align:right;white-space:nowrap}
+
+  main{max-width:1400px;margin:0 auto;padding:8px 20px 16px}
+  .strip{display:flex;gap:6px;flex:1;min-width:0;justify-content:center;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.13);border-radius:7px;padding:3px 10px;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+  .chip b{font-size:15px;color:#fff}
+  .chip span{font-size:11.5px;color:rgba(255,255,255,.78)}
+  .chip.sum b{color:#a8f0c0}
+  .banner{background:#fff4e5;border:1px solid #f5c98a;color:#7a4a00;border-radius:8px;padding:7px 12px;margin-bottom:8px;font-size:13.5px}
+  .banner.err{background:#fdecec;border-color:#f1b3b3;color:#8a1c1c}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(15,27,45,.06),0 6px 20px rgba(15,27,45,.07)}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  thead th{background:#f5f7fa;text-align:left;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:2px 10px;border-bottom:1px solid #edf0f4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr{cursor:pointer}
+  tbody tr:nth-child(even){background:#fafbfd}
+  tbody tr:hover{background:#f1f6ff}
+  tbody tr.open td.c-route{white-space:normal}
+  .c-spz{width:120px}
+  .c-pz{width:128px}
+  .c-n{width:52px;text-align:center}
+  .c-day{width:156px}
+  .c-inc{width:140px;text-align:right}
+  th.c-inc{text-align:right} th.c-n{text-align:center}
+  .spz{display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;border:1.5px solid #20262f;border-radius:4px;padding:0 6px;background:#fff;line-height:18px;letter-spacing:.3px;box-shadow:inset 6px 0 0 #1d4fb5}
+  .spz.none{border-style:dashed;border-color:#b9c2cf;color:#9aa6b6;box-shadow:none;font-weight:500}
+  .pz{color:var(--muted);font-size:13px}
+  .route .p{font-weight:600}
+  .route .cc{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:2px;vertical-align:1px}
+  .route .a{color:var(--accent);font-weight:700;margin:0 5px}
+  .route .home{color:var(--muted);font-weight:500}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;margin-right:4px}
+  .tag.l{background:#dcefe3;color:#11663a}
+  .tag.u{background:#dce9fb;color:var(--navy)}
+  .inc{font-weight:600}
+  .empty{padding:36px 20px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--ink)}
+
+  footer{max-width:1400px;margin:0 auto;padding:0 20px 30px;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .gear{border:0;background:rgba(255,255,255,.75);border-radius:8px;padding:6px 8px;opacity:.75;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font:500 12px "IBM Plex Sans",sans-serif;cursor:pointer;text-decoration:none}
+  .gear:hover,.gear[aria-expanded=true]{opacity:1}
+  .settings{display:none;flex-basis:100%;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .settings.open{display:block}
+  .settings .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .settings label{font-size:13px;color:var(--muted);font-weight:600}
+  .settings input[type=url]{flex:1 1 380px;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#f8fafc}
+  .settings button{font:inherit;font-weight:600;cursor:pointer;border-radius:8px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:8px 13px}
+  .settings .status{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .settings .status.err{color:#b42318}
+  .spacer{flex:1}
+
+  @media (max-width:1100px){ .chip.upd,.chip.rate{display:none} }
+  @media (max-width:760px){
+    .bar,main,footer{padding-left:16px;padding-right:16px}
+    .bar{flex-wrap:wrap;row-gap:5px;padding-top:6px;padding-bottom:6px}
+    .clock{margin-left:auto;font-size:12px}
+    .strip{order:3;flex-basis:100%;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+    .chip{flex:none;padding:2px 8px}
+    .chip b{font-size:13.5px}
+    .chip.lu{display:none}
+    main{padding-top:6px}
+    body{font-size:13px}
+    .c-pz,.c-n,.c-day{display:none}
+    .c-spz{width:88px}
+    .c-inc{width:66px}
+    tbody td{padding:3px 8px}
+    thead th{padding:4px 8px}
+    .spz{font-size:12px;padding:0 4px;line-height:18px}
+    .c-inc .kc{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><img src="/logo.jpg" alt="RKL"><div>RKL Doprava<small>Vlastní doprava – dnes</small></div></div>
+    <div class="strip">
+      <div class="chip"><b class="num" id="sTrips">–</b><span>přeprav dnes</span></div>
+      <div class="chip lu"><b class="num" id="sLoads">–</b><span>nakládek</span><b class="num" id="sUnl">–</b><span>vykládek</span></div>
+      <div class="chip sum"><b class="num" id="sSum">–</b><span>příjem celkem</span></div>
+      <div class="chip rate"><span>kurz</span><b class="num" id="sRate">–</b><span id="sRateSrc"></span></div>
+      <div class="chip upd"><span id="sUpd">načítám…</span></div>
+    </div>
+    <div class="clock" id="clock"></div>
+  </div>
+</header>
+
+<main>
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="panel">
+    <table>
+      <thead><tr><th class="c-spz">SPZ</th><th class="c-pz">Přeprava</th><th class="c-route">Trasa (od Opavy)</th><th class="c-n" title="Počet zásilek">Zás.</th><th class="c-day">Dnes</th><th class="c-inc">Příjem</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty"><b>Načítám…</b></div>
+  </section>
+</main>
+
+<footer>
+  <button class="gear" id="gear" aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+  <span class="spacer"></span>
+  <a class="gear" href="/logout">Odhlásit</a>
+  <div class="settings" id="settings">
+    <div class="row">
+      <label for="url">Odkaz na tabulku</label>
+      <input type="url" id="url" placeholder="Veřejný odkaz z Google Sheets nebo OneDrive / Excel online" autocomplete="off">
+      <button id="save">Uložit a načíst</button>
+    </div>
+    <div class="status" id="status">Tabulka se nikam neukládá – server ji vždy jen stáhne z odkazu (obnova každé 3 minuty). Zobrazují se přepravy s dopravcem „RKL“, které mají dnes nakládku nebo vykládku.</div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nf = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
+  const nf2 = new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}.`; };
+  const COLNAMES = { spz: 'SPZ', prepr: 'Přeprava', carrier: 'Dopravce', date: 'Datum nakl.od', unlTo: 'Datum vykl.do', incCzk: 'Příjem CZK', incEur: 'Příjem EUR' };
+  let D = null;
+
+  async function api(path, body) {
+    const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+    if (r.status === 401) { location.href = '/login'; throw new Error('Nepřihlášen'); }
+    const j = await r.json().catch(() => ({ error: 'Server neodpověděl.' }));
+    if (!r.ok) throw new Error(j.error || 'Chyba serveru');
+    return j;
+  }
+  function banner(msg, err) { const b = $('banner'); b.hidden = !msg; b.textContent = msg || ''; b.classList.toggle('err', !!err); }
+
+  function routeHtml(route) {
+    const parts = route.map(p => `<span class="p" title="${p.km != null ? p.km + ' km od Opavy' : 'poloha neznámá'}">${esc(p.name)}</span>${p.cc && p.cc !== 'CZ' ? `<span class="cc">${esc(p.cc)}</span>` : ''}`);
+    return parts.join('<span class="a">→</span>');
+  }
+
+  function render() {
+    if (!D) return;
+    if (!D.configured) banner('Zatím není nastavený odkaz na tabulku – klikni na ozubené kolečko dole.');
+    else if (D.error) banner('Tabulku se nepodařilo načíst: ' + D.error + (D.fetchedAt ? ' Zobrazuji poslední načtená data.' : ''), true);
+    else if (D.missing && D.missing.length) banner('V tabulce chybí sloupce: ' + D.missing.map(k => COLNAMES[k] || k).join(', ') + (D.missing.includes('spz') ? ' – přidej do tabulky sloupec „SPZ“.' : ''), D.missing.some(k => k !== 'spz'));
+    else banner('');
+
+    const t = D.trips;
+    $('sTrips').textContent = D.fetchedAt ? t.length : '–';
+    $('sLoads').textContent = t.reduce((a, x) => a + x.loadsToday, 0);
+    $('sUnl').textContent = t.reduce((a, x) => a + x.unloadsToday, 0);
+    $('sSum').textContent = nf.format(t.reduce((a, x) => a + x.total, 0)) + ' Kč';
+    $('sRate').textContent = nf2.format(D.rate.value) + ' Kč/€';
+    $('sRateSrc').textContent = D.rate.src === 'ČNB' ? 'ČNB ' + (D.rate.date || '') : D.rate.src;
+    $('sUpd').textContent = D.fetchedAt ? 'aktualizováno ' + new Date(D.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '';
+
+    const open = new Set([...$('rows').querySelectorAll('tr.open')].map(tr => tr.dataset.key));
+    $('rows').innerHTML = t.map(x => {
+      const tags = (x.loadsToday ? `<span class="tag l" title="Nakládek dnes">↑ ${x.loadsToday} nakl.</span>` : '') + (x.unloadsToday ? `<span class="tag u" title="Vykládek dnes">↓ ${x.unloadsToday} vykl.</span>` : '');
+      const breakdown = `CZK ${nf.format(x.czk)} + EUR ${nf2.format(x.eur)} × ${nf2.format(D.rate.value)}`;
+      return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}">
+        <td class="c-spz">${x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>'}</td>
+        <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
+        <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}">${routeHtml(x.route)}</td>
+        <td class="c-n num">${x.orders}</td>
+        <td class="c-day">${tags}</td>
+        <td class="c-inc" title="${breakdown}"><span class="inc num">${nf.format(x.total)}</span><span class="kc"> Kč</span></td>
+      </tr>`;
+    }).join('');
+    const empty = $('empty');
+    if (!D.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
+    else if (!t.length) { empty.style.display = ''; empty.innerHTML = D.fetchedAt ? '<b>Dnes žádná přeprava RKL.</b><br>V tabulce není přeprava s dopravcem RKL, která by měla dnes nakládku nebo vykládku.' : '<b>Načítám tabulku…</b>'; }
+    else empty.style.display = 'none';
+  }
+
+  async function poll(force) {
+    try { D = await api('/api/trips' + (force ? '?force=1' : '')); render(); }
+    catch (e) { if (!D) banner('Server se probouzí nebo není dostupný… zkusím to znovu.'); }
+  }
+
+  $('rows').addEventListener('click', e => { const tr = e.target.closest('tr'); if (tr) tr.classList.toggle('open'); });
+  $('gear').onclick = () => {
+    const o = $('settings').classList.toggle('open');
+    $('gear').setAttribute('aria-expanded', o);
+    if (o) { $('url').value = D ? D.url : ''; $('settings').scrollIntoView({ behavior: 'smooth', block: 'end' }); }
+  };
+  function status(msg, err) { const s = $('status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+  $('save').onclick = async () => {
+    $('save').disabled = true; status('Ukládám a načítám tabulku… (pokud server spal, může to trvat až minutu)');
+    try {
+      const r = await api('/api/config', { url: $('url').value.trim() });
+      status(r.error ? 'Odkaz je uložený, ale tabulku se nepodařilo načíst: ' + r.error : `Uloženo. Načteno ${r.totalRows} řádků z listu „${r.sheetName}“.`, !!r.error);
+      await poll(false);
+    } catch (e) { status(e.message, true); }
+    $('save').disabled = false;
+  };
+  $('url').addEventListener('keydown', e => { if (e.key === 'Enter') $('save').click(); });
+
+  function tick() { const d = new Date(); $('clock').textContent = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  tick(); setInterval(tick, 30000);
+  poll(false); setInterval(() => poll(false), 60000);
+})();
+</script>
+</body>
+</html>

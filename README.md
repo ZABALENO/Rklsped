@@ -30,3 +30,20 @@ bez něj do dočasného souboru. Zálohu lze stáhnout/obnovit v nastavení (`/a
 npm install
 npm start   # http://localhost:3000
 ```
+
+---
+
+# RKL Doprava (rkldoprava.onrender.com)
+
+Druhá stránka ze stejného repozitáře – start `node doprava.js`. Stejné heslo, pozadí a databáze
+(Neon, vlastní tabulka `kv_doprava`), odkaz na tabulku se nastavuje zvlášť pod ozubeným kolečkem.
+
+- Zobrazuje přepravy s dopravcem obsahujícím „RKL“, které mají **dnes** nakládku
+  (Datum nakl.od–do) nebo vykládku (Datum vykl.od–do).
+- Jeden řádek = jedno číslo přepravy (PZ/…): **SPZ** (sloupec „SPZ“), **trasa** všech zásilek
+  seřazená od místa nejbližšího Opavě po nejvzdálenější a **příjem** = Příjem CZK + Příjem EUR × kurz ČNB.
+- Kompaktní řádky – na obrazovku se vejde 20+ SPZ.
+
+Polohy míst podle PSČ / názvu: data © [GeoNames](https://www.geonames.org/) (CC BY 4.0,
+převod [zauberware/postal-codes-json-xml-csv](https://github.com/zauberware/postal-codes-json-xml-csv)),
+chybějící místa se dohledají přes OpenStreetMap Nominatim a uloží do databáze.
