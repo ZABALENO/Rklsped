@@ -10,7 +10,9 @@ const path = require('path');
 const { loadSheet, validUrl } = require('./lib/sheet');
 
 const PORT = process.env.PORT || 3000;
-const OFFER_MARK = '@@@';                 // ve sloupci „CODE nakl.“ = přeprava je v prodeji
+const HORIZON_WORKDAYS = 7;               // nabídka = nakládka nejpozději dnes + 7 pracovních dní
+const { pragueToday, addWorkdays } = require('./lib/workdays');
+const hasPZ = prepr => /PZ\s*\//i.test(prepr || '');  // řádek má číslo přepravy = prodáno
 const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
 const BG_REFRESH = 3 * 60 * 1000;         // obnova tabulky na pozadí
 const SELLERS = { J: 'Jirka', G: 'Gabka', N: 'Pavel', U: 'Petr', H: 'Robin' };
@@ -81,13 +83,12 @@ const labelOf = r => `${fmtDate(r.date)} · ${r.route}`.replace(/^ · /, '');
 async function evaluateSales(rows) {
   const now = new Date().toISOString();
   for (const r of rows) {
-    const offered = r.code.includes(OFFER_MARK);
-    if (offered && !r.prepr && !mem.track[r.key]) await put('track', r.key, { t: now, label: labelOf(r) });
-    if (!r.prepr) continue;
+    // řádek bez čísla přepravy si zapamatujeme – až u něj číslo PZ/ přibude, připíše se prodej
+    if (!hasPZ(r.prepr)) { if (!mem.track[r.key]) await put('track', r.key, { t: now, label: labelOf(r) }); continue; }
     const s = sellerOf(r.prepr);
     if (!s) continue;
     const cur = mem.sale[r.key];
-    const known = offered || mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
+    const known = mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
     if (!cur && known) {
       const manual = mem.sold[r.key] && mem.sold[r.key].sold && mem.sold[r.key].at;
       await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r) });
@@ -124,18 +125,20 @@ function cleanup() {
 }
 
 function board() {
+  const today = pragueToday();
+  const until = addWorkdays(today, HORIZON_WORKDAYS);
   const offered = sheet.rows
-    .filter(r => r.code.includes(OFFER_MARK) && !r.prepr && !(mem.sold[r.key] && mem.sold[r.key].sold))
+    .filter(r => !hasPZ(r.prepr) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
     .map(({ key, order, date, route, goods, weight }) => ({ key, order, date, route, goods, weight }))
     .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
   const weekAgo = new Date(Date.now() - 9 * 864e5).toISOString();
   const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') > weekAgo));
-  const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'code', 'prepr'].filter(k => !sheet.columns[k]) : [];
+  const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr'].filter(k => !sheet.columns[k]) : [];
   return {
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
-    offered,
+    offered, until,
     sold,
     sales: Object.entries(mem.sale).map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label]),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),

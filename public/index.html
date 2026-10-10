@@ -234,7 +234,7 @@
       <input type="url" id="url" placeholder="Veřejný odkaz z Google Sheets nebo OneDrive / Excel online" autocomplete="off">
       <button class="primary" id="save">Uložit a načíst</button>
     </div>
-    <div class="status" id="status">Tabulka se nikam neukládá – server ji vždy jen stáhne z odkazu (obnova každé 3 minuty). Zobrazují se řádky s „@@@“ ve sloupci CODE nakl.</div>
+    <div class="status" id="status">Tabulka se nikam neukládá – server ji vždy jen stáhne z odkazu (obnova každé 3 minuty). Zobrazují se řádky bez čísla přepravy „PZ/“ s nakládkou nejpozději do dneška + 7 pracovních dní.</div>
     <div class="tools">
       <span id="storage"></span>
       <a href="/api/export" download>Stáhnout zálohu skóre a poznámek</a>
@@ -347,12 +347,12 @@
     else if (B.error) showBanner('Tabulku se nepodařilo načíst: ' + B.error + (B.fetchedAt ? ' Zobrazuji poslední načtená data.' : ''), true);
     else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', code: 'CODE nakl.', prepr: 'Přeprava' }[k])).join(', '), true);
     else showBanner('');
-    $('upd').textContent = B.fetchedAt ? 'aktualizováno ' + hhmm(new Date(B.fetchedAt)) : '';
+    $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (B.fetchedAt ? 'aktualizováno ' + hhmm(new Date(B.fetchedAt)) : '');
 
     const shown = renderRows(today);
     const empty = $('empty');
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
-    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná neprodaná přeprava s „@@@“ ve sloupci CODE nakl.' : '<b>Načítám tabulku…</b>'; }
+    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
 
     const open = B.offered.length;

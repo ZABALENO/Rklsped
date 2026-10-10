@@ -2,11 +2,12 @@
 
 Dashboard pro speditéry na https://rklspedice.onrender.com
 
-- Zobrazuje až 30 přeprav z tabulky, které mají ve sloupci **CODE nakl.** znak `@@@`
-  a ještě nemají číslo přepravy (datum nakládky, trasa, popis zboží, hmotnost, poznámka).
+- Zobrazuje až 30 přeprav z tabulky, které ve sloupci **Přeprava** nemají číslo `PZ/` a mají
+  datum nakládky nejpozději dnes + 7 pracovních dní (bez víkendů a českých svátků); řádky bez data
+  jsou na konci. Sloupce: datum nakládky, trasa, popis zboží, hmotnost, poznámka.
 - **Prodáno** – zaškrtnutím řádek zmizí a započítá se do dnešních prodejů.
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.
-- **Skóre prodejců** – jakmile u nabízené přepravy přibude ve sloupci **Přeprava** číslo,
+- **Skóre prodejců** – jakmile u přepravy, která byla dřív bez čísla, přibude ve sloupci **Přeprava** číslo,
   připíše se prodej podle prefixu: `PZ/26J` Jirka, `PZ/26G` Gabka, `PZ/26N` Pavel,
   `PZ/26U` Petr, `PZ/26H` Robin (rok v čísle se ignoruje, velikost písmen nevadí).
   Čas prodeje = zaškrtnutí „Prodáno“, jinak okamžik, kdy se číslo v tabulce poprvé objevilo.
