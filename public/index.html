@@ -100,8 +100,9 @@
   .scoretools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
   .scoretools input,.scoretools select{font:inherit;font-size:13.5px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
   .score{list-style:none;margin:0;padding:0}
-  .score li{display:grid;grid-template-columns:90px 1fr 44px;gap:10px;align-items:center;padding:6px 0}
+  .score li{display:grid;grid-template-columns:112px 1fr 44px;gap:10px;align-items:center;padding:6px 0}
   .score .nm{font-weight:600}
+  .score .rk{display:inline-block;width:22px;color:var(--muted);font-weight:500}
   .score .tr{background:#eef2f7;border-radius:5px;height:14px;overflow:hidden}
   .score .fl{height:100%;background:var(--navy);border-radius:5px}
   .score li.lead .fl{background:var(--accent)}
@@ -208,7 +209,7 @@
 
   <section class="two">
     <div class="card">
-      <h2>Skóre prodejců</h2>
+      <h2>Leaderboard</h2>
       <div class="scoretools">
         <div class="seg" id="seg">
           <button data-p="day" class="on">Den</button><button data-p="month">Měsíc</button><button data-p="all">Celé období</button>
@@ -289,10 +290,11 @@
   }
 
   /* ---------- odvozená data ---------- */
+  const isRKL = c => /RKL/i.test(c || '');   // vlastní doprava RKL se do leaderboardu nepočítá
   function soldMap() {   // key -> {at, seller, label}
     const out = {};
     for (const [k, v] of Object.entries(B.sold)) out[k] = { at: v.at, label: v.label, seller: null };
-    for (const [k, at, seller, prepr, label] of B.sales) out[k] = { at, seller, prepr, label: (out[k] && out[k].label) || label };
+    for (const [k, at, seller, prepr, label, carrier] of B.sales) out[k] = { at, seller, prepr, carrier, label: (out[k] && out[k].label) || label };
     return out;
   }
 
@@ -347,7 +349,7 @@
     // stav zdroje
     if (!B.configured) showBanner('Zatím není nastavený odkaz na tabulku – klikni na ozubené kolečko úplně dole na stránce.', false);
     else if (B.error) showBanner('Tabulku se nepodařilo načíst: ' + B.error + (B.fetchedAt ? ' Zobrazuji poslední načtená data.' : ''), true);
-    else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', code: 'CODE nakl.', prepr: 'Přeprava' }[k])).join(', '), true);
+    else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', prepr: 'Přeprava', carrier: 'Dopravce' }[k])).join(', '), true);
     else showBanner('');
     $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (B.fetchedAt ? 'aktualizováno ' + hhmm(new Date(B.fetchedAt)) : '');
 
@@ -382,7 +384,10 @@
     $('soldList').innerHTML = todays.length ? todays.map(([k, v]) => {
       const manual = B.sold[k] && !v.seller;
       return `<li><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
-        (v.seller ? `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>` : `<span class="who none">čeká na č. přepravy</span>`) +
+        (v.seller ? (isRKL(v.carrier)
+            ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
+            : `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>`)
+          : `<span class="who none">čeká na č. přepravy</span>`) +
         (manual ? `<button data-undo="${esc(k)}">Vrátit</button>` : '') + `</li>`;
     }).join('') : '<li><span class="lb" style="color:var(--muted)">Dnes zatím nic.</span></li>';
 
@@ -408,13 +413,14 @@
       return period === 'all' || (period === 'day' ? isoDay(d) === day : isoMonth(d) === $('pMonth').value);
     };
     const cnt = Object.fromEntries(B.sellers.map(s => [s, 0]));
-    for (const [, at, seller] of B.sales) if (seller && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1;
-    const list = Object.entries(cnt);
+    for (const [, at, seller, , , carrier] of B.sales) if (seller && !isRKL(carrier) && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1;
+    // seřadit od nejvíce prodaných; při shodě v pevném pořadí jmen
+    const list = Object.entries(cnt).sort((a, b) => b[1] - a[1] || B.sellers.indexOf(a[0]) - B.sellers.indexOf(b[0]));
     const max = Math.max(1, ...list.map(x => x[1]));
     const top = Math.max(...list.map(x => x[1]));
     const total = list.reduce((a, x) => a + x[1], 0);
-    $('score').innerHTML = list.map(([n, c]) =>
-      `<li class="${c && c === top ? 'lead' : ''}"><span class="nm">${esc(n)}</span><span class="tr"><span class="fl" style="display:block;width:${c / max * 100}%"></span></span><span class="ct num">${c}</span></li>`
+    $('score').innerHTML = list.map(([n, c], i) =>
+      `<li class="${c && c === top ? 'lead' : ''}"><span class="nm"><span class="rk">${i + 1}.</span>${esc(n)}</span><span class="tr"><span class="fl" style="display:block;width:${c / max * 100}%"></span></span><span class="ct num">${c}</span></li>`
     ).join('') + `<li class="tot"><span class="nm">Celkem</span><span></span><span class="ct num">${total}</span></li>`;
   }
   $('seg').addEventListener('click', e => { const p = e.target.dataset.p; if (!p) return; period = p; lsSet('rkl_period', p); renderScore(); });

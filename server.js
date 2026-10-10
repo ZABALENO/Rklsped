@@ -91,9 +91,10 @@ async function evaluateSales(rows) {
     const known = mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
     if (!cur && known) {
       const manual = mem.sold[r.key] && mem.sold[r.key].sold && mem.sold[r.key].at;
-      await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r) });
-    } else if (cur && cur.prepr !== r.prepr) {
-      await put('sale', r.key, { ...cur, prepr: r.prepr, seller: s.name });
+      await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r), carrier: r.carrier });
+    } else if (cur && (cur.prepr !== r.prepr || (cur.carrier || '') !== r.carrier)) {
+      // změna čísla přepravy nebo dopravce (např. na RKL) se promítne i zpětně
+      await put('sale', r.key, { ...cur, prepr: r.prepr, seller: s.name, carrier: r.carrier });
     }
   }
 }
@@ -133,14 +134,14 @@ function board() {
     .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
   const weekAgo = new Date(Date.now() - 9 * 864e5).toISOString();
   const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') > weekAgo));
-  const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr'].filter(k => !sheet.columns[k]) : [];
+  const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
     offered, until,
     sold,
-    sales: Object.entries(mem.sale).map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label]),
+    sales: Object.entries(mem.sale).map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',

@@ -7,7 +7,9 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
   jsou na konci. Sloupce: datum nakládky, trasa, popis zboží, hmotnost, poznámka.
 - **Prodáno** – zaškrtnutím řádek zmizí a započítá se do dnešních prodejů.
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.
-- **Skóre prodejců** – jakmile u přepravy, která byla dřív bez čísla, přibude ve sloupci **Přeprava** číslo,
+- **Leaderboard** (dříve Skóre prodejců) – přepravy s dopravcem obsahujícím „RKL“ se nepočítají
+  (ani když se dopravce na RKL změní dodatečně); dispečeři seřazení od nejvíce prodaných.
+  jakmile u přepravy, která byla dřív bez čísla, přibude ve sloupci **Přeprava** číslo,
   připíše se prodej podle prefixu: `PZ/26J` Jirka, `PZ/26G` Gabka, `PZ/26N` Pavel,
   `PZ/26U` Petr, `PZ/26H` Robin (rok v čísle se ignoruje, velikost písmen nevadí).
   Čas prodeje = zaškrtnutí „Prodáno“, jinak okamžik, kdy se číslo v tabulce poprvé objevilo.
