@@ -83,6 +83,7 @@ const labelOf = r => `${fmtDate(r.date)} · ${r.route}`.replace(/^ · /, '');
 
 async function evaluateSales(rows) {
   const now = new Date().toISOString();
+  const today = pragueToday();
   // Které řádky (objednávky) už jsme v tabulce někdy viděli. Při úplně prvním načtení se jen
   // zapamatují (historie se do leaderboardu nepočítá). Když přibude víc než 30 % nových řádků
   // najednou, jde nejspíš o jinou tabulku – i tehdy se jen zapamatují.
@@ -99,8 +100,9 @@ async function evaluateSales(rows) {
     if (!s) continue;
     const cur = mem.sale[r.key];
     const known = mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
-    // nový řádek, který už rovnou má číslo PZ a dopravce bez „RKL“ = prodej dispečera podle prefixu PZ
-    const newExternal = !baseline && !seen.has(r.key) && !isRKL(r.carrier);
+    // nový řádek, který už rovnou má číslo PZ, dopravce bez „RKL“ a nakládku dnes nebo později
+    // = prodej dispečera podle prefixu PZ
+    const newExternal = !baseline && !seen.has(r.key) && !isRKL(r.carrier) && !!r.date && r.date >= today;
     if (!cur && (known || newExternal)) {
       const manual = mem.sold[r.key] && mem.sold[r.key].sold && mem.sold[r.key].at;
       await put('sale', r.key, { at: manual || now, prepr: r.prepr, seller: s.name, label: labelOf(r), carrier: r.carrier, via: known ? 'pz' : 'new' });
