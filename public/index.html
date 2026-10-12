@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="cs">
+<html lang="cs" data-tv-base="1400">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RKL Spedice – přepravy v prodeji</title>
 <link rel="icon" type="image/png" href="/favicon.png">
+<script src="/tv.js"></script>
 <link rel="apple-touch-icon" href="/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,13 +26,19 @@
   .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
   header{background:rgba(29,56,143,.86);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-  .bar{max-width:1320px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.2px}
-  .brand .logo{width:40px;height:40px;border-radius:8px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
-  .brand small{display:block;font-weight:400;font-size:12px;opacity:.75;letter-spacing:0}
-  .clock{margin-left:auto;font-size:13px;opacity:.85;text-align:right}
+  .bar{max-width:1320px;margin:0 auto;padding:6px 20px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:.2px;line-height:1.15;flex:none}
+  .brand .logo{width:32px;height:32px;border-radius:8px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+  .brand small{display:block;font-weight:400;font-size:11.5px;opacity:.75;letter-spacing:0}
+  .strip{display:flex;gap:8px;flex:1;min-width:0;justify-content:center;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.13);border-radius:8px;padding:3px 12px;display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+  .chip span{font-size:12px;color:rgba(255,255,255,.8)}
+  .chip b{font-size:18px;color:#fff;font-weight:600}
+  .chip.sold b{color:#a8f0c0}
+  .chip.prov b{color:#ffd77a}
+  .clock{font-size:12.5px;opacity:.85;text-align:right;white-space:nowrap;flex:none}
 
-  main{max-width:1320px;margin:0 auto;padding:18px 20px 30px}
+  main{max-width:1320px;margin:0 auto;padding:12px 20px 30px}
   .banner{background:#fff4e5;border:1px solid #f5c98a;color:#7a4a00;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:14px}
   .banner.err{background:#fdecec;border-color:#f1b3b3;color:#8a1c1c}
 
@@ -57,6 +64,19 @@
   .ph h2{margin:0;font-size:16px}
   .ph .cnt{font-size:13px;color:var(--muted)}
   .ph .upd{margin-left:auto;font-size:12.5px;color:var(--muted)}
+  .ph{align-items:center}
+  .markbtn{padding:5px 12px;font-size:13px;border-radius:20px;display:inline-flex;gap:7px;align-items:center}
+  .markbtn .n{font-family:"IBM Plex Mono",monospace;font-size:12px;background:#eef2f7;border-radius:10px;padding:0 7px}
+  .markbtn[aria-pressed=true]{background:var(--accent);border-color:#d68f00;color:#3a2600}
+  .markbtn[aria-pressed=true] .n{background:rgba(255,255,255,.55)}
+  .mk{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;background:#fff1cc;color:#7a5200;vertical-align:1px}
+  .pin{border:0;background:transparent;padding:3px;margin-left:4px;color:#b6c0cd;cursor:pointer;border-radius:6px;vertical-align:middle;line-height:0}
+  .pin:hover{color:#c62828;background:#fdecec}
+  tbody tr.pinned{background:#ffdcdc !important;box-shadow:inset 5px 0 0 #d32f2f}
+  tbody tr.pinned .pin{color:#fff;background:#d32f2f}
+  tbody tr.pinned .pin svg{fill:#fff}
+  tbody tr.pinned .route,tbody tr.pinned .goods{color:#7f1010}
+  .urg{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:1px 6px;border-radius:5px;background:#d32f2f;color:#fff;margin-left:6px;vertical-align:1px}
 
   table{width:100%;border-collapse:collapse}
   thead th{background:#f5f7fa;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -65,7 +85,7 @@
   tbody tr:hover{background:#f8fbff}
   tbody tr.is-today{background:var(--today)}
   tbody tr.gone{transition:opacity .35s, transform .35s;opacity:0;transform:translateX(30px);background:var(--ok-bg)}
-  th.c-chk,td.c-chk{width:96px}
+  th.c-chk,td.c-chk{width:128px;white-space:nowrap}
   td.c-date{white-space:nowrap;width:120px}
   td.c-w{text-align:right;white-space:nowrap;width:110px}
   th.c-w{text-align:right}
@@ -117,6 +137,8 @@
   .soldlist .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .soldlist .who{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8eef7;color:var(--navy)}
   .soldlist .who.none{background:#f1f3f6;color:var(--muted);font-weight:500}
+  .soldlist .pv{flex:none;font-size:12.5px;color:var(--ok);font-weight:600}
+  .soldlist .pv.neg{color:#b42318}
   .soldlist button{padding:3px 9px;font-size:12px}
 
   button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 13px;font-weight:600;font-size:14px}
@@ -137,6 +159,11 @@
   .settings .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
   .settings .tools a,.settings .tools button{font-size:13px;padding:5px 10px}
   .settings .tools a{color:var(--navy);font-weight:600;border:1px solid var(--line);border-radius:8px;text-decoration:none}
+  .settings .tools .danger{color:#b42318;border-color:#f1b3b3}
+  .foot{display:flex;gap:8px;align-items:center}
+  .foot .spacer{flex:1}
+  .gear[aria-pressed=true]{opacity:1;background:#fff;color:var(--navy);font-weight:600}
+  html.tv .bar,html.tv main,html.tv footer{max-width:none}
 
   .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:11px 14px 11px 18px;border-radius:10px;display:flex;gap:14px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.25);transition:transform .25s;max-width:calc(100% - 32px);z-index:10}
   .toast.show{transform:translateX(-50%) translateY(0)}
@@ -147,7 +174,11 @@
   }
   @media (max-width:760px){
     .bar,main,footer{padding-left:16px;padding-right:16px}
-    .clock{display:none}
+    .bar{flex-wrap:wrap;row-gap:5px}
+    .strip{order:3;flex-basis:100%;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px}
+    .chip{flex:none;padding:2px 9px}
+    .chip b{font-size:15px}
+    .clock{margin-left:auto}
     thead{display:none}
     table,tbody,tr,td{display:block;width:100%}
     tbody tr{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
@@ -169,6 +200,11 @@
       <img class="logo" src="/logo.jpg" alt="RKL" width="40" height="40">
       <div>RKL Spedice<small>Přepravy v prodeji</small></div>
     </div>
+    <div class="strip">
+      <div class="chip sold"><span>Dnes prodáno</span><b class="num" id="kToday">0</b></div>
+      <div class="chip"><span>Dnes k prodeji</span><b class="num" id="kOpen">–</b></div>
+      <div class="chip prov" id="provChip"><span>Dnešní provize</span><b class="num" id="kProv">–</b></div>
+    </div>
     <div class="clock" id="clock"></div>
   </div>
 </header>
@@ -176,23 +212,11 @@
 <main>
   <div class="banner" id="banner" hidden></div>
 
-  <section class="kpis">
-    <div class="kpi sold">
-      <h3>Dnes prodáno</h3>
-      <div class="big num" id="kToday">0</div>
-      <div class="sub" id="kTodaySub">přeprav</div>
-    </div>
-    <div class="kpi">
-      <h3>V nabídce</h3>
-      <div class="big num" id="kOpen">–</div>
-      <div class="sub" id="kOpenSub">načítám…</div>
-    </div>
-  </section>
-
   <section class="panel">
     <div class="ph">
       <h2>Přepravy k prodeji</h2>
       <span class="cnt" id="cnt"></span>
+      <button class="markbtn" id="markBtn" aria-pressed="false" title="Zobrazit jen řádky s @@@ ve sloupci CODE nakl.">Označeno k prodeji <span class="n" id="markN">0</span></button>
       <span class="upd" id="upd"></span>
     </div>
     <table>
@@ -227,10 +251,14 @@
 </main>
 
 <footer>
+  <div class="foot">
   <button class="gear" id="gear" aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
-  <a class="gear" href="/logout" title="Odhlásit" style="text-decoration:none;float:right">Odhlásit</a>
+  <span class="spacer"></span>
+  <button class="gear" id="tvBtn" aria-pressed="false">Režim TV</button>
+  <a class="gear" href="/logout" title="Odhlásit" style="text-decoration:none">Odhlásit</a>
+  </div>
   <div class="settings" id="settings">
     <div class="row">
       <label for="url">Odkaz na tabulku</label>
@@ -243,6 +271,7 @@
       <a href="/api/export" download>Stáhnout zálohu skóre a poznámek</a>
       <button id="impBtn">Obnovit ze zálohy</button>
       <input type="file" id="impFile" accept="application/json,.json" hidden>
+      <button class="danger" id="resetBtn">Vynulovat leaderboard a dnes prodané</button>
     </div>
   </div>
 </footer>
@@ -271,6 +300,8 @@
   const pendingNotes = {};      // rozepsané poznámky, které ještě nejsou uložené
   let holdUntil = 0, holdTimer = null, lastSig = '';
   let period = lsGet('rkl_period', 'day');
+  let markOnly = lsGet('rkl_mark', '0') === '1';
+  const nfKc = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
 
   /* ---------- server ---------- */
   async function api(path, body) {
@@ -311,9 +342,17 @@
   }
   function noteVal(k) { return k in pendingNotes ? pendingNotes[k] : (B.notes[k] || ''); }
 
+  // seznam po filtru „Označeno k prodeji“; připnuté vždy nahoře a vždy zobrazené
+  function visibleList() {
+    const list = markOnly ? B.offered.filter(r => r.marked) : B.offered;
+    const pinned = list.filter(r => r.pinned), rest = list.filter(r => !r.pinned);
+    return { list, shown: pinned.concat(rest).slice(0, Math.max(MAX_ROWS, pinned.length)) };
+  }
+  const PIN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
+
   function renderRows(today) {
-    const shown = B.offered.slice(0, MAX_ROWS);
-    const sig = today + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '')).join('\u0002');
+    const { shown } = visibleList();
+    const sig = today + '|' + markOnly + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
     if (sig === lastSig) return shown;
     // zachovat rozepsanou poznámku (fokus + kurzor)
     const ae = document.activeElement;
@@ -322,10 +361,10 @@
     lastSig = sig;
     $('rows').innerHTML = shown.map(r => {
       const n = noteVal(r.key);
-      return `<tr data-key="${esc(r.key)}" class="${r.date === today ? 'is-today' : ''}">
-        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label></td>
+      return `<tr data-key="${esc(r.key)}" class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''}">
+        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button></td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
-        <td class="c-route"><span class="route">${routeHtml(r.route)}</span>${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
+        <td class="c-route"><span class="route">${routeHtml(r.route)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
         <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>
@@ -356,20 +395,28 @@
     const shown = renderRows(today);
     const empty = $('empty');
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
+    else if (!shown.length && markOnly && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Žádná přeprava označená k prodeji.</b><br>Žádný řádek v nabídce nemá ve sloupci CODE nakl. „@@@“.'; }
     else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
 
     const open = B.offered.length;
+    const vis = visibleList();
     $('kOpen').textContent = B.fetchedAt ? open : '–';
-    $('kOpenSub').textContent = !B.configured ? 'není nastavená tabulka' : (open > MAX_ROWS ? `zobrazeno prvních ${MAX_ROWS}` : `${plural(open)} čeká na prodej`);
-    $('cnt').textContent = B.fetchedAt ? `${shown.length} z ${open}` : '';
+    $('markN').textContent = B.offered.filter(r => r.marked).length;
+    $('markBtn').setAttribute('aria-pressed', markOnly);
+    $('cnt').textContent = B.fetchedAt ? `${shown.length} z ${vis.list.length}` : '';
+    const P = B.provize;
+    if (P) {
+      $('kProv').textContent = nfKc.format(P.value) + ' Kč';
+      $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav (kurz ${String(P.rate).replace('.', ',')} Kč/€)` + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
+    }
 
     // prodeje
     const sm = soldMap();
     const byDay = {};
     for (const v of Object.values(sm)) if (v.at) { const d = isoDay(new Date(v.at)); byDay[d] = (byDay[d] || 0) + 1; }
     const tn = byDay[today] || 0;
-    $('kToday').textContent = tn; $('kTodaySub').textContent = plural(tn);
+    $('kToday').textContent = tn;
 
     const days = [];
     for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
@@ -388,6 +435,7 @@
             ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
             : `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>`)
           : `<span class="who none">čeká na č. přepravy</span>`) +
+        (B.provize && B.provize.perKey[k] != null ? `<span class="pv${B.provize.perKey[k] < 0 ? ' neg' : ''}" title="provize">${nfKc.format(B.provize.perKey[k])} Kč</span>` : '') +
         (manual ? `<button data-undo="${esc(k)}">Vrátit</button>` : '') + `</li>`;
     }).join('') : '<li><span class="lb" style="color:var(--muted)">Dnes zatím nic.</span></li>';
 
@@ -456,6 +504,19 @@
   $('toastUndo').onclick = () => { if (lastSold) { setSold(lastSold.key, false); lastSig = ''; lastSold = null; } $('toast').classList.remove('show'); };
   $('soldList').addEventListener('click', e => { const k = e.target.dataset && e.target.dataset.undo; if (k) { setSold(k, false); lastSig = ''; } });
 
+  /* ---------- filtr a připnutí ---------- */
+  $('markBtn').onclick = () => { markOnly = !markOnly; lsSet('rkl_mark', markOnly ? '1' : '0'); lastSig = ''; render(); };
+  $('rows').addEventListener('click', async e => {
+    const b = e.target.closest('.pin'); if (!b) return;
+    const key = b.closest('tr').dataset.key;
+    const row = B.offered.find(r => r.key === key); if (!row) return;
+    const pinned = !row.pinned;
+    row.pinned = pinned ? new Date().toISOString() : null;
+    lastSig = ''; render();
+    try { await api('/api/pin', { key, pinned }); } catch (err) { alert('Připnutí se nepovedlo: ' + err.message); }
+    poll(false);
+  });
+
   /* ---------- poznámky ---------- */
   function autosize(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight + 2, 160) + 'px'; }
   const noteTimers = {};
@@ -505,6 +566,11 @@
     $('save').disabled = false;
   };
   $('url').addEventListener('keydown', e => { if (e.key === 'Enter') $('save').click(); });
+  $('resetBtn').onclick = async () => {
+    if (!confirm('Opravdu vynulovat leaderboard, dnes prodané přepravy a provizi? Počítat se bude znovu od teď.')) return;
+    try { B = await api('/api/reset', {}); lastSig = ''; render(); setStatus('Vynulováno – statistiky se počítají od ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + '.'); }
+    catch (e) { setStatus('Vynulování se nepovedlo: ' + e.message, true); }
+  };
   $('impBtn').onclick = () => $('impFile').click();
   $('impFile').onchange = async () => {
     const f = $('impFile').files[0]; if (!f) return;

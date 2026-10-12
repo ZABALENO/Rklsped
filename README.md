@@ -6,6 +6,12 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
   datum nakládky nejpozději dnes + 7 pracovních dní (bez víkendů a českých svátků); řádky bez data
   jsou na konci. Sloupce: datum nakládky, trasa, popis zboží, hmotnost, poznámka.
 - **Prodáno** – zaškrtnutím řádek zmizí a započítá se do dnešních prodejů.
+- **Označeno k prodeji** – tlačítko zobrazí jen řádky, které mají ve sloupci CODE nakl. „@@@“.
+- **Připnutí** – ikona připínáčku přesune řádek nahoru jako URGENT (červeně), sdílené pro všechny.
+- **Dnešní provize** = (Příjem CZK + Příjem EUR × kurz ČNB) − (Výdaj CZK + Výdaj EUR × kurz ČNB)
+  u dnes prodaných přeprav.
+- **Vynulování** leaderboardu a dnes prodaných – v nastavení (statistiky se pak počítají od teď).
+- **Režim TV** – tlačítko dole nebo adresa `?tv=1` (vypnutí `?tv=0`) zvětší stránku pro televizi.
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.
 - **Leaderboard** (dříve Skóre prodejců) – přepravy s dopravcem obsahujícím „RKL“ se nepočítají
   (ani když se dopravce na RKL změní dodatečně); dispečeři seřazení od nejvíce prodaných.
@@ -40,10 +46,11 @@ npm start   # http://localhost:3000
 Druhá stránka ze stejného repozitáře – start `node doprava.js`. Stejné heslo, pozadí a databáze
 (Neon, vlastní tabulka `kv_doprava`), odkaz na tabulku se nastavuje zvlášť pod ozubeným kolečkem.
 
-- Zobrazuje přepravy s dopravcem obsahujícím „RKL“, které mají **dnes** nakládku
-  (Datum nakl.od–do) nebo vykládku (Datum vykl.od–do).
+- Zobrazuje přepravy s dopravcem obsahujícím „RKL“ s nakládkou (Datum nakl.od) dnes až 4 pracovní
+  dny zpět, dokud nemají všechny objednávky na čísle přepravy prošlý termín vykládky (Datum vykl.do).
 - Jeden řádek = jedno číslo přepravy (PZ/…): **SPZ** (sloupec „SPZ“), **trasa** všech zásilek
-  seřazená od místa nejbližšího Opavě po nejvzdálenější a **příjem** = Příjem CZK + Příjem EUR × kurz ČNB.
+  seřazená od místa nejbližšího Opavě po nejvzdálenější, **hmotnost**, **ložné metry** (sloupec Ložné metry,
+  jinak odhad z počtu kusů a rozměrů v popisu – označeno „~“) a **příjem** = Příjem CZK + Příjem EUR × kurz ČNB.
 - Kompaktní řádky – na obrazovku se vejde 20+ SPZ.
 
 Polohy míst podle PSČ / názvu: data © [GeoNames](https://www.geonames.org/) (CC BY 4.0,

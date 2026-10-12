@@ -8,13 +8,12 @@ const { loadSheet, validUrl } = require('./lib/sheet');
 const { createStore } = require('./lib/store');
 const { buildTrips } = require('./lib/trips');
 const geo = require('./lib/geo');
-const { pragueToday } = require('./lib/workdays');
+const { pragueToday, subWorkdays } = require('./lib/workdays');
+const { eurRate } = require('./lib/rate');
 
 const PORT = process.env.PORT || 3000;
 const SHEET_TTL = 60 * 1000;
 const BG_REFRESH = 3 * 60 * 1000;
-const RATE_TTL = 3 * 3600 * 1000;
-const DEFAULT_RATE = 25;
 
 let store;
 let sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null };
@@ -38,46 +37,25 @@ async function refreshSheet(force) {
   return inflight;
 }
 
-/* ---------- kurz EUR (ČNB) ---------- */
-async function eurRate() {
-  const c = store.mem.cfg.rate;
-  if (c && Date.now() - c.t < RATE_TTL) return c;
-  try {
-    const r = await fetch('https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt',
-      { signal: AbortSignal.timeout(8000) });
-    const txt = await r.text();
-    const date = (txt.split('\n')[0].match(/^(\d{2}\.\d{2}\.\d{4})/) || [])[1] || '';
-    const line = txt.split('\n').find(l => l.includes('|EUR|'));
-    const parts = line.split('|');
-    const value = parseFloat(parts[4].replace(',', '.')) / (parseFloat(parts[2]) || 1);
-    if (value > 10 && value < 60) {
-      const v = { value, date, t: Date.now(), src: 'ČNB' };
-      await store.put('cfg', 'rate', v);
-      return v;
-    }
-  } catch (e) { console.error('Kurz ČNB nedostupný:', e.message); }
-  return c || { value: DEFAULT_RATE, date: '', t: 0, src: 'výchozí' };
-}
-
 /* ---------- HTTP ---------- */
 const app = express();
 app.use(express.json({ limit: '1mb' }));
-require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava – dnes' });
+require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava na cestě' });
 // sdílené obrázky (pozadí, logo) z RKL Spedice
-for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png', 'tv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 app.use(express.static(path.join(__dirname, 'public-doprava'), { maxAge: 0 }));
 
 app.get('/api/trips', async (req, res) => {
   await refreshSheet(req.query.force === '1');
   const today = pragueToday();
-  const rate = await eurRate();
+  const rate = await eurRate(store);
   const trips = sheet.rows.length ? await buildTrips(sheet.rows, today, rate.value) : [];
   const missing = sheet.columns ? ['spz', 'prepr', 'carrier', 'date', 'unlTo', 'incCzk', 'incEur'].filter(k => !sheet.columns[k]) : [];
   res.json({
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url),
     url: store.mem.cfg.sheet ? store.mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length,
-    missing, today, rate, trips, storage: store.kind,
+    missing, today, from: subWorkdays(today, 4), rate, trips, storage: store.kind,
   });
 });
 

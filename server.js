@@ -11,7 +11,9 @@ const { loadSheet, validUrl } = require('./lib/sheet');
 
 const PORT = process.env.PORT || 3000;
 const HORIZON_WORKDAYS = 7;               // nabídka = nakládka nejpozději dnes + 7 pracovních dní
-const { pragueToday, addWorkdays } = require('./lib/workdays');
+const { pragueToday, addWorkdays, pragueDay } = require('./lib/workdays');
+const { eurRate } = require('./lib/rate');
+const OFFER_MARK = '@@@';               // „Označeno k prodeji“ = CODE nakl. obsahuje @@@
 const isRKL = c => /RKL/i.test(c || '');
 const hasPZ = prepr => /PZ\s*\//i.test(prepr || '');  // řádek má číslo přepravy = prodáno
 const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
@@ -20,8 +22,8 @@ const SELLERS = { J: 'Jirka', G: 'Gabka', N: 'Pavel', U: 'Petr', H: 'Robin' };
 const SELLER_ORDER = ['Jirka', 'Gabka', 'Pavel', 'Petr', 'Robin'];
 
 /* ================= úložiště ================= */
-// mem[ns][key] = value; ns: cfg | sold | note | sale | track
-const NS = ['cfg', 'sold', 'note', 'sale', 'track'];
+// mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
+const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin'];
 const mem = Object.fromEntries(NS.map(n => [n, {}]));
 let pool = null;
 const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'store.json');
@@ -141,26 +143,53 @@ function cleanup() {
   for (const [k, v] of Object.entries(mem.track)) if (v.t < limit) put('track', k, null);
   for (const [k, v] of Object.entries(mem.sold)) if ((v.u || '') < limit) put('sold', k, null);
   for (const [k, v] of Object.entries(mem.note)) if ((v.u || '') < limit) put('note', k, null);
+  for (const [k, v] of Object.entries(mem.pin)) if ((v.t || '') < limit) put('pin', k, null);
 }
 
-function board() {
+// od kdy se počítají statistiky (leaderboard, dnes prodané, graf, provize) – nastavuje „vynulování“
+const statsFrom = () => (mem.cfg.stats && mem.cfg.stats.from) || '';
+
+function board(rate) {
   const today = pragueToday();
   const until = addWorkdays(today, HORIZON_WORKDAYS);
+  const pinT = k => (mem.pin[k] ? mem.pin[k].t : null);
   const offered = sheet.rows
     .filter(r => !hasPZ(r.prepr) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
-    .map(({ key, order, date, route, goods, weight }) => ({ key, order, date, route, goods, weight }))
-    .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
+    .map(({ key, order, date, route, goods, weight, code }) => ({ key, order, date, route, goods, weight, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
+    .sort((a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0)
+      || (a.date || '9999').localeCompare(b.date || '9999'));
+  const from = statsFrom();
   const weekAgo = new Date(Date.now() - 9 * 864e5).toISOString();
-  const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') > weekAgo));
+  const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') > weekAgo && (v.at || '') >= from));
+  const sales = Object.entries(mem.sale).filter(([, v]) => (v.at || '') >= from);
+
+  // Dnešní provize = (Příjem CZK + Příjem EUR × kurz) − (Výdaj CZK + Výdaj EUR × kurz) u dnes prodaných přeprav
+  const byKey = new Map(sheet.rows.map(r => [r.key, r]));
+  const todayKeys = new Set([
+    ...Object.entries(sold).filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
+    ...sales.filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
+  ]);
+  const prov = { value: 0, income: 0, expense: 0, count: todayKeys.size, missing: 0, rate: rate.value, perKey: {} };
+  for (const k of todayKeys) {
+    const r = byKey.get(k);
+    if (!r) { prov.missing++; continue; }
+    const inc = (r.incCzk || 0) + (r.incEur || 0) * rate.value;
+    const exp = (r.expCzk || 0) + (r.expEur || 0) * rate.value;
+    prov.income += inc; prov.expense += exp; prov.perKey[k] = Math.round(inc - exp);
+  }
+  prov.value = Math.round(prov.income - prov.expense);
+  prov.income = Math.round(prov.income); prov.expense = Math.round(prov.expense);
+
   const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
-    offered, until,
+    offered, until, statsFrom: from,
     sold,
-    sales: Object.entries(mem.sale).map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
+    sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),
+    provize: prov, rate,
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
   };
@@ -172,9 +201,26 @@ app.use(express.json({ limit: '5mb' }));
 require('./lib/auth').setup(app);   // heslo z APP_PASSWORD – bez přihlášení nic nezobrazí
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
+const store = { mem, put };
+async function boardNow() { return board(await eurRate(store)); }
+
 app.get('/api/board', async (req, res) => {
   await refreshSheet(req.query.force === '1');
-  res.json(board());
+  res.json(await boardNow());
+});
+
+// připnutí řádku nahoru (urgentní) – sdílené pro všechny
+app.post('/api/pin', async (req, res) => {
+  const { key, pinned } = req.body || {};
+  if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
+  await put('pin', key, pinned ? { t: new Date().toISOString() } : null);
+  res.json({ ok: true });
+});
+
+// vynulování leaderboardu a dnes prodaných (počítá se od teď; stav „Prodáno“ u řádků zůstává)
+app.post('/api/reset', async (req, res) => {
+  await put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
+  res.json(await boardNow());
 });
 
 app.post('/api/config', async (req, res) => {
@@ -182,7 +228,7 @@ app.post('/api/config', async (req, res) => {
   if (url && !validUrl(url)) return res.status(400).json({ error: 'Podporované jsou veřejné odkazy z Google Sheets / Google Drive a OneDrive / SharePoint (Excel online).' });
   await put('cfg', 'sheet', url ? { url, u: new Date().toISOString() } : null);
   await refreshSheet(true);
-  res.json(board());
+  res.json(await boardNow());
 });
 
 app.post('/api/sold', async (req, res) => {
@@ -222,7 +268,9 @@ app.post('/api/import', async (req, res) => {
 app.get('/healthz', (req, res) => res.send('ok'));
 
 if (require.main === module) {
-  initStore().then(() => {
+  initStore().then(async () => {
+    // jednorázové vynulování statistik (požadavek 12. 10. 2026)
+    if (!mem.cfg.stats || !mem.cfg.stats.reset1) await put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
     cleanup();
     app.listen(PORT, () => console.log('RKL Spedice běží na portu ' + PORT));
     refreshSheet(true);

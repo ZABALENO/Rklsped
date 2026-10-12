@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="cs">
+<html lang="cs" data-tv-base="1400">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RKL Doprava – dnes</title>
+<title>RKL Doprava – na cestě</title>
 <link rel="icon" type="image/png" href="/favicon.png">
+<script src="/tv.js"></script>
 <link rel="apple-touch-icon" href="/logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,9 +46,15 @@
   .c-spz{width:120px}
   .c-pz{width:128px}
   .c-n{width:52px;text-align:center}
-  .c-day{width:156px}
-  .c-inc{width:140px;text-align:right}
-  th.c-inc{text-align:right} th.c-n{text-align:center}
+  .c-day{width:150px}
+  .c-kg{width:100px;text-align:right}
+  .c-ldm{width:78px;text-align:right}
+  .c-inc{width:130px;text-align:right}
+  th.c-inc,th.c-kg,th.c-ldm{text-align:right} th.c-n{text-align:center}
+  .d{font-size:12.5px;color:var(--muted);margin-right:6px}
+  .d b{font-weight:600;color:var(--ink)}
+  .d.today b{background:#ffe9b3;border-radius:4px;padding:0 3px}
+  .est{color:var(--muted);font-size:11px}
   .spz{display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;border:1.5px solid #20262f;border-radius:4px;padding:0 6px;background:#fff;line-height:18px;letter-spacing:.3px;box-shadow:inset 6px 0 0 #1d4fb5}
   .spz.none{border-style:dashed;border-color:#b9c2cf;color:#9aa6b6;box-shadow:none;font-weight:500}
   .pz{color:var(--muted);font-size:13px}
@@ -74,6 +81,8 @@
   .settings .status{font-size:12.5px;color:var(--muted);margin-top:8px}
   .settings .status.err{color:#b42318}
   .spacer{flex:1}
+  html.tv .bar,html.tv main,html.tv footer{max-width:none}
+  .gear[aria-pressed=true]{opacity:1;background:#fff;color:var(--navy);font-weight:600}
 
   @media (max-width:1100px){ .chip.upd,.chip.rate{display:none} }
   @media (max-width:760px){
@@ -86,7 +95,7 @@
     .chip.lu{display:none}
     main{padding-top:6px}
     body{font-size:13px}
-    .c-pz,.c-n,.c-day{display:none}
+    .c-pz,.c-n,.c-day,.c-kg,.c-ldm{display:none}
     .c-spz{width:88px}
     .c-inc{width:66px}
     tbody td{padding:3px 8px}
@@ -99,10 +108,11 @@
 <body>
 <header>
   <div class="bar">
-    <div class="brand"><img src="/logo.jpg" alt="RKL"><div>RKL Doprava<small>Vlastní doprava – dnes</small></div></div>
+    <div class="brand"><img src="/logo.jpg" alt="RKL"><div>RKL Doprava<small>Vlastní doprava na cestě</small></div></div>
     <div class="strip">
-      <div class="chip"><b class="num" id="sTrips">–</b><span>přeprav dnes</span></div>
-      <div class="chip lu"><b class="num" id="sLoads">–</b><span>nakládek</span><b class="num" id="sUnl">–</b><span>vykládek</span></div>
+      <div class="chip"><b class="num" id="sTrips">–</b><span>přeprav na cestě</span></div>
+      <div class="chip lu"><span>dnes</span><b class="num" id="sLoads">–</b><span>nakl.</span><b class="num" id="sUnl">–</b><span>vykl.</span></div>
+      <div class="chip lu"><b class="num" id="sKg">–</b><span>t celkem</span></div>
       <div class="chip sum"><b class="num" id="sSum">–</b><span>příjem celkem</span></div>
       <div class="chip rate"><span>kurz</span><b class="num" id="sRate">–</b><span id="sRateSrc"></span></div>
       <div class="chip upd"><span id="sUpd">načítám…</span></div>
@@ -116,7 +126,7 @@
 
   <section class="panel">
     <table>
-      <thead><tr><th class="c-spz">SPZ</th><th class="c-pz">Přeprava</th><th class="c-route">Trasa (od Opavy)</th><th class="c-n" title="Počet zásilek">Zás.</th><th class="c-day">Dnes</th><th class="c-inc">Příjem</th></tr></thead>
+      <thead><tr><th class="c-spz">SPZ</th><th class="c-pz">Přeprava</th><th class="c-route">Trasa (od Opavy)</th><th class="c-n" title="Počet zásilek">Zás.</th><th class="c-day">Nakládka → vykl.</th><th class="c-kg">Hmotnost</th><th class="c-ldm" title="Ložné metry (~ = odhad z počtu kusů a rozměrů)">LDM</th><th class="c-inc">Příjem</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
@@ -128,6 +138,7 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
   <span class="spacer"></span>
+  <button class="gear" id="tvBtn" aria-pressed="false">Režim TV</button>
   <a class="gear" href="/logout">Odhlásit</a>
   <div class="settings" id="settings">
     <div class="row">
@@ -135,7 +146,7 @@
       <input type="url" id="url" placeholder="Veřejný odkaz z Google Sheets nebo OneDrive / Excel online" autocomplete="off">
       <button id="save">Uložit a načíst</button>
     </div>
-    <div class="status" id="status">Tabulka se nikam neukládá – server ji vždy jen stáhne z odkazu (obnova každé 3 minuty). Zobrazují se přepravy s dopravcem „RKL“, které mají dnes nakládku nebo vykládku.</div>
+    <div class="status" id="status">Tabulka se nikam neukládá – server ji vždy jen stáhne z odkazu (obnova každé 3 minuty). Zobrazují se přepravy s dopravcem „RKL“ s nakládkou dnes až 4 pracovní dny zpět, dokud nemají všechny objednávky prošlý termín vykládky.</div>
   </div>
 </footer>
 
@@ -146,6 +157,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nf = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
   const nf2 = new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const nf1 = new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}.`; };
   const COLNAMES = { spz: 'SPZ', prepr: 'Přeprava', carrier: 'Dopravce', date: 'Datum nakl.od', unlTo: 'Datum vykl.do', incCzk: 'Příjem CZK', incEur: 'Příjem EUR' };
   let D = null;
@@ -175,6 +187,7 @@
     $('sTrips').textContent = D.fetchedAt ? t.length : '–';
     $('sLoads').textContent = t.reduce((a, x) => a + x.loadsToday, 0);
     $('sUnl').textContent = t.reduce((a, x) => a + x.unloadsToday, 0);
+    $('sKg').textContent = nf1.format(t.reduce((a, x) => a + x.kg, 0) / 1000);
     $('sSum').textContent = nf.format(t.reduce((a, x) => a + x.total, 0)) + ' Kč';
     $('sRate').textContent = nf2.format(D.rate.value) + ' Kč/€';
     $('sRateSrc').textContent = D.rate.src === 'ČNB' ? 'ČNB ' + (D.rate.date || '') : D.rate.src;
@@ -182,7 +195,9 @@
 
     const open = new Set([...$('rows').querySelectorAll('tr.open')].map(tr => tr.dataset.key));
     $('rows').innerHTML = t.map(x => {
-      const tags = (x.loadsToday ? `<span class="tag l" title="Nakládek dnes">↑ ${x.loadsToday} nakl.</span>` : '') + (x.unloadsToday ? `<span class="tag u" title="Vykládek dnes">↓ ${x.unloadsToday} vykl.</span>` : '');
+      const dd = iso => { if (!iso) return '?'; const [, m, d] = iso.split('-'); return `${+d}. ${+m}.`; };
+      const tags = `<span class="d ${x.firstLoad === D.today ? 'today' : ''}" title="první nakládka">↑ <b>${dd(x.firstLoad)}</b></span>` +
+        `<span class="d ${x.lastUnload === D.today ? 'today' : ''}" title="poslední termín vykládky${x.unloaded ? ' · vyloženo ' + x.unloaded + ' z ' + x.orders : ''}">↓ <b>${dd(x.lastUnload)}</b></span>`;
       const breakdown = `CZK ${nf.format(x.czk)} + EUR ${nf2.format(x.eur)} × ${nf2.format(D.rate.value)}`;
       return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}">
         <td class="c-spz">${x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>'}</td>
@@ -190,12 +205,14 @@
         <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}">${routeHtml(x.route)}</td>
         <td class="c-n num">${x.orders}</td>
         <td class="c-day">${tags}</td>
+        <td class="c-kg num">${nf.format(x.kg)} kg</td>
+        <td class="c-ldm num" title="${x.ldmEst ? 'část odhadnuta z počtu kusů a rozměrů' : 'ze sloupce Ložné metry'}">${x.ldmEst ? '<span class="est">~</span>' : ''}${nf1.format(x.ldm)}</td>
         <td class="c-inc" title="${breakdown}"><span class="inc num">${nf.format(x.total)}</span><span class="kc"> Kč</span></td>
       </tr>`;
     }).join('');
     const empty = $('empty');
     if (!D.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
-    else if (!t.length) { empty.style.display = ''; empty.innerHTML = D.fetchedAt ? '<b>Dnes žádná přeprava RKL.</b><br>V tabulce není přeprava s dopravcem RKL, která by měla dnes nakládku nebo vykládku.' : '<b>Načítám tabulku…</b>'; }
+    else if (!t.length) { empty.style.display = ''; empty.innerHTML = D.fetchedAt ? '<b>Žádná přeprava RKL na cestě.</b><br>V tabulce není přeprava s dopravcem RKL s nakládkou od ' + fmtDate(D.from) + ', která by ještě nebyla vyložená.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
   }
 
