@@ -89,6 +89,9 @@
   td.c-date{white-space:nowrap;width:120px}
   td.c-w{text-align:right;white-space:nowrap;width:110px}
   th.c-w{text-align:right}
+  td.c-price{text-align:right;white-space:nowrap;width:110px;font-weight:600;color:#11663a}
+  th.c-price{text-align:right}
+  .route .zip{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--muted);background:#eef2f7;border-radius:4px;padding:0 4px}
   td.c-note{width:24%;min-width:180px}
   .chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ok);user-select:none}
   .chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer;margin:0}
@@ -190,6 +193,7 @@
     td.c-date{grid-column:2}
     td.c-w{grid-column:3;grid-row:1;text-align:right}
     td.c-route,td.c-goods,td.c-note{grid-column:2/4}
+    td.c-price{grid-column:3;grid-row:2;text-align:right;width:auto}
     td.c-note{margin-top:6px}
     .kpi .big{font-size:32px}
   }
@@ -223,7 +227,7 @@
       <span class="upd" id="upd"></span>
     </div>
     <table>
-      <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th><th>Poznámka</th></tr></thead>
+      <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th><th class="c-price">Cena</th><th>Poznámka</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
@@ -336,7 +340,28 @@
   /* ---------- vykreslení ---------- */
   function showBanner(msg, err) { const b = $('banner'); b.hidden = !msg; b.textContent = msg || ''; b.classList.toggle('err', !!err); }
 
-  function routeHtml(route) { return String(route).split(/\s*\/\/\s*/).map(esc).join('<span class="arr">→</span>'); }
+  function splitZips(z) { const t = String(z || '').trim(); if (!t) return []; if (/^\d{2}-\d{3}$/.test(t)) return [t]; return t.split(/\s*[-;,/+]\s*/).filter(Boolean); }
+  // trasa; u míst vykládky vždy PSČ vykládky
+  function routeHtml(route, zipTo) {
+    const parts = String(route).split(/\s*\/\/\s*/);
+    if (parts.length > 1 && zipTo) {
+      const places = parts[parts.length - 1].split(/\s*\+\s*/);
+      const zips = splitZips(zipTo);
+      parts[parts.length - 1] = places.map((p, i) => {
+        const z = zips.length === places.length ? zips[i] : (i === places.length - 1 ? zips.join(', ') : '');
+        return esc(p) + (z ? ` <span class="zip">${esc(z)}</span>` : '');
+      }).join(' + ');
+      return parts.slice(0, -1).map(esc).concat(parts[parts.length - 1]).join('<span class="arr">→</span>');
+    }
+    return parts.map(esc).join('<span class="arr">→</span>');
+  }
+  const nfEur = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 2 });
+  function priceHtml(r) {
+    const out = [];
+    if (r.incEur) out.push(`${nfEur.format(r.incEur)} €`);
+    if (r.incCzk) out.push(`${nfEur.format(r.incCzk)} Kč`);
+    return out.length ? out.join('<br>') : '<span style="color:var(--muted)">–</span>';
+  }
   function dateHtml(iso, today) {
     if (!iso) return '<span class="dow">bez data</span>';
     const d = new Date(iso + 'T12:00:00'), t = new Date(today + 'T12:00:00');
@@ -369,9 +394,10 @@
       return `<tr data-key="${esc(r.key)}" class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button></td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
-        <td class="c-route"><span class="route">${routeHtml(r.route)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
+        <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
+        <td class="c-price num">${priceHtml(r)}</td>
         <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>
       </tr>`;
     }).join('');
@@ -417,7 +443,7 @@
     if (P) {
       $('kProv').textContent = nfKc.format(P.value) + ' Kč';
       $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav externím dopravcům (kurz ${String(P.rate).replace('.', ',')} Kč/€)` +
-        (P.rkl ? ` · ${P.rkl} s dopravcem RKL se nepočítá` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
+        (P.rkl ? ` · nepočítá se ${P.rkl} (${Object.entries(P.excluded || {}).map(([n, c]) => n + ' ' + c + '×').join(', ')})` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
     }
 
     // prodeje
@@ -441,7 +467,7 @@
       const manual = B.sold[k] && !v.seller;
       const car = (B.carriers && B.carriers[k]) || v.carrier || '';
       return `<li><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
-        `<span class="car${isRKL(car) ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
+        `<span class="car${(B.provize && (B.provize.exKeys || []).includes(k)) || isRKL(car) ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}${B.provize && (B.provize.exKeys || []).includes(k) ? ' – do provize se nepočítá' : ''}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
         (v.seller ? (isRKL(v.carrier)
             ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
             : `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>`)

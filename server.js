@@ -15,6 +15,15 @@ const { pragueToday, addWorkdays, pragueDay } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
 const OFFER_MARK = '@@@';               // „Označeno k prodeji“ = CODE nakl. obsahuje @@@
 const isRKL = c => /RKL/i.test(c || '');
+// dopravci, jejichž prodeje se NEpočítají do dnešní provize (vedle RKL)
+const deacc = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const PROV_EXCLUDE = [
+  { name: 'RKL', re: /rkl/ },
+  { name: 'TONDAU', re: /tonda[uv]/ },
+  { name: 'DU-AL', re: /\bdu[\s-]?al\b/ },
+  { name: 'Tomáš Krejčí', re: /tomas\s*krejci/ },
+];
+const provExcluded = c => PROV_EXCLUDE.find(x => x.re.test(deacc(c)));
 const hasPZ = prepr => /PZ\s*\//i.test(prepr || '');  // řádek má číslo přepravy = prodáno
 const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
 const BG_REFRESH = 3 * 60 * 1000;         // obnova tabulky na pozadí
@@ -155,7 +164,7 @@ function board(rate) {
   const pinT = k => (mem.pin[k] ? mem.pin[k].t : null);
   const offered = sheet.rows
     .filter(r => !hasPZ(r.prepr) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
-    .map(({ key, order, date, route, goods, weight, code }) => ({ key, order, date, route, goods, weight, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
+    .map(({ key, order, date, route, goods, weight, code, zipTo, incCzk, incEur }) => ({ key, order, date, route, goods, weight, zipTo, incCzk, incEur, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
     .sort((a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0)
       || (a.date || '9999').localeCompare(b.date || '9999'));
   const from = statsFrom();
@@ -169,14 +178,15 @@ function board(rate) {
     ...Object.entries(sold).filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
     ...sales.filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
   ]);
-  // provize se počítá jen u přeprav prodaných externímu dopravci (dopravce bez „RKL“)
-  const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, missing: 0, rate: rate.value, perKey: {} };
+  // provize se počítá jen u přeprav prodaných externímu dopravci (bez RKL, TONDAU, DU-AL, Tomáš Krejčí)
+  const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, excluded: {}, exKeys: [], missing: 0, rate: rate.value, perKey: {} };
   const carriers = {};
   for (const k of todayKeys) {
     const r = byKey.get(k);
     const carrier = (r && r.carrier) || (mem.sale[k] && mem.sale[k].carrier) || '';
     carriers[k] = carrier;
-    if (isRKL(carrier)) { prov.rkl++; continue; }
+    const ex = provExcluded(carrier);
+    if (ex) { prov.rkl++; prov.excluded[ex.name] = (prov.excluded[ex.name] || 0) + 1; prov.exKeys.push(k); continue; }
     if (!r) { prov.missing++; continue; }
     prov.count++;
     const inc = (r.incCzk || 0) + (r.incEur || 0) * rate.value;

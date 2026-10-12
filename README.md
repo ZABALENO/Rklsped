@@ -9,7 +9,9 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
 - **Označeno k prodeji** – tlačítko zobrazí jen řádky, které mají ve sloupci CODE nakl. „@@@“.
 - **Připnutí** – ikona připínáčku přesune řádek nahoru jako URGENT (červeně), sdílené pro všechny.
 - **Dnešní provize** = (Příjem CZK + Příjem EUR × kurz ČNB) − (Výdaj CZK + Výdaj EUR × kurz ČNB)
-  u dnes prodaných přeprav s dopravcem bez „RKL“; v přehledu dnes prodaných je u každé přepravy dopravce.
+  u dnes prodaných přeprav; nepočítají se dopravci RKL, TONDAU, DU-AL a Tomáš Krejčí (seznam `PROV_EXCLUDE`
+  v server.js). V přehledu dnes prodaných je u každé přepravy dopravce.
+- **Cena** (Příjem CZK / Příjem EUR) před poznámkou, u míst vykládky PSČ vykládky.
 - **Vynulování** leaderboardu a dnes prodaných – v nastavení (statistiky se pak počítají od teď).
 - **Režim TV** – tlačítko dole nebo adresa `?tv=1` (vypnutí `?tv=0`) zvětší stránku pro televizi.
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.
@@ -51,7 +53,8 @@ Druhá stránka ze stejného repozitáře – start `node doprava.js`. Stejné h
 - Jeden řádek = jedno číslo přepravy (PZ/…): **SPZ** (sloupec „SPZ“), **trasa** všech zásilek
   seřazená od místa nejbližšího Opavě po nejvzdálenější, **hmotnost**, **ložné metry** (sloupec Ložné metry,
   jinak odhad z počtu kusů a rozměrů v popisu – označeno „~“) a **příjem** = Příjem CZK + Příjem EUR × kurz ČNB.
-- Kompaktní řádky – na obrazovku se vejde 20+ SPZ.
+- U každého města první 2 číslice PSČ, trasa je vždy celá (zalomená). Tlačítko „Skrýt příjem“.
+- Na velké obrazovce (≥ 1600 px, TV ~160 cm) se sám zapne režim TV s větším písmem – vejde se 17 aut.
 
 Polohy míst podle PSČ / názvu: data © [GeoNames](https://www.geonames.org/) (CC BY 4.0,
 převod [zauberware/postal-codes-json-xml-csv](https://github.com/zauberware/postal-codes-json-xml-csv)),

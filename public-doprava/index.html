@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="cs" data-tv-base="1400">
+<html lang="cs" data-tv-base="1600" data-tv-auto="1600">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,15 +39,17 @@
   thead th{background:#f5f7fa;text-align:left;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   tbody td{padding:2px 10px;border-bottom:1px solid #edf0f4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
   tbody tr:last-child td{border-bottom:0}
-  tbody tr{cursor:pointer}
   tbody tr:nth-child(even){background:#fafbfd}
   tbody tr:hover{background:#f1f6ff}
-  tbody tr.open td.c-route{white-space:normal}
+  tbody td.c-route{white-space:normal;line-height:1.25;overflow:visible;text-overflow:clip}
+  .route .pl{white-space:nowrap}
+  .route .z{font-family:"IBM Plex Mono",monospace;font-size:.78em;font-weight:600;color:#3d4a5e;background:#eef2f7;border-radius:3px;padding:0 3px;margin-left:3px;vertical-align:1px}
+  html.noinc .c-inc,html.noinc .chip.sum,html.noinc .chip.rate{display:none}
   .c-spz{width:120px}
   .c-pz{width:128px}
   .c-n{width:52px;text-align:center}
   .c-day{width:150px}
-  .c-kg{width:100px;text-align:right}
+  .c-kg{width:76px;text-align:right}
   .c-ldm{width:78px;text-align:right}
   .c-inc{width:130px;text-align:right}
   th.c-inc,th.c-kg,th.c-ldm{text-align:right} th.c-n{text-align:center}
@@ -60,7 +62,7 @@
   .pz{color:var(--muted);font-size:13px}
   .route .p{font-weight:600}
   .route .cc{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:2px;vertical-align:1px}
-  .route .a{color:var(--accent);font-weight:700;margin:0 5px}
+  .route .a{color:var(--accent);font-weight:700}
   .route .home{color:var(--muted);font-weight:500}
   .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;margin-right:4px}
   .tag.l{background:#dcefe3;color:#11663a}
@@ -82,6 +84,22 @@
   .settings .status.err{color:#b42318}
   .spacer{flex:1}
   html.tv .bar,html.tv main,html.tv footer{max-width:none}
+  html.tv body{font-size:19px}
+  html.tv .chip.upd,html.tv .chip.rate{display:none}
+  html.tv .chip{padding:2px 10px}
+  html.tv .c-pz{display:none}
+  html.tv tbody td.c-route{line-height:1.18}
+  html.tv .brand{font-size:21px} html.tv .brand img{width:40px;height:40px} html.tv .brand small{font-size:13px}
+  html.tv .chip b{font-size:19px} html.tv .chip span{font-size:13.5px} html.tv .clock{font-size:15px}
+  html.tv thead th{font-size:13px;padding:6px 10px}
+  html.tv tbody td{padding:3px 8px}
+  html.tv .spz{font-size:18px;line-height:24px;padding:0 7px;box-shadow:inset 8px 0 0 #1d4fb5}
+  html.tv .pz{font-size:15px}
+  html.tv .d{font-size:16px}
+  html.tv .route .cc{font-size:13px}
+  html.tv .c-spz{width:140px} html.tv .c-n{width:52px}
+  html.tv .c-day{width:178px} html.tv .c-kg{width:96px} html.tv .c-ldm{width:78px} html.tv .c-inc{width:134px}
+  html.tv tbody td.c-route{font-size:18px}
   .gear[aria-pressed=true]{opacity:1;background:#fff;color:var(--navy);font-weight:600}
 
   @media (max-width:1100px){ .chip.upd,.chip.rate{display:none} }
@@ -138,6 +156,7 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
   <span class="spacer"></span>
+  <button class="gear" id="incBtn" aria-pressed="false">Skrýt příjem</button>
   <button class="gear" id="tvBtn" aria-pressed="false">Režim TV</button>
   <a class="gear" href="/logout">Odhlásit</a>
   <div class="settings" id="settings">
@@ -172,8 +191,9 @@
   function banner(msg, err) { const b = $('banner'); b.hidden = !msg; b.textContent = msg || ''; b.classList.toggle('err', !!err); }
 
   function routeHtml(route) {
-    const parts = route.map(p => `<span class="p" title="${p.km != null ? p.km + ' km od Opavy' : 'poloha neznámá'}">${esc(p.name)}</span>${p.cc && p.cc !== 'CZ' ? `<span class="cc">${esc(p.cc)}</span>` : ''}`);
-    return parts.join('<span class="a">→</span>');
+    const z2 = z => String(z || '').replace(/[^0-9A-Za-z]/g, '').slice(0, 2);
+    const parts = route.map(p => `<span class="pl"><span class="p" title="${p.km != null ? p.km + ' km od Opavy' : 'poloha neznámá'}${p.zip ? ' · PSČ ' + esc(p.zip) : ''}">${esc(p.name)}</span>${p.cc && p.cc !== 'CZ' ? `<span class="cc">${esc(p.cc)}</span>` : ''}${z2(p.zip) ? `<span class="z">${esc(z2(p.zip))}</span>` : ''}</span>`);
+    return parts.join(' <span class="a">→</span> ');
   }
 
   function render() {
@@ -195,17 +215,17 @@
 
     const open = new Set([...$('rows').querySelectorAll('tr.open')].map(tr => tr.dataset.key));
     $('rows').innerHTML = t.map(x => {
-      const dd = iso => { if (!iso) return '?'; const [, m, d] = iso.split('-'); return `${+d}. ${+m}.`; };
+      const dd = iso => { if (!iso) return '?'; const [, m, d] = iso.split('-'); return `${+d}.${+m}.`; };
       const tags = `<span class="d ${x.firstLoad === D.today ? 'today' : ''}" title="první nakládka">↑ <b>${dd(x.firstLoad)}</b></span>` +
         `<span class="d ${x.lastUnload === D.today ? 'today' : ''}" title="poslední termín vykládky${x.unloaded ? ' · vyloženo ' + x.unloaded + ' z ' + x.orders : ''}">↓ <b>${dd(x.lastUnload)}</b></span>`;
       const breakdown = `CZK ${nf.format(x.czk)} + EUR ${nf2.format(x.eur)} × ${nf2.format(D.rate.value)}`;
       return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}">
-        <td class="c-spz">${x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>'}</td>
+        <td class="c-spz" title="${esc(x.prepr || '')}">${x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>'}</td>
         <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
         <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}">${routeHtml(x.route)}</td>
         <td class="c-n num">${x.orders}</td>
         <td class="c-day">${tags}</td>
-        <td class="c-kg num">${nf.format(x.kg)} kg</td>
+        <td class="c-kg num" title="${nf.format(x.kg)} kg">${nf1.format(x.kg / 1000)} t</td>
         <td class="c-ldm num" title="${x.ldmEst ? 'část odhadnuta z počtu kusů a rozměrů' : 'ze sloupce Ložné metry'}">${x.ldmEst ? '<span class="est">~</span>' : ''}${nf1.format(x.ldm)}</td>
         <td class="c-inc" title="${breakdown}"><span class="inc num">${nf.format(x.total)}</span><span class="kc"> Kč</span></td>
       </tr>`;
@@ -221,7 +241,11 @@
     catch (e) { if (!D) banner('Server se probouzí nebo není dostupný… zkusím to znovu.'); }
   }
 
-  $('rows').addEventListener('click', e => { const tr = e.target.closest('tr'); if (tr) tr.classList.toggle('open'); });
+  // skrytí sloupce příjmu (pamatuje si prohlížeč)
+  let noInc = false; try { noInc = localStorage.getItem('rkl_noinc') === '1'; } catch {}
+  function applyInc() { document.documentElement.classList.toggle('noinc', noInc); $('incBtn').textContent = noInc ? 'Zobrazit příjem' : 'Skrýt příjem'; $('incBtn').setAttribute('aria-pressed', noInc); }
+  $('incBtn').onclick = () => { noInc = !noInc; try { localStorage.setItem('rkl_noinc', noInc ? '1' : '0'); } catch {} applyInc(); };
+  applyInc();
   $('gear').onclick = () => {
     const o = $('settings').classList.toggle('open');
     $('gear').setAttribute('aria-expanded', o);
