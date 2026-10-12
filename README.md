@@ -11,7 +11,7 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
 - **Označeno k prodeji** – tlačítko zobrazí jen řádky, které mají ve sloupci CODE nakl. „@@@“.
 - **Připnutí** – ikona připínáčku přesune řádek nahoru jako URGENT (červeně), sdílené pro všechny.
 - **Dnešní provize** = (Příjem CZK + Příjem EUR × kurz ČNB) − (Výdaj CZK + Výdaj EUR × kurz ČNB)
-  u dnes prodaných přeprav; nepočítají se dopravci RKL, TONDAU, DU-AL a Tomáš Krejčí (seznam `PROV_EXCLUDE`
+  u dnes prodaných přeprav; nepočítají se přepravy s dopravcem RKL nebo bez dopravce (seznam `PROV_EXCLUDE`
   v server.js) a přepravy se zápornou provizí horší než −5 000 Kč. V přehledu dnes prodaných je u každé přepravy dopravce.
 - **Cena** (Příjem CZK / Příjem EUR) před poznámkou, u míst vykládky PSČ vykládky.
 - **Vynulování** leaderboardu a dnes prodaných – v nastavení (statistiky se pak počítají od teď).

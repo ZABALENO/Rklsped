@@ -15,13 +15,10 @@ const { pragueToday, addWorkdays, pragueDay } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
 const OFFER_MARK = '@@@';               // „Označeno k prodeji“ = CODE nakl. obsahuje @@@
 const isRKL = c => /RKL/i.test(c || '');
-// dopravci, jejichž prodeje se NEpočítají do dnešní provize (vedle RKL)
+// dopravci, jejichž prodeje se NEpočítají do dnešní provize
 const deacc = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const PROV_EXCLUDE = [
   { name: 'RKL', re: /rkl/ },
-  { name: 'TONDAU', re: /tonda[uv]/ },
-  { name: 'DU-AL', re: /\bdu[\s-]?al\b/ },
-  { name: 'Tomáš Krejčí', re: /tomas\s*krejci/ },
 ];
 const NEG_LIMIT = -5000;                 // záporná provize pod tuto hranici se do součtu nepočítá
 const provExcluded = c => PROV_EXCLUDE.find(x => x.re.test(deacc(c)));
@@ -179,7 +176,7 @@ function board(rate) {
     ...Object.entries(sold).filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
     ...sales.filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
   ]);
-  // provize se počítá jen u přeprav prodaných externímu dopravci (bez RKL, TONDAU, DU-AL, Tomáš Krejčí)
+  // provize se počítá jen u přeprav prodaných externímu dopravci (bez RKL)
   const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, noCarrier: 0, excluded: {}, exKeys: [], negSkipped: [], missing: 0, rate: rate.value, perKey: {} };
   // dopravce ke všem prodaným přepravám (z aktuální tabulky, jinak z uloženého prodeje)
   const carriers = {};
