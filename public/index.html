@@ -216,6 +216,7 @@
     <div class="ph">
       <h2>Přepravy k prodeji</h2>
       <span class="cnt" id="cnt"></span>
+      <button class="markbtn" id="allBtn" aria-pressed="false" hidden>Zobrazit vše</button>
       <button class="markbtn" id="markBtn" aria-pressed="false" title="Zobrazit jen řádky s @@@ ve sloupci CODE nakl.">Označeno k prodeji <span class="n" id="markN">0</span></button>
       <span class="upd" id="upd"></span>
     </div>
@@ -301,6 +302,7 @@
   let holdUntil = 0, holdTimer = null, lastSig = '';
   let period = lsGet('rkl_period', 'day');
   let markOnly = lsGet('rkl_mark', '0') === '1';
+  let showAll = lsGet('rkl_all', '0') === '1';
   const nfKc = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
 
   /* ---------- server ---------- */
@@ -346,13 +348,14 @@
   function visibleList() {
     const list = markOnly ? B.offered.filter(r => r.marked) : B.offered;
     const pinned = list.filter(r => r.pinned), rest = list.filter(r => !r.pinned);
-    return { list, shown: pinned.concat(rest).slice(0, Math.max(MAX_ROWS, pinned.length)) };
+    const all = pinned.concat(rest);
+    return { list, shown: showAll ? all : all.slice(0, Math.max(MAX_ROWS, pinned.length)) };
   }
   const PIN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
 
   function renderRows(today) {
     const { shown } = visibleList();
-    const sig = today + '|' + markOnly + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
+    const sig = today + '|' + markOnly + showAll + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
     if (sig === lastSig) return shown;
     // zachovat rozepsanou poznámku (fokus + kurzor)
     const ae = document.activeElement;
@@ -405,6 +408,9 @@
     $('markN').textContent = B.offered.filter(r => r.marked).length;
     $('markBtn').setAttribute('aria-pressed', markOnly);
     $('cnt').textContent = B.fetchedAt ? `${shown.length} z ${vis.list.length}` : '';
+    $('allBtn').hidden = !B.fetchedAt || (!showAll && vis.list.length <= MAX_ROWS);
+    $('allBtn').setAttribute('aria-pressed', showAll);
+    $('allBtn').textContent = showAll ? `Jen prvních ${MAX_ROWS}` : `Zobrazit vše (${vis.list.length})`;
     const P = B.provize;
     if (P) {
       $('kProv').textContent = nfKc.format(P.value) + ' Kč';
@@ -505,6 +511,7 @@
   $('soldList').addEventListener('click', e => { const k = e.target.dataset && e.target.dataset.undo; if (k) { setSold(k, false); lastSig = ''; } });
 
   /* ---------- filtr a připnutí ---------- */
+  $('allBtn').onclick = () => { showAll = !showAll; lsSet('rkl_all', showAll ? '1' : '0'); lastSig = ''; render(); };
   $('markBtn').onclick = () => { markOnly = !markOnly; lsSet('rkl_mark', markOnly ? '1' : '0'); lastSig = ''; render(); };
   $('rows').addEventListener('click', async e => {
     const b = e.target.closest('.pin'); if (!b) return;
