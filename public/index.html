@@ -448,7 +448,7 @@
     if (P) {
       $('kProv').textContent = nfKc.format(P.value) + ' Kč';
       $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav externím dopravcům (kurz ${String(P.rate).replace('.', ',')} Kč/€)` +
-        (P.rkl ? ` · nepočítá se ${P.rkl} (${Object.entries(P.excluded || {}).map(([n, c]) => n + ' ' + c + '×').join(', ')})` : '') + (P.noCarrier ? ` · ${P.noCarrier} zatím bez dopravce` : '') + (P.negSkipped && P.negSkipped.length ? ` · nepočítá se ${P.negSkipped.length}× záporná provize pod −5 000 Kč` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
+        (P.rkl ? ` · nepočítá se ${P.rkl} (${Object.entries(P.excluded || {}).map(([n, c]) => n + ' ' + c + '×').join(', ')})` : '') + (P.noCarrier ? ` · ${P.noCarrier} zatím bez dopravce` : '') + (P.negSkipped && P.negSkipped.length ? ` · nepočítá se ${P.negSkipped.length}× záporná provize pod −5 000 Kč` : '') + (P.highSkipped && P.highSkipped.length ? ` · nepočítá se ${P.highSkipped.length}× provize nad 10 000 Kč` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
     }
 
     // prodeje
@@ -480,7 +480,7 @@
             ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
             : `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>`)
           : `<span class="who none">čeká na č. přepravy</span>`) +
-        (B.provize && B.provize.perKey[k] != null ? `<span class="pv${B.provize.perKey[k] < 0 ? ' neg' : ''}${(B.provize.negSkipped || []).includes(k) ? ' skip' : ''}" title="${(B.provize.negSkipped || []).includes(k) ? 'záporná provize pod −5 000 Kč – do součtu se nepočítá' : 'provize'}">${nfKc.format(B.provize.perKey[k])} Kč</span>` : '') +
+        (B.provize && B.provize.perKey[k] != null ? `<span class="pv${B.provize.perKey[k] < 0 ? ' neg' : ''}${(B.provize.negSkipped || []).concat(B.provize.highSkipped || []).includes(k) ? ' skip' : ''}" title="${(B.provize.negSkipped || []).includes(k) ? 'záporná provize pod −5 000 Kč – do součtu se nepočítá' : (B.provize.highSkipped || []).includes(k) ? 'provize nad 10 000 Kč – do součtu se nepočítá' : 'provize'}">${nfKc.format(B.provize.perKey[k])} Kč</span>` : '') +
         (manual ? `<button data-undo="${esc(k)}">Vrátit</button>` : '') + `</li>`;
     }).join('') : '<li><span class="lb" style="color:var(--muted)">Dnes zatím nic.</span></li>';
 

@@ -21,6 +21,7 @@ const PROV_EXCLUDE = [
   { name: 'RKL', re: /rkl/ },
 ];
 const NEG_LIMIT = -5000;                 // záporná provize pod tuto hranici se do součtu nepočítá
+const POS_LIMIT = 10000;                 // provize vyšší než tato hranice se do součtu nepočítá
 const provExcluded = c => PROV_EXCLUDE.find(x => x.re.test(deacc(c)));
 const hasPZ = prepr => /PZ\s*\//i.test(prepr || '');  // řádek má číslo přepravy = prodáno
 const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
@@ -177,7 +178,7 @@ function board(rate) {
     ...sales.filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
   ]);
   // provize se počítá jen u přeprav prodaných externímu dopravci (bez RKL)
-  const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, noCarrier: 0, excluded: {}, exKeys: [], negSkipped: [], missing: 0, rate: rate.value, perKey: {} };
+  const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, noCarrier: 0, excluded: {}, exKeys: [], negSkipped: [], highSkipped: [], missing: 0, rate: rate.value, perKey: {} };
   // dopravce ke všem prodaným přepravám (z aktuální tabulky, jinak z uloženého prodeje)
   const carriers = {};
   for (const k of new Set([...Object.keys(sold), ...sales.map(([k]) => k)])) {
@@ -196,8 +197,9 @@ function board(rate) {
     const inc = (r.incCzk || 0) + (r.incEur || 0) * rate.value;
     const exp = (r.expCzk || 0) + (r.expEur || 0) * rate.value;
     prov.perKey[k] = Math.round(inc - exp);
-    // provize jedné přepravy horší než −5 000 Kč se do součtu nepočítá (nejspíš chyba v datech)
+    // provize jedné přepravy horší než −5 000 Kč nebo vyšší než 10 000 Kč se do součtu nepočítá
     if (inc - exp < NEG_LIMIT) { prov.negSkipped.push(k); prov.count--; continue; }
+    if (inc - exp > POS_LIMIT) { prov.highSkipped.push(k); prov.count--; continue; }
     prov.income += inc; prov.expense += exp;
   }
   prov.value = Math.round(prov.income - prov.expense);
