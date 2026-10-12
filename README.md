@@ -9,7 +9,7 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
 - **Označeno k prodeji** – tlačítko zobrazí jen řádky, které mají ve sloupci CODE nakl. „@@@“.
 - **Připnutí** – ikona připínáčku přesune řádek nahoru jako URGENT (červeně), sdílené pro všechny.
 - **Dnešní provize** = (Příjem CZK + Příjem EUR × kurz ČNB) − (Výdaj CZK + Výdaj EUR × kurz ČNB)
-  u dnes prodaných přeprav.
+  u dnes prodaných přeprav s dopravcem bez „RKL“; v přehledu dnes prodaných je u každé přepravy dopravce.
 - **Vynulování** leaderboardu a dnes prodaných – v nastavení (statistiky se pak počítají od teď).
 - **Režim TV** – tlačítko dole nebo adresa `?tv=1` (vypnutí `?tv=0`) zvětší stránku pro televizi.
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.

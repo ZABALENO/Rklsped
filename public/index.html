@@ -137,6 +137,8 @@
   .soldlist .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .soldlist .who{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e8eef7;color:var(--navy)}
   .soldlist .who.none{background:#f1f3f6;color:var(--muted);font-weight:500}
+  .soldlist .car{flex:0 1 auto;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:#2b3a50;background:#f3f6fa;border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+  .soldlist .car.rkl{color:var(--muted);background:#f1f3f6;border-style:dashed}
   .soldlist .pv{flex:none;font-size:12.5px;color:var(--ok);font-weight:600}
   .soldlist .pv.neg{color:#b42318}
   .soldlist button{padding:3px 9px;font-size:12px}
@@ -414,7 +416,8 @@
     const P = B.provize;
     if (P) {
       $('kProv').textContent = nfKc.format(P.value) + ' Kč';
-      $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav (kurz ${String(P.rate).replace('.', ',')} Kč/€)` + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
+      $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav externím dopravcům (kurz ${String(P.rate).replace('.', ',')} Kč/€)` +
+        (P.rkl ? ` · ${P.rkl} s dopravcem RKL se nepočítá` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
     }
 
     // prodeje
@@ -436,7 +439,9 @@
     $('soldN').textContent = todays.length;
     $('soldList').innerHTML = todays.length ? todays.map(([k, v]) => {
       const manual = B.sold[k] && !v.seller;
+      const car = (B.carriers && B.carriers[k]) || v.carrier || '';
       return `<li><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
+        `<span class="car${isRKL(car) ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
         (v.seller ? (isRKL(v.carrier)
             ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
             : `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>`)

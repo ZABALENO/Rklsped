@@ -169,10 +169,16 @@ function board(rate) {
     ...Object.entries(sold).filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
     ...sales.filter(([, v]) => pragueDay(v.at) === today).map(([k]) => k),
   ]);
-  const prov = { value: 0, income: 0, expense: 0, count: todayKeys.size, missing: 0, rate: rate.value, perKey: {} };
+  // provize se počítá jen u přeprav prodaných externímu dopravci (dopravce bez „RKL“)
+  const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, missing: 0, rate: rate.value, perKey: {} };
+  const carriers = {};
   for (const k of todayKeys) {
     const r = byKey.get(k);
+    const carrier = (r && r.carrier) || (mem.sale[k] && mem.sale[k].carrier) || '';
+    carriers[k] = carrier;
+    if (isRKL(carrier)) { prov.rkl++; continue; }
     if (!r) { prov.missing++; continue; }
+    prov.count++;
     const inc = (r.incCzk || 0) + (r.incEur || 0) * rate.value;
     const exp = (r.expCzk || 0) + (r.expEur || 0) * rate.value;
     prov.income += inc; prov.expense += exp; prov.perKey[k] = Math.round(inc - exp);
@@ -189,7 +195,7 @@ function board(rate) {
     sold,
     sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),
-    provize: prov, rate,
+    provize: prov, rate, carriers,
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
   };
