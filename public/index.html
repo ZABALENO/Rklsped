@@ -144,6 +144,7 @@
   .soldlist .car.rkl{color:var(--muted);background:#f1f3f6;border-style:dashed}
   .soldlist .pv{flex:none;font-size:12.5px;color:var(--ok);font-weight:600}
   .soldlist .pv.neg{color:#b42318}
+  .soldlist li.rklrow{opacity:.55}
   .soldlist .pv.skip{text-decoration:line-through;opacity:.6}
   .soldlist button{padding:3px 9px;font-size:12px}
 
@@ -335,6 +336,8 @@
     const out = {};
     for (const [k, v] of Object.entries(B.sold)) out[k] = { at: v.at, label: v.label, seller: null };
     for (const [k, at, seller, prepr, label, carrier] of B.sales) out[k] = { at, seller, prepr, carrier, label: (out[k] && out[k].label) || label };
+    // dopravce z aktuální tabulky má přednost; přeprava s dopravcem RKL se jako prodej nepočítá
+    for (const [k, v] of Object.entries(out)) { v.carrier = (B.carriers && B.carriers[k]) || v.carrier || ''; v.rkl = isRKL(v.carrier); }
     return out;
   }
 
@@ -450,7 +453,7 @@
     // prodeje
     const sm = soldMap();
     const byDay = {};
-    for (const v of Object.values(sm)) if (v.at) { const d = isoDay(new Date(v.at)); byDay[d] = (byDay[d] || 0) + 1; }
+    for (const v of Object.values(sm)) if (v.at && !v.rkl) { const d = isoDay(new Date(v.at)); byDay[d] = (byDay[d] || 0) + 1; }
     const tn = byDay[today] || 0;
     $('kToday').textContent = tn;
 
@@ -462,12 +465,15 @@
       return `<div class="d ${k === today ? 't' : ''}" title="${d.getDate()}. ${d.getMonth() + 1}.: ${v}"><span class="v num">${v}</span><div class="b" style="height:${Math.round(v / max * 64) + 2}px"></div><span class="l">${k === today ? 'dnes' : DOW[d.getDay()]}</span></div>`;
     }).join('');
 
-    const todays = Object.entries(sm).filter(([, v]) => v.at && isoDay(new Date(v.at)) === today).sort((a, b) => a[1].at < b[1].at ? 1 : -1);
-    $('soldN').textContent = todays.length;
+    // nejdřív započítané prodeje, přepravy s dopravcem RKL na konci (šedě, nepočítají se)
+    const todays = Object.entries(sm).filter(([, v]) => v.at && isoDay(new Date(v.at)) === today)
+      .sort((a, b) => (a[1].rkl - b[1].rkl) || (a[1].at < b[1].at ? 1 : -1));
+    $('soldN').textContent = todays.filter(([, v]) => !v.rkl).length;
     $('soldList').innerHTML = todays.length ? todays.map(([k, v]) => {
       const manual = B.sold[k] && !v.seller;
+      const liCls = v.rkl ? ' class="rklrow" title="Dopravce RKL – do Dnes prodáno ani leaderboardu se nepočítá"' : '';
       const car = (B.carriers && B.carriers[k]) || v.carrier || '';
-      return `<li><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
+      return `<li${liCls}><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
         `<span class="car${(B.provize && (B.provize.exKeys || []).includes(k)) || isRKL(car) ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}${B.provize && (B.provize.exKeys || []).includes(k) ? ' – do provize se nepočítá' : ''}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
         (v.seller ? (isRKL(v.carrier)
             ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
@@ -499,7 +505,7 @@
       return period === 'all' || (period === 'day' ? isoDay(d) === day : isoMonth(d) === $('pMonth').value);
     };
     const cnt = Object.fromEntries(B.sellers.map(s => [s, 0]));
-    for (const [, at, seller, , , carrier] of B.sales) if (seller && !isRKL(carrier) && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1;
+    for (const [k, at, seller, , , carrier] of B.sales) if (seller && !isRKL((B.carriers && B.carriers[k]) || carrier) && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1;
     // seřadit od nejvíce prodaných; při shodě v pevném pořadí jmen
     const list = Object.entries(cnt).sort((a, b) => b[1] - a[1] || B.sellers.indexOf(a[0]) - B.sellers.indexOf(b[0]));
     const max = Math.max(1, ...list.map(x => x[1]));

@@ -181,7 +181,12 @@ function board(rate) {
   ]);
   // provize se počítá jen u přeprav prodaných externímu dopravci (bez RKL, TONDAU, DU-AL, Tomáš Krejčí)
   const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, excluded: {}, exKeys: [], negSkipped: [], missing: 0, rate: rate.value, perKey: {} };
+  // dopravce ke všem prodaným přepravám (z aktuální tabulky, jinak z uloženého prodeje)
   const carriers = {};
+  for (const k of new Set([...Object.keys(sold), ...sales.map(([k]) => k)])) {
+    const r = byKey.get(k);
+    carriers[k] = (r && r.carrier) || (mem.sale[k] && mem.sale[k].carrier) || '';
+  }
   for (const k of todayKeys) {
     const r = byKey.get(k);
     const carrier = (r && r.carrier) || (mem.sale[k] && mem.sale[k].carrier) || '';
