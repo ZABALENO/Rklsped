@@ -6,7 +6,8 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
   datum nakládky nejpozději dnes + 7 pracovních dní (bez víkendů a českých svátků); řádky bez data
   jsou na konci. Sloupce: datum nakládky, trasa, popis zboží, hmotnost, poznámka.
 - **Prodáno** – zaškrtnutím řádek zmizí a započítá se do dnešních prodejů. „Dnes prodáno“, graf
-  i leaderboard počítají jen přepravy s dopravcem bez „RKL“ (RKL jsou v přehledu šedě).
+  i leaderboard a provize počítají jen přepravy, u kterých už je vyplněný dopravce bez „RKL“
+  (ostatní jsou v přehledu šedě).
 - **Označeno k prodeji** – tlačítko zobrazí jen řádky, které mají ve sloupci CODE nakl. „@@@“.
 - **Připnutí** – ikona připínáčku přesune řádek nahoru jako URGENT (červeně), sdílené pro všechny.
 - **Dnešní provize** = (Příjem CZK + Příjem EUR × kurz ČNB) − (Výdaj CZK + Výdaj EUR × kurz ČNB)

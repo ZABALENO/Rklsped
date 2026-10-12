@@ -337,7 +337,8 @@
     for (const [k, v] of Object.entries(B.sold)) out[k] = { at: v.at, label: v.label, seller: null };
     for (const [k, at, seller, prepr, label, carrier] of B.sales) out[k] = { at, seller, prepr, carrier, label: (out[k] && out[k].label) || label };
     // dopravce z aktuální tabulky má přednost; přeprava s dopravcem RKL se jako prodej nepočítá
-    for (const [k, v] of Object.entries(out)) { v.carrier = (B.carriers && B.carriers[k]) || v.carrier || ''; v.rkl = isRKL(v.carrier); }
+    // počítá se jen prodej, u kterého už vznikl dopravce a neobsahuje „RKL“
+    for (const [k, v] of Object.entries(out)) { v.carrier = (B.carriers && B.carriers[k]) || v.carrier || ''; v.rkl = !v.carrier.trim() || isRKL(v.carrier); }
     return out;
   }
 
@@ -447,7 +448,7 @@
     if (P) {
       $('kProv').textContent = nfKc.format(P.value) + ' Kč';
       $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav externím dopravcům (kurz ${String(P.rate).replace('.', ',')} Kč/€)` +
-        (P.rkl ? ` · nepočítá se ${P.rkl} (${Object.entries(P.excluded || {}).map(([n, c]) => n + ' ' + c + '×').join(', ')})` : '') + (P.negSkipped && P.negSkipped.length ? ` · nepočítá se ${P.negSkipped.length}× záporná provize pod −5 000 Kč` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
+        (P.rkl ? ` · nepočítá se ${P.rkl} (${Object.entries(P.excluded || {}).map(([n, c]) => n + ' ' + c + '×').join(', ')})` : '') + (P.noCarrier ? ` · ${P.noCarrier} zatím bez dopravce` : '') + (P.negSkipped && P.negSkipped.length ? ` · nepočítá se ${P.negSkipped.length}× záporná provize pod −5 000 Kč` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
     }
 
     // prodeje
@@ -471,7 +472,7 @@
     $('soldN').textContent = todays.filter(([, v]) => !v.rkl).length;
     $('soldList').innerHTML = todays.length ? todays.map(([k, v]) => {
       const manual = B.sold[k] && !v.seller;
-      const liCls = v.rkl ? ' class="rklrow" title="Dopravce RKL – do Dnes prodáno ani leaderboardu se nepočítá"' : '';
+      const liCls = v.rkl ? ` class="rklrow" title="${v.carrier ? 'Dopravce RKL' : 'Zatím bez dopravce'} – do Dnes prodáno, provize ani leaderboardu se nepočítá"` : '';
       const car = (B.carriers && B.carriers[k]) || v.carrier || '';
       return `<li${liCls}><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
         `<span class="car${(B.provize && (B.provize.exKeys || []).includes(k)) || isRKL(car) ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}${B.provize && (B.provize.exKeys || []).includes(k) ? ' – do provize se nepočítá' : ''}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
@@ -505,7 +506,7 @@
       return period === 'all' || (period === 'day' ? isoDay(d) === day : isoMonth(d) === $('pMonth').value);
     };
     const cnt = Object.fromEntries(B.sellers.map(s => [s, 0]));
-    for (const [k, at, seller, , , carrier] of B.sales) if (seller && !isRKL((B.carriers && B.carriers[k]) || carrier) && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1;
+    for (const [k, at, seller, , , carrier] of B.sales) { const c = (B.carriers && B.carriers[k]) || carrier || ''; if (seller && c.trim() && !isRKL(c) && inPeriod(at)) cnt[seller] = (cnt[seller] || 0) + 1; }
     // seřadit od nejvíce prodaných; při shodě v pevném pořadí jmen
     const list = Object.entries(cnt).sort((a, b) => b[1] - a[1] || B.sellers.indexOf(a[0]) - B.sellers.indexOf(b[0]));
     const max = Math.max(1, ...list.map(x => x[1]));
