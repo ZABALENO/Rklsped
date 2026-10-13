@@ -130,6 +130,7 @@ async function refreshSheet(force) {
     try {
       const out = await loadSheet(url);
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
+      await require('./lib/change').trackChange(mem.cfg, put, out, url);
       await evaluateSales(out.rows);
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, fetchedAt: sheet.url === url ? sheet.fetchedAt : null, rows: sheet.url === url ? sheet.rows : [] };
@@ -203,7 +204,7 @@ function board(rate) {
   return {
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
-    fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
+    fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
     offered, until, statsFrom: from,
     sold,
     sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),

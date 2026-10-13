@@ -31,6 +31,7 @@ async function refreshSheet(force) {
     try {
       const out = await loadSheet(url);
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
+      await require('./lib/change').trackChange(store.mem.cfg, store.put, out, url);
       await updateHistory(out.rows);
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, rows: sheet.url === url ? sheet.rows : [], fetchedAt: sheet.url === url ? sheet.fetchedAt : null };
@@ -82,7 +83,7 @@ app.get('/api/trips', async (req, res) => {
   res.json({
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url),
     url: store.mem.cfg.sheet ? store.mem.cfg.sheet.url : '',
-    fetchedAt: sheet.fetchedAt, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length,
+    fetchedAt: sheet.fetchedAt, changedAt: store.mem.cfg.chg ? store.mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length,
     missing, today, from: subWorkdays(today, 4), rate, trips, storage: store.kind,
   });
 });
