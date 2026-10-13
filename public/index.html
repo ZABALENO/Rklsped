@@ -133,6 +133,11 @@
   .score .tot{border-top:1px solid var(--line);margin-top:4px;padding-top:9px;color:var(--muted)}
   .score .tot .ct{color:var(--ink)}
 
+  .daynav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:-2px 0 8px}
+  .daynav button{padding:4px 10px;font-size:13px}
+  .daynav input{font:inherit;font-size:13.5px;padding:4px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+  .daynav .daysum{margin-left:auto;font-size:13px;color:var(--muted)}
+  .daynav .daysum b{color:var(--ok)}
   .soldlist{list-style:none;margin:0;padding:0;max-height:330px;overflow:auto}
   .soldlist li{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #edf0f4;font-size:14px}
   .soldlist li:first-child{border-top:0}
@@ -253,7 +258,14 @@
       <ul class="score" id="score"></ul>
     </div>
     <div class="card">
-      <h2>Dnes prodané přepravy (<span id="soldN">0</span>)</h2>
+      <h2><span id="soldTitle">Dnes prodané přepravy</span> (<span id="soldN">0</span>)</h2>
+      <div class="daynav">
+        <button id="sdPrev" title="Předchozí den" aria-label="Předchozí den">‹</button>
+        <input type="date" id="sdDate" aria-label="Den">
+        <button id="sdNext" title="Další den" aria-label="Další den">›</button>
+        <button id="sdToday">Dnes</button>
+        <span class="daysum" id="sdSum"></span>
+      </div>
       <ul class="soldlist" id="soldList"></ul>
     </div>
   </section>
@@ -311,6 +323,7 @@
   let period = lsGet('rkl_period', 'day');
   let markOnly = lsGet('rkl_mark', '0') === '1';
   let showAll = lsGet('rkl_all', '0') === '1';
+  let soldDay = null;   // null = dnes
   const nfKc = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
 
   /* ---------- server ---------- */
@@ -466,23 +479,35 @@
       return `<div class="d ${k === today ? 't' : ''}" title="${d.getDate()}. ${d.getMonth() + 1}.: ${v}"><span class="v num">${v}</span><div class="b" style="height:${Math.round(v / max * 64) + 2}px"></div><span class="l">${k === today ? 'dnes' : DOW[d.getDay()]}</span></div>`;
     }).join('');
 
-    // nejdřív započítané prodeje, přepravy s dopravcem RKL na konci (šedě, nepočítají se)
-    const todays = Object.entries(sm).filter(([, v]) => v.at && isoDay(new Date(v.at)) === today)
+    // přehled prodaných přeprav za zvolený den (výchozí dnes); započítané nahoře, nezapočítané šedě na konci
+    const day = soldDay || today;
+    const [NEG, POS] = B.provLimits || [-5000, 10000];
+    const pv = k => (B.provAll && B.provAll[k] != null ? B.provAll[k] : null);
+    const pvSkip = k => pv(k) != null && (pv(k) < NEG || pv(k) > POS);
+    const list = Object.entries(sm).filter(([, v]) => v.at && isoDay(new Date(v.at)) === day)
       .sort((a, b) => (a[1].rkl - b[1].rkl) || (a[1].at < b[1].at ? 1 : -1));
-    $('soldN').textContent = todays.filter(([, v]) => !v.rkl).length;
-    $('soldList').innerHTML = todays.length ? todays.map(([k, v]) => {
-      const manual = B.sold[k] && !v.seller;
-      const liCls = v.rkl ? ` class="rklrow" title="${v.carrier ? 'Dopravce RKL' : 'Zatím bez dopravce'} – do Dnes prodáno, provize ani leaderboardu se nepočítá"` : '';
-      const car = (B.carriers && B.carriers[k]) || v.carrier || '';
-      return `<li${liCls}><span class="tm num">${hhmm(new Date(v.at))}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
-        `<span class="car${(B.provize && (B.provize.exKeys || []).includes(k)) || isRKL(car) ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}${B.provize && (B.provize.exKeys || []).includes(k) ? ' – do provize se nepočítá' : ''}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
-        (v.seller ? (isRKL(v.carrier)
-            ? `<span class="who none" title="${esc(v.prepr || '')} · dopravce ${esc(v.carrier)} – do leaderboardu se nepočítá">${esc(v.seller)} · RKL</span>`
+    const counted = list.filter(([, v]) => !v.rkl);
+    const daySum = counted.reduce((a, [k]) => a + (pv(k) != null && !pvSkip(k) ? pv(k) : 0), 0);
+    $('soldN').textContent = counted.length;
+    $('soldTitle').textContent = day === today ? 'Dnes prodané přepravy' : 'Prodané přepravy ' + fmtDate(day).replace(/ \d{4}$/, '');
+    $('sdDate').value = day; $('sdDate').max = today;
+    $('sdNext').disabled = day >= today; $('sdToday').disabled = day === today;
+    $('sdSum').innerHTML = counted.length ? `provize dne <b>${nfKc.format(daySum)} Kč</b>` : '';
+    $('soldList').innerHTML = list.length ? list.map(([k, v]) => {
+      const manual = B.sold[k] && !v.seller && day === today;
+      const liCls = v.rkl ? ` class="rklrow" title="${v.carrier ? 'Dopravce RKL' : 'Zatím bez dopravce'} – do prodaných, provize ani leaderboardu se nepočítá"` : '';
+      const car = v.carrier || '';
+      const p = pv(k);
+      const time = new Date(v.at);
+      return `<li${liCls}><span class="tm num">${hhmm(time)}</span><span class="lb" title="${esc(v.label)}">${esc(String(v.label || '').replace(/\s*\/\/\s*/g, ' → '))}</span>` +
+        `<span class="car${v.rkl ? ' rkl' : ''}" title="Dopravce: ${esc(car || 'zatím nevyplněn')}">${car ? '🚚 ' + esc(car) : 'dopravce –'}</span>` +
+        (v.seller ? (v.rkl
+            ? `<span class="who none" title="${esc(v.prepr || '')}">${esc(v.seller)}${isRKL(car) ? ' · RKL' : ''}</span>`
             : `<span class="who" title="${esc(v.prepr || '')}">${esc(v.seller)}</span>`)
           : `<span class="who none">čeká na č. přepravy</span>`) +
-        (B.provize && B.provize.perKey[k] != null ? `<span class="pv${B.provize.perKey[k] < 0 ? ' neg' : ''}${(B.provize.negSkipped || []).concat(B.provize.highSkipped || []).includes(k) ? ' skip' : ''}" title="${(B.provize.negSkipped || []).includes(k) ? 'záporná provize pod −5 000 Kč – do součtu se nepočítá' : (B.provize.highSkipped || []).includes(k) ? 'provize nad 10 000 Kč – do součtu se nepočítá' : 'provize'}">${nfKc.format(B.provize.perKey[k])} Kč</span>` : '') +
+        (p != null && !v.rkl ? `<span class="pv${p < 0 ? ' neg' : ''}${pvSkip(k) ? ' skip' : ''}" title="${p < NEG ? 'záporná provize pod −5 000 Kč – do součtu se nepočítá' : p > POS ? 'provize nad 10 000 Kč – do součtu se nepočítá' : 'provize'}">${nfKc.format(p)} Kč</span>` : '') +
         (manual ? `<button data-undo="${esc(k)}">Vrátit</button>` : '') + `</li>`;
-    }).join('') : '<li><span class="lb" style="color:var(--muted)">Dnes zatím nic.</span></li>';
+    }).join('') : `<li><span class="lb" style="color:var(--muted)">${day === today ? 'Dnes zatím nic.' : 'Tento den se nic neprodalo.'}</span></li>`;
 
     renderScore();
   }
@@ -547,6 +572,12 @@
     toast(`Prodáno: ${row.route}`, row);
   });
   $('toastUndo').onclick = () => { if (lastSold) { setSold(lastSold.key, false); lastSig = ''; lastSold = null; } $('toast').classList.remove('show'); };
+  const shiftDay = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDay(d); };
+  const setDay = d => { const t = todayIso(); soldDay = !d || d >= t ? null : d; render(); };
+  $('sdPrev').onclick = () => setDay(shiftDay(soldDay || todayIso(), -1));
+  $('sdNext').onclick = () => setDay(shiftDay(soldDay || todayIso(), 1));
+  $('sdToday').onclick = () => setDay(null);
+  $('sdDate').onchange = () => setDay($('sdDate').value);
   $('soldList').addEventListener('click', e => { const k = e.target.dataset && e.target.dataset.undo; if (k) { setSold(k, false); lastSig = ''; } });
 
   /* ---------- filtr a připnutí ---------- */

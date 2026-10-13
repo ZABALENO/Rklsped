@@ -14,6 +14,8 @@ Dashboard pro speditéry na https://rklspedice.onrender.com
   u dnes prodaných přeprav; nepočítají se přepravy s dopravcem RKL nebo bez dopravce (seznam `PROV_EXCLUDE`
   v server.js) a přepravy s provizí horší než −5 000 Kč nebo vyšší než 10 000 Kč. V přehledu dnes prodaných je u každé přepravy dopravce.
 - **Cena** (Příjem CZK / Příjem EUR) před poznámkou, u míst vykládky PSČ vykládky.
+- **Prodané přepravy po dnech** – přehled kdo, kdy a kterému dopravci prodal, s přepínáním na předchozí dny
+  (šipky / kalendář) a provizí dne.
 - **Vynulování** leaderboardu a dnes prodaných – v nastavení (statistiky se pak počítají od teď).
 - **Režim TV** – tlačítko dole nebo adresa `?tv=1` (vypnutí `?tv=0`) zvětší stránku pro televizi.
 - **Poznámka** – sdílená pro všechny, ukládá se do databáze.
@@ -55,6 +57,9 @@ Druhá stránka ze stejného repozitáře – start `node doprava.js`. Stejné h
 - Jeden řádek = jedno číslo přepravy (PZ/…): **SPZ** (sloupec „SPZ“), **trasa** všech zásilek
   seřazená od místa nejbližšího Opavě po nejvzdálenější, **hmotnost**, **ložné metry** (sloupec Ložné metry,
   jinak odhad z počtu kusů a rozměrů v popisu – označeno „~“) a **příjem** = Příjem CZK + Příjem EUR × kurz ČNB.
+- **Historie nakládek** dole – pro zvolený den: SPZ tahače, dispečer (podle čísla přepravy), přeprava,
+  trasa, zboží, hmotnost. Ukládá se do databáze (tabulka `kv_doprava`, ns `hist`), takže zůstane, i když
+  starší řádky z tabulky zmizí.
 - U každého města první 2 číslice PSČ, trasa je vždy celá (zalomená). Tlačítko „Skrýt příjem“.
 - Na velké obrazovce (≥ 1600 px, TV ~160 cm) se sám zapne režim TV s větším písmem – vejde se 17 aut.
 

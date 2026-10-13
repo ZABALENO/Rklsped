@@ -6,7 +6,8 @@ const express = require('express');
 const path = require('path');
 const { loadSheet, validUrl } = require('./lib/sheet');
 const { createStore } = require('./lib/store');
-const { buildTrips } = require('./lib/trips');
+const { buildTrips, isRKL } = require('./lib/trips');
+const { sellerOf } = require('./lib/sellers');
 const geo = require('./lib/geo');
 const { pragueToday, subWorkdays } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
@@ -30,11 +31,38 @@ async function refreshSheet(force) {
     try {
       const out = await loadSheet(url);
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
+      await updateHistory(out.rows);
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, rows: sheet.url === url ? sheet.rows : [], fetchedAt: sheet.url === url ? sheet.fetchedAt : null };
     } finally { inflight = null; }
   })();
   return inflight;
+}
+
+/* ---------- historie nakládek ----------
+   Pro každý den (Datum nakl.od) se v databázi drží seznam zásilek RKL: SPZ, dispečer, přeprava, trasa…
+   Záznamy se jen doplňují/aktualizují – když řádek z tabulky zmizí, v historii zůstane. */
+const HIST_DAYS = 400;
+function histRow(r) {
+  const s = sellerOf(r.prepr);
+  return { k: r.key, spz: r.spz || '', pz: r.prepr || '', who: s ? s.name : '', route: r.route || '', goods: r.goods || '',
+    kg: r.weight || 0, to: r.zipTo || '', ul: r.unlTo || r.unlFrom || '' };
+}
+async function updateHistory(rows) {
+  const limit = subWorkdays(pragueToday(), Math.round(HIST_DAYS * 5 / 7));
+  const byDay = new Map();
+  for (const r of rows) {
+    if (!isRKL(r.carrier) || !r.date || r.date < limit) continue;
+    if (!byDay.has(r.date)) byDay.set(r.date, []);
+    byDay.get(r.date).push(histRow(r));
+  }
+  for (const [day, list] of byDay) {
+    const prev = (store.mem.hist[day] && store.mem.hist[day].o) || [];
+    const map = new Map(prev.map(o => [o.k, o]));
+    for (const o of list) map.set(o.k, o);
+    const merged = [...map.values()].sort((a, b) => (a.spz || '~').localeCompare(b.spz || '~', 'cs') || a.pz.localeCompare(b.pz));
+    if (JSON.stringify(merged) !== JSON.stringify(prev)) await store.put('hist', day, { o: merged });
+  }
 }
 
 /* ---------- HTTP ---------- */
@@ -67,9 +95,17 @@ app.post('/api/config', async (req, res) => {
   res.json({ ok: true, error: sheet.error, totalRows: sheet.rows.length, sheetName: sheet.sheet });
 });
 
+// historie nakládek pro jeden den + seznam dnů, pro které historie existuje
+app.get('/api/history', async (req, res) => {
+  await refreshSheet(false);
+  const days = Object.keys(store.mem.hist).sort();
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(req.query.date || '') ? req.query.date : pragueToday();
+  res.json({ date, days, orders: (store.mem.hist[date] && store.mem.hist[date].o) || [] });
+});
+
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo'], 'doprava.json').then(s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist'], 'doprava.json').then(s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));

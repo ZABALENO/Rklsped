@@ -26,8 +26,7 @@ const provExcluded = c => PROV_EXCLUDE.find(x => x.re.test(deacc(c)));
 const hasPZ = prepr => /PZ\s*\//i.test(prepr || '');  // řádek má číslo přepravy = prodáno
 const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku v paměti
 const BG_REFRESH = 3 * 60 * 1000;         // obnova tabulky na pozadí
-const SELLERS = { J: 'Jirka', G: 'Gabka', N: 'Pavel', U: 'Petr', H: 'Robin' };
-const SELLER_ORDER = ['Jirka', 'Gabka', 'Pavel', 'Petr', 'Robin'];
+const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
@@ -82,12 +81,6 @@ async function put(ns, k, v) {
 let sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null };
 let inflight = null;
 
-function sellerOf(prepr) {
-  const m = String(prepr).match(/^\s*PZ\s*\/\s*\d{2}\s*([A-Z])/i);
-  if (!m) return null;
-  const L = m[1].toUpperCase();
-  return { letter: L, name: SELLERS[L] || `Ostatní (${L})` };
-}
 const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
 const labelOf = r => `${fmtDate(r.date)} · ${r.route}`.replace(/^ · /, '');
 
@@ -167,8 +160,7 @@ function board(rate) {
     .sort((a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0)
       || (a.date || '9999').localeCompare(b.date || '9999'));
   const from = statsFrom();
-  const weekAgo = new Date(Date.now() - 9 * 864e5).toISOString();
-  const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') > weekAgo && (v.at || '') >= from));
+  const sold = Object.fromEntries(Object.entries(mem.sold).filter(([, v]) => v.sold && (v.at || '') >= from));
   const sales = Object.entries(mem.sale).filter(([, v]) => (v.at || '') >= from);
 
   // Dnešní provize = (Příjem CZK + Příjem EUR × kurz) − (Výdaj CZK + Výdaj EUR × kurz) u dnes prodaných přeprav
@@ -181,9 +173,11 @@ function board(rate) {
   const prov = { value: 0, income: 0, expense: 0, count: 0, rkl: 0, noCarrier: 0, excluded: {}, exKeys: [], negSkipped: [], highSkipped: [], missing: 0, rate: rate.value, perKey: {} };
   // dopravce ke všem prodaným přepravám (z aktuální tabulky, jinak z uloženého prodeje)
   const carriers = {};
+  const provAll = {};   // provize každé prodané přepravy (pro historii po dnech)
   for (const k of new Set([...Object.keys(sold), ...sales.map(([k]) => k)])) {
     const r = byKey.get(k);
     carriers[k] = (r && r.carrier) || (mem.sale[k] && mem.sale[k].carrier) || '';
+    if (r) provAll[k] = Math.round((r.incCzk || 0) + (r.incEur || 0) * rate.value - (r.expCzk || 0) - (r.expEur || 0) * rate.value);
   }
   for (const k of todayKeys) {
     const r = byKey.get(k);
@@ -214,7 +208,7 @@ function board(rate) {
     sold,
     sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),
-    provize: prov, rate, carriers,
+    provize: prov, rate, carriers, provAll, provLimits: [NEG_LIMIT, POS_LIMIT],
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
   };

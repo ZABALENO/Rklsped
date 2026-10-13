@@ -82,6 +82,22 @@
   .settings button{font:inherit;font-weight:600;cursor:pointer;border-radius:8px;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:8px 13px}
   .settings .status{font-size:12.5px;color:var(--muted);margin-top:8px}
   .settings .status.err{color:#b42318}
+  .hist{margin-top:12px}
+  .hh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .hh h2{margin:0;font-size:15px}
+  .daynav{display:flex;gap:6px;align-items:center}
+  .daynav button{font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:7px;padding:3px 10px;color:var(--ink)}
+  .daynav button:disabled{opacity:.45;cursor:default}
+  .daynav input{font:inherit;font-size:13px;padding:3px 7px;border:1px solid var(--line);border-radius:7px}
+  .hsum{margin-left:auto;font-size:13px;color:var(--muted)}
+  .htable tbody td{white-space:normal;vertical-align:top;padding:4px 10px}
+  .htable tr.grp td{border-top:2px solid #dfe5ee}
+  .h-spz{width:130px} .h-who{width:96px} .h-pz{width:130px} .h-goods{width:24%} .h-kg{width:96px;text-align:right}
+  .htable td.h-kg{text-align:right;white-space:nowrap}
+  .who{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:20px;background:#e8eef7;color:var(--navy)}
+  .htable .zip{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);background:#eef2f7;border-radius:3px;padding:0 3px}
+  .htable .goods{color:#2b3a50}
+  @media (max-width:760px){ .h-pz,.h-goods,.h-who{display:none} .h-spz{width:88px} .h-kg{width:70px} }
   .spacer{flex:1}
   html.tv .bar,html.tv main,html.tv footer{max-width:none}
   html.tv body{font-size:19px}
@@ -148,6 +164,24 @@
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
+  </section>
+
+  <section class="panel hist">
+    <div class="hh">
+      <h2>Historie nakládek</h2>
+      <div class="daynav">
+        <button id="hPrev" title="Předchozí den s nakládkou" aria-label="Předchozí den">‹</button>
+        <input type="date" id="hDate" aria-label="Den">
+        <button id="hNext" title="Další den s nakládkou" aria-label="Další den">›</button>
+        <button id="hToday">Dnes</button>
+      </div>
+      <span class="hsum" id="hSum"></span>
+    </div>
+    <table class="htable">
+      <thead><tr><th class="h-spz">SPZ tahače</th><th class="h-who">Dispečer</th><th class="h-pz">Přeprava</th><th>Trasa</th><th class="h-goods">Zboží</th><th class="h-kg">Hmotnost</th></tr></thead>
+      <tbody id="hRows"></tbody>
+    </table>
+    <div class="empty" id="hEmpty" hidden></div>
   </section>
 </main>
 
@@ -262,6 +296,45 @@
     $('save').disabled = false;
   };
   $('url').addEventListener('keydown', e => { if (e.key === 'Enter') $('save').click(); });
+
+
+  /* ---------- historie nakládek ---------- */
+  let H = null, hDate = null;
+  const isoToday = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  async function loadHist(date) {
+    try { H = await api('/api/history' + (date ? '?date=' + date : '')); hDate = H.date; renderHist(); } catch {}
+  }
+  function renderHist() {
+    if (!H) return;
+    const today = isoToday();
+    $('hDate').value = H.date; $('hDate').max = today;
+    $('hPrev').disabled = !H.days.some(d => d < H.date);
+    $('hNext').disabled = !H.days.some(d => d > H.date && d <= today) && H.date >= today;
+    $('hToday').disabled = H.date === today;
+    const o = H.orders;
+    const spzs = new Set(o.map(x => x.spz || '?'));
+    $('hSum').textContent = o.length ? `${o.length} zásilek · ${spzs.size} tahačů · ${nf1.format(o.reduce((a, x) => a + (x.kg || 0), 0) / 1000)} t` : '';
+    let last = null;
+    $('hRows').innerHTML = o.map(x => {
+      const first = x.spz !== last; last = x.spz;
+      const route = String(x.route || '').split(/\s*\/\/\s*/).map(esc).join(' <span class="a" style="color:var(--accent);font-weight:700">→</span> ') + (x.to ? ` <span class="zip">${esc(x.to)}</span>` : '');
+      return `<tr class="${first ? 'grp' : ''}">
+        <td class="h-spz">${first ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') : ''}</td>
+        <td class="h-who">${x.who ? `<span class="who">${esc(x.who)}</span>` : ''}</td>
+        <td class="h-pz"><span class="pz num">${esc(x.pz || '—')}</span></td>
+        <td><span class="route" style="font-weight:600">${route}</span></td>
+        <td class="h-goods"><span class="goods">${esc(x.goods || '–')}</span></td>
+        <td class="h-kg num">${nf.format(x.kg || 0)} kg</td>
+      </tr>`;
+    }).join('');
+    $('hEmpty').hidden = o.length > 0;
+    $('hEmpty').innerHTML = `<b>${fmtDate(H.date)} – žádná nakládka RKL.</b>` + (H.days.length ? '' : '<br>Historie se začne plnit po prvním načtení tabulky.');
+  }
+  $('hPrev').onclick = () => { const d = H.days.filter(x => x < H.date).pop(); if (d) loadHist(d); };
+  $('hNext').onclick = () => { const t = isoToday(); const d = H.days.find(x => x > H.date && x <= t); loadHist(d || t); };
+  $('hToday').onclick = () => loadHist(null);
+  $('hDate').onchange = () => loadHist($('hDate').value);
+  loadHist(null); setInterval(() => loadHist(hDate === isoToday() ? null : hDate), 5 * 60 * 1000);
 
   function tick() { const d = new Date(); $('clock').textContent = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
   tick(); setInterval(tick, 30000);
