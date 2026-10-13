@@ -252,8 +252,13 @@
         <div class="seg" id="seg">
           <button data-p="day" class="on">Den</button><button data-p="month">Měsíc</button><button data-p="all">Celé období</button>
         </div>
-        <input type="date" id="pDay">
-        <select id="pMonth" hidden></select>
+        <div class="daynav" id="lbNav" style="margin:0">
+          <button id="lbPrev" title="Předchozí" aria-label="Předchozí">‹</button>
+          <input type="date" id="pDay">
+          <select id="pMonth" hidden></select>
+          <button id="lbNext" title="Další" aria-label="Další">›</button>
+          <button id="lbToday">Dnes</button>
+        </div>
       </div>
       <ul class="score" id="score"></ul>
     </div>
@@ -524,6 +529,17 @@
     if ($('pMonth').dataset.h !== mhtml) { $('pMonth').innerHTML = mhtml; $('pMonth').dataset.h = mhtml; $('pMonth').value = mlist.includes(month) ? month : mlist[0]; }
 
     $('pDay').hidden = period !== 'day'; $('pMonth').hidden = period !== 'month';
+    $('lbNav').hidden = period === 'all';
+    const t = todayIso();
+    if (period === 'day') {
+      $('pDay').max = t;
+      $('lbNext').disabled = day >= t; $('lbToday').disabled = day === t; $('lbToday').textContent = 'Dnes';
+    } else if (period === 'month') {
+      const opts = [...$('pMonth').options].map(o => o.value), i = opts.indexOf($('pMonth').value);
+      $('lbPrev').disabled = i >= opts.length - 1; $('lbNext').disabled = i <= 0;
+      $('lbToday').disabled = $('pMonth').value === isoMonth(new Date()); $('lbToday').textContent = 'Tento měsíc';
+    }
+    if (period === 'day') $('lbPrev').disabled = false;
     document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b.dataset.p === period));
 
     const inPeriod = at => {
@@ -543,7 +559,21 @@
   }
   $('seg').addEventListener('click', e => { const p = e.target.dataset.p; if (!p) return; period = p; lsSet('rkl_period', p); renderScore(); });
   $('pDay').value = todayIso();
-  $('pDay').onchange = renderScore;
+  $('pDay').onchange = () => { if ($('pDay').value > todayIso()) $('pDay').value = todayIso(); renderScore(); };
+  // listování leaderboardu po dnech / měsících
+  function lbShift(n) {
+    if (period === 'day') {
+      const d = new Date(($('pDay').value || todayIso()) + 'T12:00:00'); d.setDate(d.getDate() + n);
+      const v = isoDay(d); $('pDay').value = v > todayIso() ? todayIso() : v;
+    } else if (period === 'month') {
+      const opts = [...$('pMonth').options].map(o => o.value), i = opts.indexOf($('pMonth').value);
+      const j = Math.min(Math.max(i - n, 0), opts.length - 1); if (opts[j]) $('pMonth').value = opts[j];   // seznam je od nejnovějšího
+    }
+    renderScore();
+  }
+  $('lbPrev').onclick = () => lbShift(-1);
+  $('lbNext').onclick = () => lbShift(1);
+  $('lbToday').onclick = () => { if (period === 'day') $('pDay').value = todayIso(); else $('pMonth').value = isoMonth(new Date()); renderScore(); };
   $('pMonth').onchange = renderScore;
 
   /* ---------- Prodáno ---------- */
