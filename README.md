@@ -66,3 +66,14 @@ Druhá stránka ze stejného repozitáře – start `node doprava.js`. Stejné h
 Polohy míst podle PSČ / názvu: data © [GeoNames](https://www.geonames.org/) (CC BY 4.0,
 převod [zauberware/postal-codes-json-xml-csv](https://github.com/zauberware/postal-codes-json-xml-csv)),
 chybějící místa se dohledají přes OpenStreetMap Nominatim a uloží do databáze.
+
+## Přihlášení e-mailem s jednorázovým kódem
+
+Zapne se nastavením proměnných prostředí (na Renderu u obou služeb):
+
+- `MAIL_FROM` – ověřený odesílatel (např. `dashboard@rkl.cz`)
+- `BREVO_API_KEY` (nebo `RESEND_API_KEY`) – klíč poskytovatele e-mailů
+- volitelně `MAIL_NAME` (jméno odesílatele), `ALLOWED_DOMAIN` (výchozí `rkl.cz`)
+
+Povolené jsou jen adresy `jmeno@rkl.cz`. Kód je šestimístný, platí 10 minut, max. 5 pokusů.
+Bez těchto proměnných zůstává přihlášení heslem `APP_PASSWORD`.
