@@ -41,6 +41,7 @@
   .srchbtn:hover,.srchbtn[aria-pressed=true]{background:rgba(255,255,255,.25)}
   #q{width:230px;max-width:46vw;font:inherit;font-size:14px;padding:5px 10px;border:0;border-radius:8px;background:#fff;color:#0f1b2d}
   #q:focus{outline:2px solid #ffd77a}
+  .route .cd{font-size:.72em;font-weight:500;color:#5d6b80;background:#f1f4f8;border-radius:3px;padding:0 4px;vertical-align:1px}
   .chg{font-weight:600;font-size:12px;opacity:1;margin-top:1px}
   .clock{font-size:12.5px;opacity:.85;text-align:right;white-space:nowrap;flex:none}
 
@@ -374,18 +375,21 @@
 
   function splitZips(z) { const t = String(z || '').trim(); if (!t) return []; if (/^\d{2}-\d{3}$/.test(t)) return [t]; return t.split(/\s*[-;,/+]\s*/).filter(Boolean); }
   // trasa; u míst vykládky vždy PSČ vykládky
-  function routeHtml(route, zipTo) {
+  // CODE nakl. / CODE vykl. z tabulky – malým písmem u města nakládky / vykládky (značka @@@ se nezobrazuje, má vlastní štítek)
+  const codeHtml = c => { const t = String(c || '').replace(/@@@/g, '').replace(/\s+/g, ' ').trim(); return t ? ` <span class="cd">${esc(t)}</span>` : ''; };
+  function routeHtml(route, zipTo, codeL, codeU) {
     const parts = String(route).split(/\s*\/\/\s*/);
-    if (parts.length > 1 && zipTo) {
-      const places = parts[parts.length - 1].split(/\s*\+\s*/);
-      const zips = splitZips(zipTo);
-      parts[parts.length - 1] = places.map((p, i) => {
-        const z = zips.length === places.length ? zips[i] : (i === places.length - 1 ? zips.join(', ') : '');
-        return esc(p) + (z ? ` <span class="zip">${esc(z)}</span>` : '');
+    if (parts.length === 1) return esc(parts[0]) + codeHtml(codeL);
+    const last = parts.length - 1;
+    return parts.map((part, i) => {
+      if (i === 0) return part.split(/\s*\+\s*/).map(p => esc(p) + codeHtml(codeL)).join(' + ');
+      if (i < last) return esc(part);
+      const places = part.split(/\s*\+\s*/), zips = zipTo ? splitZips(zipTo) : [];
+      return places.map((p, j) => {
+        const z = zips.length === places.length ? zips[j] : (j === places.length - 1 ? zips.join(', ') : '');
+        return esc(p) + (z ? ` <span class="zip">${esc(z)}</span>` : '') + codeHtml(codeU);
       }).join(' + ');
-      return parts.slice(0, -1).map(esc).concat(parts[parts.length - 1]).join('<span class="arr">→</span>');
-    }
-    return parts.map(esc).join('<span class="arr">→</span>');
+    }).join('<span class="arr">→</span>');
   }
   const nfEur = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 2 });
   function priceHtml(r) {
@@ -447,7 +451,7 @@
       return `<tr data-key="${esc(r.key)}" class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button></td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
-        <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
+        <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
         <td class="c-price num">${priceHtml(r)}</td>

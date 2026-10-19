@@ -63,6 +63,8 @@
   .pz{color:var(--muted);font-size:13px}
   .route .p{font-weight:600}
   .route .cc{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:2px;vertical-align:1px}
+  .route .cd{font-size:.72em;font-weight:500;color:var(--muted);margin-left:4px;vertical-align:1px}
+  html.tv .route .cd{font-size:12px}
   .route .a{color:var(--accent);font-weight:700}
   .route .home{color:var(--muted);font-weight:500}
   .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;margin-right:4px}
@@ -226,7 +228,7 @@
 
   function routeHtml(route) {
     const z2 = z => String(z || '').replace(/[^0-9A-Za-z]/g, '').slice(0, 2);
-    const parts = route.map(p => `<span class="pl"><span class="p" title="${p.km != null ? p.km + ' km od Opavy' : 'poloha neznámá'}${p.zip ? ' · PSČ ' + esc(p.zip) : ''}">${esc(p.name)}</span>${p.cc && p.cc !== 'CZ' ? `<span class="cc">${esc(p.cc)}</span>` : ''}${z2(p.zip) ? `<span class="z">${esc(z2(p.zip))}</span>` : ''}</span>`);
+    const parts = route.map(p => `<span class="pl"><span class="p" title="${p.km != null ? p.km + ' km od Opavy' : 'poloha neznámá'}${p.zip ? ' · PSČ ' + esc(p.zip) : ''}">${esc(p.name)}</span>${p.cc && p.cc !== 'CZ' ? `<span class="cc">${esc(p.cc)}</span>` : ''}${z2(p.zip) ? `<span class="z">${esc(z2(p.zip))}</span>` : ''}${p.code ? `<span class="cd">${esc(p.code)}</span>` : ''}</span>`);
     return parts.join(' <span class="a">→</span> ');
   }
 
