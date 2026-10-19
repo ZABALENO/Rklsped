@@ -77,6 +77,8 @@
   footer{max-width:1400px;margin:0 auto;padding:0 20px 30px;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
   .gear{border:0;background:rgba(255,255,255,.75);border-radius:8px;padding:6px 8px;opacity:.75;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font:500 12px "IBM Plex Sans",sans-serif;cursor:pointer;text-decoration:none}
   .gear:hover,.gear[aria-expanded=true]{opacity:1}
+  .gear[hidden]{display:none}
+  #sUpd{cursor:default}
   .settings{display:none;flex-basis:100%;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px}
   .settings.open{display:block}
   .settings .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -188,7 +190,7 @@
 </main>
 
 <footer>
-  <button class="gear" id="gear" aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
+  <button class="gear" id="gear" hidden aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
   <span class="spacer"></span>
@@ -247,7 +249,7 @@
     $('sSum').textContent = nf.format(t.reduce((a, x) => a + x.total, 0)) + ' Kč';
     $('sRate').textContent = nf2.format(D.rate.value) + ' Kč/€';
     $('sRateSrc').textContent = D.rate.src === 'ČNB' ? 'ČNB ' + (D.rate.date || '') : D.rate.src;
-    $('sUpd').textContent = D.changedAt ? (() => { const d = new Date(D.changedAt), t = d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); return 'data v tabulce změněna ' + (d.toDateString() === new Date().toDateString() ? 'dnes' : d.getDate() + '. ' + (d.getMonth() + 1) + '.') + ' v ' + t; })() : (D.fetchedAt ? 'načteno ' + new Date(D.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '');
+    $('sUpd').textContent = !D.configured ? 'tabulka není nastavena' : D.changedAt ? (() => { const d = new Date(D.changedAt), t = d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); return 'data v tabulce změněna ' + (d.toDateString() === new Date().toDateString() ? 'dnes' : d.getDate() + '. ' + (d.getMonth() + 1) + '.') + ' v ' + t; })() : (D.fetchedAt ? 'načteno ' + new Date(D.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '');
 
     const open = new Set([...$('rows').querySelectorAll('tr.open')].map(tr => tr.dataset.key));
     $('rows').innerHTML = t.map(x => {
@@ -282,6 +284,7 @@
   function applyInc() { document.documentElement.classList.toggle('noinc', noInc); $('incBtn').textContent = noInc ? 'Zobrazit příjem' : 'Skrýt příjem'; $('incBtn').setAttribute('aria-pressed', noInc); }
   $('incBtn').onclick = () => { noInc = !noInc; try { localStorage.setItem('rkl_noinc', noInc ? '1' : '0'); } catch {} applyInc(); };
   applyInc();
+  $('sUpd').onclick = () => $('gear').click();   // nastavení zdroje se otevírá kliknutím na čas poslední změny tabulky
   $('gear').onclick = () => {
     const o = $('settings').classList.toggle('open');
     $('gear').setAttribute('aria-expanded', o);

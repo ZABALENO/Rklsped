@@ -169,6 +169,11 @@
   footer{max-width:1320px;margin:0 auto;padding:0 20px 40px}
   .gear{border:0;background:rgba(255,255,255,.75);border-radius:8px;padding:6px 8px;opacity:.75;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px}
   .gear:hover,.gear[aria-expanded=true]{opacity:.9}
+  .gear[hidden]{display:none}
+  html.noprice .c-price,html.noprice .pv,html.noprice #sdSum{display:none}
+  html.noprice #kProv{color:transparent;text-shadow:0 0 9px rgba(255,255,255,.95)}
+  #provChip{cursor:pointer;user-select:none}
+  #chg{cursor:default}
   .settings{display:none;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
   .settings.open{display:block}
   .settings .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -287,7 +292,7 @@
 
 <footer>
   <div class="foot">
-  <button class="gear" id="gear" aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
+  <button class="gear" id="gear" hidden aria-expanded="false" title="Nastavení zdroje dat" aria-label="Nastavení">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
   <span class="spacer"></span>
@@ -479,7 +484,7 @@
     else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', prepr: 'Přeprava', carrier: 'Dopravce' }[k])).join(', '), true);
     else showBanner('');
     $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (B.fetchedAt ? 'načteno ' + hhmm(new Date(B.fetchedAt)) : '');
-    $('chg').textContent = B.changedAt ? 'data v tabulce změněna ' + fmtChg(B.changedAt) : '';
+    $('chg').textContent = B.changedAt ? 'data v tabulce změněna ' + fmtChg(B.changedAt) : (B.configured ? '' : 'tabulka není nastavena');
 
     const shown = renderRows(today);
     const empty = $('empty');
@@ -501,8 +506,9 @@
     const P = B.provize;
     if (P) {
       $('kProv').textContent = nfKc.format(P.value) + ' Kč';
-      $('provChip').title = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav externím dopravcům (kurz ${String(P.rate).replace('.', ',')} Kč/€)` +
+      $('provChip').dataset.t = `Příjem ${nfKc.format(P.income)} Kč − výdaj ${nfKc.format(P.expense)} Kč u ${P.count} dnes prodaných přeprav externím dopravcům (kurz ${String(P.rate).replace('.', ',')} Kč/€)` +
         (P.rkl ? ` · nepočítá se ${P.rkl} (${Object.entries(P.excluded || {}).map(([n, c]) => n + ' ' + c + '×').join(', ')})` : '') + (P.noCarrier ? ` · ${P.noCarrier} zatím bez dopravce` : '') + (P.negSkipped && P.negSkipped.length ? ` · nepočítá se ${P.negSkipped.length}× záporná provize pod −5 000 Kč` : '') + (P.highSkipped && P.highSkipped.length ? ` · nepočítá se ${P.highSkipped.length}× provize nad 10 000 Kč` : '') + (P.missing ? ` · ${P.missing} už v tabulce není` : '');
+      applyPrice();
     }
 
     // prodeje
@@ -695,7 +701,14 @@
   });
   $('rows').addEventListener('keydown', e => { if (e.target.classList.contains('note') && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } });
 
-  /* ---------- nastavení ---------- */
+  /* ---------- skrytí cen: klik na „Dnešní provize“ ---------- */
+  let noPrice = lsGet('rkl_noprice', '0') === '1';
+  function applyPrice() { document.documentElement.classList.toggle('noprice', noPrice); $('provChip').title = noPrice ? 'Ceny a provize jsou skryté – klikni pro zobrazení' : $('provChip').dataset.t || ''; }
+  $('provChip').onclick = () => { noPrice = !noPrice; lsSet('rkl_noprice', noPrice ? '1' : '0'); applyPrice(); };
+  applyPrice();
+
+  /* ---------- nastavení (otevírá se kliknutím na čas poslední změny tabulky vpravo nahoře) ---------- */
+  $('chg').onclick = () => $('gear').click();
   $('gear').onclick = () => {
     const open = $('settings').classList.toggle('open');
     $('gear').setAttribute('aria-expanded', open);
