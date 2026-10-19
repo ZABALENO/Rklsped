@@ -173,8 +173,7 @@
   .gear{border:0;background:rgba(255,255,255,.75);border-radius:8px;padding:6px 8px;opacity:.75;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px}
   .gear:hover,.gear[aria-expanded=true]{opacity:.9}
   .gear[hidden]{display:none}
-  html.noprice .c-price,html.noprice .pv,html.noprice #sdSum{display:none}
-  html.noprice #kProv{color:transparent;text-shadow:0 0 9px rgba(255,255,255,.95)}
+  html.noprice .c-price{display:none}
   #provChip{cursor:pointer;user-select:none}
   #chg{cursor:default}
   .settings{display:none;margin-top:8px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
@@ -706,7 +705,7 @@
 
   /* ---------- skrytí cen: klik na „Dnešní provize“ ---------- */
   let noPrice = lsGet('rkl_noprice', '0') === '1';
-  function applyPrice() { document.documentElement.classList.toggle('noprice', noPrice); $('provChip').title = noPrice ? 'Ceny a provize jsou skryté – klikni pro zobrazení' : $('provChip').dataset.t || ''; }
+  function applyPrice() { document.documentElement.classList.toggle('noprice', noPrice); $('provChip').title = (noPrice ? 'Ceny u řádků jsou skryté – klikni pro zobrazení. ' : '') + ($('provChip').dataset.t || ''); }
   $('provChip').onclick = () => { noPrice = !noPrice; lsSet('rkl_noprice', noPrice ? '1' : '0'); applyPrice(); };
   applyPrice();
 
