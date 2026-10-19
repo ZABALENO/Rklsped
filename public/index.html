@@ -36,6 +36,11 @@
   .chip b{font-size:18px;color:#fff;font-weight:600}
   .chip.sold b{color:#a8f0c0}
   .chip.prov b{color:#ffd77a}
+  .srch{display:flex;align-items:center;gap:6px}
+  .srchbtn{background:rgba(255,255,255,.13);color:#fff;border:0;border-radius:8px;padding:5px 12px;font:600 13px inherit;font-family:inherit;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+  .srchbtn:hover,.srchbtn[aria-pressed=true]{background:rgba(255,255,255,.25)}
+  #q{width:230px;max-width:46vw;font:inherit;font-size:14px;padding:5px 10px;border:0;border-radius:8px;background:#fff;color:#0f1b2d}
+  #q:focus{outline:2px solid #ffd77a}
   .chg{font-weight:600;font-size:12px;opacity:1;margin-top:1px}
   .clock{font-size:12.5px;opacity:.85;text-align:right;white-space:nowrap;flex:none}
 
@@ -67,6 +72,7 @@
   .ph .upd{margin-left:auto;font-size:12.5px;color:var(--muted)}
   .ph{align-items:center}
   .markbtn{padding:5px 12px;font-size:13px;border-radius:20px;display:inline-flex;gap:7px;align-items:center}
+  .markbtn[hidden]{display:none}
   .markbtn .n{font-family:"IBM Plex Mono",monospace;font-size:12px;background:#eef2f7;border-radius:10px;padding:0 7px}
   .markbtn[aria-pressed=true]{background:var(--accent);border-color:#d68f00;color:#3a2600}
   .markbtn[aria-pressed=true] .n{background:rgba(255,255,255,.55)}
@@ -218,6 +224,7 @@
       <div class="chip sold"><span>Dnes prodáno</span><b class="num" id="kToday">0</b></div>
       <div class="chip"><span>Dnes k prodeji</span><b class="num" id="kOpen">–</b></div>
       <div class="chip prov" id="provChip"><span>Dnešní provize</span><b class="num" id="kProv">–</b></div>
+      <div class="srch"><button class="srchbtn" id="srchBtn" aria-pressed="false" title="Hledat v seznamu (jako Ctrl+F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Hledat</button><input id="q" type="search" placeholder="Hledat v seznamu…" aria-label="Hledat" autocomplete="off" hidden></div>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="chg"></div></div>
   </div>
@@ -397,17 +404,38 @@
   function noteVal(k) { return k in pendingNotes ? pendingNotes[k] : (B.notes[k] || ''); }
 
   // seznam po filtru „Označeno k prodeji“; připnuté vždy nahoře a vždy zobrazené
+  // vyhledávání: hledaný text se porovná se všemi sloupci řádku (datum, trasa, PSČ, objednávka, popis, hmotnost, cena, poznámka)
+  const fold = t => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  let query = '';
+  function rowText(r) {
+    const d = r.date ? new Date(r.date + 'T00:00:00') : null;
+    const dt = d ? [r.date, `${d.getDate()}. ${d.getMonth() + 1}.`, `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`, `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`, DOW[d.getDay()]].join(' ') : '';
+    const price = priceHtml(r).replace(/<[^>]*>/g, ' ');
+    const extra = Object.values(r).filter(v => typeof v === 'string' || typeof v === 'number').join(' ');
+    return fold([dt, extra, fmtW(r.weight), r.weight, price, noteVal(r.key), B.notes[r.key] || ''].join(' '));
+  }
+  function matchesQuery(r) {
+    const words = fold(query).split(/\s+/).filter(Boolean);
+    if (!words.length) return true;
+    const t = rowText(r);
+    return words.every(w => t.includes(w));
+  }
   function visibleList() {
-    const list = markOnly ? B.offered.filter(r => r.marked) : B.offered;
+    let list = markOnly ? B.offered.filter(r => r.marked) : B.offered;
+    const total = list.length;
+    const ae = document.activeElement;
+    const editing = ae && ae.classList && ae.classList.contains('note') ? ae.closest('tr').dataset.key : null;
+    if (query.trim()) list = list.filter(r => r.key === editing || matchesQuery(r));
     const pinned = list.filter(r => r.pinned), rest = list.filter(r => !r.pinned);
     const all = pinned.concat(rest);
-    return { list, shown: showAll ? all : all.slice(0, Math.max(MAX_ROWS, pinned.length)) };
+    const searching = !!query.trim();
+    return { list, total, searching, shown: (showAll || searching) ? all : all.slice(0, Math.max(MAX_ROWS, pinned.length)) };
   }
   const PIN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
 
   function renderRows(today) {
     const { shown } = visibleList();
-    const sig = today + '|' + markOnly + showAll + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
+    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
     if (sig === lastSig) return shown;
     // zachovat rozepsanou poznámku (fokus + kurzor)
     const ae = document.activeElement;
@@ -452,6 +480,7 @@
     const shown = renderRows(today);
     const empty = $('empty');
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
+    else if (!shown.length && query.trim() && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Nic nenalezeno.</b><br>Hledání „' + esc(query.trim()) + '“ neodpovídá žádnému řádku v nabídce.'; }
     else if (!shown.length && markOnly && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Žádná přeprava označená k prodeji.</b><br>Žádný řádek v nabídce nemá ve sloupci CODE nakl. „@@@“.'; }
     else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
@@ -461,8 +490,8 @@
     $('kOpen').textContent = B.fetchedAt ? open : '–';
     $('markN').textContent = B.offered.filter(r => r.marked).length;
     $('markBtn').setAttribute('aria-pressed', markOnly);
-    $('cnt').textContent = B.fetchedAt ? `${shown.length} z ${vis.list.length}` : '';
-    $('allBtn').hidden = !B.fetchedAt || (!showAll && vis.list.length <= MAX_ROWS);
+    $('cnt').textContent = B.fetchedAt ? (vis.searching ? `nalezeno ${shown.length} z ${vis.total}` : `${shown.length} z ${vis.list.length}`) : '';
+    $('allBtn').hidden = !B.fetchedAt || vis.searching || (!showAll && vis.list.length <= MAX_ROWS);
     $('allBtn').setAttribute('aria-pressed', showAll);
     $('allBtn').textContent = showAll ? `Jen prvních ${MAX_ROWS}` : `Zobrazit vše (${vis.list.length})`;
     const P = B.provize;
@@ -614,6 +643,14 @@
   $('soldList').addEventListener('click', e => { const k = e.target.dataset && e.target.dataset.undo; if (k) { setSold(k, false); lastSig = ''; } });
 
   /* ---------- filtr a připnutí ---------- */
+  function setSearch(open) {
+    $('q').hidden = !open; $('srchBtn').setAttribute('aria-pressed', open);
+    if (open) $('q').focus();
+    else if (query) { query = ''; $('q').value = ''; lastSig = ''; render(); }
+  }
+  $('srchBtn').onclick = () => setSearch($('q').hidden);
+  $('q').oninput = () => { query = $('q').value; lastSig = ''; render(); };
+  $('q').onkeydown = e => { if (e.key === 'Escape') { $('q').value = ''; setSearch(false); } };
   $('allBtn').onclick = () => { showAll = !showAll; lsSet('rkl_all', showAll ? '1' : '0'); lastSig = ''; render(); };
   $('markBtn').onclick = () => { markOnly = !markOnly; lsSet('rkl_mark', markOnly ? '1' : '0'); lastSig = ''; render(); };
   $('rows').addEventListener('click', async e => {
