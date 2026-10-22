@@ -63,6 +63,10 @@
   .pz{color:var(--muted);font-size:13px}
   .route .p{font-weight:600}
   .route .cc{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:2px;vertical-align:1px}
+  .detbtn{background:rgba(255,255,255,.13);color:#fff;border:0;border-radius:7px;padding:3px 12px;font:600 13px "IBM Plex Sans",sans-serif;cursor:pointer;white-space:nowrap}
+  .detbtn:hover{background:rgba(255,255,255,.25)}
+  .detbtn[aria-pressed=true]{background:#ffd77a;color:#3a2600}
+  html:not(.det) .route .cd{display:none}
   .route .cd{font-size:.72em;font-weight:500;color:var(--muted);margin-left:4px;vertical-align:1px}
   html.tv .route .cd{font-size:12px}
   .route .a{color:var(--accent);font-weight:700}
@@ -154,6 +158,7 @@
       <div class="chip lu"><b class="num" id="sKg">–</b><span>t celkem</span></div>
       <div class="chip sum"><b class="num" id="sSum">–</b><span>příjem celkem</span></div>
       <div class="chip rate"><span>kurz</span><b class="num" id="sRate">–</b><span id="sRateSrc"></span></div>
+      <button class="detbtn" id="detBtn" aria-pressed="false" title="Zobrazit / skrýt poznámky CODE u měst">Detaily</button>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="sUpd"></div></div>
   </div>
@@ -282,6 +287,10 @@
   // skrytí sloupce příjmu (pamatuje si prohlížeč)
   let noInc = false; try { noInc = localStorage.getItem('rkl_noinc') === '1'; } catch {}
   function applyInc() { document.documentElement.classList.toggle('noinc', noInc); $('incBtn').textContent = noInc ? 'Zobrazit příjem' : 'Skrýt příjem'; $('incBtn').setAttribute('aria-pressed', noInc); }
+  let det = false; try { det = localStorage.getItem('rkl_det') === '1'; } catch {}
+  function applyDet() { document.documentElement.classList.toggle('det', det); $('detBtn').setAttribute('aria-pressed', det); }
+  $('detBtn').onclick = () => { det = !det; try { localStorage.setItem('rkl_det', det ? '1' : '0'); } catch {} applyDet(); };
+  applyDet();
   $('incBtn').onclick = () => { noInc = !noInc; try { localStorage.setItem('rkl_noinc', noInc ? '1' : '0'); } catch {} applyInc(); };
   applyInc();
   $('sUpd').onclick = () => $('gear').click();   // nastavení zdroje se otevírá kliknutím na čas poslední změny tabulky
