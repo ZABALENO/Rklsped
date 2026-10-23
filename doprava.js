@@ -84,7 +84,7 @@ app.get('/api/trips', async (req, res) => {
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url),
     url: store.mem.cfg.sheet ? store.mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, changedAt: store.mem.cfg.chg ? store.mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length,
-    missing, today, from: subWorkdays(today, 4), rate, trips, storage: store.kind,
+    missing, today, from: subWorkdays(today, 3), rate, trips, storage: store.kind,
   });
 });
 
