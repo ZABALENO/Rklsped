@@ -104,6 +104,35 @@ app.get('/api/history', async (req, res) => {
   res.json({ date, days, orders: (store.mem.hist[date] && store.mem.hist[date].o) || [] });
 });
 
+// nabídka přeprav z RKL Spedice pro přepínání pohledu (bez provizí): server si ji čte od rklspedice vlastním tokenem
+const SPEDICE_URL = (process.env.SPEDICE_URL || 'https://rklspedice.onrender.com').replace(/\/$/, '');
+let spCache = { at: 0, data: null, error: null }, spInflight = null;
+async function loadSpedice() {
+  const tok = require('./lib/auth').internalToken();
+  if (!tok) throw new Error('chybí DATABASE_URL');
+  const r = await fetch(SPEDICE_URL + '/api/board', { headers: { 'x-rkl-internal': tok, Accept: 'application/json' }, signal: AbortSignal.timeout(60000) });
+  if (!r.ok) throw new Error('RKL Spedice odpověděla ' + r.status + (r.status === 401 ? ' (zatím neběží nová verze?)' : ''));
+  const b = await r.json();
+  return {
+    configured: b.configured, fetchedAt: b.fetchedAt, changedAt: b.changedAt, until: b.until, soldToday: b.soldToday,
+    open: (b.offered || []).length,
+    offered: (b.offered || []).slice(0, 60).map(o => ({ key: o.key, order: o.order, date: o.date, route: o.route, goods: o.goods, weight: o.weight,
+      zipTo: o.zipTo, incCzk: o.incCzk, incEur: o.incEur, codeL: o.codeL, codeU: o.codeU, marked: o.marked, pinned: o.pinned })),
+    notes: b.notes || {},
+  };
+}
+app.get('/api/spedice', async (req, res) => {
+  const fresh = spCache.data && Date.now() - spCache.at < 15000;
+  if (!fresh && !spInflight) {
+    spInflight = loadSpedice()
+      .then(d => { spCache = { at: Date.now(), data: d, error: null }; })
+      .catch(e => { spCache = { ...spCache, at: Date.now() - 10000, error: e.message }; })
+      .finally(() => { spInflight = null; });
+  }
+  if (!spCache.data && spInflight) await spInflight;
+  res.json({ ...(spCache.data || {}), error: spCache.error, ok: !!spCache.data });
+});
+
 app.get('/healthz', (req, res) => res.send('ok'));
 
 createStore('kv_doprava', ['cfg', 'geo', 'hist'], 'doprava.json').then(s => {

@@ -197,6 +197,7 @@ function board(rate) {
     if (inc - exp > POS_LIMIT) { prov.highSkipped.push(k); prov.count--; continue; }
     prov.income += inc; prov.expense += exp;
   }
+  const soldToday = [...todayKeys].filter(k => (carriers[k] || '').trim() && !/rkl/i.test(carriers[k])).length;
   prov.value = Math.round(prov.income - prov.expense);
   prov.income = Math.round(prov.income); prov.expense = Math.round(prov.expense);
 
@@ -205,7 +206,7 @@ function board(rate) {
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
-    offered, until, statsFrom: from,
+    offered, until, statsFrom: from, soldToday,
     sold,
     sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="cs" data-tv-base="1400">
+<html lang="cs" data-tv-base="1400" data-tv2-base="1250" data-tv-per="5">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -192,6 +192,44 @@
   .gear[aria-pressed=true]{opacity:1;background:#fff;color:var(--navy);font-weight:600}
   html.tv .bar,html.tv main,html.tv footer{max-width:none}
 
+
+  /* CODE u měst lze skrýt tlačítkem v liště */
+  html.nocode .route .cd{display:none}
+  .srchbtn[aria-pressed=true]#codeBtn{background:#ffd77a;color:#3a2600}
+  .pgchip{display:none}
+  html.tv2 .pgchip{display:flex}
+  .pgchip:has(#pgInd:empty){display:none !important}
+  tr.pg-off{display:none}
+  #pgBar{position:fixed;left:0;top:0;height:5px;background:#ffd77a;z-index:50;width:0}
+  @keyframes pgbar{from{width:0}to{width:100%}}
+  .tvset{display:none}
+  html.tv2 .tvset{display:inline-flex}
+
+  /* TV 2 – slidy: velké písmo, jen několik přeprav na slide */
+  html.tv2 body{font-size:20px}
+  html.tv2 main{padding-top:8px;padding-bottom:0}
+  html.tv2 .weekcard,html.tv2 .two,html.tv2 .ph,html.tv2 .srch,html.tv2 .settings{display:none}
+  html.tv2 .strip{flex-wrap:nowrap}
+  html.tv2 th.c-chk,html.tv2 td.c-chk{display:none}
+  html.tv2 footer{position:fixed;right:10px;bottom:6px;opacity:.35;padding:0;max-width:none}
+  html.tv2 footer:hover{opacity:1}
+  html.tv2 footer .gear:not(.tvset):not(#tvBtn):not(#tv2Btn){display:none}
+  html.tv2 thead th{font-size:13px;padding:7px 10px}
+  html.tv2 tbody tr{height:var(--rowh,110px)}
+  html.tv2 tbody td{padding:5px 10px;vertical-align:middle;border-bottom:3px solid #b9c3d3}
+  html.tv2 td.c-date{font-size:22px;width:128px;padding-left:10px}
+  html.tv2 td.c-route{font-size:25px;line-height:1.2;min-width:330px}
+  html.tv2 .route .zip{font-size:15px}
+  html.tv2 .route .cd{font-size:15px}
+  html.tv2 td.c-goods{width:25%}
+  html.tv2 .goods{font-size:19px;line-height:1.25}
+  html.tv2 td.c-w{font-size:21px;width:105px}
+  html.tv2 td.c-price{font-size:21px;width:105px}
+  html.tv2 td.c-note{font-size:17px;width:15%;min-width:0}
+  html.tv2 textarea.note:not(.has){display:none}
+  html.tv2 td.c-note textarea{font-size:17px;pointer-events:none;resize:none;border:0;background:transparent}
+  html.tv2 .urg{font-size:14px}
+
   .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:11px 14px 11px 18px;border-radius:10px;display:flex;gap:14px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.25);transition:transform .25s;max-width:calc(100% - 32px);z-index:10}
   .toast.show{transform:translateX(-50%) translateY(0)}
   .toast button{background:transparent;color:var(--accent);border-color:#3b4a61}
@@ -232,6 +270,8 @@
       <div class="chip sold"><span>Dnes prodáno</span><b class="num" id="kToday">0</b></div>
       <div class="chip"><span>Dnes k prodeji</span><b class="num" id="kOpen">–</b></div>
       <div class="chip prov" id="provChip"><span>Dnešní provize</span><b class="num" id="kProv">–</b></div>
+      <button class="srchbtn" id="codeBtn" aria-pressed="true" title="Zobrazit / skrýt CODE u měst">Code</button>
+      <div class="chip pgchip"><b class="num" id="pgInd"></b></div>
       <div class="srch"><button class="srchbtn" id="srchBtn" aria-pressed="false" title="Hledat v seznamu (jako Ctrl+F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Hledat</button><input id="q" type="search" placeholder="Hledat v seznamu…" aria-label="Hledat" autocomplete="off" hidden></div>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="chg"></div></div>
@@ -298,7 +338,10 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
   <span class="spacer"></span>
-  <button class="gear" id="tvBtn" aria-pressed="false">Režim TV</button>
+  <button class="gear" id="tvBtn" aria-pressed="false">TV 1</button>
+  <button class="gear" id="tv2Btn" aria-pressed="false" title="Slidy: velké písmo, několik přeprav na slide, automatické přepínání">TV 2 (slidy)</button>
+  <button class="gear tvset" id="perBtn" title="Počet přeprav na jednom slidu (TV 2)">5 na slide</button>
+  <button class="gear tvset" id="secBtn" title="Doba zobrazení jednoho slidu (TV 2)">20 s</button>
   <a class="gear" href="/logout" title="Odhlásit" style="text-decoration:none">Odhlásit</a>
   </div>
   <div class="settings" id="settings">
@@ -466,6 +509,7 @@
       </tr>`;
     }).join('');
     $('rows').querySelectorAll('.note').forEach(autosize);
+    if (window.RKL) RKL.page([...$('rows').children]);
     if (focusKey) {
       const tr = [...$('rows').children].find(t => t.dataset.key === focusKey);
       const ta = tr && tr.querySelector('.note');
@@ -702,6 +746,15 @@
     saveNote(e.target.closest('tr').dataset.key, e.target);
   });
   $('rows').addEventListener('keydown', e => { if (e.target.classList.contains('note') && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } });
+
+  /* ---------- CODE u měst + TV 2 slidy ---------- */
+  let noCode = lsGet('rkl_nocode', '0') === '1';
+  function applyCode() { document.documentElement.classList.toggle('nocode', noCode); $('codeBtn').setAttribute('aria-pressed', !noCode); }
+  $('codeBtn').onclick = () => { noCode = !noCode; lsSet('rkl_nocode', noCode ? '1' : '0'); applyCode(); };
+  applyCode();
+  const rowEls = () => [...$('rows').children];
+  RKL.onChange = () => RKL.page(rowEls());
+  RKL.page(rowEls());
 
   /* ---------- skrytí cen: klik na „Dnešní provize“ ---------- */
   let noPrice = lsGet('rkl_noprice', '0') === '1';

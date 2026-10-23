@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="cs" data-tv-base="1600" data-tv-auto="1600">
+<html lang="cs" data-tv-base="1600" data-tv-auto="1600" data-tv2-base="1200" data-tv-per="4">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -125,6 +125,74 @@
   html.tv .c-spz{width:140px} html.tv .c-n{width:52px}
   html.tv .c-day{width:178px} html.tv .c-kg{width:96px} html.tv .c-ldm{width:78px} html.tv .c-inc{width:134px}
   html.tv tbody td.c-route{font-size:18px}
+
+  /* pohled: Doprava / Spedice / Střídat */
+  .seg{display:flex;gap:2px;background:rgba(255,255,255,.13);border-radius:7px;padding:2px}
+  .seg button{background:transparent;color:#fff;border:0;border-radius:5px;padding:2px 10px;font:600 13px "IBM Plex Sans",sans-serif;cursor:pointer;white-space:nowrap}
+  .seg button[aria-pressed=true]{background:#ffd77a;color:#3a2600}
+  .pgchip{display:none}
+  html.tv2 .pgchip{display:flex}
+  .pgchip:has(#pgInd:empty){display:none !important}
+  tr.pg-off{display:none}
+  #pgBar{position:fixed;left:0;top:0;height:5px;background:#ffd77a;z-index:50;width:0}
+  @keyframes pgbar{from{width:0}to{width:100%}}
+  .tvset{display:none}
+  html.tv2 .tvset{display:inline-flex}
+
+  /* pohled RKL Spedice (nabídka přeprav, jen ke čtení) */
+  .sptable th.sp-date{width:132px} .sptable th.sp-w{width:104px;text-align:right} .sptable th.sp-price{width:116px;text-align:right} .sptable th.sp-goods{width:27%} .sptable th.sp-note{width:17%}
+  .sptable tbody td{white-space:normal;vertical-align:middle;padding:6px 10px;border-bottom:2px solid #c9d1de;overflow:visible;text-overflow:clip}
+  .sptable td.sp-date{white-space:nowrap}
+  .sptable .dn{font-size:12px;color:var(--muted);display:block}
+  .sptable .tg{display:inline-block;font-size:10.5px;font-weight:800;padding:0 6px;border-radius:5px;background:#f2a900;color:#3a2600;margin-left:6px;vertical-align:1px}
+  .sptable .tg.z{background:#dce9fb;color:var(--navy)}
+  .sptable td.sp-w,.sptable td.sp-price{text-align:right;white-space:nowrap;font-weight:600}
+  .sptable td.sp-price{color:#11663a}
+  .sptable .route .p{font-weight:700}
+  .sptable .zp{font-family:"IBM Plex Mono",monospace;font-size:.78em;font-weight:600;color:#3d4a5e;background:#eef2f7;border-radius:3px;padding:0 3px}
+  .sptable .urg{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:5px;background:#d32f2f;color:#fff;margin-left:6px;vertical-align:1px}
+  .sptable tr.pinned{background:#fdecec}
+  .sptable td.sp-note{color:#3d4a5e;font-size:.92em}
+  html.noinc .sp-price{display:none}
+  .sphead{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:#f5f7fa}
+  .sphead .k{background:#e8eef7;border-radius:8px;padding:3px 12px;font-size:13px;color:var(--muted)}
+  .sphead .k b{font-size:18px;color:var(--navy);margin-left:6px}
+  .sphead .ttl{font-weight:700;color:var(--navy)}
+  .sphead .st{margin-left:auto;font-size:12px;color:var(--muted)}
+
+  /* TV 2 – slidy: velké písmo, jen několik přeprav na slide */
+  html.tv2 body{font-size:20px}
+  html.tv2 main{padding-top:8px;padding-bottom:0}
+  html.tv2 .hist,html.tv2 .sphead .st,html.tv2 .settings{display:none}
+  html.tv2 .strip{flex-wrap:nowrap}
+  html.tv2 .chip.rate,html.tv2 .chip.lu{display:none}
+  html.tv2 footer{position:fixed;right:10px;bottom:6px;opacity:.35;padding:0;max-width:none}
+  html.tv2 footer:hover{opacity:1}
+  html.tv2 footer .gear:not(.tvset):not(#tvBtn):not(#tv2Btn):not(#incBtn){display:none}
+  html.tv2 thead th{font-size:13px;padding:7px 10px}
+  html.tv2 tbody tr{height:var(--rowh,110px)}
+  html.tv2 tbody td{padding:5px 10px;border-bottom:3px solid #b9c3d3;white-space:normal;overflow:visible}
+  html.tv2 .c-pz,html.tv2 .c-n,html.tv2 th.c-pz,html.tv2 th.c-n{display:none}
+  html.tv2 th.c-spz,html.tv2 td.c-spz{width:235px}
+  html.tv2 .spz{font-size:30px;line-height:42px;padding:0 12px 0 22px;box-shadow:inset 12px 0 0 #1d4fb5;border-width:2.5px;white-space:nowrap}
+  html.tv2 td.c-route{font-size:31px;line-height:1.2}
+  html.tv2 .route .cc{font-size:17px}
+  html.tv2 .route .z{font-size:18px}
+  html.tv2 .route .cd{font-size:15px}
+  html.tv2 th.c-day,html.tv2 td.c-day{width:165px}
+  html.tv2 .d{font-size:20px;display:block;margin:2px 0}
+  html.tv2 th.c-kg,html.tv2 td.c-kg{width:110px} html.tv2 td.c-kg{font-size:24px}
+  html.tv2 th.c-ldm,html.tv2 td.c-ldm{width:90px} html.tv2 td.c-ldm{font-size:24px}
+  html.tv2 th.c-inc,html.tv2 td.c-inc{width:165px} html.tv2 td.c-inc{font-size:26px}
+  html.tv2 .sptable th.sp-date{width:200px} html.tv2 .sptable th.sp-w{width:125px} html.tv2 .sptable th.sp-price{width:125px}
+  html.tv2 .sptable td.sp-date{font-size:22px}
+  html.tv2 .sptable td.sp-route{font-size:25px;line-height:1.2}
+  html.tv2 .sptable td.sp-goods{font-size:19px;line-height:1.25}
+  html.tv2 .sptable td.sp-w,html.tv2 .sptable td.sp-price{font-size:21px}
+  html.tv2 .sptable td.sp-note{font-size:17px}
+  html.tv2 .sptable .zp,html.tv2 .sptable .cd{font-size:15px}
+  html.tv2 .sphead .k{font-size:16px} html.tv2 .sphead .k b{font-size:26px}
+
   .gear[aria-pressed=true]{opacity:1;background:#fff;color:var(--navy);font-weight:600}
 
   @media (max-width:1100px){ .chip.rate{display:none} }
@@ -158,6 +226,9 @@
       <div class="chip lu"><b class="num" id="sKg">–</b><span>t celkem</span></div>
       <div class="chip sum"><b class="num" id="sSum">–</b><span>příjem celkem</span></div>
       <div class="chip rate"><span>kurz</span><b class="num" id="sRate">–</b><span id="sRateSrc"></span></div>
+      <div class="seg" id="viewSeg" title="Co se zobrazuje: Doprava (RKL na cestě), Spedice (nabídka přeprav k prodeji) nebo střídání obou">
+        <button data-v="d">Doprava</button><button data-v="s">Spedice</button><button data-v="a">Střídat</button></div>
+      <div class="chip pgchip"><b class="num" id="pgInd"></b></div>
       <button class="detbtn" id="detBtn" aria-pressed="false" title="Zobrazit / skrýt poznámky CODE u měst">Detaily</button>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="sUpd"></div></div>
@@ -167,7 +238,7 @@
 <main>
   <div class="banner" id="banner" hidden></div>
 
-  <section class="panel">
+  <section class="panel pg-table" id="tripPanel">
     <table>
       <thead><tr><th class="c-spz">SPZ</th><th class="c-pz">Přeprava</th><th class="c-route">Trasa (od Opavy)</th><th class="c-n" title="Počet zásilek">Zás.</th><th class="c-day">Nakládka → vykl.</th><th class="c-kg">Hmotnost</th><th class="c-ldm" title="Ložné metry (~ = odhad z počtu kusů a rozměrů)">LDM</th><th class="c-inc">Příjem</th></tr></thead>
       <tbody id="rows"></tbody>
@@ -175,7 +246,18 @@
     <div class="empty" id="empty"><b>Načítám…</b></div>
   </section>
 
-  <section class="panel hist">
+  <section class="panel pg-table" id="spPanel" hidden>
+    <div class="sphead"><span class="ttl">RKL Spedice – přepravy v prodeji</span>
+      <span class="k">Dnes prodáno<b class="num" id="spSold">–</b></span><span class="k">Dnes k prodeji<b class="num" id="spOpen">–</b></span>
+      <span class="st" id="spSt"></span></div>
+    <table class="sptable">
+      <thead><tr><th class="sp-date">Datum nakládky</th><th>Trasa</th><th class="sp-goods">Popis zboží</th><th class="sp-w">Hmotnost</th><th class="sp-price">Cena</th><th class="sp-note">Poznámka</th></tr></thead>
+      <tbody id="spRows"></tbody>
+    </table>
+    <div class="empty" id="spEmpty" hidden></div>
+  </section>
+
+  <section class="panel hist" id="histPanel">
     <div class="hh">
       <h2>Historie nakládek</h2>
       <div class="daynav">
@@ -200,7 +282,10 @@
   </button>
   <span class="spacer"></span>
   <button class="gear" id="incBtn" aria-pressed="false">Skrýt příjem</button>
-  <button class="gear" id="tvBtn" aria-pressed="false">Režim TV</button>
+  <button class="gear" id="tvBtn" aria-pressed="false">TV 1</button>
+  <button class="gear" id="tv2Btn" aria-pressed="false" title="Slidy: velké písmo, několik přeprav na slide, automatické přepínání">TV 2 (slidy)</button>
+  <button class="gear tvset" id="perBtn" title="Počet přeprav na jednom slidu (TV 2)">4 na slide</button>
+  <button class="gear tvset" id="secBtn" title="Doba zobrazení jednoho slidu (TV 2)">20 s</button>
   <a class="gear" href="/logout">Odhlásit</a>
   <div class="settings" id="settings">
     <div class="row">
@@ -277,7 +362,99 @@
     if (!D.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
     else if (!t.length) { empty.style.display = ''; empty.innerHTML = D.fetchedAt ? '<b>Žádná přeprava RKL na cestě.</b><br>V tabulce není přeprava s dopravcem RKL s nakládkou od ' + fmtDate(D.from) + ', která by ještě nebyla vyložená.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
+    if (typeof pageNow === 'function' && shownView === 'd') pageNow();
   }
+
+
+  /* ---------- pohled RKL Spedice + přepínání pohledů + slidy (TV 2) ---------- */
+  let view = 'd'; try { view = localStorage.getItem('rkl_view') || 'd'; } catch {}
+  if (!['d', 's', 'a'].includes(view)) view = 'd';
+  let shownView = view === 's' ? 's' : 'd';
+  let SP = null, spErr = null, spLoadedAt = 0, spBusy = false;
+  const DOW = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+  const nfK = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 2 });
+  const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
+  const splitZips = z => { const t = String(z || '').trim(); if (!t) return []; if (/^\d{2}-\d{3}$/.test(t)) return [t]; return t.split(/\s*[-;,/+]\s*/).filter(Boolean); };
+  const cdHtml = c => { const t = String(c || '').replace(/@@@/g, '').replace(/\s+/g, ' ').trim(); return t ? `<span class="cd">${esc(t)}</span>` : ''; };
+  function spRouteHtml(route, zipTo, codeL, codeU) {
+    const parts = String(route).split(/\s*\/\/\s*/), last = parts.length - 1;
+    if (!last) return `<span class="p">${esc(parts[0])}</span>${cdHtml(codeL)}`;
+    return parts.map((part, i) => {
+      if (i === 0) return part.split(/\s*\+\s*/).map(x => `<span class="p">${esc(x)}</span>${cdHtml(codeL)}`).join(' + ');
+      if (i < last) return esc(part);
+      const places = part.split(/\s*\+\s*/), zips = splitZips(zipTo);
+      return places.map((x, j) => {
+        const z = zips.length === places.length ? zips[j] : (j === places.length - 1 ? zips.join(', ') : '');
+        return `<span class="p">${esc(x)}</span>` + (z ? ` <span class="zp">${esc(z)}</span>` : '') + cdHtml(codeU);
+      }).join(' + ');
+    }).join(' <span class="a">→</span> ');
+  }
+  function spDate(iso) {
+    if (!iso) return '<span class="dn">bez data</span>';
+    const d = new Date(iso + 'T12:00:00'), t = todayIso();
+    const diff = Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(t + 'T12:00:00Z')) / 864e5);
+    const tag = diff === 0 ? '<span class="tg">DNES</span>' : diff === 1 ? '<span class="tg z">ZÍTRA</span>' : diff < 0 ? '<span class="tg z">MINULÉ</span>' : '';
+    return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}.</span>${tag}<span class="dn">${DOW[d.getDay()]} ${d.getFullYear()}</span>`;
+  }
+  function renderSp() {
+    const body = $('spRows');
+    if (!SP || !SP.ok) {
+      body.innerHTML = '';
+      const e = $('spEmpty'); e.hidden = false;
+      e.innerHTML = spErr ? '<b>RKL Spedice zatím neodpovídá.</b><br>' + esc(spErr) : '<b>Načítám RKL Spedice…</b><br>Po delší nečinnosti se server probouzí, může to trvat až minutu.';
+      $('spSold').textContent = $('spOpen').textContent = '–';
+      return;
+    }
+    $('spSold').textContent = SP.soldToday ?? '–'; $('spOpen').textContent = SP.open ?? SP.offered.length;
+    $('spSt').textContent = SP.changedAt ? 'data v tabulce změněna ' + new Date(SP.changedAt).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    body.innerHTML = SP.offered.map(r => {
+      const price = [r.incEur ? nfK.format(r.incEur) + ' €' : '', r.incCzk ? nfK.format(r.incCzk) + ' Kč' : ''].filter(Boolean).join('<br>') || '–';
+      return `<tr class="${r.pinned ? 'pinned' : ''}">
+        <td class="sp-date">${spDate(r.date)}</td>
+        <td class="sp-route route">${spRouteHtml(r.route, r.zipTo, r.codeL, r.codeU)}${r.pinned ? '<span class="urg">URGENT</span>' : ''}</td>
+        <td class="sp-goods">${esc(r.goods) || '–'}</td>
+        <td class="sp-w num">${r.weight != null ? nf.format(r.weight) + ' kg' : '–'}</td>
+        <td class="sp-price num">${price}</td>
+        <td class="sp-note">${esc((SP.notes && SP.notes[r.key]) || '')}</td></tr>`;
+    }).join('');
+    const e = $('spEmpty'); e.hidden = SP.offered.length > 0;
+    if (!SP.offered.length) e.innerHTML = '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(SP.until) + '.';
+  }
+  async function loadSp(force) {
+    if (spBusy || (!force && Date.now() - spLoadedAt < 25000)) return;
+    spBusy = true;
+    try { SP = await api('/api/spedice'); spErr = SP.error || null; spLoadedAt = Date.now(); renderSp(); pageNow(); }
+    catch (e) { spErr = e.message; renderSp(); }
+    finally { spBusy = false; }
+  }
+  const pageRows = () => [...($(shownView === 'd' ? 'rows' : 'spRows')).children];
+  function pageNow() { if (window.RKL) RKL.page(pageRows()); }
+  function applyView() {
+    $('tripPanel').hidden = shownView !== 'd';
+    $('spPanel').hidden = shownView !== 's';
+    $('histPanel').hidden = shownView !== 'd';
+    document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === view));
+    if (view !== 'd') loadSp(false);
+    pageNow();
+  }
+  document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => {
+    view = b.dataset.v; try { localStorage.setItem('rkl_view', view); } catch {}
+    shownView = view === 's' ? 's' : 'd'; if (window.RKL) RKL.reset();
+    applyView();
+  });
+  if (window.RKL) {
+    RKL.onChange = applyView;
+    // po posledním slidu jednoho pohledu přepnout na druhý (jen ve „Střídat“)
+    RKL.onWrap = () => { if (view !== 'a') return false; shownView = shownView === 'd' ? 's' : 'd'; applyView(); return true; };
+  }
+  // mimo TV 2 (celá stránka najednou) se pohledy ve „Střídat“ přepínají po 1,5× době slidu
+  (function altLoop() {
+    setTimeout(() => {
+      if (view === 'a' && (!window.RKL || RKL.mode() !== 2)) { shownView = shownView === 'd' ? 's' : 'd'; applyView(); }
+      altLoop();
+    }, Math.round((window.RKL ? RKL.sec() : 20) * 1500));
+  })();
+  setInterval(() => { if (view !== 'd') loadSp(false); }, 30000);
 
   async function poll(force) {
     try { D = await api('/api/trips' + (force ? '?force=1' : '')); render(); }
@@ -352,6 +529,7 @@
 
   function tick() { const d = new Date(); $('clock').textContent = d.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
   tick(); setInterval(tick, 30000);
+  applyView();
   poll(false); setInterval(() => poll(false), 60000);
 })();
 </script>
