@@ -107,6 +107,28 @@
   .cards div{width:130px;background:#0a1230 center/cover;border:1px solid rgba(255,255,255,.35);filter:grayscale(.6) brightness(.8);position:relative;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
   .cards div::after{content:attr(data-l);position:absolute;left:0;right:0;bottom:0;padding:3px 6px;background:rgba(0,0,0,.7);font:600 9px "Orbitron",sans-serif;letter-spacing:1.5px;color:#fff;text-transform:uppercase}
   @media (max-width:900px){.cards{display:none}}
+
+  .rich{display:none;height:100%;overflow:auto;padding:2px 4px;font-size:14px;line-height:1.4;scrollbar-width:thin}
+  .dev.isrich .rich{display:block}.dev.isrich textarea{display:none}
+  .rich .who{font:700 15px "Orbitron",sans-serif;letter-spacing:1px;color:#fff;margin-bottom:2px}
+  .rich .fn{color:var(--tx);margin-bottom:10px}
+  .rich h4{margin:12px 0 5px;font:700 10.5px "Orbitron",sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--cy);display:flex;align-items:center;gap:6px}
+  .rich h4::after{content:"";flex:1;height:1px;background:var(--line)}
+  .rich .use{display:flex;gap:10px;align-items:center}
+  .rich .use svg{width:92px;flex:none}
+  .rich .lg{flex:1;min-width:0;font-size:12.5px}
+  .rich .lg div{display:flex;gap:6px;align-items:baseline;margin-bottom:2px}
+  .rich .lg i{width:8px;height:8px;flex:none;box-shadow:0 0 6px currentColor}
+  .rich .lg b{margin-left:auto;font:600 12px "IBM Plex Mono",monospace;color:#fff}
+  .rich .err{border:1px solid rgba(255,84,84,.75);background:rgba(255,40,40,.13);color:#ff9a9a;padding:7px 9px;margin-top:2px}
+  .rich .err div::before{content:"⚠ ";color:#ff4d4d}
+  .rich .err div{margin:2px 0}
+  .rich .okb{border:1px solid rgba(125,211,160,.6);background:rgba(125,211,160,.1);color:#9be6bd;padding:6px 9px}
+  .rich ul{margin:2px 0 0;padding:0;list-style:none}
+  .rich li{margin:3px 0;padding-left:16px;position:relative}
+  .rich li::before{content:"›";position:absolute;left:0;color:var(--cy)}
+  .rich li.bad{color:#ff9a9a}.rich li.bad::before{content:"⚠";color:#ff4d4d}
+  .rich .upd{margin-top:12px;font:500 11px "IBM Plex Mono",monospace;color:var(--mut)}
   .note{border:1px solid rgba(255,184,48,.5);background:rgba(255,184,48,.08);color:var(--am);padding:10px 14px;margin-bottom:14px;font-size:14px}
   .note.err{border-color:rgba(255,84,112,.6);background:rgba(255,84,112,.08);color:var(--rd)}
 
@@ -254,7 +276,7 @@
     if ($('phones').dataset.sig !== ps) {
       $('phones').dataset.sig = ps;
       $('phones').innerHTML = rels.map(x => `<div class="ph" style="--c:${color(x.i)}"><div class="t" style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i>${esc(x.name)}<span data-st="${esc(x.key)}"></span></div>
-        <div class="dev"><textarea data-k="${esc(x.key)}" maxlength="6000" placeholder="Jak ${esc(x.name)} využívá agenta… (text se ukládá automaticky)" spellcheck="false"></textarea></div></div>`).join('');
+        <div class="dev"><div class="rich"></div><textarea data-k="${esc(x.key)}" maxlength="6000" placeholder="Jak ${esc(x.name)} využívá agenta… (text se ukládá automaticky)" spellcheck="false"></textarea></div></div>`).join('');
       $('phones').querySelectorAll('textarea').forEach(bindText);
       $('phones').querySelectorAll('.ph .t').forEach(h => h.addEventListener('click', () => {
         const p = h.parentElement; if (p.classList.contains('empty')) { p.dataset.open = '1'; p.classList.remove('empty'); p.querySelector('textarea').focus(); }
@@ -271,10 +293,52 @@
       const stEl = document.querySelector(`[data-st="${CSS.escape(t.dataset.k)}"]`);
       if (fromSheet && stEl) { stEl.textContent = 'z tabulky'; stEl.className = 'ok'; }
       const v = R.texts[t.dataset.k] || '';
+      const dev = t.parentElement, rich = dev.querySelector('.rich'), po = fromSheet ? parseDesc(v) : null;
+      dev.classList.toggle('isrich', !!po);
+      if (po) { const h = richHtml(po); if (rich.dataset.h !== h) { rich.dataset.h = h; rich.innerHTML = h; } }
       if ((fromSheet || (document.activeElement !== t && !t.dataset.dirty)) && t.value !== v) t.value = v;
     });
   }
 
+
+  // ---- strukturovaný popis agenta (z listu „Popisy agentů“) -> přehledná karta ----
+  const BAD = /nedorozum|nepochop|nesrozum|omyl|chyb(?:a|y|n|ou|ě)|špatn|spatn|selhá|selha|nefung/i;
+  function parseDesc(t) {
+    const L = { agent: 'agent', funkce: 'fn', využití: 'use', vyuziti: 'use', chyby: 'err', problémy: 'err', problemy: 'err', 'časté dotazy': 'q', 'caste dotazy': 'q', aktualizováno: 'upd', aktualizovano: 'upd' };
+    const o = {}; let cur = null;
+    for (const line of String(t).split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Za-zÁ-ž ]+?)(?:\s*\([^)]*\))?\s*:\s*(.*)$/);
+      const k = m && L[m[1].trim().toLowerCase()];
+      if (k) { cur = k; o[k] = [m[2]]; } else if (cur) o[cur].push(line);
+    }
+    if (!o.use && !o.err && !o.fn) return null;
+    for (const k in o) o[k] = o[k].join('\n').trim();
+    return o;
+  }
+  const items = s => String(s || '').split(/\n|;|•|(?<=\d\s?%),|\s-\s(?=[A-ZÁ-Ž])/).map(x => x.replace(/^[\s\-–•*›]+/, '').trim()).filter(Boolean);
+  function richHtml(o) {
+    let h = '';
+    if (o.agent) h += `<div class="who">${esc(o.agent)}</div>`;
+    if (o.fn) h += `<div class="fn">${esc(o.fn)}</div>`;
+    if (o.use) {
+      const parts = items(o.use).map(x => { const m = x.match(/^(.*?)[\s=≈~:]*(\d+(?:[.,]\d+)?)\s*%/); return m ? { n: m[1].replace(/[\s≈=~:-]+$/, '').trim() || x, v: parseFloat(m[2].replace(',', '.')) } : null; }).filter(Boolean);
+      h += '<h4>K čemu se využívá</h4>';
+      if (parts.length) {
+        const sum = parts.reduce((s, p) => s + p.v, 0) || 1, C = 2 * Math.PI * 34; let acc = 0, arcs = '', lg = '';
+        parts.forEach((p, i) => { const len = C * p.v / sum, col = PAL[i % PAL.length];
+          arcs += `<circle cx="45" cy="45" r="34" fill="none" stroke="${col}" stroke-width="14" stroke-dasharray="${Math.max(0, len - 1.5)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 45 45)"/>`; acc += len;
+          lg += `<div style="color:${col}"><i style="background:${col}"></i><span style="color:var(--tx)">${esc(p.n)}</span><b>${Math.round(p.v)} %</b></div>`; });
+        h += `<div class="use"><svg viewBox="0 0 90 90">${arcs}</svg><div class="lg">${lg}</div></div>`;
+      } else h += `<div>${esc(o.use)}</div>`;
+    }
+    if (o.err != null) {
+      const e = items(o.err), none = !e.length || e.every(x => /^(žádn|zadn|nic|bez |nejsou|-|—|–)/i.test(x));
+      h += '<h4>Chyby a nedorozumění</h4>' + (none ? '<div class="okb">✓ žádné hlášené chyby</div>' : `<div class="err">${e.map(x => `<div>${esc(x)}</div>`).join('')}</div>`);
+    }
+    if (o.q) h += '<h4>Časté dotazy</h4><ul>' + items(o.q).map(x => `<li class="${BAD.test(x) ? 'bad' : ''}">${esc(x)}</li>`).join('') + '</ul>';
+    if (o.upd) h += `<div class="upd">Aktualizováno: ${esc(o.upd)}</div>`;
+    return h;
+  }
   function bindText(t) {
     let timer = null;
     const st = () => document.querySelector(`[data-st="${CSS.escape(t.dataset.k)}"]`);
