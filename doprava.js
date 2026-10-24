@@ -34,6 +34,7 @@ async function refreshSheet(force) {
       await require('./lib/change').trackChange(store.mem.cfg, store.put, out, url);
       await updateHistory(out.rows);
       await updateAgents(out.counts);
+      try { await require('./lib/issues').snapshot(store, out.texts); } catch (e) { console.error('Přehled problémů:', e.message); }
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, rows: sheet.url === url ? sheet.rows : [], fetchedAt: sheet.url === url ? sheet.fetchedAt : null };
     } finally { inflight = null; }
@@ -176,6 +177,7 @@ app.get('/api/agents', async (req, res) => {
 });
 
 // popis, jak relace agenta využívá (sdílený pro všechny)
+app.get('/api/agents/issues', (req, res) => res.json(require('./lib/issues').report(store, sheet.texts)));
 // ruční přičtení k relaci pro dnešní den: {key, count, trips}
 app.post('/api/agents/adjust', async (req, res) => {
   const key = nk(req.body && req.body.key);
@@ -257,7 +259,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
