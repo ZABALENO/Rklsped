@@ -412,7 +412,7 @@
       const fromSheet = (R.sheetKeys || []).includes(t.dataset.k);
       t.readOnly = fromSheet;
       const stEl = document.querySelector(`[data-st="${CSS.escape(t.dataset.k)}"]`);
-      if (fromSheet && stEl) { stEl.textContent = 'z tabulky'; stEl.className = 'ok'; }
+      if (fromSheet && stEl) { stEl.textContent = ''; stEl.className = ''; }
       const v = R.texts[t.dataset.k] || '';
       const dev = t.parentElement, rich = dev.querySelector('.rich'), po = fromSheet ? parseDesc(v) : null;
       dev.classList.toggle('isrich', !!po);
