@@ -9,7 +9,7 @@ const { createStore } = require('./lib/store');
 const { buildTrips, isRKL } = require('./lib/trips');
 const { sellerOf } = require('./lib/sellers');
 const geo = require('./lib/geo');
-const { pragueToday, subWorkdays } = require('./lib/workdays');
+const { pragueToday, subWorkdays, isWorkday } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
 
 const PORT = process.env.PORT || 3000;
@@ -166,6 +166,11 @@ app.get('/api/agents', async (req, res) => {
     hasSheet: !!(sheet.counts && sheet.counts.length), relations,
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
     history, texts: Object.assign(Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])), sheetTexts),
+    workdaysSince: (() => {                       // pracovní dny od nejstaršího data v historii do dneška (včetně obou)
+      const f = history.length ? history[history.length - 1].date : null; if (!f) return 0;
+      let n = 0; for (let d = new Date(f + 'T00:00:00Z'); d.toISOString().slice(0, 10) <= today; d = new Date(d.getTime() + 864e5)) if (isWorkday(d)) n++;
+      return n;
+    })(),
     sheetKeys: Object.keys(sheetTexts), hasTexts: !!sheet.texts,
   });
 });
