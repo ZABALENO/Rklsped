@@ -6,7 +6,7 @@
 <title>Agentizace RKL Opava</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#000; --bg2:#1d1d1b; --panel:rgba(2,5,16,.84); --line:rgba(120,160,255,.6);
@@ -19,7 +19,7 @@
   .bgimg.l3{filter:none;background:radial-gradient(900px 600px at 20% 0%,rgba(94,138,255,.55),transparent 65%),radial-gradient(800px 600px at 100% 100%,rgba(29,56,143,.75),transparent 60%),linear-gradient(180deg,rgba(0,4,24,.9),rgba(0,0,12,.78));mix-blend-mode:normal}
   *{box-sizing:border-box}
   html{background:var(--bg)}
-  body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 "Rajdhani","IBM Plex Sans",system-ui,sans-serif;
+  body{font-variant-numeric:tabular-nums;margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;
     background:transparent}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
     background-image:linear-gradient(rgba(94,138,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.07) 1px,transparent 1px);
@@ -31,11 +31,11 @@
   header{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;position:relative}
   header::after{content:"";position:absolute;left:0;bottom:-1px;width:220px;height:2px;background:linear-gradient(90deg,var(--cy),transparent);box-shadow:0 0 14px var(--cy)}
   header img{width:42px;height:42px;border-radius:10px;box-shadow:0 0 0 1px var(--line),0 0 18px rgba(94,138,255,.35)}
-  h1{margin:0;font:900 clamp(20px,2.6vw,32px)/1.05 "Orbitron",sans-serif;letter-spacing:3px;text-transform:uppercase;
+  h1{margin:0;font:900 clamp(20px,2.6vw,32px)/1.05 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;
     background:linear-gradient(90deg,#fff,var(--cy) 60%,var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(94,138,255,.25)}
-  h1 .by{display:inline-block;margin-left:12px;font:500 10px "IBM Plex Mono",monospace;letter-spacing:2px;text-transform:none;opacity:.32;-webkit-text-fill-color:currentColor;color:var(--tx);vertical-align:middle}
-  .sub{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:1.5px;text-transform:uppercase;margin-top:5px}
-  .hr{margin-left:auto;text-align:right;font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:1px}
+  h1 .by{display:inline-block;margin-left:12px;font:500 10px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2px;text-transform:none;opacity:.32;-webkit-text-fill-color:currentColor;color:var(--tx);vertical-align:middle}
+  .sub{font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);letter-spacing:1.5px;text-transform:uppercase;margin-top:5px}
+  .hr{margin-left:auto;text-align:right;font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);letter-spacing:1px}
   .hr a{color:var(--cy);text-decoration:none;border:1px solid var(--line);padding:5px 12px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-block;margin-bottom:6px;letter-spacing:2px;text-transform:uppercase;background:rgba(94,138,255,.06)}
   .hr a:hover{background:rgba(94,138,255,.18)}
   .tbtn{width:34px;height:30px;padding:0;margin-right:6px;vertical-align:top;color:var(--cy);border:1px solid var(--line);background:rgba(94,138,255,.08);cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-flex;align-items:center;justify-content:center}
@@ -46,7 +46,7 @@
   .live.off{color:var(--am)} .live.off i{background:var(--am);box-shadow:0 0 10px var(--am)}
   @keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
 
-  .sec{display:flex;align-items:center;gap:12px;margin:26px 0 12px;font:700 15px "Orbitron",sans-serif;letter-spacing:3px;text-transform:uppercase;color:var(--cy)}
+  .sec{display:flex;align-items:center;gap:12px;margin:26px 0 12px;font:700 15px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;color:var(--cy)}
   .sec::before{content:"";width:10px;height:10px;background:var(--cy);box-shadow:0 0 12px var(--cy);transform:rotate(45deg)}
   .sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
 
@@ -56,34 +56,34 @@
     clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
     box-shadow:inset 0 0 40px rgba(94,138,255,.05)}
   .panel::before{content:"";position:absolute;left:0;top:0;width:34px;height:2px;background:var(--cy);box-shadow:0 0 10px var(--cy)}
-  .panel h3{margin:0 0 8px;font:700 12px "Orbitron",sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
+  .panel h3{margin:0 0 8px;font:700 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
 
   .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:260px}
-  .kpi{min-width:0;overflow:hidden}.kpi .big{max-width:100%;white-space:nowrap;font:900 120px/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(94,138,255,.55);letter-spacing:2px}
-  .kpi .lbl{font:600 13px "Orbitron",sans-serif;letter-spacing:4px;color:var(--cy);margin-top:10px;text-transform:uppercase}
-  .kpi .meta{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-top:12px}
+  .kpi{min-width:0;overflow:hidden}.kpi .big{max-width:100%;white-space:nowrap;font:900 120px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(94,138,255,.55);letter-spacing:2px}
+  .kpi .lbl{font:600 13px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:4px;color:var(--cy);margin-top:10px;text-transform:uppercase}
+  .kpi .meta{font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);margin-top:12px}
 
-  .saved{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);width:100%}.saved .sl{font:700 11px "Orbitron",sans-serif;letter-spacing:1.5px;text-align:center;line-height:1.5;color:var(--mg);text-transform:uppercase}.saved .sv{font:900 clamp(22px,2.4vw,34px)/1.1 "Orbitron",sans-serif;color:#fff;margin-top:6px;text-shadow:0 0 14px rgba(242,165,22,.6);white-space:nowrap}.saved .sm{font:500 11px "IBM Plex Mono",monospace;color:var(--mut);margin-top:6px}
+  .saved{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);width:100%}.saved .sl{font:700 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:1.5px;text-align:center;line-height:1.5;color:var(--mg);text-transform:uppercase}.saved .sv{font:900 clamp(22px,2.4vw,34px)/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff;margin-top:6px;text-shadow:0 0 14px rgba(242,165,22,.6);white-space:nowrap}.saved .sm{font:500 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);margin-top:6px}
   svg{display:block;width:100%;height:auto;overflow:visible}
   .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;margin-top:8px;font-size:13px}
   .legend div{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
   .legend i{width:9px;height:9px;flex:none;box-shadow:0 0 8px currentColor}
-  .legend b{margin-left:auto;font:600 12px "IBM Plex Mono",monospace;color:#fff}
+  .legend b{margin-left:auto;font:600 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff}
 
   .rank{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow:auto;padding-right:4px}
   .rank .r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
   .rank .n{font-weight:700;letter-spacing:.5px}
-  .rank .c{font:600 14px "IBM Plex Mono",monospace;color:#fff}
+  .rank .c{font:600 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff}
   .rank .bar{grid-column:1/3;height:5px;background:rgba(255,255,255,.07);position:relative}
   .rank .bar i{position:absolute;inset:0 auto 0 0;box-shadow:0 0 10px currentColor}
-  .rank .d{font:500 12px "IBM Plex Mono",monospace;color:var(--mut)}
+  .rank .d{font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut)}
 
   .tablewrap{overflow:auto;max-height:520px}
   table{width:100%;border-collapse:collapse;font-size:14px}
-  th{position:sticky;top:0;background:#080c18;z-index:2;text-align:right;font:700 10.5px "Orbitron",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{position:sticky;top:0;background:#080c18;z-index:2;text-align:right;font:700 10.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#080c18;z-index:1}
   th:first-child{z-index:3}
-  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(120,160,255,.28);font:500 14px "IBM Plex Mono",monospace;white-space:nowrap}
+  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(120,160,255,.28);font:500 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;white-space:nowrap}
   td.z{color:#8a9ac4}
   td.tot{color:#fff;font-weight:600}
   tr:hover td{background:rgba(94,138,255,.07)}
@@ -92,38 +92,38 @@
 
   .phones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 18px}
   .ph{align-self:start}.ph.empty{order:2}.ph.empty .dev{display:none}.ph.empty .t{cursor:pointer;padding:9px 12px;border:1px dashed var(--c);opacity:.7;margin:0}.ph.empty .t:hover{opacity:1;background:rgba(94,138,255,.08)}.ph .t{cursor:pointer}
-  .ph .t{display:flex;align-items:center;gap:9px;margin-bottom:8px;font:700 14px "Orbitron",sans-serif;letter-spacing:2px;text-transform:uppercase}
+  .ph .t{display:flex;align-items:center;gap:9px;margin-bottom:8px;font:700 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase}
   .ph .t i{width:10px;height:10px;transform:rotate(45deg);box-shadow:0 0 10px currentColor}
-  .ph .t span{margin-left:auto;font:500 11px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:0;text-transform:none}
+  .ph .t span{margin-left:auto;font:500 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);letter-spacing:0;text-transform:none}
   .ph .t span.ok{color:var(--lm)}
   .dev{position:relative;aspect-ratio:9/19.5;max-height:760px;width:100%;border:2px solid var(--c,var(--cy));border-radius:34px;padding:20px 12px 18px;
     background:linear-gradient(180deg,rgba(10,18,38,.9),rgba(6,10,22,.92));box-shadow:0 0 22px color-mix(in srgb,var(--c,var(--cy)) 35%,transparent),inset 0 0 30px color-mix(in srgb,var(--c,var(--cy)) 10%,transparent)}
   .dev::after{content:"";position:absolute;bottom:7px;left:50%;width:88px;height:4px;transform:translateX(-50%);border-radius:3px;background:var(--c,var(--cy));opacity:.55}
-  .dev textarea{width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--tx);font:500 15px/1.5 "Rajdhani","IBM Plex Sans",sans-serif;padding:4px 4px}
+  .dev textarea{width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--tx);font:500 15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;padding:4px 4px}
   .dev textarea::placeholder{color:#8a9ac4}
 
   .hero{position:relative;height:150px;margin:0 0 18px;overflow:hidden;border:1px solid var(--line);clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
   .hero .bg{position:absolute;inset:0;background:#0a1230 center/cover;filter:grayscale(1) contrast(1.15) brightness(.55)}
   .hero::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(29,56,143,.85),rgba(29,56,143,.25) 55%,rgba(0,0,0,.65)),repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px);mix-blend-mode:normal}
-  .hero .tx{position:absolute;z-index:2;left:22px;bottom:14px;font:700 12px "Orbitron",sans-serif;letter-spacing:4px;color:#fff;text-transform:uppercase}
+  .hero .tx{position:absolute;z-index:2;left:22px;bottom:14px;font:700 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:4px;color:#fff;text-transform:uppercase}
   .hero .tx b{color:var(--mg)}
   .cards{position:absolute;z-index:2;right:16px;top:16px;bottom:16px;display:flex;gap:10px}
   .cards div{width:130px;background:#0a1230 center/cover;border:1px solid rgba(255,255,255,.35);filter:grayscale(.6) brightness(.8);position:relative;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
-  .cards div::after{content:attr(data-l);position:absolute;left:0;right:0;bottom:0;padding:3px 6px;background:rgba(0,0,0,.7);font:600 9px "Orbitron",sans-serif;letter-spacing:1.5px;color:#fff;text-transform:uppercase}
+  .cards div::after{content:attr(data-l);position:absolute;left:0;right:0;bottom:0;padding:3px 6px;background:rgba(0,0,0,.7);font:600 9px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:1.5px;color:#fff;text-transform:uppercase}
   @media (max-width:900px){.cards{display:none}}
 
   .rich{display:none;height:100%;overflow:auto;padding:2px 4px;font-size:14px;line-height:1.4;scrollbar-width:thin}
   .dev.isrich .rich{display:block}.dev.isrich textarea{display:none}
-  .rich .who{font:700 15px "Orbitron",sans-serif;letter-spacing:1px;color:#fff;margin-bottom:2px}
+  .rich .who{font:700 15px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:1px;color:#fff;margin-bottom:2px}
   .rich .fn{color:var(--tx);margin-bottom:10px}
-  .rich h4{margin:12px 0 5px;font:700 10.5px "Orbitron",sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--cy);display:flex;align-items:center;gap:6px}
+  .rich h4{margin:12px 0 5px;font:700 10.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--cy);display:flex;align-items:center;gap:6px}
   .rich h4::after{content:"";flex:1;height:1px;background:var(--line)}
   .rich .use{display:flex;gap:10px;align-items:center}
   .rich .use svg{width:92px;flex:none}
   .rich .lg{flex:1;min-width:0;font-size:12.5px}
   .rich .lg div{display:flex;gap:6px;align-items:baseline;margin-bottom:2px}
   .rich .lg i{width:8px;height:8px;flex:none;box-shadow:0 0 6px currentColor}
-  .rich .lg b{margin-left:auto;font:600 12px "IBM Plex Mono",monospace;color:#fff}
+  .rich .lg b{margin-left:auto;font:600 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff}
   .rich .err{border:1px solid rgba(255,84,84,.75);background:rgba(255,40,40,.13);color:#ff9a9a;padding:7px 9px;margin-top:2px}
   .rich .err div::before{content:"⚠ ";color:#ff4d4d}
   .rich .err div{margin:2px 0}
@@ -132,7 +132,7 @@
   .rich li{margin:3px 0;padding-left:16px;position:relative}
   .rich li::before{content:"›";position:absolute;left:0;color:var(--cy)}
   .rich li.bad{color:#ff9a9a}.rich li.bad::before{content:"⚠";color:#ff4d4d}
-  .rich .upd{margin-top:12px;font:500 11px "IBM Plex Mono",monospace;color:var(--mut)}
+  .rich .upd{margin-top:12px;font:500 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut)}
 
   /* ===== DENNÍ REŽIM (07:00–18:00 pražského času) ===== */
   :root[data-theme="day"]{--bg:#d9dce3;--panel:rgba(255,255,255,.97);--line:rgba(29,29,27,.55);--cy:#1d388f;--mg:#1d388f;--lm:#0f7a3d;--am:#1d388f;--rd:#c4162a;--tx:#1d1d1b;--mut:#4a4d57}
@@ -185,31 +185,31 @@
   .nw{white-space:nowrap;display:inline-block}
   .rich .lg b{white-space:nowrap}
 
-  .adminbtn{display:block;margin:34px auto 0;background:none;border:0;color:var(--mut);opacity:.28;font:500 11px "IBM Plex Mono",monospace;letter-spacing:3px;text-transform:uppercase;cursor:pointer;padding:6px 14px}
+  .adminbtn{display:block;margin:34px auto 0;background:none;border:0;color:var(--mut);opacity:.28;font:500 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;cursor:pointer;padding:6px 14px}
   .adminbtn:hover,.adminbtn[aria-expanded="true"]{opacity:.9}
   #admin{margin-top:6px}
   .ad-top{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:baseline;margin-bottom:12px}
-  .ad-top .n{font:900 40px/1 "Orbitron",sans-serif;color:var(--tx)}
+  .ad-top .n{font:900 40px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--tx)}
   .ad-top .n.bad{color:var(--rd)}
-  .ad-top span{color:var(--mut);font:500 12px "IBM Plex Mono",monospace}
+  .ad-top span{color:var(--mut);font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif}
   .ad-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px}
   .hb{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:3px 10px;align-items:center;margin-bottom:8px;font-size:13px}
   .hb .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .hb .l small{color:var(--mut);margin-right:6px}
-  .hb .v{text-align:right;font:600 12px "IBM Plex Mono",monospace;color:var(--tx);white-space:nowrap}
+  .hb .v{text-align:right;font:600 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--tx);white-space:nowrap}
   .hb .b{grid-column:1/3;height:8px;background:rgba(128,150,200,.2);position:relative}
   .hb .b i{position:absolute;inset:0 auto 0 0}
   .hb .b i.t{opacity:.35}
-  .rs{margin:14px 0 6px;font:700 14px "Orbitron",sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--tx);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-  .rs small{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:0;text-transform:none}
+  .rs{margin:14px 0 6px;font:700 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--tx);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .rs small{font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);letter-spacing:0;text-transform:none}
   .is{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--line);border-left-width:4px;background:rgba(128,150,200,.07)}
   .is.high{border-left-color:var(--rd)}.is.mid{border-left-color:#f2a516}.is.low{border-left-color:#7b8aae}.is.fixed{opacity:.72}
   .is .bd{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
-  .chip{font:700 10px "Orbitron",sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor;white-space:nowrap}
+  .chip{font:700 10px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor;white-space:nowrap}
   .chip.high{color:var(--rd)}.chip.mid{color:#d98b00}.chip.low{color:var(--mut)}.chip.new{color:#fff;background:#1d388f;border-color:#1d388f}.chip.chg{color:#fff;background:#d98b00;border-color:#d98b00}
   .chip.st{color:var(--tx)}
   .is .tx{font-size:14.5px;line-height:1.4}
-  .is .mt{grid-column:2;color:var(--mut);font:500 11.5px "IBM Plex Mono",monospace}
+  .is .mt{grid-column:2;color:var(--mut);font:500 11.5px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif}
   .is .pv{grid-column:2;color:var(--mut);font-size:12.5px;text-decoration:line-through}
   @media (max-width:900px){.ad-grid{grid-template-columns:1fr}}
   .note{border:1px solid rgba(255,184,48,.5);background:rgba(255,184,48,.08);color:var(--am);padding:10px 14px;margin-bottom:14px;font-size:14px}
@@ -322,8 +322,8 @@
     return `<svg viewBox="0 0 ${S} ${S}" style="max-width:260px;margin:0 auto">
       <circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(94,138,255,.25)" stroke-dasharray="2 6"/>
       ${arcs}
-      <text x="${c}" y="${c - 2}" text-anchor="middle" fill="#fff" font-family="Orbitron" font-weight="900" font-size="30">${nf.format(total)}</text>
-      <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#c3cfe8" font-family="Orbitron" font-size="9" letter-spacing="3">POZIC</text></svg>`;
+      <text x="${c}" y="${c - 2}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="30">${nf.format(total)}</text>
+      <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
   }
 
   function bars(rels) {
@@ -333,14 +333,14 @@
     let g = '';
     for (let k = 0; k <= 4; k++) {
       const y = T + ph - ph * k / 4;
-      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
+      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
     }
     let b = '';
     rels.forEach((x, i) => {
       const v = x.count || 0, h = ph * v / top, bx = L + i * bw + bw * .2, w = bw * .6, y = T + ph - h, col = color(x.i);
       b += `<g><defs><linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="${col}" stop-opacity=".15"/></linearGradient></defs>
         <rect x="${bx}" y="${y}" width="${w}" height="${Math.max(h, v ? 2 : 0)}" fill="url(#bg${i})" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 7px ${col})"><title>${esc(x.name)}: ${nf.format(v)}</title></rect>
-        <text x="${bx + w / 2}" y="${y - 5}" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono" font-size="11" font-weight="600">${x.count == null ? '–' : nf.format(v)}</text>
+        <text x="${bx + w / 2}" y="${y - 5}" text-anchor="middle" fill="#fff" font-family="Inter" font-size="11" font-weight="600">${x.count == null ? '–' : nf.format(v)}</text>
         <text transform="translate(${bx + w / 2 + 3},${H - B + 14}) rotate(-38)" text-anchor="end" fill="#e3ebff" font-family="Rajdhani" font-weight="600" font-size="12">${esc(x.name)}</text></g>`;
     });
     return `<svg viewBox="0 0 ${W} ${H}">${g}${b}</svg>`;
@@ -353,9 +353,9 @@
     const X = i => L + pw * i / (pts.length - 1), Y = v => T + ph - ph * v / (max * 1.1);
     const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.total)}`).join(' ');
     let grid = '';
-    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
+    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
     const every = Math.ceil(pts.length / 10);
-    const lbl = pts.map((p, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : '').join('');
+    const lbl = pts.map((p, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="10">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : '').join('');
     const dots = pts.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.total)}" r="3.5" fill="#000" stroke="#5e8aff" stroke-width="2"><title>${fmtD(p.date)}: ${nf.format(p.total)} pozic</title></circle>`).join('');
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:190px"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e8aff" stop-opacity=".45"/><stop offset="1" stop-color="#5e8aff" stop-opacity="0"/></linearGradient></defs>
       ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#5e8aff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #5e8aff)"/>${dots}${lbl}</svg>`;
@@ -518,7 +518,7 @@
     else {
       const W = 1000, H = 150, L = 34, T = 12, B = 22, mx = Math.max(1, ...h.map(p => p.open)), X = i => L + (W - L - 8) * i / (h.length - 1), Y = v => T + (H - T - B) * (1 - v / mx);
       const pts = h.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.open)}`).join(' ');
-      $('adTrend').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:150px"><path d="${pts}" fill="none" stroke="${color(0)}" stroke-width="2.5"/>${h.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.open)}" r="3" fill="${color(0)}"><title>${esc(fmtH(p.hour))}: ${p.open}</title></circle>`).join('')}<text x="${L - 6}" y="${T + 4}" text-anchor="end" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${mx}</text><text x="${L - 6}" y="${H - B + 4}" text-anchor="end" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">0</text></svg>`;
+      $('adTrend').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:150px"><path d="${pts}" fill="none" stroke="${color(0)}" stroke-width="2.5"/>${h.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.open)}" r="3" fill="${color(0)}"><title>${esc(fmtH(p.hour))}: ${p.open}</title></circle>`).join('')}<text x="${L - 6}" y="${T + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${mx}</text><text x="${L - 6}" y="${H - B + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">0</text></svg>`;
     }
     $('adSecs').innerHTML = I.relations.map(r => `<div class="rs">${esc(r.name)}${r.agent ? ` <small>· ${esc(r.agent)}</small>` : ''}</div>` + r.issues.map(i => {
       const fixed = i.status === 'opraveno', gone = !i.current && !fixed;
