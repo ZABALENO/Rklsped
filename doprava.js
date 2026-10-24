@@ -100,18 +100,23 @@ const aiCookie = req => { for (const p of (req.headers.cookie || '').split(';'))
 const aiOk = req => !!aiPw() && aiEq(aiCookie(req), aiTok());
 const aiTries = new Map();
 const AI_LOGIN = `<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentizace RKL Opava – přihlášení</title><link rel="icon" type="image/png" href="/favicon.png">
-<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;color:#e9edf7;font:16px/1.4 system-ui,sans-serif;padding:16px;
-background-image:radial-gradient(900px 500px at 15% -10%,rgba(29,56,143,.5),transparent 60%),linear-gradient(rgba(94,138,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.07) 1px,transparent 1px);background-size:auto,48px 48px,48px 48px}
-form{width:100%;max-width:380px;background:rgba(8,12,24,.85);border:1px solid rgba(94,138,255,.4);padding:30px 26px;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);box-shadow:0 0 40px rgba(94,138,255,.2)}
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1d388f;color:#e9edf7;font:16px/1.4 system-ui,sans-serif;padding:16px;overflow:hidden}
+body::before{content:"";position:fixed;inset:-16px;background:url(/bg.jpg) center/cover no-repeat;filter:blur(1.5px);z-index:-3}
+body::after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,0,10,.55),rgba(10,20,60,.82))}
+.grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(94,138,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.14) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);background-size:48px 48px,48px 48px,auto;mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%)}
+.scan{position:fixed;left:0;right:0;height:120px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(94,138,255,.18),transparent);animation:sc 6s linear infinite}@keyframes sc{from{top:-120px}to{top:100%}}
+form{position:relative;width:100%;max-width:380px;background:rgba(6,10,24,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(94,138,255,.5);padding:30px 26px;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);box-shadow:0 0 50px rgba(94,138,255,.3)}
+form::before{content:"";position:absolute;left:0;top:0;width:60px;height:2px;background:#5e8aff;box-shadow:0 0 12px #5e8aff}
+@media (prefers-reduced-motion:reduce){.scan{animation:none}}
 img{width:48px;height:48px;border-radius:10px;display:block;margin-bottom:14px}h1{margin:0 0 4px;font-size:20px;letter-spacing:3px;text-transform:uppercase}p{margin:0 0 18px;color:#8793ad;font-size:13px;letter-spacing:1px}
 input{width:100%;padding:12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font-size:16px;outline:0}input:focus{box-shadow:0 0 12px rgba(94,138,255,.6)}
 button{margin-top:12px;width:100%;padding:12px;background:#1d388f;border:1px solid #5e8aff;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}button:hover{background:#2747b8}
 .e{color:#ff6b5e;font-size:14px;min-height:20px;margin-top:10px}</style></head><body>
-<form id="f"><img src="/logo.jpg" alt="RKL"><h1>Agentizace RKL Opava</h1><p>Monitoring AI agentů</p>
+<div class="grid"></div><div class="scan"></div><form id="f"><img src="/logo.jpg" alt="RKL"><h1>Agentizace RKL Opava</h1><p>Monitoring AI agentů</p>
 <input type="password" id="pw" placeholder="Heslo" autocomplete="current-password" autofocus><button>Vstoupit</button><div class="e" id="e"></div></form>
 <script>document.getElementById('f').onsubmit=async e=>{e.preventDefault();const r=await fetch('/ai/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})});
 if(r.ok)location.href='/ai';else{const j=await r.json().catch(()=>({}));document.getElementById('e').textContent=j.error||'Chyba';}};</script></body></html>`;
-for (const f of ['logo.jpg', 'favicon.png']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 app.post('/ai/login', (req, res) => {
   const ip = req.ip || 'x', now = Date.now();
   const t = (aiTries.get(ip) || []).filter(x => now - x < 10 * 60 * 1000); aiTries.set(ip, t);
