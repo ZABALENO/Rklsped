@@ -225,7 +225,7 @@
     const total = R.total;
     countUp($('total'), total);
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
-    $('kpiMeta').textContent = withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '';
+    $('kpiMeta').textContent = (withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '') + (R.trips ? ' · z toho ' + nf.format(R.trips) + ' přeprav' : '');
     $('pie').innerHTML = donut(rels, total);
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
@@ -233,7 +233,7 @@
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
       <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
-      <span class="d">${x.date ? 'k ' + fmtD(x.date) : 'bez dat'}${x.count && total ? ' · ' + Math.round(100 * x.count / total) + ' %' : ''}</span></div>`).join('');
+      <span class="d">${x.date ? 'k ' + fmtD(x.date) : 'bez dat'}${x.count && total ? ' · ' + Math.round(100 * x.count / total) + ' %' : ''}${x.trips ? ' · ' + nf.format(x.trips) + ' přeprav' : ''}</span></div>`).join('');
     $('trend').innerHTML = trend(R.history);
     // tabulka po dnech
     const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);

@@ -137,11 +137,20 @@ app.get('/api/agents', async (req, res) => {
   for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) histKeys.add(k);
   const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
   const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
-  const history = Object.keys(store.mem.agent).sort().reverse().slice(0, 45).map(d => {
-    const c = store.mem.agent[d].c || {};
+  const adj = store.mem.cfg.adj, today = pragueToday();
+  const adjOn = adj && adj.date === today ? adj : null;           // ruční přičtení platí jen pro daný den
+  if (adjOn) for (const r of relations) if (r.key === adjOn.key) {
+    r.count = (r.count || 0) + (adjOn.count || 0); r.trips = adjOn.trips || 0; r.date = r.date || today;
+  }
+  const hd = Object.keys(store.mem.agent);
+  if (adjOn && !hd.includes(today)) hd.push(today);
+  const history = hd.sort().reverse().slice(0, 45).map(d => {
+    const c = Object.assign({}, (store.mem.agent[d] || {}).c || {});
+    if (adjOn && d === today) c[adjOn.key] = (c[adjOn.key] || 0) + (adjOn.count || 0);
     return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
   });
   res.json({
+    trips: adjOn ? adjOn.trips || 0 : 0,
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
     hasSheet: !!(sheet.counts && sheet.counts.length), relations,
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
@@ -150,6 +159,13 @@ app.get('/api/agents', async (req, res) => {
 });
 
 // popis, jak relace agenta využívá (sdílený pro všechny)
+// ruční přičtení k relaci pro dnešní den: {key, count, trips}
+app.post('/api/agents/adjust', async (req, res) => {
+  const key = nk(req.body && req.body.key);
+  if (!key) return res.status(400).json({ error: 'Chybí relace.' });
+  await store.put('cfg', 'adj', { date: pragueToday(), key, count: Math.round(+req.body.count) || 0, trips: Math.round(+req.body.trips) || 0 });
+  res.json({ ok: true });
+});
 app.post('/api/agents/text', async (req, res) => {
   const key = nk(req.body && req.body.key), text = String((req.body && req.body.text) || '').slice(0, 6000);
   if (!key) return res.status(400).json({ error: 'Chybí relace.' });
@@ -224,10 +240,11 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext'], 'doprava.json').then(s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
+  if (!store.mem.cfg.adj) await store.put('cfg', 'adj', { date: pragueToday(), key: 'zapad 1', count: 90, trips: 8 }); // jednorázově: +90 pozic, 8 přeprav k Západu 1 (jen 24. 10. 2026)
   refreshSheet(true);
   setInterval(() => refreshSheet(true), BG_REFRESH);
 }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
