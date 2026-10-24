@@ -226,7 +226,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nf = new Intl.NumberFormat('cs-CZ');
   const PAL_N = ['#5e8aff', '#f2a516', '#ffffff', '#2f5bd6', '#ffcf6b', '#9db6ff', '#c98a0d', '#7dd3a0', '#b8c4e6', '#ff8a5e', '#3d4f8f', '#e6d3a1'];
-  const PAL_D = ['#1d388f', '#1d1d1b', '#5b79d1', '#6e7381', '#0f2466', '#3f5fc0', '#52555e', '#7f9be0', '#2b2b29', '#8b909c', '#a5b5e6', '#b7bcc8'];
+  const PAL_D = ['#1d388f', '#f2b300', '#1f9d55', '#7b3fc4', '#0aa5b8', '#d62839', '#f26b21', '#d6409f', '#a21caf', '#2f7de1', '#5c6370', '#8a4b1f'];
   let PAL = PAL_N;
   const auto = () => {
     const h = +new Intl.DateTimeFormat('cs-CZ', { hour: 'numeric', hour12: false, timeZone: 'Europe/Prague' }).format(new Date());
