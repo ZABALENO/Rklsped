@@ -34,6 +34,11 @@ async function refreshSheet(force) {
       await require('./lib/change').trackChange(store.mem.cfg, store.put, out, url);
       await updateHistory(out.rows);
       await updateAgents(out.counts);
+      if (out.counts) {                                   // kdy se hodnoty počtů v tabulce naposledy opravdu změnily
+        const sig = require('crypto').createHash('sha1').update(JSON.stringify(out.counts.map(c => [nk(c.name), c.entries[0] ? c.entries[0].count : null, c.entries[0] ? c.entries[0].date : null]).sort())).digest('hex');
+        const cur = store.mem.cfg.cnt;
+        if (!cur || cur.h !== sig) await store.put('cfg', 'cnt', { h: sig, at: new Date().toISOString(), prev: cur ? cur.at : null });
+      }
       try { await require('./lib/issues').snapshot(store, out.texts); } catch (e) { console.error('Přehled problémů:', e.message); }
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, rows: sheet.url === url ? sheet.rows : [], fetchedAt: sheet.url === url ? sheet.fetchedAt : null };
@@ -162,6 +167,7 @@ app.get('/api/agents', async (req, res) => {
     return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
   });
   res.json({
+    changedAt: (store.mem.cfg.cnt || {}).at || null,
     trips: relations.reduce((a, r) => a + (r.trips || 0), 0),
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
     hasSheet: !!(sheet.counts && sheet.counts.length), relations,

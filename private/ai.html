@@ -481,13 +481,14 @@
     else note.hidden = true;
     const ok = R.hasSheet && !R.error;
     live.className = 'live' + (ok ? '' : ' off'); $('liveTxt').textContent = ok ? 'systém online' : 'bez dat';
-    $('upd').textContent = R.fetchedAt ? 'načteno ' + new Date(R.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '';
+    $('upd').textContent = R.changedAt ? 'poslední změna v tabulce: ' + new Date(R.changedAt).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' }).replace(/\s+/g, '\u00a0')
+      : (R.fetchedAt ? 'načteno ' + new Date(R.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '');
   }
 
   async function load() {
     try {
       const j = await api('/api/agents');
-      const s = JSON.stringify([j.relations, j.history, j.hasSheet, j.error, j.configured, j.sheetKeys, (j.sheetKeys || []).map(k => j.texts[k])]) + Object.keys(j.texts).length;
+      const s = JSON.stringify([j.relations, j.history, j.hasSheet, j.error, j.configured, j.changedAt, j.sheetKeys, (j.sheetKeys || []).map(k => j.texts[k])]) + Object.keys(j.texts).length;
       R = j; status();
       if (s !== sig || !$('phones').children.length) { sig = s; render(); }
       else render.call(null);
