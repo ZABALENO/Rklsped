@@ -250,8 +250,12 @@
       $('phones').querySelectorAll('textarea').forEach(bindText);
     }
     $('phones').querySelectorAll('textarea').forEach(t => {
+      const fromSheet = (R.sheetKeys || []).includes(t.dataset.k);
+      t.readOnly = fromSheet;
+      const stEl = document.querySelector(`[data-st="${CSS.escape(t.dataset.k)}"]`);
+      if (fromSheet && stEl) { stEl.textContent = 'z tabulky'; stEl.className = 'ok'; }
       const v = R.texts[t.dataset.k] || '';
-      if (document.activeElement !== t && !t.dataset.dirty && t.value !== v) t.value = v;
+      if ((fromSheet || (document.activeElement !== t && !t.dataset.dirty)) && t.value !== v) t.value = v;
     });
   }
 
@@ -282,7 +286,7 @@
   async function load() {
     try {
       const j = await api('/api/agents');
-      const s = JSON.stringify([j.relations, j.history, j.hasSheet, j.error, j.configured]) + Object.keys(j.texts).length;
+      const s = JSON.stringify([j.relations, j.history, j.hasSheet, j.error, j.configured, j.sheetKeys, (j.sheetKeys || []).map(k => j.texts[k])]) + Object.keys(j.texts).length;
       R = j; status();
       if (s !== sig || !$('phones').children.length) { sig = s; render(); }
       else render.call(null);

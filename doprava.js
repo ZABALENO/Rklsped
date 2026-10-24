@@ -135,8 +135,11 @@ app.get('/api/agents', async (req, res) => {
   for (const c of sheet.counts || []) { const e = c.entries[0]; if (e) cur.set(nk(c.name), { name: prettyName(c.name), count: e.count, date: e.date }); }
   const histKeys = new Set();
   for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) histKeys.add(k);
-  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
+  const txtKeys = (sheet.texts || []).map(t => nk(t.name));
+  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
   const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
+  const sheetTexts = {};
+  for (const t of sheet.texts || []) if (t.text) sheetTexts[nk(t.name)] = t.text;
   const adj = store.mem.cfg.adj, today = pragueToday();
   const adjOn = adj && adj.date === today ? adj : null;           // ruční přičtení platí jen pro daný den
   if (adjOn) for (const r of relations) if (r.key === adjOn.key) {
@@ -154,7 +157,8 @@ app.get('/api/agents', async (req, res) => {
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
     hasSheet: !!(sheet.counts && sheet.counts.length), relations,
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
-    history, texts: Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])),
+    history, texts: Object.assign(Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])), sheetTexts),
+    sheetKeys: Object.keys(sheetTexts), hasTexts: !!sheet.texts,
   });
 });
 
