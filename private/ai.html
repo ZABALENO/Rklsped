@@ -39,6 +39,7 @@
   .hr a{color:var(--cy);text-decoration:none;border:1px solid var(--line);padding:5px 12px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-block;margin-bottom:6px;letter-spacing:2px;text-transform:uppercase;background:rgba(94,138,255,.06)}
   .hr a:hover{background:rgba(94,138,255,.18)}
   .tbtn{width:34px;height:30px;padding:0;margin-right:6px;vertical-align:top;color:var(--cy);border:1px solid var(--line);background:rgba(94,138,255,.08);cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-flex;align-items:center;justify-content:center}
+  .tbtn.spin svg{animation:rsp .8s linear infinite}@keyframes rsp{to{transform:rotate(360deg)}}
   .tbtn:hover{background:rgba(94,138,255,.22)}.tbtn svg{width:18px;height:18px}
   [data-theme="day"] .tbtn{color:#1d388f;border-color:#1d388f;background:rgba(255,255,255,.6)}
   .live{display:inline-flex;align-items:center;gap:8px;color:var(--lm)}
@@ -226,7 +227,7 @@
   <header>
     <img src="/logo.jpg" alt="RKL">
     <div><h1>Agentizace RKL Opava<span class="by">Robin Balcar</span></h1><div class="sub">RKL Holding · Monitoring AI agentů</div></div>
-    <div class="hr"><button class="tbtn" id="themeBtn" type="button" aria-label="Přepnout světlý / tmavý režim"></button> <a href="/ai/logout">Odhlásit</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
+    <div class="hr"><button class="tbtn" id="themeBtn" type="button" aria-label="Přepnout světlý / tmavý režim"></button> <button class="tbtn" id="refBtn" type="button" aria-label="Obnovit data" title="Obnovit data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button> <a href="/ai/logout">Odhlásit</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
   </header>
 
   <div class="note" id="note" hidden></div>
@@ -535,6 +536,12 @@
   });
   setInterval(() => { if (!$('admin').hidden) loadAdmin(); }, 5 * 60 * 1000);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBig);
+  $('refBtn').addEventListener('click', async () => {
+    const b = $('refBtn'); if (b.classList.contains('spin')) return;
+    b.classList.add('spin');
+    try { await Promise.all([load(), $('admin').hidden ? null : loadAdmin()]); } catch (e) {}
+    setTimeout(() => b.classList.remove('spin'), 500);
+  });
   load(); setInterval(load, 60000);
 })();
 </script>
