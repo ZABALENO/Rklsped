@@ -72,11 +72,12 @@ async function updateHistory(rows) {
 const nk = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 const PRETTY = { zapad: 'Západ', vychod: 'Východ', vnitro: 'Vnitro', jih: 'Jih' };
 const prettyName = raw => String(raw || '').trim().split(/\s+/).map(w => PRETTY[nk(w)] || (w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+const tripBase = n => { const m = nk(n).match(/^(.*?)\s+prepravy$/); return m ? m[1] : null; };   // sloupec „Západ 1 Přepravy“ = počet přeprav relace Západ 1
 const AGENT_ORDER = ['zapad 1', 'zapad 2', 'zapad 3', 'zapad 4', 'vnitro 1', 'vnitro 2', 'vnitro 3', 'vnitro 4', 'jih', 'vychod'];
 async function updateAgents(counts) {
   if (!counts) return;
   const byDay = new Map();
-  for (const c of counts) for (const e of c.entries) {
+  for (const c of counts) if (!tripBase(c.name)) for (const e of c.entries) {
     if (!byDay.has(e.date)) byDay.set(e.date, {});
     byDay.get(e.date)[nk(c.name)] = e.count;
   }
@@ -132,9 +133,15 @@ app.use('/api/agents', (req, res, next) => aiOk(req) ? next() : res.status(401).
 app.get('/api/agents', async (req, res) => {
   await refreshSheet(false);
   const cur = new Map();
-  for (const c of sheet.counts || []) { const e = c.entries[0]; if (e) cur.set(nk(c.name), { name: prettyName(c.name), count: e.count, date: e.date }); }
+  const sheetTrips = {};
+  for (const c of sheet.counts || []) {
+    const e = c.entries[0], tb = tripBase(c.name);
+    if (tb) { if (e) sheetTrips[tb] = e.count; continue; }
+    if (e) cur.set(nk(c.name), { name: prettyName(c.name), count: e.count, date: e.date });
+  }
+  const isTripKey = k => / prepravy$/.test(k);
   const histKeys = new Set();
-  for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) histKeys.add(k);
+  for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) if (!isTripKey(k)) histKeys.add(k);
   const txtKeys = (sheet.texts || []).map(t => nk(t.name));
   const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
   const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
@@ -142,18 +149,19 @@ app.get('/api/agents', async (req, res) => {
   for (const t of sheet.texts || []) if (t.text) sheetTexts[nk(t.name)] = t.text;
   const adj = store.mem.cfg.adj, today = pragueToday();
   const adjOn = adj && adj.date === today ? adj : null;           // ruční přičtení platí jen pro daný den
+  for (const r of relations) if (sheetTrips[r.key] != null) r.trips = sheetTrips[r.key];
   if (adjOn) for (const r of relations) if (r.key === adjOn.key) {
-    r.count = (r.count || 0) + (adjOn.count || 0); r.trips = adjOn.trips || 0; r.date = r.date || today;
+    r.count = (r.count || 0) + (adjOn.count || 0); r.trips = (r.trips || 0) + (adjOn.trips || 0); r.date = r.date || today;
   }
   const hd = Object.keys(store.mem.agent);
   if (adjOn && !hd.includes(today)) hd.push(today);
   const history = hd.sort().reverse().slice(0, 45).map(d => {
-    const c = Object.assign({}, (store.mem.agent[d] || {}).c || {});
+    const c = Object.assign({}, (store.mem.agent[d] || {}).c || {}); for (const k of Object.keys(c)) if (isTripKey(k)) delete c[k];
     if (adjOn && d === today) c[adjOn.key] = (c[adjOn.key] || 0) + (adjOn.count || 0);
     return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
   });
   res.json({
-    trips: adjOn ? adjOn.trips || 0 : 0,
+    trips: relations.reduce((a, r) => a + (r.trips || 0), 0),
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
     hasSheet: !!(sheet.counts && sheet.counts.length), relations,
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
@@ -248,7 +256,7 @@ createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext'], 'doprava.jso
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
-  if (!store.mem.cfg.adj || (store.mem.cfg.adj.v || 1) < 2) await store.put('cfg', 'adj', { v: 2, date: pragueToday(), key: 'zapad 1', count: 90, trips: 29 }); // jednorázově: +90 pozic, 29 přeprav (8 + 21) k Západu 1 (jen 24. 10. 2026)
+  if (!store.mem.cfg.adj || (store.mem.cfg.adj.v || 1) < 3) await store.put('cfg', 'adj', { v: 3, date: pragueToday(), key: 'zapad 1', count: 90, trips: 21 }); // jednorázově: +90 pozic a +21 přeprav k Západu 1 (k hodnotě přeprav z tabulky) (jen 24. 10. 2026)
   refreshSheet(true);
   setInterval(() => refreshSheet(true), BG_REFRESH);
 }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
