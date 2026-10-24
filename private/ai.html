@@ -63,7 +63,7 @@
   .kpi .lbl{font:600 13px "Orbitron",sans-serif;letter-spacing:4px;color:var(--cy);margin-top:10px;text-transform:uppercase}
   .kpi .meta{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-top:12px}
 
-  .saved{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);width:100%}.saved .sl{font:700 11px "Orbitron",sans-serif;letter-spacing:3px;color:var(--mg);text-transform:uppercase}.saved .sv{font:900 clamp(22px,2.4vw,34px)/1.1 "Orbitron",sans-serif;color:#fff;margin-top:6px;text-shadow:0 0 14px rgba(242,165,22,.6);white-space:nowrap}.saved .sm{font:500 11px "IBM Plex Mono",monospace;color:var(--mut);margin-top:6px}
+  .saved{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);width:100%}.saved .sl{font:700 11px "Orbitron",sans-serif;letter-spacing:1.5px;text-align:center;line-height:1.5;color:var(--mg);text-transform:uppercase}.saved .sv{font:900 clamp(22px,2.4vw,34px)/1.1 "Orbitron",sans-serif;color:#fff;margin-top:6px;text-shadow:0 0 14px rgba(242,165,22,.6);white-space:nowrap}.saved .sm{font:500 11px "IBM Plex Mono",monospace;color:var(--mut);margin-top:6px}
   svg{display:block;width:100%;height:auto;overflow:visible}
   .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;margin-top:8px;font-size:13px}
   .legend div{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
@@ -182,6 +182,8 @@
   [data-theme="day"] .rich .okb{border-color:rgba(15,122,61,.6);background:rgba(15,122,61,.08);color:#0f7a3d}
   [data-theme="day"] .note{background:rgba(194,106,0,.1);color:#8a4b00}
   [data-theme="day"] .note.err{background:rgba(196,22,42,.08);color:#b00020}
+  .nw{white-space:nowrap;display:inline-block}
+  .rich .lg b{white-space:nowrap}
   .note{border:1px solid rgba(255,184,48,.5);background:rgba(255,184,48,.08);color:var(--am);padding:10px 14px;margin-bottom:14px;font-size:14px}
   .note.err{border-color:rgba(255,84,112,.6);background:rgba(255,84,112,.08);color:var(--rd)}
 
@@ -204,7 +206,7 @@
   <div class="grid g1">
     <div class="panel kpi"><h3>Všechny pozice dohromady</h3>
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
-      <div class="saved"><div class="sl" id="savedLbl">Ušetřený čas</div><div class="sv" id="saved">–</div><div class="sm" id="savedMeta"></div><div class="sm" style="color:var(--tx);margin-top:4px">pouze za zapsání objednávek do Lori</div></div></div>
+      <div class="saved"><div class="sl" id="savedLbl">Ušetřený čas</div><div class="sv" id="saved">–</div><div class="sm" id="savedMeta"></div><div class="sm" style="color:var(--tx);margin-top:4px">pouze za zapsání objednávek do&nbsp;Lori</div></div></div>
     <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h3>Počet pozic podle dispečinku</h3><div id="bars"></div></div>
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
@@ -223,7 +225,8 @@
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])).replace(/(\d) %/g, '$1\u00a0%');
+  const nw = t => `<span class="nw">${esc(t)}</span>`;
   const nf = new Intl.NumberFormat('cs-CZ');
   const PAL_N = ['#5e8aff', '#f2a516', '#ffffff', '#2f5bd6', '#ffcf6b', '#9db6ff', '#c98a0d', '#7dd3a0', '#b8c4e6', '#ff8a5e', '#3d4f8f', '#e6d3a1'];
   const PAL_D = ['#1d388f', '#f2b300', '#1f9d55', '#7b3fc4', '#0aa5b8', '#d62839', '#f26b21', '#d6409f', '#a21caf', '#2f7de1', '#5c6370', '#8a4b1f'];
@@ -332,12 +335,12 @@
     const total = R.total;
     countUp($('total'), total);
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
-    $('kpiMeta').textContent = (withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '') + (R.trips ? ' · z toho ' + nf.format(R.trips) + ' přeprav' : '');
+    $('kpiMeta').innerHTML = [withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '', R.trips ? 'z toho ' + nf.format(R.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ');
     const mins = (total + (R.trips || 0)) * 2, hh = Math.floor(mins / 60), mm = mins % 60;
     const first = '2026-10-12';
-    $('savedLbl').textContent = 'Ušetřený čas' + (first ? ' od: ' + fmtD(first) + ' = ' + (R.workdaysSince || 0) + ' ' + (R.workdaysSince === 1 ? 'pracovní den' : R.workdaysSince >= 2 && R.workdaysSince <= 4 ? 'pracovní dny' : 'pracovních dnů') : '');
+    $('savedLbl').innerHTML = nw('Ušetřený čas') + (first ? ' ' + nw('od: ' + fmtD(first)) + ' ' + nw('= ' + (R.workdaysSince || 0) + ' ' + (R.workdaysSince === 1 ? 'pracovní den' : R.workdaysSince >= 2 && R.workdaysSince <= 4 ? 'pracovní dny' : 'pracovních dnů')) : '');
     $('saved').textContent = hh ? `${nf.format(hh)} h ${mm} min` : `${mm} min`;
-    $('savedMeta').textContent = `(${nf.format(total)} objednávek + ${nf.format(R.trips || 0)} přeprav) × 2 min`;
+    $('savedMeta').innerHTML = nw(`(${nf.format(total)} objednávek + ${nf.format(R.trips || 0)} přeprav)`) + ' ' + nw('× 2 min');
     $('pie').innerHTML = donut(rels, total);
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
@@ -345,7 +348,7 @@
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
       <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
-      <span class="d">${x.date ? 'k ' + fmtD(x.date) : 'bez dat'}${x.count && total ? ' · ' + Math.round(100 * x.count / total) + ' %' : ''}${x.trips ? ' · ' + nf.format(x.trips) + ' přeprav' : ''}</span></div>`).join('');
+      <span class="d">${[x.date ? 'k ' + fmtD(x.date) : 'bez dat', x.count && total ? Math.round(100 * x.count / total) + ' %' : '', x.trips ? nf.format(x.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ')}</span></div>`).join('');
     $('trend').innerHTML = trend(R.history);
     // tabulka po dnech
     const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);
