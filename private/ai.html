@@ -9,18 +9,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#000; --bg2:#1d1d1b; --panel:rgba(8,12,24,.78); --line:rgba(94,138,255,.32);
+    --bg:#000; --bg2:#1d1d1b; --panel:rgba(6,10,26,.62); --line:rgba(94,138,255,.32);
     --cy:#5e8aff; --mg:#f2a516; --lm:#7dd3a0; --am:#f2a516; --vi:#1d388f; --rd:#ff6b5e;
     --tx:#e9edf7; --mut:#8793ad;
   }
+  .bgimg{position:fixed;inset:0;z-index:-1;pointer-events:none}
+  .bgimg{background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.5)}
+  .bgimg.l2{background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(3.2) brightness(.8) blur(1.2px);mix-blend-mode:screen;opacity:.5}
+  .bgimg.l3{filter:none;background:radial-gradient(900px 600px at 20% 0%,rgba(94,138,255,.55),transparent 65%),radial-gradient(800px 600px at 100% 100%,rgba(29,56,143,.75),transparent 60%),linear-gradient(180deg,rgba(0,6,34,.82),rgba(0,0,16,.55));mix-blend-mode:normal}
   *{box-sizing:border-box}
   html{background:var(--bg)}
   body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 "Rajdhani","IBM Plex Sans",system-ui,sans-serif;
-    background:
-      radial-gradient(1200px 600px at 12% -10%,rgba(255,255,255,.07),transparent 60%),
-      radial-gradient(900px 600px at 95% 10%,rgba(29,56,143,.25),transparent 60%),
-      #000;
-    background-attachment:fixed}
+    background:transparent}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
     background-image:linear-gradient(rgba(94,138,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.07) 1px,transparent 1px);
     background-size:48px 48px;mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 75%)}
@@ -116,6 +116,7 @@
 </style>
 </head>
 <body>
+<div class="bgimg"></div><div class="bgimg l2"></div><div class="bgimg l3"></div>
 <div class="wrap">
   <header>
     <img src="/logo.jpg" alt="RKL">
