@@ -193,6 +193,9 @@
   .ad-top .n{font:900 40px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--tx)}
   .ad-top .n.bad{color:var(--rd)}
   .ad-top span{color:var(--mut);font:500 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif}
+  .us{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}.us .ub{min-width:0}.us small,.lg2 small{display:block;color:var(--mut);font-size:11.5px;overflow-wrap:anywhere}.us .un{cursor:pointer;border-bottom:1px dashed var(--mut)}
+  .dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:5px;background:#6b7794}.dot.on{background:#3ddc84;box-shadow:0 0 8px #3ddc84}
+  .lg2{padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}.lg2 span{color:var(--mut);margin-right:8px;white-space:nowrap}
   .ad-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px}
   .hb{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:3px 10px;align-items:center;margin-bottom:8px;font-size:13px}
   .hb .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -256,6 +259,8 @@
     <div class="ad-grid" style="margin-top:14px"><div class="panel"><h3>Opakující se problémy (počet hodinových přehledů, ve kterých se objevily)</h3><div id="adProb"></div></div><div class="panel"><h3>Problémy podle relací</h3><div id="adRel"></div></div></div>
     <div class="panel" style="margin-bottom:14px"><h3>Vývoj počtu otevřených problémů po hodinách</h3><div id="adTrend"></div></div>
     <div class="panel"><h3>Problémy podle relací – od nejdůležitějších</h3><div id="adSecs"></div></div>
+    <div class="sec">Přihlášení uživatelé</div>
+    <div class="ad-grid" style="margin-top:0"><div class="panel"><h3>Zařízení (online = aktivní v posledních 3 min)</h3><div id="adUsers"></div></div><div class="panel"><h3>Historie připojení</h3><div id="adLog" style="max-height:420px;overflow:auto"></div></div></div>
   </div>
 </div>
 
@@ -529,7 +534,19 @@
         ${i.prev ? `<div class="pv">dříve: ${esc(i.prev)}</div>` : ''}</div>`;
     }).join('')).join('') + (I.noDesc.length ? `<div class="sub" style="margin-top:12px">Bez popisu: ${esc(I.noDesc.join(', '))}.</div>` : '') + (I.relations.length || !I.latest ? '' : '<div class="okb" style="border:1px solid var(--lm);padding:10px;margin-top:10px;color:var(--lm)">✓ Žádné hlášené problémy – vše v pořádku.</div>');
   }
-  async function loadAdmin() { try { ISS = await api('/api/agents/issues'); renderAdmin(); } catch (e) {} }
+  const fmtDT = iso => { const d = new Date(iso); return d.toLocaleDateString('cs-CZ', { timeZone: 'Europe/Prague' }).replace(/\s/g, '') + ' ' + d.toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit' }); };
+  let USR = null;
+  function renderUsers() {
+    const U = USR; if (!U) return;
+    $('adUsers').innerHTML = `<div class="sub" style="margin:0 0 10px">Online teď: <b>${nf.format(U.online)}</b> · celkem zařízení: <b>${nf.format(U.total)}</b></div>` + (U.users.map(u => `<div class="us"><i class="dot ${u.online ? 'on' : ''}"></i><div class="ub"><b class="un" data-id="${u.id}" title="Klikni pro přejmenování">${esc(u.label || 'Bez jména')}</b>${u.me ? ' <span class="chip st">TY</span>' : ''}<small>#${u.short} · ${esc(u.device)} · IP ${esc(u.ip)}</small><small>poprvé ${esc(fmtDT(u.first))} · naposledy ${u.online ? 'právě teď' : esc(fmtDT(u.last))} · ${nf.format(u.n)}× připojeno</small></div></div>`).join('') || '<div class="sub">Zatím nikdo.</div>');
+    $('adLog').innerHTML = U.log.map(l => `<div class="lg2"><span>${esc(fmtDT(l.at))}</span><b>${esc(l.label || '#' + l.short)}</b><small>${esc(l.kind)} · ${esc(l.device)} · ${esc(l.ip)}</small></div>`).join('') || '<div class="sub">Zatím žádná historie.</div>';
+    document.querySelectorAll('#adUsers .un').forEach(el => el.addEventListener('click', async () => {
+      const cur = U.users.find(x => x.id === el.dataset.id), v = prompt('Jméno / popis zařízení:', cur && cur.label || '');
+      if (v === null) return;
+      try { await fetch('/api/agents/users/label', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: el.dataset.id, label: v }) }); loadAdmin(); } catch (e) {}
+    }));
+  }
+  async function loadAdmin() { try { ISS = await api('/api/agents/issues'); renderAdmin(); } catch (e) {} try { USR = await api('/api/agents/users'); renderUsers(); } catch (e) {} }
   $('adminBtn').addEventListener('click', () => {
     const open = $('admin').hidden; $('admin').hidden = !open; $('adminBtn').setAttribute('aria-expanded', String(open));
     if (open) { loadAdmin(); $('admin').scrollIntoView({ behavior: 'smooth', block: 'start' }); }

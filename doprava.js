@@ -124,6 +124,34 @@ button{margin-top:12px;width:100%;padding:12px;background:#1d388f;border:1px sol
 <script>document.getElementById('f').onsubmit=async e=>{e.preventDefault();const r=await fetch('/ai/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})});
 if(r.ok)location.href='/ai';else{const j=await r.json().catch(()=>({}));document.getElementById('e').textContent=j.error||'Chyba';}};</script></body></html>`;
 for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+
+// ---------- evidence přihlášených do /ai: anonymní ID zařízení (cookie rkl_aiv), IP, prohlížeč; historie připojení ----------
+const aiSeen = new Map(); // id -> čas posledního pingu (v paměti)
+const vCookie = req => { for (const p of (req.headers.cookie || '').split(';')) { const i = p.indexOf('='); if (i > 0 && p.slice(0, i).trim() === 'rkl_aiv') return decodeURIComponent(p.slice(i + 1).trim()); } return ''; };
+const devLabel = ua => {
+  ua = String(ua || '');
+  const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Neznámé zařízení';
+  const br = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : '';
+  return br ? os + ' · ' + br : os;
+};
+async function aiTrack(req, res, kind) {
+  try {
+    let id = vCookie(req);
+    if (!/^[a-f0-9]{16}$/.test(id)) { id = crypto.randomBytes(8).toString('hex'); res.cookie('rkl_aiv', id, { httpOnly: true, sameSite: 'lax', secure: req.secure, path: '/', maxAge: 365 * 864e5 }); }
+    const now = Date.now(), iso = new Date(now).toISOString(), ua = String(req.headers['user-agent'] || '').slice(0, 300), ip = req.ip || '';
+    const u = store.mem.aiuser[id], prevSeen = aiSeen.get(id) || (u && Date.parse(u.last)) || 0;
+    aiSeen.set(id, now);
+    const newVisit = kind === 'login' || !prevSeen || now - prevSeen > 30 * 60 * 1000;
+    if (!u || newVisit || now - Date.parse(u.last) > 5 * 60 * 1000 || u.ip !== ip) {
+      await store.put('aiuser', id, { id, ip, ua, label: (u && u.label) || '', first: (u && u.first) || iso, last: iso, n: ((u && u.n) || 0) + (newVisit ? 1 : 0) });
+    }
+    if (newVisit) {
+      await store.put('alog', iso + '-' + id, { id, at: iso, ip, ua, kind: kind === 'login' ? 'přihlášení' : 'připojení' });
+      const keys = Object.keys(store.mem.alog).sort();
+      for (const k of keys.slice(0, Math.max(0, keys.length - 1000))) await store.put('alog', k, null);
+    }
+  } catch (e) { console.error('aiTrack:', e.message); }
+}
 app.post('/ai/login', (req, res) => {
   const ip = req.ip || 'x', now = Date.now();
   const t = (aiTries.get(ip) || []).filter(x => now - x < 10 * 60 * 1000); aiTries.set(ip, t);
@@ -131,11 +159,28 @@ app.post('/ai/login', (req, res) => {
   if (!aiPw() || !aiEq(String((req.body && req.body.password) || ''), aiPw())) { t.push(now); return res.status(401).json({ error: 'Nesprávné heslo.' }); }
   aiTries.delete(ip);
   res.cookie('rkl_ai', aiTok(), { httpOnly: true, sameSite: 'lax', secure: req.secure, path: '/', maxAge: 30 * 864e5 });
+  aiTrack(req, res, 'login').finally(() => res.json({ ok: true }));
+});
+app.get('/ai/logout', (req, res) => { aiSeen.delete(vCookie(req)); res.clearCookie('rkl_ai', { path: '/' }); res.redirect('/ai'); });
+app.get('/ai', async (req, res) => { if (!aiOk(req)) return res.type('html').send(AI_LOGIN); await aiTrack(req, res, 'visit'); res.sendFile(path.join(__dirname, 'private', 'ai.html')); });
+app.use('/api/agents', (req, res, next) => {
+  if (!aiOk(req)) return res.status(401).json({ error: 'Nepřihlášen' });
+  if (req.path === '/' || req.path === '') aiTrack(req, res, 'ping');
+  next();
+});
+app.get('/api/agents/users', (req, res) => {
+  const now = Date.now(), me = vCookie(req);
+  const users = Object.values(store.mem.aiuser).map(u => { const seen = Math.max(aiSeen.get(u.id) || 0, Date.parse(u.last) || 0); return { id: u.id, short: u.id.slice(0, 4).toUpperCase(), label: u.label || '', device: devLabel(u.ua), ip: u.ip, first: u.first, last: new Date(seen).toISOString(), n: u.n || 0, online: now - (aiSeen.get(u.id) || 0) < 3 * 60 * 1000, me: u.id === me }; })
+    .sort((a, b) => (b.online - a.online) || (Date.parse(b.last) - Date.parse(a.last)));
+  const log = Object.values(store.mem.alog).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 200).map(l => { const u = store.mem.aiuser[l.id]; return { at: l.at, id: l.id, short: l.id.slice(0, 4).toUpperCase(), label: (u && u.label) || '', device: devLabel(l.ua), ip: l.ip, kind: l.kind }; });
+  res.json({ online: users.filter(u => u.online).length, total: users.length, users, log });
+});
+app.post('/api/agents/users/label', async (req, res) => {
+  const id = String((req.body && req.body.id) || ''), u = store.mem.aiuser[id];
+  if (!u) return res.status(404).json({ error: 'Neznámé zařízení' });
+  await store.put('aiuser', id, { ...u, label: String((req.body && req.body.label) || '').trim().slice(0, 40) });
   res.json({ ok: true });
 });
-app.get('/ai/logout', (req, res) => { res.clearCookie('rkl_ai', { path: '/' }); res.redirect('/ai'); });
-app.get('/ai', (req, res) => aiOk(req) ? res.sendFile(path.join(__dirname, 'private', 'ai.html')) : res.type('html').send(AI_LOGIN));
-app.use('/api/agents', (req, res, next) => aiOk(req) ? next() : res.status(401).json({ error: 'Nepřihlášen' }));
 app.get('/api/agents', async (req, res) => {
   await refreshSheet(false);
   const cur = new Map();
@@ -265,7 +310,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
