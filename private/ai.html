@@ -367,11 +367,11 @@
     countUp($('total'), total);
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
     $('kpiMeta').innerHTML = [withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '', R.trips ? 'z toho ' + nf.format(R.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ');
-    const mins = (total + (R.trips || 0)) * 2, hh = Math.floor(mins / 60), mm = mins % 60;
+    const mins = total * 2, hh = Math.floor(mins / 60), mm = mins % 60;
     const first = '2026-10-12';
     $('savedLbl').innerHTML = nw('Ušetřený čas') + (first ? ' ' + nw('od: ' + fmtD(first)) + ' ' + nw('= ' + (R.workdaysSince || 0) + ' ' + (R.workdaysSince === 1 ? 'pracovní den' : R.workdaysSince >= 2 && R.workdaysSince <= 4 ? 'pracovní dny' : 'pracovních dnů')) : '');
     $('saved').textContent = hh ? `${nf.format(hh)} h ${mm} min` : `${mm} min`;
-    $('savedMeta').innerHTML = nw(`(${nf.format(total)} objednávek + ${nf.format(R.trips || 0)} přeprav)`) + ' ' + nw('× 2 min');
+    $('savedMeta').innerHTML = nw(`(${nf.format(total)} pozic vč. ${nf.format(R.trips || 0)} přeprav)`) + ' ' + nw('× 2 min');
     $('pie').innerHTML = donut(rels, total);
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
