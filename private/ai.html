@@ -333,6 +333,7 @@
   }
 
   function bars(rels) {
+    rels = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0));
     const W = 560, H = 270, L = 34, B = 62, T = 14, n = rels.length, max = Math.max(1, ...rels.map(x => x.count || 0));
     const step = Math.pow(10, Math.floor(Math.log10(max))), nice = Math.ceil(max / step) * step, top = nice < max * 1.05 ? nice + step : nice;
     const bw = (W - L) / n, ph = H - B - T;
