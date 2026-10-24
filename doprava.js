@@ -90,6 +90,68 @@ async function updateAgents(counts) {
 /* ---------- HTTP ---------- */
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+
+// ---------- AI dashboard: vlastní heslo (AI_PASSWORD), nezávislé na hlavním přihlášení ----------
+const crypto = require('crypto');
+const aiPw = () => process.env.AI_PASSWORD || '';
+const aiTok = () => crypto.createHmac('sha256', aiPw() + '|' + (process.env.SESSION_SECRET || 'rkl')).update('rkl-ai-dashboard-v1').digest('hex');
+const aiEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
+const aiCookie = req => { for (const p of (req.headers.cookie || '').split(';')) { const i = p.indexOf('='); if (i > 0 && p.slice(0, i).trim() === 'rkl_ai') return decodeURIComponent(p.slice(i + 1).trim()); } return ''; };
+const aiOk = req => !!aiPw() && aiEq(aiCookie(req), aiTok());
+const aiTries = new Map();
+const AI_LOGIN = `<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentizace RKL Opava – přihlášení</title><link rel="icon" type="image/png" href="/favicon.png">
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;color:#e9edf7;font:16px/1.4 system-ui,sans-serif;padding:16px;
+background-image:radial-gradient(900px 500px at 15% -10%,rgba(29,56,143,.5),transparent 60%),linear-gradient(rgba(94,138,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.07) 1px,transparent 1px);background-size:auto,48px 48px,48px 48px}
+form{width:100%;max-width:380px;background:rgba(8,12,24,.85);border:1px solid rgba(94,138,255,.4);padding:30px 26px;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);box-shadow:0 0 40px rgba(94,138,255,.2)}
+img{width:48px;height:48px;border-radius:10px;display:block;margin-bottom:14px}h1{margin:0 0 4px;font-size:20px;letter-spacing:3px;text-transform:uppercase}p{margin:0 0 18px;color:#8793ad;font-size:13px;letter-spacing:1px}
+input{width:100%;padding:12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font-size:16px;outline:0}input:focus{box-shadow:0 0 12px rgba(94,138,255,.6)}
+button{margin-top:12px;width:100%;padding:12px;background:#1d388f;border:1px solid #5e8aff;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}button:hover{background:#2747b8}
+.e{color:#ff6b5e;font-size:14px;min-height:20px;margin-top:10px}</style></head><body>
+<form id="f"><img src="/logo.jpg" alt="RKL"><h1>Agentizace RKL Opava</h1><p>Monitoring AI agentů</p>
+<input type="password" id="pw" placeholder="Heslo" autocomplete="current-password" autofocus><button>Vstoupit</button><div class="e" id="e"></div></form>
+<script>document.getElementById('f').onsubmit=async e=>{e.preventDefault();const r=await fetch('/ai/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})});
+if(r.ok)location.href='/ai';else{const j=await r.json().catch(()=>({}));document.getElementById('e').textContent=j.error||'Chyba';}};</script></body></html>`;
+for (const f of ['logo.jpg', 'favicon.png']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+app.post('/ai/login', (req, res) => {
+  const ip = req.ip || 'x', now = Date.now();
+  const t = (aiTries.get(ip) || []).filter(x => now - x < 10 * 60 * 1000); aiTries.set(ip, t);
+  if (t.length >= 10) return res.status(429).json({ error: 'Příliš mnoho pokusů, zkus to za pár minut.' });
+  if (!aiPw() || !aiEq(String((req.body && req.body.password) || ''), aiPw())) { t.push(now); return res.status(401).json({ error: 'Nesprávné heslo.' }); }
+  aiTries.delete(ip);
+  res.cookie('rkl_ai', aiTok(), { httpOnly: true, sameSite: 'lax', secure: req.secure, path: '/', maxAge: 30 * 864e5 });
+  res.json({ ok: true });
+});
+app.get('/ai/logout', (req, res) => { res.clearCookie('rkl_ai', { path: '/' }); res.redirect('/ai'); });
+app.get('/ai', (req, res) => aiOk(req) ? res.sendFile(path.join(__dirname, 'private', 'ai.html')) : res.type('html').send(AI_LOGIN));
+app.use('/api/agents', (req, res, next) => aiOk(req) ? next() : res.status(401).json({ error: 'Nepřihlášen' }));
+app.get('/api/agents', async (req, res) => {
+  await refreshSheet(false);
+  const cur = new Map();
+  for (const c of sheet.counts || []) { const e = c.entries[0]; if (e) cur.set(nk(c.name), { name: prettyName(c.name), count: e.count, date: e.date }); }
+  const histKeys = new Set();
+  for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) histKeys.add(k);
+  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
+  const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
+  const history = Object.keys(store.mem.agent).sort().reverse().slice(0, 45).map(d => {
+    const c = store.mem.agent[d].c || {};
+    return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
+  });
+  res.json({
+    configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
+    hasSheet: !!(sheet.counts && sheet.counts.length), relations,
+    total: relations.reduce((a, r) => a + (r.count || 0), 0),
+    history, texts: Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])),
+  });
+});
+
+// popis, jak relace agenta využívá (sdílený pro všechny)
+app.post('/api/agents/text', async (req, res) => {
+  const key = nk(req.body && req.body.key), text = String((req.body && req.body.text) || '').slice(0, 6000);
+  if (!key) return res.status(400).json({ error: 'Chybí relace.' });
+  await store.put('atext', key, text ? { t: text, u: new Date().toISOString() } : null);
+  res.json({ ok: true });
+});
+
 require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava na cestě' });
 // sdílené obrázky (pozadí, logo) z RKL Spedice
 for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png', 'tv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
@@ -154,35 +216,6 @@ app.get('/api/spedice', async (req, res) => {
   res.json({ ...(spCache.data || {}), error: spCache.error, ok: !!spCache.data });
 });
 
-app.get('/ai', (req, res) => res.sendFile(path.join(__dirname, 'public-doprava', 'ai.html')));
-
-app.get('/api/agents', async (req, res) => {
-  await refreshSheet(false);
-  const cur = new Map();
-  for (const c of sheet.counts || []) { const e = c.entries[0]; if (e) cur.set(nk(c.name), { name: prettyName(c.name), count: e.count, date: e.date }); }
-  const histKeys = new Set();
-  for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) histKeys.add(k);
-  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
-  const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
-  const history = Object.keys(store.mem.agent).sort().reverse().slice(0, 45).map(d => {
-    const c = store.mem.agent[d].c || {};
-    return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
-  });
-  res.json({
-    configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
-    hasSheet: !!(sheet.counts && sheet.counts.length), relations,
-    total: relations.reduce((a, r) => a + (r.count || 0), 0),
-    history, texts: Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])),
-  });
-});
-
-// popis, jak relace agenta využívá (sdílený pro všechny)
-app.post('/api/agents/text', async (req, res) => {
-  const key = nk(req.body && req.body.key), text = String((req.body && req.body.text) || '').slice(0, 6000);
-  if (!key) return res.status(400).json({ error: 'Chybí relace.' });
-  await store.put('atext', key, text ? { t: text, u: new Date().toISOString() } : null);
-  res.json({ ok: true });
-});
 
 app.get('/healthz', (req, res) => res.send('ok'));
 

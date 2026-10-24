@@ -119,7 +119,7 @@
   <header>
     <img src="/logo.jpg" alt="RKL">
     <div><h1>Agentizace RKL Opava</h1><div class="sub">RKL Holding · Monitoring AI agentů · počty pozic podle dispečinků</div></div>
-    <div class="hr"><a href="/">← RKL Doprava</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
+    <div class="hr"><a href="/">← RKL Doprava</a> <a href="/ai/logout">Odhlásit</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
   </header>
 
   <div class="note" id="note" hidden></div>
@@ -154,7 +154,7 @@
 
   async function api(path, body) {
     const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
-    if (r.status === 401) { location.href = '/login'; throw new Error('Nepřihlášen'); }
+    if (r.status === 401) { location.href = '/ai'; throw new Error('Nepřihlášen'); }
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'Chyba serveru');
     return j;
