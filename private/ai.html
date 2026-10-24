@@ -230,7 +230,7 @@
     $('kpiMeta').textContent = (withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '') + (R.trips ? ' · z toho ' + nf.format(R.trips) + ' přeprav' : '');
     const mins = (total + (R.trips || 0)) * 2, hh = Math.floor(mins / 60), mm = mins % 60;
     const first = R.history.length ? R.history[R.history.length - 1].date : null;
-    $('savedLbl').textContent = 'Ušetřený čas' + (first ? ' od: ' + fmtD(first) + ' (' + (R.workdaysSince || 0) + ' ' + (R.workdaysSince === 1 ? 'pracovní den' : R.workdaysSince >= 2 && R.workdaysSince <= 4 ? 'pracovní dny' : 'pracovních dnů') + ')' : '');
+    $('savedLbl').textContent = 'Ušetřený čas' + (first ? ' od: ' + fmtD(first) + ' = ' + (R.workdaysSince || 0) + ' ' + (R.workdaysSince === 1 ? 'pracovní den' : R.workdaysSince >= 2 && R.workdaysSince <= 4 ? 'pracovní dny' : 'pracovních dnů') : '');
     $('saved').textContent = hh ? `${nf.format(hh)} h ${mm} min` : `${mm} min`;
     $('savedMeta').textContent = `(${nf.format(total)} objednávek + ${nf.format(R.trips || 0)} přeprav) × 2 min`;
     $('pie').innerHTML = donut(rels, total);
