@@ -9,20 +9,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#04070f; --bg2:#0a1022; --panel:rgba(10,18,38,.72); --line:rgba(80,200,255,.28);
-    --cy:#33e1ff; --mg:#ff3df0; --lm:#9dff4d; --am:#ffb830; --vi:#8b6bff; --rd:#ff5470;
-    --tx:#d7e6ff; --mut:#7b90b8;
+    --bg:#000; --bg2:#0a0d16; --panel:rgba(8,12,24,.78); --line:rgba(94,138,255,.32);
+    --cy:#5e8aff; --mg:#f2a516; --lm:#7dd3a0; --am:#f2a516; --vi:#1d388f; --rd:#ff6b5e;
+    --tx:#e9edf7; --mut:#8793ad;
   }
   *{box-sizing:border-box}
   html{background:var(--bg)}
   body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 "Rajdhani","IBM Plex Sans",system-ui,sans-serif;
     background:
-      radial-gradient(1200px 600px at 12% -10%,rgba(51,225,255,.14),transparent 60%),
-      radial-gradient(900px 600px at 95% 10%,rgba(255,61,240,.12),transparent 60%),
-      linear-gradient(180deg,#050912,#070d1c 60%,#04070f);
+      radial-gradient(1200px 600px at 12% -10%,rgba(29,56,143,.45),transparent 60%),
+      radial-gradient(900px 600px at 95% 10%,rgba(242,165,22,.10),transparent 60%),
+      #000;
     background-attachment:fixed}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
-    background-image:linear-gradient(rgba(80,200,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(80,200,255,.07) 1px,transparent 1px);
+    background-image:linear-gradient(rgba(94,138,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.07) 1px,transparent 1px);
     background-size:48px 48px;mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 75%)}
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.07;
     background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
@@ -30,13 +30,13 @@
 
   header{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;position:relative}
   header::after{content:"";position:absolute;left:0;bottom:-1px;width:220px;height:2px;background:linear-gradient(90deg,var(--cy),transparent);box-shadow:0 0 14px var(--cy)}
-  header img{width:42px;height:42px;border-radius:10px;box-shadow:0 0 0 1px var(--line),0 0 18px rgba(51,225,255,.35)}
+  header img{width:42px;height:42px;border-radius:10px;box-shadow:0 0 0 1px var(--line),0 0 18px rgba(94,138,255,.35)}
   h1{margin:0;font:900 clamp(20px,2.6vw,32px)/1.05 "Orbitron",sans-serif;letter-spacing:3px;text-transform:uppercase;
-    background:linear-gradient(90deg,#fff,var(--cy) 55%,var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(51,225,255,.25)}
+    background:linear-gradient(90deg,#fff,var(--cy) 60%,var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(94,138,255,.25)}
   .sub{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:1.5px;text-transform:uppercase;margin-top:5px}
   .hr{margin-left:auto;text-align:right;font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:1px}
-  .hr a{color:var(--cy);text-decoration:none;border:1px solid var(--line);padding:5px 12px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-block;margin-bottom:6px;letter-spacing:2px;text-transform:uppercase;background:rgba(51,225,255,.06)}
-  .hr a:hover{background:rgba(51,225,255,.18)}
+  .hr a{color:var(--cy);text-decoration:none;border:1px solid var(--line);padding:5px 12px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-block;margin-bottom:6px;letter-spacing:2px;text-transform:uppercase;background:rgba(94,138,255,.06)}
+  .hr a:hover{background:rgba(94,138,255,.18)}
   .live{display:inline-flex;align-items:center;gap:8px;color:var(--lm)}
   .live i{width:8px;height:8px;border-radius:50%;background:var(--lm);box-shadow:0 0 10px var(--lm);animation:pulse 1.8s infinite}
   .live.off{color:var(--am)} .live.off i{background:var(--am);box-shadow:0 0 10px var(--am)}
@@ -50,12 +50,12 @@
   .g1{grid-template-columns:minmax(200px,1fr) minmax(260px,1.25fr) minmax(320px,1.9fr) minmax(220px,1.1fr)}
   .panel{position:relative;background:var(--panel);border:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
-    box-shadow:inset 0 0 40px rgba(51,225,255,.05)}
+    box-shadow:inset 0 0 40px rgba(94,138,255,.05)}
   .panel::before{content:"";position:absolute;left:0;top:0;width:34px;height:2px;background:var(--cy);box-shadow:0 0 10px var(--cy)}
   .panel h3{margin:0 0 8px;font:700 11px "Orbitron",sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
 
   .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:260px}
-  .kpi .big{font:900 clamp(64px,8vw,120px)/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(51,225,255,.55);letter-spacing:2px}
+  .kpi .big{font:900 clamp(64px,8vw,120px)/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(94,138,255,.55);letter-spacing:2px}
   .kpi .lbl{font:600 13px "Orbitron",sans-serif;letter-spacing:4px;color:var(--cy);margin-top:10px;text-transform:uppercase}
   .kpi .meta{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-top:12px}
 
@@ -75,14 +75,14 @@
 
   .tablewrap{overflow:auto;max-height:520px}
   table{width:100%;border-collapse:collapse;font-size:14px}
-  th{position:sticky;top:0;background:#0a1226;z-index:2;text-align:right;font:700 10.5px "Orbitron",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#0a1226;z-index:1}
+  th{position:sticky;top:0;background:#080c18;z-index:2;text-align:right;font:700 10.5px "Orbitron",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#080c18;z-index:1}
   th:first-child{z-index:3}
-  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(80,200,255,.12);font:500 14px "IBM Plex Mono",monospace;white-space:nowrap}
+  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(94,138,255,.12);font:500 14px "IBM Plex Mono",monospace;white-space:nowrap}
   td.z{color:#41507a}
   td.tot{color:#fff;font-weight:600}
-  tr:hover td{background:rgba(51,225,255,.07)}
-  tr.today td{background:rgba(51,225,255,.10)}
+  tr:hover td{background:rgba(94,138,255,.07)}
+  tr.today td{background:rgba(94,138,255,.10)}
   tr.today td:first-child::after{content:" • dnes";color:var(--lm);font-size:11px}
 
   .phones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 18px}
@@ -97,6 +97,15 @@
   .dev textarea{width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--tx);font:500 15px/1.5 "Rajdhani","IBM Plex Sans",sans-serif;padding:4px 4px}
   .dev textarea::placeholder{color:#42557f}
 
+  .hero{position:relative;height:150px;margin:0 0 18px;overflow:hidden;border:1px solid var(--line);clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
+  .hero .bg{position:absolute;inset:0;background:#0a1230 center/cover;filter:grayscale(1) contrast(1.15) brightness(.55)}
+  .hero::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(29,56,143,.85),rgba(29,56,143,.25) 55%,rgba(0,0,0,.65)),repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px);mix-blend-mode:normal}
+  .hero .tx{position:absolute;z-index:2;left:22px;bottom:14px;font:700 12px "Orbitron",sans-serif;letter-spacing:4px;color:#fff;text-transform:uppercase}
+  .hero .tx b{color:var(--mg)}
+  .cards{position:absolute;z-index:2;right:16px;top:16px;bottom:16px;display:flex;gap:10px}
+  .cards div{width:130px;background:#0a1230 center/cover;border:1px solid rgba(255,255,255,.35);filter:grayscale(.6) brightness(.8);position:relative;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+  .cards div::after{content:attr(data-l);position:absolute;left:0;right:0;bottom:0;padding:3px 6px;background:rgba(0,0,0,.7);font:600 9px "Orbitron",sans-serif;letter-spacing:1.5px;color:#fff;text-transform:uppercase}
+  @media (max-width:900px){.cards{display:none}}
   .note{border:1px solid rgba(255,184,48,.5);background:rgba(255,184,48,.08);color:var(--am);padding:10px 14px;margin-bottom:14px;font-size:14px}
   .note.err{border-color:rgba(255,84,112,.6);background:rgba(255,84,112,.08);color:var(--rd)}
 
@@ -112,6 +121,15 @@
     <div><h1>Agentizace RKL Opava</h1><div class="sub">Monitoring AI agentů · počty pozic podle dispečinků</div></div>
     <div class="hr"><a href="/">← RKL Doprava</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
   </header>
+
+  <div class="hero"><div class="bg" style="background-image:url('https://rklholding.cz/systemfiles/global/image/1728637194rkl-soc-site.jpg')"></div>
+    <div class="cards">
+      <div data-l="Logistika" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/1729593491sni-mek-obrazovky-2024-09-11-v-12-41-26.webp')"></div>
+      <div data-l="Slévárna" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/1729593592img-1476.webp')"></div>
+      <div data-l="Armatury" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/1729499434msa.webp')"></div>
+      <div data-l="Železniční nápravy" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/17875774181783688807hero-axles-btqbevwc.webp')"></div>
+    </div>
+    <div class="tx">RKL Holding · <b>Opava</b> · logistika × AI</div></div>
 
   <div class="note" id="note" hidden></div>
 
@@ -138,7 +156,7 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nf = new Intl.NumberFormat('cs-CZ');
-  const PAL = ['#33e1ff', '#ff3df0', '#9dff4d', '#ffb830', '#8b6bff', '#ff5470', '#2bffb0', '#4d8bff', '#ff8a3d', '#e0ff4d', '#c06bff', '#3dffe9'];
+  const PAL = ['#5e8aff', '#f2a516', '#ffffff', '#2f5bd6', '#ffcf6b', '#9db6ff', '#c98a0d', '#7dd3a0', '#b8c4e6', '#ff8a5e', '#3d4f8f', '#e6d3a1'];
   const fmtD = iso => { const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
   const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
   let R = null, sig = '', shownTotal = 0;
@@ -170,7 +188,7 @@
     });
     if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${w}"/>`;
     return `<svg viewBox="0 0 ${S} ${S}" style="max-width:260px;margin:0 auto">
-      <circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(51,225,255,.25)" stroke-dasharray="2 6"/>
+      <circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(94,138,255,.25)" stroke-dasharray="2 6"/>
       ${arcs}
       <text x="${c}" y="${c - 2}" text-anchor="middle" fill="#fff" font-family="Orbitron" font-weight="900" font-size="30">${nf.format(total)}</text>
       <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#7b90b8" font-family="Orbitron" font-size="9" letter-spacing="3">POZIC</text></svg>`;
@@ -183,7 +201,7 @@
     let g = '';
     for (let k = 0; k <= 4; k++) {
       const y = T + ph - ph * k / 4;
-      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(80,200,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
+      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
     }
     let b = '';
     rels.forEach((x, i) => {
@@ -203,12 +221,12 @@
     const X = i => L + pw * i / (pts.length - 1), Y = v => T + ph - ph * v / (max * 1.1);
     const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.total)}`).join(' ');
     let grid = '';
-    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(80,200,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
+    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
     const every = Math.ceil(pts.length / 10);
     const lbl = pts.map((p, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : '').join('');
-    const dots = pts.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.total)}" r="3.5" fill="#04070f" stroke="#33e1ff" stroke-width="2"><title>${fmtD(p.date)}: ${nf.format(p.total)} pozic</title></circle>`).join('');
-    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:190px"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33e1ff" stop-opacity=".45"/><stop offset="1" stop-color="#33e1ff" stop-opacity="0"/></linearGradient></defs>
-      ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#33e1ff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #33e1ff)"/>${dots}${lbl}</svg>`;
+    const dots = pts.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.total)}" r="3.5" fill="#000" stroke="#5e8aff" stroke-width="2"><title>${fmtD(p.date)}: ${nf.format(p.total)} pozic</title></circle>`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:190px"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e8aff" stop-opacity=".45"/><stop offset="1" stop-color="#5e8aff" stop-opacity="0"/></linearGradient></defs>
+      ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#5e8aff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #5e8aff)"/>${dots}${lbl}</svg>`;
   }
 
   function render() {
