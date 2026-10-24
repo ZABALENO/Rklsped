@@ -131,22 +131,22 @@
   .rich .upd{margin-top:12px;font:500 11px "IBM Plex Mono",monospace;color:var(--mut)}
 
   /* ===== DENNÍ REŽIM (07:00–18:00 pražského času) ===== */
-  :root[data-theme="day"]{--bg:#eaf0fa;--panel:rgba(255,255,255,.9);--line:rgba(29,56,143,.38);--cy:#1d388f;--mg:#c26a00;--lm:#0f7a3d;--am:#c26a00;--rd:#c4162a;--tx:#0f1b3d;--mut:#44557f}
-  [data-theme="day"] .bgimg{filter:saturate(.9) brightness(1.08)}
+  :root[data-theme="day"]{--bg:#a9bddb;--panel:rgba(255,255,255,.97);--line:rgba(15,35,110,.75);--cy:#1d388f;--mg:#c26a00;--lm:#0f7a3d;--am:#c26a00;--rd:#c4162a;--tx:#050c24;--mut:#26376b}
+  [data-theme="day"] .bgimg{filter:saturate(.85) brightness(.8) contrast(1.1)}
   [data-theme="day"] .bgimg.l2{display:none}
-  [data-theme="day"] .bgimg.l3{background:linear-gradient(180deg,rgba(236,243,255,.82),rgba(224,235,252,.7))}
+  [data-theme="day"] .bgimg.l3{background:linear-gradient(180deg,rgba(120,150,205,.62),rgba(95,125,190,.5))}
   [data-theme="day"] body::before{opacity:.35;background-image:linear-gradient(rgba(29,56,143,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(29,56,143,.12) 1px,transparent 1px)}
   [data-theme="day"] body::after{display:none}
   [data-theme="day"] h1{background:linear-gradient(90deg,#0f1b3d,#1d388f 60%,#c26a00);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
-  [data-theme="day"] .panel{box-shadow:0 2px 14px rgba(29,56,143,.16),inset 0 0 30px rgba(29,56,143,.04)}
+  [data-theme="day"] .panel{border-width:1.5px;box-shadow:0 3px 16px rgba(5,15,60,.35)}
   [data-theme="day"] .kpi .big{color:#1d388f;text-shadow:0 0 22px rgba(29,56,143,.28)}
   [data-theme="day"] .saved .sv{color:#0f1b3d;text-shadow:none}
   [data-theme="day"] .saved .sl{color:#c26a00}
   [data-theme="day"] .legend b,[data-theme="day"] .rank .c,[data-theme="day"] td.tot,[data-theme="day"] .rich .who,[data-theme="day"] .rich .lg b{color:#0f1b3d}
-  [data-theme="day"] .rank .bar{background:rgba(29,56,143,.12)}
-  [data-theme="day"] th,[data-theme="day"] th:first-child,[data-theme="day"] td:first-child{background:#f1f5fc}
-  [data-theme="day"] td{border-bottom-color:rgba(29,56,143,.2)}
-  [data-theme="day"] td.z{color:#8a98ba}
+  [data-theme="day"] .rank .bar{background:rgba(15,35,110,.2)}
+  [data-theme="day"] th,[data-theme="day"] th:first-child,[data-theme="day"] td:first-child{background:#e6edf9}
+  [data-theme="day"] td{border-bottom-color:rgba(15,35,110,.35)}
+  [data-theme="day"] td.z{color:#5a6a95}
   [data-theme="day"] tr:hover td{background:rgba(29,56,143,.07)}
   [data-theme="day"] tr.today td{background:rgba(29,56,143,.12)}
   [data-theme="day"] tr.today td:first-child::after{color:#0f7a3d}
@@ -155,7 +155,16 @@
   [data-theme="day"] .live.off{color:#c26a00}[data-theme="day"] .live.off i{background:#c26a00}
   [data-theme="day"] .sec::before{box-shadow:0 0 8px rgba(29,56,143,.5)}
   [data-theme="day"] .panel::before,[data-theme="day"] header::after{box-shadow:none}
-  [data-theme="day"] svg text{fill:#1b2a55}
+  [data-theme="day"] svg text{fill:#050c24}
+  [data-theme="day"] header,[data-theme="day"] .sub,[data-theme="day"] .hr{color:#050c24}
+  [data-theme="day"] .sec{color:#0a1a5c;background:rgba(255,255,255,.93);padding:7px 14px;border:1px solid rgba(15,35,110,.6)}
+  [data-theme="day"] .sub{color:#0a1640}
+  [data-theme="day"] h1{background:linear-gradient(90deg,#050c24,#0a1a5c 65%,#8a4a00);-webkit-background-clip:text;background-clip:text}
+  [data-theme="day"] .hr a{color:#0a1a5c;border-color:#0a1a5c;background:rgba(255,255,255,.55)}
+  [data-theme="day"] .live{background:rgba(255,255,255,.55);padding:2px 8px;border-radius:3px}
+  [data-theme="day"] .panel h3,[data-theme="day"] th{color:#0a1a5c}
+  [data-theme="day"] .rank .d,[data-theme="day"] .saved .sm,[data-theme="day"] .kpi .meta{color:#26376b}
+  [data-theme="day"] .kpi .lbl{color:#0a1a5c}
   [data-theme="day"] svg circle[fill="#000"]{fill:#fff}
   [data-theme="day"] svg [filter],[data-theme="day"] svg rect,[data-theme="day"] svg circle,[data-theme="day"] svg path{filter:none!important}
   [data-theme="day"] .dev{background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(238,244,255,.95));box-shadow:0 0 14px color-mix(in srgb,var(--c,var(--cy)) 30%,transparent)}
