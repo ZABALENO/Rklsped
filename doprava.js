@@ -33,6 +33,7 @@ async function refreshSheet(force) {
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
       await require('./lib/change').trackChange(store.mem.cfg, store.put, out, url);
       await updateHistory(out.rows);
+      await updateAgents(out.counts);
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, rows: sheet.url === url ? sheet.rows : [], fetchedAt: sheet.url === url ? sheet.fetchedAt : null };
     } finally { inflight = null; }
@@ -63,6 +64,26 @@ async function updateHistory(rows) {
     for (const o of list) map.set(o.k, o);
     const merged = [...map.values()].sort((a, b) => (a.spz || '~').localeCompare(b.spz || '~', 'cs') || a.pz.localeCompare(b.pz));
     if (JSON.stringify(merged) !== JSON.stringify(prev)) await store.put('hist', day, { o: merged });
+  }
+}
+
+/* ---------- Agentizace RKL Opava: počty pozic z listu „Počty pozic“ ----------
+   Aktuální hodnoty čte server ze zdrojové tabulky; pro přehled po dnech se každý (relace, datum) uloží do databáze. */
+const nk = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const PRETTY = { zapad: 'Západ', vychod: 'Východ', vnitro: 'Vnitro', jih: 'Jih' };
+const prettyName = raw => String(raw || '').trim().split(/\s+/).map(w => PRETTY[nk(w)] || (w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+const AGENT_ORDER = ['zapad 1', 'zapad 2', 'zapad 3', 'zapad 4', 'vnitro 1', 'vnitro 2', 'vnitro 3', 'vnitro 4', 'jih', 'vychod'];
+async function updateAgents(counts) {
+  if (!counts) return;
+  const byDay = new Map();
+  for (const c of counts) for (const e of c.entries) {
+    if (!byDay.has(e.date)) byDay.set(e.date, {});
+    byDay.get(e.date)[nk(c.name)] = e.count;
+  }
+  for (const [day, c] of byDay) {
+    const prev = (store.mem.agent[day] && store.mem.agent[day].c) || {};
+    const merged = { ...prev, ...c };
+    if (JSON.stringify(merged) !== JSON.stringify(prev)) await store.put('agent', day, { c: merged, u: new Date().toISOString() });
   }
 }
 
@@ -133,9 +154,39 @@ app.get('/api/spedice', async (req, res) => {
   res.json({ ...(spCache.data || {}), error: spCache.error, ok: !!spCache.data });
 });
 
+app.get('/ai', (req, res) => res.sendFile(path.join(__dirname, 'public-doprava', 'ai.html')));
+
+app.get('/api/agents', async (req, res) => {
+  await refreshSheet(false);
+  const cur = new Map();
+  for (const c of sheet.counts || []) { const e = c.entries[0]; if (e) cur.set(nk(c.name), { name: prettyName(c.name), count: e.count, date: e.date }); }
+  const histKeys = new Set();
+  for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) histKeys.add(k);
+  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
+  const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
+  const history = Object.keys(store.mem.agent).sort().reverse().slice(0, 45).map(d => {
+    const c = store.mem.agent[d].c || {};
+    return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
+  });
+  res.json({
+    configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
+    hasSheet: !!(sheet.counts && sheet.counts.length), relations,
+    total: relations.reduce((a, r) => a + (r.count || 0), 0),
+    history, texts: Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])),
+  });
+});
+
+// popis, jak relace agenta využívá (sdílený pro všechny)
+app.post('/api/agents/text', async (req, res) => {
+  const key = nk(req.body && req.body.key), text = String((req.body && req.body.text) || '').slice(0, 6000);
+  if (!key) return res.status(400).json({ error: 'Chybí relace.' });
+  await store.put('atext', key, text ? { t: text, u: new Date().toISOString() } : null);
+  res.json({ ok: true });
+});
+
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist'], 'doprava.json').then(s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext'], 'doprava.json').then(s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));

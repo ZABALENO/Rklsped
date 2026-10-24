@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentizace RKL Opava</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#04070f; --bg2:#0a1022; --panel:rgba(10,18,38,.72); --line:rgba(80,200,255,.28);
+    --cy:#33e1ff; --mg:#ff3df0; --lm:#9dff4d; --am:#ffb830; --vi:#8b6bff; --rd:#ff5470;
+    --tx:#d7e6ff; --mut:#7b90b8;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg)}
+  body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 "Rajdhani","IBM Plex Sans",system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 12% -10%,rgba(51,225,255,.14),transparent 60%),
+      radial-gradient(900px 600px at 95% 10%,rgba(255,61,240,.12),transparent 60%),
+      linear-gradient(180deg,#050912,#070d1c 60%,#04070f);
+    background-attachment:fixed}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:linear-gradient(rgba(80,200,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(80,200,255,.07) 1px,transparent 1px);
+    background-size:48px 48px;mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 75%)}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.07;
+    background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
+  .wrap{position:relative;z-index:1;max-width:1480px;margin:0 auto;padding:18px 22px 40px}
+
+  header{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;position:relative}
+  header::after{content:"";position:absolute;left:0;bottom:-1px;width:220px;height:2px;background:linear-gradient(90deg,var(--cy),transparent);box-shadow:0 0 14px var(--cy)}
+  header img{width:42px;height:42px;border-radius:10px;box-shadow:0 0 0 1px var(--line),0 0 18px rgba(51,225,255,.35)}
+  h1{margin:0;font:900 clamp(20px,2.6vw,32px)/1.05 "Orbitron",sans-serif;letter-spacing:3px;text-transform:uppercase;
+    background:linear-gradient(90deg,#fff,var(--cy) 55%,var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(51,225,255,.25)}
+  .sub{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:1.5px;text-transform:uppercase;margin-top:5px}
+  .hr{margin-left:auto;text-align:right;font:500 12px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:1px}
+  .hr a{color:var(--cy);text-decoration:none;border:1px solid var(--line);padding:5px 12px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-block;margin-bottom:6px;letter-spacing:2px;text-transform:uppercase;background:rgba(51,225,255,.06)}
+  .hr a:hover{background:rgba(51,225,255,.18)}
+  .live{display:inline-flex;align-items:center;gap:8px;color:var(--lm)}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--lm);box-shadow:0 0 10px var(--lm);animation:pulse 1.8s infinite}
+  .live.off{color:var(--am)} .live.off i{background:var(--am);box-shadow:0 0 10px var(--am)}
+  @keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+
+  .sec{display:flex;align-items:center;gap:12px;margin:26px 0 12px;font:700 15px "Orbitron",sans-serif;letter-spacing:3px;text-transform:uppercase;color:var(--cy)}
+  .sec::before{content:"";width:10px;height:10px;background:var(--cy);box-shadow:0 0 12px var(--cy);transform:rotate(45deg)}
+  .sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+  .grid{display:grid;gap:14px}
+  .g1{grid-template-columns:minmax(200px,1fr) minmax(260px,1.25fr) minmax(320px,1.9fr) minmax(220px,1.1fr)}
+  .panel{position:relative;background:var(--panel);border:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
+    box-shadow:inset 0 0 40px rgba(51,225,255,.05)}
+  .panel::before{content:"";position:absolute;left:0;top:0;width:34px;height:2px;background:var(--cy);box-shadow:0 0 10px var(--cy)}
+  .panel h3{margin:0 0 8px;font:700 11px "Orbitron",sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
+
+  .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:260px}
+  .kpi .big{font:900 clamp(64px,8vw,120px)/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(51,225,255,.55);letter-spacing:2px}
+  .kpi .lbl{font:600 13px "Orbitron",sans-serif;letter-spacing:4px;color:var(--cy);margin-top:10px;text-transform:uppercase}
+  .kpi .meta{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-top:12px}
+
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;margin-top:8px;font-size:13px}
+  .legend div{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
+  .legend i{width:9px;height:9px;flex:none;box-shadow:0 0 8px currentColor}
+  .legend b{margin-left:auto;font:600 12px "IBM Plex Mono",monospace;color:#fff}
+
+  .rank{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow:auto;padding-right:4px}
+  .rank .r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+  .rank .n{font-weight:700;letter-spacing:.5px}
+  .rank .c{font:600 14px "IBM Plex Mono",monospace;color:#fff}
+  .rank .bar{grid-column:1/3;height:5px;background:rgba(255,255,255,.07);position:relative}
+  .rank .bar i{position:absolute;inset:0 auto 0 0;box-shadow:0 0 10px currentColor}
+  .rank .d{font:500 11px "IBM Plex Mono",monospace;color:var(--mut)}
+
+  .tablewrap{overflow:auto;max-height:520px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{position:sticky;top:0;background:#0a1226;z-index:2;text-align:right;font:700 10.5px "Orbitron",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#0a1226;z-index:1}
+  th:first-child{z-index:3}
+  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(80,200,255,.12);font:500 14px "IBM Plex Mono",monospace;white-space:nowrap}
+  td.z{color:#41507a}
+  td.tot{color:#fff;font-weight:600}
+  tr:hover td{background:rgba(51,225,255,.07)}
+  tr.today td{background:rgba(51,225,255,.10)}
+  tr.today td:first-child::after{content:" • dnes";color:var(--lm);font-size:11px}
+
+  .phones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 18px}
+  .ph .t{display:flex;align-items:center;gap:9px;margin-bottom:8px;font:700 14px "Orbitron",sans-serif;letter-spacing:2px;text-transform:uppercase}
+  .ph .t i{width:10px;height:10px;transform:rotate(45deg);box-shadow:0 0 10px currentColor}
+  .ph .t span{margin-left:auto;font:500 11px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:0;text-transform:none}
+  .ph .t span.ok{color:var(--lm)}
+  .dev{position:relative;aspect-ratio:9/19.5;max-height:760px;width:100%;border:2px solid var(--c,var(--cy));border-radius:34px;padding:34px 12px 18px;
+    background:linear-gradient(180deg,rgba(10,18,38,.9),rgba(6,10,22,.92));box-shadow:0 0 22px color-mix(in srgb,var(--c,var(--cy)) 35%,transparent),inset 0 0 30px color-mix(in srgb,var(--c,var(--cy)) 10%,transparent)}
+  .dev::before{content:"";position:absolute;top:11px;left:50%;width:84px;height:16px;transform:translateX(-50%);border-radius:10px;background:#02040a;border:1px solid var(--c,var(--cy))}
+  .dev::after{content:"";position:absolute;bottom:7px;left:50%;width:88px;height:4px;transform:translateX(-50%);border-radius:3px;background:var(--c,var(--cy));opacity:.55}
+  .dev textarea{width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--tx);font:500 15px/1.5 "Rajdhani","IBM Plex Sans",sans-serif;padding:4px 4px}
+  .dev textarea::placeholder{color:#42557f}
+
+  .note{border:1px solid rgba(255,184,48,.5);background:rgba(255,184,48,.08);color:var(--am);padding:10px 14px;margin-bottom:14px;font-size:14px}
+  .note.err{border-color:rgba(255,84,112,.6);background:rgba(255,84,112,.08);color:var(--rd)}
+
+  @media (max-width:1200px){.g1{grid-template-columns:1fr 1fr}.phones{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:640px){.g1{grid-template-columns:1fr}.phones{grid-template-columns:1fr}.wrap{padding:14px 12px}header{flex-wrap:wrap}.hr{width:100%;text-align:left}}
+  @media (prefers-reduced-motion:reduce){.live i{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="/logo.jpg" alt="RKL">
+    <div><h1>Agentizace RKL Opava</h1><div class="sub">Monitoring AI agentů · počty pozic podle dispečinků</div></div>
+    <div class="hr"><a href="/">← RKL Doprava</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
+  </header>
+
+  <div class="note" id="note" hidden></div>
+
+  <div class="grid g1">
+    <div class="panel kpi"><h3>Všechny pozice dohromady</h3>
+      <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div></div>
+    <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
+    <div class="panel"><h3>Počet pozic podle dispečinku</h3><div id="bars"></div></div>
+    <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
+  </div>
+
+  <div class="sec">Počty pozic podle dnů</div>
+  <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+    <div class="panel"><h3>Vývoj celkového počtu pozic</h3><div id="trend"></div></div>
+    <div class="panel"><h3>Aktuální stav k jednotlivým datumům</h3><div class="tablewrap"><table id="tbl"></table></div></div>
+  </div>
+
+  <div class="sec">Jak agenta využíváme</div>
+  <div class="phones" id="phones"></div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nf = new Intl.NumberFormat('cs-CZ');
+  const PAL = ['#33e1ff', '#ff3df0', '#9dff4d', '#ffb830', '#8b6bff', '#ff5470', '#2bffb0', '#4d8bff', '#ff8a3d', '#e0ff4d', '#c06bff', '#3dffe9'];
+  const fmtD = iso => { const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
+  const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
+  let R = null, sig = '', shownTotal = 0;
+
+  async function api(path, body) {
+    const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+    if (r.status === 401) { location.href = '/login'; throw new Error('Nepřihlášen'); }
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Chyba serveru');
+    return j;
+  }
+  const color = i => PAL[i % PAL.length];
+
+  function countUp(el, to) {
+    if (matchMedia('(prefers-reduced-motion:reduce)').matches) { el.textContent = nf.format(to); shownTotal = to; return; }
+    const from = shownTotal, t0 = performance.now(), dur = 900;
+    const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = nf.format(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); else shownTotal = to; };
+    requestAnimationFrame(step);
+  }
+
+  function donut(rels, total) {
+    const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r;
+    let acc = 0, arcs = '';
+    rels.forEach((x, i) => {
+      if (!x.count) return;
+      const len = C * x.count / total, gap = rels.filter(y => y.count).length > 1 ? 2.5 : 0;
+      arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color(x.i)}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})" style="filter:drop-shadow(0 0 6px ${color(x.i)})"><title>${esc(x.name)}: ${nf.format(x.count)} (${Math.round(100 * x.count / total)} %)</title></circle>`;
+      acc += len;
+    });
+    if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${w}"/>`;
+    return `<svg viewBox="0 0 ${S} ${S}" style="max-width:260px;margin:0 auto">
+      <circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(51,225,255,.25)" stroke-dasharray="2 6"/>
+      ${arcs}
+      <text x="${c}" y="${c - 2}" text-anchor="middle" fill="#fff" font-family="Orbitron" font-weight="900" font-size="30">${nf.format(total)}</text>
+      <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#7b90b8" font-family="Orbitron" font-size="9" letter-spacing="3">POZIC</text></svg>`;
+  }
+
+  function bars(rels) {
+    const W = 560, H = 270, L = 34, B = 62, T = 14, n = rels.length, max = Math.max(1, ...rels.map(x => x.count || 0));
+    const step = Math.pow(10, Math.floor(Math.log10(max))), nice = Math.ceil(max / step) * step, top = nice < max * 1.05 ? nice + step : nice;
+    const bw = (W - L) / n, ph = H - B - T;
+    let g = '';
+    for (let k = 0; k <= 4; k++) {
+      const y = T + ph - ph * k / 4;
+      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(80,200,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
+    }
+    let b = '';
+    rels.forEach((x, i) => {
+      const v = x.count || 0, h = ph * v / top, bx = L + i * bw + bw * .2, w = bw * .6, y = T + ph - h, col = color(x.i);
+      b += `<g><defs><linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="${col}" stop-opacity=".15"/></linearGradient></defs>
+        <rect x="${bx}" y="${y}" width="${w}" height="${Math.max(h, v ? 2 : 0)}" fill="url(#bg${i})" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 7px ${col})"><title>${esc(x.name)}: ${nf.format(v)}</title></rect>
+        <text x="${bx + w / 2}" y="${y - 5}" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono" font-size="11" font-weight="600">${x.count == null ? '–' : nf.format(v)}</text>
+        <text transform="translate(${bx + w / 2 + 3},${H - B + 14}) rotate(-38)" text-anchor="end" fill="#9db0d6" font-family="Rajdhani" font-weight="600" font-size="12">${esc(x.name)}</text></g>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${H}">${g}${b}</svg>`;
+  }
+
+  function trend(hist) {
+    const pts = hist.slice().reverse();                      // od nejstaršího
+    if (pts.length < 2) return '<div class="sub" style="padding:20px 0">Graf se zobrazí, jakmile bude uložených aspoň několik dnů (každý den se ukládá stav z tabulky).</div>';
+    const W = 1000, H = 190, L = 44, T = 14, B = 28, max = Math.max(1, ...pts.map(p => p.total)), pw = W - L - 10, ph = H - T - B;
+    const X = i => L + pw * i / (pts.length - 1), Y = v => T + ph - ph * v / (max * 1.1);
+    const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.total)}`).join(' ');
+    let grid = '';
+    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(80,200,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
+    const every = Math.ceil(pts.length / 10);
+    const lbl = pts.map((p, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : '').join('');
+    const dots = pts.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.total)}" r="3.5" fill="#04070f" stroke="#33e1ff" stroke-width="2"><title>${fmtD(p.date)}: ${nf.format(p.total)} pozic</title></circle>`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:190px"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33e1ff" stop-opacity=".45"/><stop offset="1" stop-color="#33e1ff" stop-opacity="0"/></linearGradient></defs>
+      ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#33e1ff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #33e1ff)"/>${dots}${lbl}</svg>`;
+  }
+
+  function render() {
+    const rels = R.relations.map((x, i) => ({ ...x, i }));
+    const total = R.total;
+    countUp($('total'), total);
+    const withDate = rels.filter(x => x.date).map(x => x.date).sort();
+    $('kpiMeta').textContent = withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '';
+    $('pie').innerHTML = donut(rels, total);
+    $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
+    $('bars').innerHTML = bars(rels);
+    const maxc = Math.max(1, ...rels.map(x => x.count || 0));
+    $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
+      <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
+      <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
+      <span class="d">${x.date ? 'k ' + fmtD(x.date) : 'bez dat'}${x.count && total ? ' · ' + Math.round(100 * x.count / total) + ' %' : ''}</span></div>`).join('');
+    $('trend').innerHTML = trend(R.history);
+    // tabulka po dnech
+    const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);
+    const cols = used.length ? used : rels;
+    $('tbl').innerHTML = `<thead><tr><th>Datum</th>${cols.map(x => `<th style="color:${color(x.i)}">${esc(x.name)}</th>`).join('')}<th>Celkem</th></tr></thead><tbody>` +
+      (R.history.length ? R.history.map(h => `<tr class="${h.date === today() ? 'today' : ''}"><td>${fmtD(h.date)}</td>${cols.map(x => { const v = h.counts[x.key]; return v == null ? '<td class="z">–</td>' : `<td>${nf.format(v)}</td>`; }).join('')}<td class="tot">${nf.format(h.total)}</td></tr>`).join('')
+        : `<tr><td colspan="${cols.length + 2}" class="z" style="text-align:center;padding:20px">Zatím žádná data.</td></tr>`) + '</tbody>';
+    // textová pole (vykreslí se jen při změně seznamu relací, aby se neztratil rozepsaný text)
+    const ps = R.relations.map(x => x.key).join('|');
+    if ($('phones').dataset.sig !== ps) {
+      $('phones').dataset.sig = ps;
+      $('phones').innerHTML = rels.map(x => `<div class="ph" style="--c:${color(x.i)}"><div class="t" style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i>${esc(x.name)}<span data-st="${esc(x.key)}"></span></div>
+        <div class="dev"><textarea data-k="${esc(x.key)}" maxlength="6000" placeholder="Jak ${esc(x.name)} využívá agenta… (text se ukládá automaticky)" spellcheck="false"></textarea></div></div>`).join('');
+      $('phones').querySelectorAll('textarea').forEach(bindText);
+    }
+    $('phones').querySelectorAll('textarea').forEach(t => {
+      const v = R.texts[t.dataset.k] || '';
+      if (document.activeElement !== t && !t.dataset.dirty && t.value !== v) t.value = v;
+    });
+  }
+
+  function bindText(t) {
+    let timer = null;
+    const st = () => document.querySelector(`[data-st="${CSS.escape(t.dataset.k)}"]`);
+    t.addEventListener('input', () => {
+      t.dataset.dirty = '1'; if (st()) { st().textContent = 'ukládám…'; st().className = ''; }
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        try { await api('/api/agents/text', { key: t.dataset.k, text: t.value }); R.texts[t.dataset.k] = t.value; delete t.dataset.dirty; if (st()) { st().textContent = 'uloženo ✓'; st().className = 'ok'; } }
+        catch (e) { if (st()) st().textContent = 'chyba uložení'; }
+      }, 900);
+    });
+  }
+
+  function status() {
+    const note = $('note'), live = $('live');
+    if (!R.configured) { note.hidden = false; note.className = 'note'; note.textContent = 'Zdrojová tabulka ještě není nastavená (na hlavní stránce RKL Doprava).'; }
+    else if (R.error && !R.hasSheet) { note.hidden = false; note.className = 'note err'; note.textContent = 'Tabulku se nepodařilo načíst: ' + R.error; }
+    else if (!R.hasSheet) { note.hidden = false; note.className = 'note'; note.textContent = 'V tabulce jsem nenašel list „Počty pozic“ (v 1. řádku dvojice sloupců „název relace“ + „datum“). Odkaz musí vést na celý sešit, ne jen na jeden list.'; }
+    else note.hidden = true;
+    const ok = R.hasSheet && !R.error;
+    live.className = 'live' + (ok ? '' : ' off'); $('liveTxt').textContent = ok ? 'systém online' : 'bez dat';
+    $('upd').textContent = R.fetchedAt ? 'načteno ' + new Date(R.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '';
+  }
+
+  async function load() {
+    try {
+      const j = await api('/api/agents');
+      const s = JSON.stringify([j.relations, j.history, j.hasSheet, j.error, j.configured]) + Object.keys(j.texts).length;
+      R = j; status();
+      if (s !== sig || !$('phones').children.length) { sig = s; render(); }
+      else render.call(null);
+    } catch (e) { $('liveTxt').textContent = 'server nedostupný'; $('live').className = 'live off'; }
+  }
+  load(); setInterval(load, 60000);
+})();
+</script>
+</body>
+</html>
