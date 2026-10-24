@@ -55,7 +55,7 @@
   .panel h3{margin:0 0 8px;font:700 11px "Orbitron",sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
 
   .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:260px}
-  .kpi .big{font:900 clamp(64px,8vw,120px)/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(94,138,255,.55);letter-spacing:2px}
+  .kpi{min-width:0;overflow:hidden}.kpi .big{max-width:100%;white-space:nowrap;font:900 120px/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(94,138,255,.55);letter-spacing:2px}
   .kpi .lbl{font:600 13px "Orbitron",sans-serif;letter-spacing:4px;color:var(--cy);margin-top:10px;text-transform:uppercase}
   .kpi .meta{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-top:12px}
 
@@ -161,12 +161,12 @@
   }
   const color = i => PAL[i % PAL.length];
 
-  function countUp(el, to) {
+  let countUp = function (el, to) {
     if (matchMedia('(prefers-reduced-motion:reduce)').matches) { el.textContent = nf.format(to); shownTotal = to; return; }
     const from = shownTotal, t0 = performance.now(), dur = 900;
     const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = nf.format(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); else shownTotal = to; };
     requestAnimationFrame(step);
-  }
+  };
 
   function donut(rels, total) {
     const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r;
@@ -300,6 +300,17 @@
       else render.call(null);
     } catch (e) { $('liveTxt').textContent = 'server nedostupný'; $('live').className = 'live off'; }
   }
+  function fitBig() {
+    const b = $('total'), box = b.parentElement, avail = box.clientWidth - 32;
+    if (avail <= 0) return;
+    b.style.fontSize = '120px';
+    const w = Math.max(b.scrollWidth, b.getBoundingClientRect().width);
+    if (w > avail) b.style.fontSize = Math.max(28, Math.floor(120 * avail / w)) + 'px';
+  }
+  new ResizeObserver(fitBig).observe(document.querySelector('.kpi'));
+  addEventListener('resize', fitBig); addEventListener('orientationchange', () => setTimeout(fitBig, 200));
+  const _cu = countUp; countUp = (el, to) => { _cu(el, to); el.textContent = nf.format(to); fitBig(); setTimeout(fitBig, 950); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBig);
   load(); setInterval(load, 60000);
 })();
 </script>
