@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#000; --bg2:#0a0d16; --panel:rgba(8,12,24,.78); --line:rgba(94,138,255,.32);
+    --bg:#000; --bg2:#1d1d1b; --panel:rgba(8,12,24,.78); --line:rgba(94,138,255,.32);
     --cy:#5e8aff; --mg:#f2a516; --lm:#7dd3a0; --am:#f2a516; --vi:#1d388f; --rd:#ff6b5e;
     --tx:#e9edf7; --mut:#8793ad;
   }
@@ -17,8 +17,8 @@
   html{background:var(--bg)}
   body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 "Rajdhani","IBM Plex Sans",system-ui,sans-serif;
     background:
-      radial-gradient(1200px 600px at 12% -10%,rgba(29,56,143,.45),transparent 60%),
-      radial-gradient(900px 600px at 95% 10%,rgba(242,165,22,.10),transparent 60%),
+      radial-gradient(1200px 600px at 12% -10%,rgba(255,255,255,.07),transparent 60%),
+      radial-gradient(900px 600px at 95% 10%,rgba(29,56,143,.25),transparent 60%),
       #000;
     background-attachment:fixed}
   body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
@@ -118,18 +118,9 @@
 <div class="wrap">
   <header>
     <img src="/logo.jpg" alt="RKL">
-    <div><h1>Agentizace RKL Opava</h1><div class="sub">Monitoring AI agentů · počty pozic podle dispečinků</div></div>
+    <div><h1>Agentizace RKL Opava</h1><div class="sub">RKL Holding · Monitoring AI agentů · počty pozic podle dispečinků</div></div>
     <div class="hr"><a href="/">← RKL Doprava</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
   </header>
-
-  <div class="hero"><div class="bg" style="background-image:url('https://rklholding.cz/systemfiles/global/image/1728637194rkl-soc-site.jpg')"></div>
-    <div class="cards">
-      <div data-l="Logistika" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/1729593491sni-mek-obrazovky-2024-09-11-v-12-41-26.webp')"></div>
-      <div data-l="Slévárna" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/1729593592img-1476.webp')"></div>
-      <div data-l="Armatury" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/1729499434msa.webp')"></div>
-      <div data-l="Železniční nápravy" style="background-image:url('https://www.rklholding.cz/systemfiles/article/image/17875774181783688807hero-axles-btqbevwc.webp')"></div>
-    </div>
-    <div class="tx">RKL Holding · <b>Opava</b> · logistika × AI</div></div>
 
   <div class="note" id="note" hidden></div>
 
