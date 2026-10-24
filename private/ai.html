@@ -9,14 +9,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#000; --bg2:#1d1d1b; --panel:rgba(6,10,26,.62); --line:rgba(94,138,255,.32);
-    --cy:#5e8aff; --mg:#f2a516; --lm:#7dd3a0; --am:#f2a516; --vi:#1d388f; --rd:#ff6b5e;
-    --tx:#e9edf7; --mut:#8793ad;
+    --bg:#000; --bg2:#1d1d1b; --panel:rgba(2,5,16,.84); --line:rgba(120,160,255,.6);
+    --cy:#7aa2ff; --mg:#f2a516; --lm:#7dd3a0; --am:#f2a516; --vi:#1d388f; --rd:#ff6b5e;
+    --tx:#ffffff; --mut:#c3cfe8;
   }
   .bgimg{position:fixed;inset:0;z-index:-1;pointer-events:none}
   .bgimg{background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.5)}
   .bgimg.l2{background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(3.2) brightness(.8) blur(1.2px);mix-blend-mode:screen;opacity:.5}
-  .bgimg.l3{filter:none;background:radial-gradient(900px 600px at 20% 0%,rgba(94,138,255,.55),transparent 65%),radial-gradient(800px 600px at 100% 100%,rgba(29,56,143,.75),transparent 60%),linear-gradient(180deg,rgba(0,6,34,.82),rgba(0,0,16,.55));mix-blend-mode:normal}
+  .bgimg.l3{filter:none;background:radial-gradient(900px 600px at 20% 0%,rgba(94,138,255,.55),transparent 65%),radial-gradient(800px 600px at 100% 100%,rgba(29,56,143,.75),transparent 60%),linear-gradient(180deg,rgba(0,4,24,.9),rgba(0,0,12,.78));mix-blend-mode:normal}
   *{box-sizing:border-box}
   html{background:var(--bg)}
   body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 "Rajdhani","IBM Plex Sans",system-ui,sans-serif;
@@ -52,7 +52,7 @@
     clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
     box-shadow:inset 0 0 40px rgba(94,138,255,.05)}
   .panel::before{content:"";position:absolute;left:0;top:0;width:34px;height:2px;background:var(--cy);box-shadow:0 0 10px var(--cy)}
-  .panel h3{margin:0 0 8px;font:700 11px "Orbitron",sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
+  .panel h3{margin:0 0 8px;font:700 12px "Orbitron",sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--mut)}
 
   .kpi{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:260px}
   .kpi{min-width:0;overflow:hidden}.kpi .big{max-width:100%;white-space:nowrap;font:900 120px/1 "Orbitron",sans-serif;color:#fff;text-shadow:0 0 18px var(--cy),0 0 50px rgba(94,138,255,.55);letter-spacing:2px}
@@ -72,15 +72,15 @@
   .rank .c{font:600 14px "IBM Plex Mono",monospace;color:#fff}
   .rank .bar{grid-column:1/3;height:5px;background:rgba(255,255,255,.07);position:relative}
   .rank .bar i{position:absolute;inset:0 auto 0 0;box-shadow:0 0 10px currentColor}
-  .rank .d{font:500 11px "IBM Plex Mono",monospace;color:var(--mut)}
+  .rank .d{font:500 12px "IBM Plex Mono",monospace;color:var(--mut)}
 
   .tablewrap{overflow:auto;max-height:520px}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th{position:sticky;top:0;background:#080c18;z-index:2;text-align:right;font:700 10.5px "Orbitron",sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--cy);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#080c18;z-index:1}
   th:first-child{z-index:3}
-  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(94,138,255,.12);font:500 14px "IBM Plex Mono",monospace;white-space:nowrap}
-  td.z{color:#41507a}
+  td{text-align:right;padding:7px 10px;border-bottom:1px solid rgba(120,160,255,.28);font:500 14px "IBM Plex Mono",monospace;white-space:nowrap}
+  td.z{color:#8a9ac4}
   td.tot{color:#fff;font-weight:600}
   tr:hover td{background:rgba(94,138,255,.07)}
   tr.today td{background:rgba(94,138,255,.10)}
@@ -96,7 +96,7 @@
     background:linear-gradient(180deg,rgba(10,18,38,.9),rgba(6,10,22,.92));box-shadow:0 0 22px color-mix(in srgb,var(--c,var(--cy)) 35%,transparent),inset 0 0 30px color-mix(in srgb,var(--c,var(--cy)) 10%,transparent)}
   .dev::after{content:"";position:absolute;bottom:7px;left:50%;width:88px;height:4px;transform:translateX(-50%);border-radius:3px;background:var(--c,var(--cy));opacity:.55}
   .dev textarea{width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--tx);font:500 15px/1.5 "Rajdhani","IBM Plex Sans",sans-serif;padding:4px 4px}
-  .dev textarea::placeholder{color:#42557f}
+  .dev textarea::placeholder{color:#8a9ac4}
 
   .hero{position:relative;height:150px;margin:0 0 18px;overflow:hidden;border:1px solid var(--line);clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
   .hero .bg{position:absolute;inset:0;background:#0a1230 center/cover;filter:grayscale(1) contrast(1.15) brightness(.55)}
@@ -185,7 +185,7 @@
       <circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(94,138,255,.25)" stroke-dasharray="2 6"/>
       ${arcs}
       <text x="${c}" y="${c - 2}" text-anchor="middle" fill="#fff" font-family="Orbitron" font-weight="900" font-size="30">${nf.format(total)}</text>
-      <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#7b90b8" font-family="Orbitron" font-size="9" letter-spacing="3">POZIC</text></svg>`;
+      <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#c3cfe8" font-family="Orbitron" font-size="9" letter-spacing="3">POZIC</text></svg>`;
   }
 
   function bars(rels) {
@@ -195,7 +195,7 @@
     let g = '';
     for (let k = 0; k <= 4; k++) {
       const y = T + ph - ph * k / 4;
-      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
+      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
     }
     let b = '';
     rels.forEach((x, i) => {
@@ -203,7 +203,7 @@
       b += `<g><defs><linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="${col}" stop-opacity=".15"/></linearGradient></defs>
         <rect x="${bx}" y="${y}" width="${w}" height="${Math.max(h, v ? 2 : 0)}" fill="url(#bg${i})" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 7px ${col})"><title>${esc(x.name)}: ${nf.format(v)}</title></rect>
         <text x="${bx + w / 2}" y="${y - 5}" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono" font-size="11" font-weight="600">${x.count == null ? '–' : nf.format(v)}</text>
-        <text transform="translate(${bx + w / 2 + 3},${H - B + 14}) rotate(-38)" text-anchor="end" fill="#9db0d6" font-family="Rajdhani" font-weight="600" font-size="12">${esc(x.name)}</text></g>`;
+        <text transform="translate(${bx + w / 2 + 3},${H - B + 14}) rotate(-38)" text-anchor="end" fill="#e3ebff" font-family="Rajdhani" font-weight="600" font-size="12">${esc(x.name)}</text></g>`;
     });
     return `<svg viewBox="0 0 ${W} ${H}">${g}${b}</svg>`;
   }
@@ -215,9 +215,9 @@
     const X = i => L + pw * i / (pts.length - 1), Y = v => T + ph - ph * v / (max * 1.1);
     const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.total)}`).join(' ');
     let grid = '';
-    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
+    for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; grid += `<line x1="${L}" x2="${W - 10}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${nf.format(Math.round(max * 1.1 * k / 3))}</text>`; }
     const every = Math.ceil(pts.length / 10);
-    const lbl = pts.map((p, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" fill="#7b90b8" font-family="IBM Plex Mono" font-size="10">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : '').join('');
+    const lbl = pts.map((p, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" fill="#c3cfe8" font-family="IBM Plex Mono" font-size="10">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : '').join('');
     const dots = pts.map((p, i) => `<circle cx="${X(i)}" cy="${Y(p.total)}" r="3.5" fill="#000" stroke="#5e8aff" stroke-width="2"><title>${fmtD(p.date)}: ${nf.format(p.total)} pozic</title></circle>`).join('');
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:190px"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e8aff" stop-opacity=".45"/><stop offset="1" stop-color="#5e8aff" stop-opacity="0"/></linearGradient></defs>
       ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#5e8aff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #5e8aff)"/>${dots}${lbl}</svg>`;
@@ -230,7 +230,7 @@
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
     $('kpiMeta').textContent = (withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '') + (R.trips ? ' · z toho ' + nf.format(R.trips) + ' přeprav' : '');
     const mins = (total + (R.trips || 0)) * 2, hh = Math.floor(mins / 60), mm = mins % 60;
-    const first = R.history.length ? R.history[R.history.length - 1].date : null;
+    const first = '2026-10-12';
     $('savedLbl').textContent = 'Ušetřený čas' + (first ? ' od: ' + fmtD(first) + ' = ' + (R.workdaysSince || 0) + ' ' + (R.workdaysSince === 1 ? 'pracovní den' : R.workdaysSince >= 2 && R.workdaysSince <= 4 ? 'pracovní dny' : 'pracovních dnů') : '');
     $('saved').textContent = hh ? `${nf.format(hh)} h ${mm} min` : `${mm} min`;
     $('savedMeta').textContent = `(${nf.format(total)} objednávek + ${nf.format(R.trips || 0)} přeprav) × 2 min`;

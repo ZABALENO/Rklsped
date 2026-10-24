@@ -167,7 +167,7 @@ app.get('/api/agents', async (req, res) => {
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
     history, texts: Object.assign(Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])), sheetTexts),
     workdaysSince: (() => {                       // pracovní dny od nejstaršího data v historii do dneška (včetně obou)
-      const f = history.length ? history[history.length - 1].date : null; if (!f) return 0;
+      const f = '2026-10-12';                         // pevný začátek měření ušetřeného času
       let n = 0; for (let d = new Date(f + 'T00:00:00Z'); d.toISOString().slice(0, 10) <= today; d = new Date(d.getTime() + 864e5)) if (isWorkday(d)) n++;
       return n;
     })(),
