@@ -244,7 +244,7 @@ createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext'], 'doprava.jso
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
-  if (!store.mem.cfg.adj) await store.put('cfg', 'adj', { date: pragueToday(), key: 'zapad 1', count: 90, trips: 8 }); // jednorázově: +90 pozic, 8 přeprav k Západu 1 (jen 24. 10. 2026)
+  if (!store.mem.cfg.adj || (store.mem.cfg.adj.v || 1) < 2) await store.put('cfg', 'adj', { v: 2, date: pragueToday(), key: 'zapad 1', count: 90, trips: 29 }); // jednorázově: +90 pozic, 29 přeprav (8 + 21) k Západu 1 (jen 24. 10. 2026)
   refreshSheet(true);
   setInterval(() => refreshSheet(true), BG_REFRESH);
 }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
