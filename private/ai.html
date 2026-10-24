@@ -86,13 +86,13 @@
   tr.today td:first-child::after{content:" • dnes";color:var(--lm);font-size:11px}
 
   .phones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 18px}
+  .ph{align-self:start}.ph.empty{order:2}.ph.empty .dev{display:none}.ph.empty .t{cursor:pointer;padding:9px 12px;border:1px dashed var(--c);opacity:.7;margin:0}.ph.empty .t:hover{opacity:1;background:rgba(94,138,255,.08)}.ph .t{cursor:pointer}
   .ph .t{display:flex;align-items:center;gap:9px;margin-bottom:8px;font:700 14px "Orbitron",sans-serif;letter-spacing:2px;text-transform:uppercase}
   .ph .t i{width:10px;height:10px;transform:rotate(45deg);box-shadow:0 0 10px currentColor}
   .ph .t span{margin-left:auto;font:500 11px "IBM Plex Mono",monospace;color:var(--mut);letter-spacing:0;text-transform:none}
   .ph .t span.ok{color:var(--lm)}
-  .dev{position:relative;aspect-ratio:9/19.5;max-height:760px;width:100%;border:2px solid var(--c,var(--cy));border-radius:34px;padding:34px 12px 18px;
+  .dev{position:relative;aspect-ratio:9/19.5;max-height:760px;width:100%;border:2px solid var(--c,var(--cy));border-radius:34px;padding:20px 12px 18px;
     background:linear-gradient(180deg,rgba(10,18,38,.9),rgba(6,10,22,.92));box-shadow:0 0 22px color-mix(in srgb,var(--c,var(--cy)) 35%,transparent),inset 0 0 30px color-mix(in srgb,var(--c,var(--cy)) 10%,transparent)}
-  .dev::before{content:"";position:absolute;top:11px;left:50%;width:84px;height:16px;transform:translateX(-50%);border-radius:10px;background:#02040a;border:1px solid var(--c,var(--cy))}
   .dev::after{content:"";position:absolute;bottom:7px;left:50%;width:88px;height:4px;transform:translateX(-50%);border-radius:3px;background:var(--c,var(--cy));opacity:.55}
   .dev textarea{width:100%;height:100%;resize:none;border:0;outline:0;background:transparent;color:var(--tx);font:500 15px/1.5 "Rajdhani","IBM Plex Sans",sans-serif;padding:4px 4px}
   .dev textarea::placeholder{color:#42557f}
@@ -248,7 +248,15 @@
       $('phones').innerHTML = rels.map(x => `<div class="ph" style="--c:${color(x.i)}"><div class="t" style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i>${esc(x.name)}<span data-st="${esc(x.key)}"></span></div>
         <div class="dev"><textarea data-k="${esc(x.key)}" maxlength="6000" placeholder="Jak ${esc(x.name)} využívá agenta… (text se ukládá automaticky)" spellcheck="false"></textarea></div></div>`).join('');
       $('phones').querySelectorAll('textarea').forEach(bindText);
+      $('phones').querySelectorAll('.ph .t').forEach(h => h.addEventListener('click', () => {
+        const p = h.parentElement; if (p.classList.contains('empty')) { p.dataset.open = '1'; p.classList.remove('empty'); p.querySelector('textarea').focus(); }
+        else if (!p.querySelector('textarea').value.trim()) { delete p.dataset.open; p.classList.add('empty'); }
+      }));
     }
+    $('phones').querySelectorAll('.ph').forEach(p => {
+      const t = p.querySelector('textarea'), v0 = R.texts[t.dataset.k] || '';
+      p.classList.toggle('empty', !v0.trim() && !t.value.trim() && !p.dataset.open);
+    });
     $('phones').querySelectorAll('textarea').forEach(t => {
       const fromSheet = (R.sheetKeys || []).includes(t.dataset.k);
       t.readOnly = fromSheet;
