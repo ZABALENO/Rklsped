@@ -246,7 +246,6 @@
 
   <div class="sec">Počty pozic podle dnů</div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-    <div class="panel"><h3>Vývoj celkového počtu pozic</h3><div id="trend"></div></div>
     <div class="panel"><h3>Aktuální stav k jednotlivým datumům</h3><div class="tablewrap"><table id="tbl"></table></div></div>
   </div>
 
@@ -387,7 +386,7 @@
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
       <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
       <span class="d">${[x.date ? 'k ' + fmtD(x.date) : 'bez dat', x.count && total ? Math.round(100 * x.count / total) + ' %' : '', x.trips ? nf.format(x.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ')}</span></div>`).join('');
-    $('trend').innerHTML = trend(R.history);
+    // graf vývoje celkového počtu pozic odstraněn
     // tabulka po dnech
     const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);
     const cols = used.length ? used : rels;
