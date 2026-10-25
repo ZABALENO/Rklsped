@@ -391,11 +391,16 @@
     const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);
     const cols = used.length ? used : rels;
     // přírůstky: kolik která relace napsala v daném dni oproti předchozímu dni (pozice vč. přeprav)
-    const asc = R.history.slice().reverse(), prev = {}, rows = asc.map(h => {
+    // zobrazují se jen pracovní dny v ČR; přírůstek z víkendu/svátku se připočte k nejbližšímu následujícímu pracovnímu dni
+    const asc = R.history.slice().reverse(), prev = {}, pend = {}, rows = [];
+    for (const h of asc) {
+      for (const x of cols) { const v = h.counts[x.key]; if (v == null) continue; pend[x.key] = (pend[x.key] || 0) + Math.max(0, v - (prev[x.key] || 0)); prev[x.key] = v; }
+      if (h.wd === false) continue;
       const d = {}; let tot = 0;
-      for (const x of cols) { const v = h.counts[x.key]; if (v == null) { d[x.key] = null; continue; } const inc = Math.max(0, v - (prev[x.key] || 0)); prev[x.key] = v; d[x.key] = inc; tot += inc; }
-      return { date: h.date, d, tot };
-    }).reverse();
+      for (const x of cols) { if (h.counts[x.key] == null) { d[x.key] = null; continue; } d[x.key] = pend[x.key] || 0; tot += d[x.key]; pend[x.key] = 0; }
+      rows.push({ date: h.date, d, tot });
+    }
+    rows.reverse();
     $('tbl').innerHTML = `<thead><tr><th>Datum</th>${cols.map(x => `<th style="color:${color(x.i)}">${esc(x.name)}</th>`).join('')}<th>Celkem</th></tr></thead><tbody>` +
       (rows.length ? rows.map(r => `<tr class="${r.date === today() ? 'today' : ''}"><td>${fmtD(r.date)}</td>${cols.map(x => { const v = r.d[x.key]; return v == null ? '<td class="z">–</td>' : `<td>${nf.format(v)}</td>`; }).join('')}<td class="tot">${nf.format(r.tot)}</td></tr>`).join('')
         : `<tr><td colspan="${cols.length + 2}" class="z" style="text-align:center;padding:20px">Zatím žádná data.</td></tr>`) + '</tbody>';

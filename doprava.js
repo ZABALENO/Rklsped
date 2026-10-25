@@ -222,7 +222,7 @@ app.get('/api/agents', async (req, res) => {
     if (adjOn && (adjOn.always || d === today)) o[adjOn.key] = (o[adjOn.key] || 0) + (adjOn.count || 0);
     byDay[d] = o;
   }
-  const history = Object.keys(byDay).sort().reverse().slice(0, 45).map(d => ({ date: d, counts: byDay[d], total: Object.values(byDay[d]).reduce((a, b) => a + b, 0) }));
+  const history = Object.keys(byDay).sort().reverse().slice(0, 45).map(d => ({ date: d, wd: isWorkday(new Date(d + 'T12:00:00Z')), counts: byDay[d], total: Object.values(byDay[d]).reduce((a, b) => a + b, 0) }));
   res.json({
     changedAt: (store.mem.cfg.cnt || {}).at || null,
     trips: relations.reduce((a, r) => a + (r.trips || 0), 0),
