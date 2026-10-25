@@ -206,16 +206,23 @@ app.get('/api/agents', async (req, res) => {
   }
   const hd = Object.keys(store.mem.agent);
   if (adjOn && !hd.includes(today)) hd.push(today);
-  if (adjOn && adjOn.always && adjOn.date) { // trvalé přičtení: každý den od data nastavení do dneška má řádek (i když v tabulce nebyl záznam)
-    for (let d = new Date(adjOn.date + 'T12:00:00Z'), end = new Date(today + 'T12:00:00Z'); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+  // každý den od prvního záznamu do dneška má řádek; úroveň relace se přenáší z předchozího dne (přírůstky počítá stránka)
+  if (hd.length) {
+    const first = hd.slice().sort()[0];
+    for (let d = new Date(first + 'T12:00:00Z'), end = new Date(today + 'T12:00:00Z'); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
       const k = d.toISOString().slice(0, 10); if (!hd.includes(k)) hd.push(k);
     }
   }
-  const history = hd.sort().reverse().slice(0, 45).map(d => {
-    const c = Object.assign({}, (store.mem.agent[d] || {}).c || {}); for (const k of Object.keys(c)) if (isTripKey(k)) delete c[k];
-    if (adjOn && (adjOn.always || d === today)) c[adjOn.key] = (c[adjOn.key] || 0) + (adjOn.count || 0);
-    return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
-  });
+  const lvl = {}, byDay = {};
+  for (const d of hd.slice().sort()) {
+    const c = (store.mem.agent[d] || {}).c || {};
+    for (const k of Object.keys(c)) if (!isTripKey(k)) lvl[k] = c[k];
+    const o = Object.assign({}, lvl);
+    // výchozí hodnota (základ) se přičítá k úrovni každého dne, takže se v denních přírůstcích vyruší
+    if (adjOn && (adjOn.always || d === today)) o[adjOn.key] = (o[adjOn.key] || 0) + (adjOn.count || 0);
+    byDay[d] = o;
+  }
+  const history = Object.keys(byDay).sort().reverse().slice(0, 45).map(d => ({ date: d, counts: byDay[d], total: Object.values(byDay[d]).reduce((a, b) => a + b, 0) }));
   res.json({
     changedAt: (store.mem.cfg.cnt || {}).at || null,
     trips: relations.reduce((a, r) => a + (r.trips || 0), 0),

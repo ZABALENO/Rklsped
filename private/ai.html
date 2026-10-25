@@ -246,7 +246,7 @@
 
   <div class="sec">Počty pozic podle dnů</div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-    <div class="panel"><h3>Aktuální stav k jednotlivým datumům</h3><div class="tablewrap"><table id="tbl"></table></div></div>
+    <div class="panel"><h3>Přírůstek pozic za jednotlivé dny</h3><div class="tablewrap"><table id="tbl"></table></div></div>
   </div>
 
   <div class="sec">Jak agenta využíváme</div>
@@ -390,8 +390,14 @@
     // tabulka po dnech
     const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);
     const cols = used.length ? used : rels;
+    // přírůstky: kolik která relace napsala v daném dni oproti předchozímu dni (pozice vč. přeprav)
+    const asc = R.history.slice().reverse(), prev = {}, rows = asc.map(h => {
+      const d = {}; let tot = 0;
+      for (const x of cols) { const v = h.counts[x.key]; if (v == null) { d[x.key] = null; continue; } const inc = Math.max(0, v - (prev[x.key] || 0)); prev[x.key] = v; d[x.key] = inc; tot += inc; }
+      return { date: h.date, d, tot };
+    }).reverse();
     $('tbl').innerHTML = `<thead><tr><th>Datum</th>${cols.map(x => `<th style="color:${color(x.i)}">${esc(x.name)}</th>`).join('')}<th>Celkem</th></tr></thead><tbody>` +
-      (R.history.length ? R.history.map(h => `<tr class="${h.date === today() ? 'today' : ''}"><td>${fmtD(h.date)}</td>${cols.map(x => { const v = h.counts[x.key]; return v == null ? '<td class="z">–</td>' : `<td>${nf.format(v)}</td>`; }).join('')}<td class="tot">${nf.format(h.total)}</td></tr>`).join('')
+      (rows.length ? rows.map(r => `<tr class="${r.date === today() ? 'today' : ''}"><td>${fmtD(r.date)}</td>${cols.map(x => { const v = r.d[x.key]; return v == null ? '<td class="z">–</td>' : `<td>${nf.format(v)}</td>`; }).join('')}<td class="tot">${nf.format(r.tot)}</td></tr>`).join('')
         : `<tr><td colspan="${cols.length + 2}" class="z" style="text-align:center;padding:20px">Zatím žádná data.</td></tr>`) + '</tbody>';
     // textová pole (vykreslí se jen při změně seznamu relací, aby se neztratil rozepsaný text)
     const ps = R.relations.map(x => x.key).join('|');
