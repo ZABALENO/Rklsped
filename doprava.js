@@ -208,7 +208,7 @@ app.get('/api/agents', async (req, res) => {
   if (adjOn && !hd.includes(today)) hd.push(today);
   const history = hd.sort().reverse().slice(0, 45).map(d => {
     const c = Object.assign({}, (store.mem.agent[d] || {}).c || {}); for (const k of Object.keys(c)) if (isTripKey(k)) delete c[k];
-    if (adjOn && d === today) c[adjOn.key] = (c[adjOn.key] || 0) + (adjOn.count || 0);
+    if (adjOn && (adjOn.always || d === today)) c[adjOn.key] = (c[adjOn.key] || 0) + (adjOn.count || 0);
     return { date: d, counts: c, total: Object.values(c).reduce((a, b) => a + b, 0) };
   });
   res.json({
