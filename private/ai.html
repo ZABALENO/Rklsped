@@ -438,9 +438,15 @@
     return o;
   }
   const items = s => String(s || '').split(/\n|;|•|(?<=\d\s?%),|\s-\s(?=[A-ZÁ-Ž])/).map(x => x.replace(/^[\s\-–•*›]+/, '').trim()).filter(Boolean);
+  // jen jméno agenta (např. „Pepa“); když není známé („nezjištěno“), nadpis se nezobrazí
+  function agentName(t) {
+    let n = String(t || '').split(/[\n(,;–—]|\s-\s|\srelace\b/i)[0].replace(/^\s*jméno\s*/i, '').replace(/[.:\s]+$/, '').trim();
+    if (!n || /nezji|neznám|nezná|nezn[aá]|nenalez|není|^\?+$|^[-–—]+$/i.test(n) || n.length > 30) return '';
+    return n;
+  }
   function richHtml(o) {
     let h = '';
-    if (o.agent) h += `<div class="who">${esc(o.agent)}</div>`;
+    const nm = agentName(o.agent); if (nm) h += `<div class="who">${esc(nm)}</div>`;
     if (o.fn) h += `<div class="fn">${esc(o.fn)}</div>`;
     if (o.use) {
       const parts = items(o.use).map(x => { const m = x.match(/^(.*?)[\s=≈~:]*(\d+(?:[.,]\d+)?)\s*%/); return m ? { n: m[1].replace(/[\s≈=~:-]+$/, '').trim() || x, v: parseFloat(m[2].replace(',', '.')) } : null; }).filter(Boolean);
