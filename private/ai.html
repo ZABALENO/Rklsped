@@ -417,7 +417,7 @@
       const v = R.texts[t.dataset.k] || '';
       const dev = t.parentElement, rich = dev.querySelector('.rich'), po = fromSheet ? parseDesc(v) : null;
       dev.classList.toggle('isrich', !!po);
-      if (po) { const h = richHtml(po); if (rich.dataset.h !== h) { rich.dataset.h = h; rich.innerHTML = h; } }
+      if (po) { const h = richHtml(po, t.dataset.k); if (rich.dataset.h !== h) { rich.dataset.h = h; rich.innerHTML = h; } }
       if ((fromSheet || (document.activeElement !== t && !t.dataset.dirty)) && t.value !== v) t.value = v;
     });
   }
@@ -444,9 +444,10 @@
     if (!n || /nezji|neznám|nezná|nezn[aá]|nenalez|není|^\?+$|^[-–—]+$/i.test(n) || n.length > 30) return '';
     return n;
   }
-  function richHtml(o) {
+  const FIXED_AGENTS = { 'zapad 1': 'Johny', 'vnitro 2': 'Pepa' }; // trvale nastavená jména agentů (podle klíče relace)
+  function richHtml(o, key) {
     let h = '';
-    const nm = agentName(o.agent); if (nm) h += `<div class="who">${esc(nm)}</div>`;
+    const nm = FIXED_AGENTS[String(key || '').toLowerCase()] || agentName(o.agent); if (nm) h += `<div class="who">${esc(nm)}</div>`;
     if (o.fn) h += `<div class="fn">${esc(o.fn)}</div>`;
     if (o.use) {
       const parts = items(o.use).map(x => { const m = x.match(/^(.*?)[\s=≈~:]*(\d+(?:[.,]\d+)?)\s*%/); return m ? { n: m[1].replace(/[\s≈=~:-]+$/, '').trim() || x, v: parseFloat(m[2].replace(',', '.')) } : null; }).filter(Boolean);
