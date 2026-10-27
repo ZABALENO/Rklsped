@@ -245,10 +245,6 @@
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
   </div>
 
-  <div class="sec">Přírůstek pozic pouze za pracovní dny</div>
-  <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-    <div class="panel"><h3>Přírůstek oproti předchozímu pracovnímu dni</h3><div class="tablewrap"><table id="tbl"></table></div></div>
-  </div>
 
   <div class="sec">Jak agenta využíváme</div>
   <div class="phones" id="phones"></div>
@@ -407,7 +403,7 @@
       rows.push({ date: h.date, d, tot });
     }
     rows.reverse();
-    $('tbl').innerHTML = `<thead><tr><th>Datum</th>${cols.map(x => `<th style="color:${color(x.i)}">${esc(x.name)}</th>`).join('')}<th>Celkem</th></tr></thead><tbody>` +
+    if ($('tbl')) $('tbl').innerHTML = `<thead><tr><th>Datum</th>${cols.map(x => `<th style="color:${color(x.i)}">${esc(x.name)}</th>`).join('')}<th>Celkem</th></tr></thead><tbody>` +
       (rows.length ? rows.map(r => `<tr class="${r.date === today() ? 'today' : ''}"><td>${fmtD(r.date)}</td>${cols.map(x => { const v = r.d[x.key]; return v == null ? '<td class="z">–</td>' : `<td>${nf.format(v)}</td>`; }).join('')}<td class="tot">${nf.format(r.tot)}</td></tr>`).join('')
         : `<tr><td colspan="${cols.length + 2}" class="z" style="text-align:center;padding:20px">Zatím žádná data.</td></tr>`) + '</tbody>';
     // textová pole (vykreslí se jen při změně seznamu relací, aby se neztratil rozepsaný text)
