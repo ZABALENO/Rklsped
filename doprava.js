@@ -196,6 +196,10 @@ app.get('/api/agents', async (req, res) => {
   const txtKeys = (sheet.texts || []).map(t => nk(t.name));
   const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
   const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
+  // „Zbývá“: dnešní řádky relace (sloupec Tuz.Z / Relace), jejichž číslo objednávky nebo přepravy má za lomítkem a rokem písmeno (např. ZZ/26N13892); řádek se počítá jednou
+  const pend = {};
+  for (const r of sheet.rows) if (r.date === pragueToday() && r.relace && /\/\d{2}[A-Za-z]/.test((r.order || '') + ' ' + (r.prepr || ''))) pend[nk(r.relace)] = (pend[nk(r.relace)] || 0) + 1;
+  for (const r of relations) r.pending = pend[r.key] || 0;
   const sheetTexts = {};
   for (const t of sheet.texts || []) if (t.text) sheetTexts[nk(t.name)] = t.text;
   const adj = store.mem.cfg.adj, today = pragueToday();
