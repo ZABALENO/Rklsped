@@ -121,6 +121,8 @@
   .rich h4::after{content:"";flex:1;height:1px;background:var(--line)}
   .rich .use{display:flex;gap:10px;align-items:center}
   .rich .use svg{width:92px;flex:none}
+  .useall{display:flex;gap:28px;align-items:center;flex-wrap:wrap}.useall svg{width:min(260px,100%);flex:none}.useall .lg{flex:1;min-width:240px;font-size:15px}
+  .useall .lg div{display:flex;gap:8px;align-items:baseline;margin-bottom:6px}.useall .lg i{width:10px;height:10px;flex:none;box-shadow:0 0 6px currentColor}.useall .lg b{margin-left:auto;font-weight:700;color:var(--tx)}
   .rich .lg{flex:1;min-width:0;font-size:12.5px}
   .rich .lg div{display:flex;gap:6px;align-items:baseline;margin-bottom:2px}
   .rich .lg i{width:8px;height:8px;flex:none;box-shadow:0 0 6px currentColor}
@@ -243,6 +245,11 @@
     <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h3>Počet pozic podle dispečinku</h3><div id="bars"></div></div>
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
+  </div>
+
+  <div class="sec">Na co agenty využíváme nejvíce</div>
+  <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+    <div class="panel"><h3>Činnosti všech agentů ze všech relací dohromady</h3><div id="useAll"></div></div>
   </div>
 
 
@@ -388,7 +395,7 @@
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
       <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
       <span class="d">${[x.date ? 'k ' + fmtD(x.date) : 'bez dat', x.count && total ? Math.round(100 * x.count / total) + ' %' : '', x.trips ? nf.format(x.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ')}</span></div>`).join('');
-    // graf vývoje celkového počtu pozic odstraněn
+    renderUseAll();
     // tabulka po dnech
     const used = rels.filter(x => R.history.some(h => h.counts[x.key] != null) || x.count != null);
     const cols = used.length ? used : rels;
@@ -438,6 +445,37 @@
 
   // ---- strukturovaný popis agenta (z listu „Popisy agentů“) -> přehledná karta ----
   const BAD = /nedorozum|nepochop|nesrozum|omyl|chyb(?:a|y|n|ou|ě)|špatn|spatn|selhá|selha|nefung/i;
+  // činnosti sloučené do skupin (různé relace je pojmenovávají různě)
+  const USE_GROUPS = [
+    [/lori|objedn|přepis|prepis|zápis|zapis/i, 'Zápis objednávek do Lori'],
+    [/mýto|myto|čestn|cestn/i, 'Mýto a čestná prohlášení'],
+    [/pdf|razítk|razitk|podpis/i, 'PDF, razítka a podpisy'],
+    [/comarr|inzer|databank/i, 'Comarr a inzerce'],
+    [/skill|pravidl|ladění|ladeni/i, 'Ladění pravidel a skillů'],
+    [/dashboard|přehled|prehled|technik/i, 'Dashboard, přehledy a technika'],
+    [/schránk|schrank|pošt|posta|e-?mail|komunik/i, 'Schránka a e-maily'],
+    [/úprav|uprav|kontrol/i, 'Úpravy a kontroly'],
+    [/přeprav|preprav|dopravc|heslo|frigo/i, 'Přepravy a dopravci']
+  ];
+  function renderUseAll() {
+    const el = $('useAll'); if (!el) return;
+    const agg = new Map(); let nrel = 0;
+    for (const k of (R.sheetKeys || [])) {
+      const o = parseDesc(R.texts[k] || ''); if (!o || !o.use) continue;
+      const parts = items(o.use).map(x => { const m = x.match(/^(.*?)[\s=≈~:]*(\d+(?:[.,]\d+)?)\s*%/); return m ? { n: m[1].replace(/[\s≈=~:-]+$/, '').replace(/\([^)]*\)/g, '').replace(/^[^:]*:\s*/, '').trim() || x, v: parseFloat(m[2].replace(',', '.')) } : null; }).filter(Boolean);
+      const sum = parts.reduce((a, p) => a + p.v, 0); if (!sum) continue;
+      nrel++;
+      for (const p of parts) { const g = (USE_GROUPS.find(([re]) => re.test(p.n)) || [])[1] || (p.n.charAt(0).toUpperCase() + p.n.slice(1)); agg.set(g, (agg.get(g) || 0) + 100 * p.v / sum); }
+    }
+    if (!nrel) { el.innerHTML = '<div class="sub" style="padding:14px 0">Zatím nejsou v tabulce žádná procenta využití agentů.</div>'; return; }
+    let arr = [...agg].map(([n, v]) => ({ n, v: v / nrel })).sort((a, b) => b.v - a.v);
+    if (arr.length > 8) { const rest = arr.slice(7).reduce((a, p) => a + p.v, 0); arr = arr.slice(0, 7).concat([{ n: 'Ostatní', v: rest }]); }
+    const C = 2 * Math.PI * 34; let acc = 0, arcs = '', lg = '';
+    arr.forEach((p, i) => { const len = C * p.v / 100, col = PAL[i % PAL.length];
+      arcs += `<circle cx="45" cy="45" r="34" fill="none" stroke="${col}" stroke-width="14" stroke-dasharray="${Math.max(0, len - 1.5)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 45 45)"/>`; acc += len;
+      lg += `<div style="color:${col}"><i style="background:${col}"></i><span style="color:var(--tx)">${esc(p.n)}</span><b>${Math.round(p.v)} %</b></div>`; });
+    el.innerHTML = `<div class="use useall"><svg viewBox="0 0 90 90">${arcs}</svg><div class="lg">${lg}</div></div><div class="sub" style="margin-top:10px;text-transform:none;letter-spacing:0">Průměr přes ${nf.format(nrel)} ${nrel === 1 ? 'relaci' : nrel < 5 ? 'relace' : 'relací'} s vyplněným využitím (každá relace má stejnou váhu).</div>`;
+  }
   function parseDesc(t) {
     const L = { agent: 'agent', funkce: 'fn', využití: 'use', vyuziti: 'use', chyby: 'err', problémy: 'err', problemy: 'err', 'časté dotazy': 'q', 'caste dotazy': 'q', aktualizováno: 'upd', aktualizovano: 'upd' };
     const o = {}; let cur = null;
