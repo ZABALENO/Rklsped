@@ -132,7 +132,7 @@ async function refreshSheet(force) {
   inflight = (async () => {
     try {
       const out = await loadSheet(url);
-      if (rowFilter) out.rows = out.rows.filter(rowFilter);
+      if (rowFilter) { const all = out.rows.length; out.rows = rowFilter(out.rows, out); out.hiddenByFilter = all - out.rows.length; }
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
       await require('./lib/change').trackChange(mem.cfg, put, out, url);
       await evaluateSales(out.rows);
@@ -208,6 +208,7 @@ function board(rate) {
   const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
     tenant: id,
+    hiddenByFilter: sheet.hiddenByFilter || 0, relaceCol: !!(sheet.columns && sheet.columns.relace),
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
@@ -227,10 +228,15 @@ return { id, mem, put, store, initStore, refreshSheet, evaluateSales, board, boa
 }
 
 /* ================= HTTP ================= */
-// Relace Vnitro 1: jen objednávky začínající na ZV/ (a – je-li v tabulce sloupec „Relace“ – jen řádky relace Vnitro 1)
-const V1_RELACE = /vnitro\s*1/i;
-const vnitro1Filter = r => /^ZV\s*\//i.test(r.order || '') && (r.relace == null || r.relace === '' || V1_RELACE.test(r.relace));
-const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json' });
+// Každá relace vidí jen řádky se svou hodnotou ve sloupci „Relace“ (zapad 1 / vnitro 1; bez ohledu na diakritiku a velikost písmen).
+// Relace Vnitro 1 navíc jen objednávky začínající na ZV/. Když tabulka sloupec „Relace“ nemá, filtr relace se nepoužije.
+const byRelace = (re, extra) => (rows, out) => {
+  const has = !!(out.columns && out.columns.relace);
+  return rows.filter(r => (!has || re.test(deacc(r.relace))) && (!extra || extra(r)));
+};
+const zapad1Filter = byRelace(/zapad\s*1/);
+const vnitro1Filter = byRelace(/vnitro\s*1/, r => /^ZV\s*\//i.test(r.order || ''));
+const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json', rowFilter: zapad1Filter });
 const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter });
 const tenants = { main, vnitro1: v1 };
 const { mem, put, refreshSheet, evaluateSales } = main;
