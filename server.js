@@ -28,12 +28,15 @@ const SHEET_TTL = 60 * 1000;              // jak dlouho držet staženou tabulku
 const BG_REFRESH = 3 * 60 * 1000;         // obnova tabulky na pozadí
 const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
+/* ================= instance dashboardu (hlavní + relace Vnitro 1) ================= */
+// Každá instance má vlastní úložiště (tabulku v databázi), vlastní zdrojovou tabulku a vlastní stav.
+function makeTenant({ id, table, fileName, rowFilter }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
 const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin'];
 const mem = Object.fromEntries(NS.map(n => [n, {}]));
 let pool = null;
-const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), 'store.json');
+const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), fileName);
 
 async function initStore() {
   if (process.env.DATABASE_URL) {
@@ -45,19 +48,19 @@ async function initStore() {
     for (const p of ['sslmode', 'channel_binding', 'sslrootcert']) u.searchParams.delete(p);
     pool = new Pool({ connectionString: u.toString(), ssl: needSsl ? { rejectUnauthorized: false } : false, max: 4, idleTimeoutMillis: 30000 });
     pool.on('error', e => console.error('DB:', e.message));
-    await pool.query(`CREATE TABLE IF NOT EXISTS kv (
+    await pool.query(`CREATE TABLE IF NOT EXISTS ${table} (
       ns text NOT NULL, k text NOT NULL, v jsonb NOT NULL, u timestamptz NOT NULL DEFAULT now(),
       PRIMARY KEY (ns, k))`);
-    const { rows } = await pool.query('SELECT ns, k, v FROM kv');
+    const { rows } = await pool.query(`SELECT ns, k, v FROM ${table}`);
     for (const r of rows) if (mem[r.ns]) mem[r.ns][r.k] = r.v;
-    console.log(`Úložiště: Postgres (${rows.length} záznamů)`);
+    console.log(`Úložiště ${id}: Postgres/${table} (${rows.length} záznamů)`);
   } else {
     try {
       fs.mkdirSync(path.dirname(FILE), { recursive: true });
       if (fs.existsSync(FILE)) Object.assign(mem, JSON.parse(fs.readFileSync(FILE, 'utf8')));
       for (const n of NS) mem[n] = mem[n] || {};
     } catch (e) { console.error('Soubor úložiště nelze načíst:', e.message); }
-    console.log('Úložiště: soubor (dočasné – nastav DATABASE_URL)');
+    console.log(`Úložiště ${id}: soubor (dočasné – nastav DATABASE_URL)`);
   }
 }
 
@@ -66,9 +69,9 @@ async function put(ns, k, v) {
   if (v == null) delete mem[ns][k]; else mem[ns][k] = v;
   if (pool) {
     try {
-      if (v == null) await pool.query('DELETE FROM kv WHERE ns=$1 AND k=$2', [ns, k]);
+      if (v == null) await pool.query(`DELETE FROM ${table} WHERE ns=$1 AND k=$2`, [ns, k]);
       else await pool.query(
-        `INSERT INTO kv (ns,k,v,u) VALUES ($1,$2,$3,now())
+        `INSERT INTO ${table} (ns,k,v,u) VALUES ($1,$2,$3,now())
          ON CONFLICT (ns,k) DO UPDATE SET v=EXCLUDED.v, u=now()`, [ns, k, JSON.stringify(v)]);
     } catch (e) { console.error('DB zápis selhal:', e.message); }
   } else {
@@ -129,6 +132,7 @@ async function refreshSheet(force) {
   inflight = (async () => {
     try {
       const out = await loadSheet(url);
+      if (rowFilter) out.rows = out.rows.filter(rowFilter);
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
       await require('./lib/change').trackChange(mem.cfg, put, out, url);
       await evaluateSales(out.rows);
@@ -203,6 +207,7 @@ function board(rate) {
 
   const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
+    tenant: id,
     configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
     url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
     fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
@@ -216,47 +221,66 @@ function board(rate) {
   };
 }
 
-/* ================= HTTP ================= */
-const app = express();
-app.use(express.json({ limit: '5mb' }));
-require('./lib/auth').setup(app);   // heslo z APP_PASSWORD – bez přihlášení nic nezobrazí
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
-
 const store = { mem, put };
 async function boardNow() { return board(await eurRate(store)); }
+return { id, mem, put, store, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
+}
+
+/* ================= HTTP ================= */
+// Relace Vnitro 1: jen objednávky začínající na ZV/ (a – je-li v tabulce sloupec „Relace“ – jen řádky relace Vnitro 1)
+const V1_RELACE = /vnitro\s*1/i;
+const vnitro1Filter = r => /^ZV\s*\//i.test(r.order || '') && (r.relace == null || r.relace === '' || V1_RELACE.test(r.relace));
+const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json' });
+const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter });
+const tenants = { main, vnitro1: v1 };
+const { mem, put, refreshSheet, evaluateSales } = main;
+
+const app = express();
+app.use(express.json({ limit: '5mb' }));
+require('./lib/auth').setup(app);   // heslo z APP_PASSWORD (hlavní) / VNITRO1_PASSWORD (relace Vnitro 1) – bez přihlášení nic nezobrazí
+// aktuální instance podle přihlášení (req.tenantId nastavuje lib/auth)
+app.use((req, res, next) => { req.t = tenants[req.tenantId] || main; next(); });
+// hlavní stránka: pro relaci Vnitro 1 se přidá třída, která schová leaderboard a historii
+const INDEX = path.join(__dirname, 'public', 'index.html');
+app.get(['/', '/index.html'], (req, res, next) => {
+  let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
+  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
+  res.set('Cache-Control', 'no-store').type('html').send(h);
+});
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
 app.get('/api/board', async (req, res) => {
-  await refreshSheet(req.query.force === '1');
-  res.json(await boardNow());
+  await req.t.refreshSheet(req.query.force === '1');
+  res.json(await req.t.boardNow());
 });
 
-// připnutí řádku nahoru (urgentní) – sdílené pro všechny
+// připnutí řádku nahoru (urgentní) – sdílené pro všechny v dané instanci
 app.post('/api/pin', async (req, res) => {
   const { key, pinned } = req.body || {};
   if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
-  await put('pin', key, pinned ? { t: new Date().toISOString() } : null);
+  await req.t.put('pin', key, pinned ? { t: new Date().toISOString() } : null);
   res.json({ ok: true });
 });
 
 // vynulování leaderboardu a dnes prodaných (počítá se od teď; stav „Prodáno“ u řádků zůstává)
 app.post('/api/reset', async (req, res) => {
-  await put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
-  res.json(await boardNow());
+  await req.t.put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
+  res.json(await req.t.boardNow());
 });
 
 app.post('/api/config', async (req, res) => {
   const url = String((req.body && req.body.url) || '').trim();
   if (url && !validUrl(url)) return res.status(400).json({ error: 'Podporované jsou veřejné odkazy z Google Sheets / Google Drive a OneDrive / SharePoint (Excel online).' });
-  await put('cfg', 'sheet', url ? { url, u: new Date().toISOString() } : null);
-  await refreshSheet(true);
-  res.json(await boardNow());
+  await req.t.put('cfg', 'sheet', url ? { url, u: new Date().toISOString() } : null);
+  await req.t.refreshSheet(true);
+  res.json(await req.t.boardNow());
 });
 
 app.post('/api/sold', async (req, res) => {
   const { key, sold, label } = req.body || {};
   if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
   const now = new Date().toISOString();
-  await put('sold', key, { sold: !!sold, at: sold ? now : null, u: now, label: String(label || '').slice(0, 200) });
+  await req.t.put('sold', key, { sold: !!sold, at: sold ? now : null, u: now, label: String(label || '').slice(0, 200) });
   res.json({ ok: true, at: now });
 });
 
@@ -264,14 +288,14 @@ app.post('/api/note', async (req, res) => {
   const { key, text } = req.body || {};
   if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
   const t = String(text || '').slice(0, 500);
-  await put('note', key, t.trim() ? { text: t, u: new Date().toISOString() } : null);
+  await req.t.put('note', key, t.trim() ? { text: t, u: new Date().toISOString() } : null);
   res.json({ ok: true });
 });
 
 // záloha všech uložených dat (skóre, poznámky, prodáno)
 app.get('/api/export', (req, res) => {
-  res.setHeader('Content-Disposition', `attachment; filename="rklspedice-zaloha-${new Date().toISOString().slice(0, 10)}.json"`);
-  res.json({ exportedAt: new Date().toISOString(), data: mem });
+  res.setHeader('Content-Disposition', `attachment; filename="rklspedice${req.t.id === 'main' ? '' : '-' + req.t.id}-zaloha-${new Date().toISOString().slice(0, 10)}.json"`);
+  res.json({ exportedAt: new Date().toISOString(), data: req.t.mem });
 });
 // obnova ze zálohy – jen doplní, co chybí (nic nepřepíše)
 app.post('/api/import', async (req, res) => {
@@ -280,7 +304,7 @@ app.post('/api/import', async (req, res) => {
   let n = 0;
   for (const ns of ['sold', 'note', 'sale', 'track']) {
     for (const [k, v] of Object.entries(data[ns] || {})) {
-      if (!mem[ns][k] && v && typeof v === 'object' && k.length <= 300) { await put(ns, k, v); n++; }
+      if (!req.t.mem[ns][k] && v && typeof v === 'object' && k.length <= 300) { await req.t.put(ns, k, v); n++; }
     }
   }
   res.json({ ok: true, imported: n });
@@ -289,13 +313,12 @@ app.post('/api/import', async (req, res) => {
 app.get('/healthz', (req, res) => res.send('ok'));
 
 if (require.main === module) {
-  initStore().then(async () => {
+  Promise.all([main.initStore(), v1.initStore()]).then(async () => {
     // jednorázové vynulování statistik (požadavek 12. 10. 2026)
-    if (!mem.cfg.stats || !mem.cfg.stats.reset1) await put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
-    cleanup();
+    if (!main.mem.cfg.stats || !main.mem.cfg.stats.reset1) await main.put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
+    main.cleanup(); v1.cleanup();
     app.listen(PORT, () => console.log('RKL Spedice běží na portu ' + PORT));
-    refreshSheet(true);
-    setInterval(() => refreshSheet(true), BG_REFRESH);
+    for (const t of [main, v1]) { t.refreshSheet(true); setInterval(() => t.refreshSheet(true), BG_REFRESH); }
   }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
 }
 module.exports = { app, sellerOf, evaluateSales, mem };
