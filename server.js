@@ -30,7 +30,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
 /* ================= instance dashboardu (hlavní + relace Vnitro 1) ================= */
 // Každá instance má vlastní úložiště (tabulku v databázi), vlastní zdrojovou tabulku a vlastní stav.
-function makeTenant({ id, table, fileName, rowFilter }) {
+function makeTenant({ id, table, fileName, rowFilter, sharedUrl }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
 const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin'];
@@ -83,6 +83,8 @@ async function put(ns, k, v) {
 /* ================= tabulka + vyhodnocení prodejů ================= */
 let sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null };
 let inflight = null;
+// zdrojová tabulka: vlastní odkaz (nastavený v nastavení této relace), jinak sdílená tabulka hlavního dashboardu
+const sheetUrl = () => (mem.cfg.sheet && mem.cfg.sheet.url) || (sharedUrl ? sharedUrl() : '') || '';
 
 const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
 const labelOf = r => `${fmtDate(r.date)} · ${r.route}`.replace(/^ · /, '');
@@ -124,7 +126,7 @@ async function evaluateSales(rows) {
 }
 
 async function refreshSheet(force) {
-  const url = mem.cfg.sheet && mem.cfg.sheet.url;
+  const url = sheetUrl();
   if (!url) { sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null }; return; }
   const fresh = sheet.url === url && sheet.fetchedAt && Date.now() - Date.parse(sheet.fetchedAt) < SHEET_TTL;
   if (!force && fresh) return;
@@ -209,8 +211,8 @@ function board(rate) {
   return {
     tenant: id,
     hiddenByFilter: sheet.hiddenByFilter || 0, relaceCol: !!(sheet.columns && sheet.columns.relace),
-    configured: !!(mem.cfg.sheet && mem.cfg.sheet.url),
-    url: mem.cfg.sheet ? mem.cfg.sheet.url : '',
+    configured: !!sheetUrl(),
+    url: sheetUrl(),
     fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
     offered, until, statsFrom: from, soldToday,
     sold,
@@ -237,7 +239,7 @@ const byRelace = (re, extra) => (rows, out) => {
 const zapad1Filter = byRelace(/zapad\s*1/);
 const vnitro1Filter = byRelace(/vnitro\s*1/, r => /^ZV\s*\//i.test(r.order || ''));
 const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json', rowFilter: zapad1Filter });
-const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter });
+const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const tenants = { main, vnitro1: v1 };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
