@@ -350,24 +350,31 @@
   function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
-    const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, since: x.since, ...t, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0).sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, ...t, oA: x.pA, tA: x.tA, oM: x.pM, tM: x.tM, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0);
     const day = barMode === 'day';
-    if (day) { items.forEach(x => { x.a = x.ta; x.m = x.tm; }); items.sort((p, q) => (q.a + q.m) - (p.a + p.m)); }
-    const n = items.length, W = 500, RH = 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
-    const bwid = BX - L - 6;
-    let b = `<text x="${BX + 52}" y="14" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">AGENT</text><text x="${BX + 60}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">RUČNĚ</text>${day ? '' : `<text x="${BX + 150}" y="14" fill="#3ddc84" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">DNES A / R</text>`}<text x="${W}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">PODÍL AGENTA</text>`;
+    if (day) items.forEach(x => { const q = S.rels.find(r => r.key === x.key).today; x.a = x.ta; x.m = x.tm; x.oA = q.pA; x.tA = q.tA; x.oM = q.pM; x.tM = q.tM; });
+    items.sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    const n = items.length, W = 600, RH = 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
+    const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
+    let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W - 54, 'OBJ. / PŘEP.', 'text-anchor="end"') + hd(W, '% AGENT', 'text-anchor="end"');
     items.forEach((x, i) => {
-      const y = T + i * RH, h = 18, wa = bwid * x.a / max, wm = bwid * x.m / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
+      const y = T + i * RH, h = 18, k = bwid / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
+      let xx = L, segs = '';
+      const seg = (v, fill, stroke, dash, tip) => { if (!v) return; const w = Math.max(k * v, 2); segs += `<rect x="${xx}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}" ${dash ? 'stroke-dasharray="3 2"' : ''}><title>${esc(x.name)}: ${tip} ${nf.format(v)}</title></rect>`; xx += k * v; };
+      seg(x.oA, col, col, 0, 'agent – objednávky'); seg(x.tA, col, col, 0, 'agent – přepravy');
+      const split1 = xx; if (x.tA) segs += `<rect x="${xx - k * x.tA}" y="${y}" width="${Math.max(k * x.tA, 2)}" height="${h}" fill="url(#pt)" pointer-events="none"/>`;
+      seg(x.oM, 'url(#pd)', '#f2a516', 1, 'ručně – objednávky'); seg(x.tM, 'rgba(242,165,22,.62)', '#f2a516', 1, 'ručně – přepravy');
+      const o = x.oA + x.oM, t = x.tA + x.tM;
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
-        <rect x="${L}" y="${y}" width="${Math.max(wa, x.a ? 2 : 0)}" height="${h}" fill="${col}" stroke="${col}" style="filter:drop-shadow(0 0 5px ${col})"><title>${esc(x.name)}: agent ${nf.format(x.a)}, ručně ${nf.format(x.m)}</title></rect>
-        ${x.m ? `<rect x="${L + wa}" y="${y}" width="${Math.max(wm, 3)}" height="${h}" fill="url(#pd)" stroke="#f2a516" stroke-width="1" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně ${nf.format(x.m)}</title></rect>` : ''}
+        ${segs}
         <text x="${BX + 52}" y="${y + 15}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
         <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
-        ${day ? '' : `        <text x="${BX + 150}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
+        ${day ? '' : `<text x="${BX + 158}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
+        <text x="${W - 54}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${nf.format(o)} / ${nf.format(t)}</text>
         <text x="${W}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${pct} %</text></g>`;
     });
-    const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern></defs>`;
-    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>${day ? 'přírůstek dnes (' + fmtD(today()) + ') oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
+    const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
+    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky</span><span>${day ? 'přírůstek dnes (' + fmtD(today()) + ') oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
 
