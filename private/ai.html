@@ -249,7 +249,7 @@
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
     <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
-    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div id="bars"></div></div>
+    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="weekTgl" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
   </div>
 
@@ -346,14 +346,23 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let barMode = 'day';
+  let barMode = 'day', weekOff = 0;
+  const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const weekRange = off => { const t = today(), dow = (new Date(t + 'T12:00:00Z').getUTCDay() + 6) % 7, mon = isoAdd(t, -dow - 7 * off); return [mon, isoAdd(mon, 6)]; };
+  const WEEK_NAMES = ['Tento týden', 'Minulý týden', 'Předminulý týden', 'Před předminulým'];
   function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
     const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, ...t, oA: x.pA, tA: x.tA, oM: x.pM, tM: x.tM, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0);
-    const day = barMode === 'day';
-    if (day) items.forEach(x => { const q = S.rels.find(r => r.key === x.key).today; x.a = x.ta; x.m = x.tm; x.oA = q.pA; x.tA = q.tA; x.oM = q.pM; x.tM = q.tM; });
+    const day = barMode !== 'all';
+    if (barMode === 'day') items.forEach(x => { const q = S.rels.find(r => r.key === x.key).today; x.a = x.ta; x.m = x.tm; x.oA = q.pA; x.tA = q.tA; x.oM = q.pM; x.tM = q.tM; });
+    let wk = null;
+    if (barMode === 'week') {
+      wk = weekRange(weekOff);
+      items.forEach(x => { const z = { pA: 0, pM: 0, tA: 0, tM: 0 }; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) for (const f in z) z[f] += d.rels[x.key][f] || 0; x.oA = z.pA; x.tA = z.tA; x.oM = z.pM; x.tM = z.tM; x.a = z.pA + z.tA; x.m = z.pM + z.tM; });
+    }
     items.sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    if (!items.some(x => x.a + x.m)) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné přírůstky.</div>';
     const n = items.length, W = 600, RH = 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
     const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
     let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W - 54, 'OBJ. / PŘEP.', 'text-anchor="end"') + hd(W, '% AGENT', 'text-anchor="end"');
@@ -374,7 +383,7 @@
         <text x="${W}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${pct} %</text></g>`;
     });
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
-    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky</span><span>${day ? 'přírůstek dnes (' + fmtD(today()) + ') oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
+    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek dnes (' + fmtD(today()) + ') oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
 
@@ -438,6 +447,8 @@
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
     document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
+    const wt = $('weekTgl'); wt.hidden = barMode !== 'week';
+    if (barMode === 'week') wt.innerHTML = WEEK_NAMES.map((n, i) => { const r = weekRange(i); return `<button type="button" data-w="${i}" class="${i === weekOff ? 'on' : ''}" title="${fmtD(r[0])} – ${fmtD(r[1])}">${n}</button>`; }).join('');
     if ($('perday')) $('perday').innerHTML = perDay(rels);
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
@@ -650,6 +661,7 @@
     setTimeout(() => b.classList.remove('spin'), 500);
   });
   document.querySelectorAll('#barTgl button').forEach(b => b.addEventListener('click', () => { barMode = b.dataset.m; render(); }));
+  $('weekTgl').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { weekOff = +b.dataset.w; render(); } });
   load(); setInterval(load, 60000);
 })();
 </script>
