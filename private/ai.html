@@ -121,6 +121,7 @@
   .rich h4::after{content:"";flex:1;height:1px;background:var(--line)}
   .rich .use{display:flex;gap:10px;align-items:center}
   .rich .use svg{width:92px;flex:none}
+  .tgl{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}.tgl button{background:transparent;color:var(--mut);border:1px solid rgba(94,138,255,.35);padding:5px 12px;font:600 12px Inter,sans-serif;cursor:pointer;border-radius:3px}.tgl button.on{background:rgba(94,138,255,.22);color:var(--tx,#fff);border-color:#5e8aff}
   .pdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}.pdt{font-weight:700;font-size:14px;margin-bottom:4px}.pdt span{color:var(--mut);font-weight:500;font-size:12px;margin-left:8px}
   .tblwrap{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th,.tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid rgba(94,138,255,.14);white-space:nowrap}.tbl th:first-child,.tbl td:first-child{text-align:left}.tbl small{color:var(--mut);font-weight:400}.tbl .z{color:var(--mut)}.tbl tr.today td{background:rgba(94,138,255,.08)}.tbl tr.we td{opacity:.6}.tbl b.ag{color:#3ddc84}.tbl b.mn{color:#f2a516}.tbl td.tot{font-weight:700}
   .barleg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:12px;color:var(--mut)}.barleg i{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;border:1px solid #f2a516}
@@ -248,7 +249,7 @@
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
     <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
-    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně <span style="white-space:nowrap">(od 12. 10. 2026)</span></h3><div id="bars"></div></div>
+    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div id="bars"></div></div>
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
   </div>
 
@@ -345,13 +346,16 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
+  let barMode = 'day';
   function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
     const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, since: x.since, ...t, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0).sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    const day = barMode === 'day';
+    if (day) { items.forEach(x => { x.a = x.ta; x.m = x.tm; }); items.sort((p, q) => (q.a + q.m) - (p.a + p.m)); }
     const n = items.length, W = 500, RH = 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
     const bwid = BX - L - 6;
-    let b = `<text x="${BX + 52}" y="14" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">AGENT</text><text x="${BX + 60}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">RUČNĚ</text><text x="${BX + 150}" y="14" fill="#3ddc84" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">DNES A / R</text><text x="${W}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">PODÍL AGENTA</text>`;
+    let b = `<text x="${BX + 52}" y="14" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">AGENT</text><text x="${BX + 60}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">RUČNĚ</text>${day ? '' : `<text x="${BX + 150}" y="14" fill="#3ddc84" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">DNES A / R</text>`}<text x="${W}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">PODÍL AGENTA</text>`;
     items.forEach((x, i) => {
       const y = T + i * RH, h = 18, wa = bwid * x.a / max, wm = bwid * x.m / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
@@ -359,11 +363,11 @@
         ${x.m ? `<rect x="${L + wa}" y="${y}" width="${Math.max(wm, 3)}" height="${h}" fill="url(#pd)" stroke="#f2a516" stroke-width="1" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně ${nf.format(x.m)}</title></rect>` : ''}
         <text x="${BX + 52}" y="${y + 15}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
         <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
-        <text x="${BX + 150}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>
+        ${day ? '' : `        <text x="${BX + 150}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
         <text x="${W}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${pct} %</text></g>`;
     });
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern></defs>`;
-    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>sloupec = aktuální stav v tabulce, „Dnes“ = přírůstek oproti předchozímu snímku (jen pracovní dny)</span></div>`;
+    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>${day ? 'přírůstek dnes (' + fmtD(today()) + ') oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
 
@@ -426,6 +430,7 @@
     $('pie').innerHTML = donut(rels, total);
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
+    document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
     if ($('perday')) $('perday').innerHTML = perDay(rels);
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
@@ -637,6 +642,7 @@
     try { await Promise.all([load(), $('admin').hidden ? null : loadAdmin()]); } catch (e) {}
     setTimeout(() => b.classList.remove('spin'), 500);
   });
+  document.querySelectorAll('#barTgl button').forEach(b => b.addEventListener('click', () => { barMode = b.dataset.m; render(); }));
   load(); setInterval(load, 60000);
 })();
 </script>
