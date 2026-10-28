@@ -349,29 +349,22 @@
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
     const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, since: x.since, ...t, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0).sort((p, q) => (q.a + q.m) - (p.a + p.m));
-    const W = 560, H = 316, L = 74, B = 108, T = 14, n = items.length, max = Math.max(1, ...items.map(x => x.a + x.m));
-    const step = Math.pow(10, Math.floor(Math.log10(max))), nice = Math.ceil(max / step) * step, top = nice < max * 1.05 ? nice + step : nice;
-    const bw = (W - L) / n, ph = H - B - T;
-    let g = '';
-    for (let k = 0; k <= 4; k++) {
-      const y = T + ph - ph * k / 4;
-      g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${nf.format(Math.round(top * k / 4))}</text>`;
-    }
-    let b = '';
+    const n = items.length, W = 500, RH = 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
+    const bwid = BX - L - 6;
+    let b = `<text x="${BX + 52}" y="14" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">AGENT</text><text x="${BX + 60}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5">RUČNĚ</text><text x="${BX + 150}" y="14" fill="#3ddc84" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">DNES A / R</text><text x="${W}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" text-anchor="end">PODÍL AGENTA</text>`;
     items.forEach((x, i) => {
-      const ha = ph * x.a / top, hm = ph * x.m / top, bx = L + i * bw + bw * .2, w = bw * .6, ya = T + ph - ha, ym = ya - hm, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
-      b += `<g><defs><linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="${col}" stop-opacity=".25"/></linearGradient></defs>
-        <rect x="${bx}" y="${ya}" width="${w}" height="${Math.max(ha, x.a ? 2 : 0)}" fill="url(#bg${i})" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 7px ${col})"><title>${esc(x.name)}: agent ${nf.format(x.a)}, ručně ${nf.format(x.m)}</title></rect>
-        ${x.m ? `<rect x="${bx}" y="${ym}" width="${w}" height="${Math.max(hm, 3)}" fill="url(#pd)" stroke="#f2a516" stroke-width="1" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně ${nf.format(x.m)}</title></rect>` : ''}
-        <text x="${bx + w / 2}" y="${ym - 5}" text-anchor="middle" fill="#fff" font-family="Inter" font-size="11" font-weight="600">${nf.format(x.a)}<tspan fill="#f2a516" dx="4">+${nf.format(x.m)}</tspan></text>
-        <text class="dup" x="${bx + w / 2}" y="${H - B + 78}" text-anchor="middle" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.ta)} / <tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>
-        <text x="${bx + w / 2}" y="${H - B + 96}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="10">agent ${pct} %</text>
-        <text transform="translate(${bx + w / 2 + 3},${H - B + 14}) rotate(-38)" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text></g>`;
+      const y = T + i * RH, h = 18, wa = bwid * x.a / max, wm = bwid * x.m / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
+      b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
+        <rect x="${L}" y="${y}" width="${Math.max(wa, x.a ? 2 : 0)}" height="${h}" fill="${col}" stroke="${col}" style="filter:drop-shadow(0 0 5px ${col})"><title>${esc(x.name)}: agent ${nf.format(x.a)}, ručně ${nf.format(x.m)}</title></rect>
+        ${x.m ? `<rect x="${L + wa}" y="${y}" width="${Math.max(wm, 3)}" height="${h}" fill="url(#pd)" stroke="#f2a516" stroke-width="1" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně ${nf.format(x.m)}</title></rect>` : ''}
+        <text x="${BX + 52}" y="${y + 15}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
+        <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
+        <text x="${BX + 150}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>
+        <text x="${W}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${pct} %</text></g>`;
     });
-    const lbl = `<text class="dup" x="0" y="${H - B + 78}" fill="#3ddc84" font-family="Inter" font-size="11" font-weight="700">Dnes agent / ručně</text>`;
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern></defs>`;
     const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>sloupec = aktuální stav v tabulce, „Dnes“ = přírůstek oproti předchozímu snímku (jen pracovní dny)</span></div>`;
-    return `<svg viewBox="0 0 ${W} ${H}">${defs}${g}${b}${lbl}</svg>${leg}`;
+    return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
 
   // po dnech: u každé relace jeden dvojitý sloupec (agent | ručně) pro každý den, pod tím tabulka
