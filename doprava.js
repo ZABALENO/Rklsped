@@ -214,26 +214,30 @@ app.get('/api/agents', async (req, res) => {
     // list „Počty pozic“ = snímky stavu (kumulativní počty ke dni); denní přírůstek = rozdíl oproti předchozímu snímku, víkend/svátek se přičte k dalšímu pracovnímu dni
     const dl = sheet.daily; if (!dl) return null;
     const dnames = {}; for (const n of dl.relations) dnames[nk(n)] = n;
-    const days = Object.keys(dl.days).sort();
     const F = ['pA', 'pM', 'tA', 'tM'], z = () => ({ pA: 0, pM: 0, tA: 0, tM: 0 });
     const incs = {}, rels = [];
     for (const k of Object.keys(dnames)) {
-      let prev = null, pend = z(), cur = z(), td = z();
-      for (const d of days) {
-        const v = dl.days[d][dnames[k]]; if (!v) continue;
+      let prev = null, pend = z(), cur = z(), td = z(), lastDate = null;
+      for (const sn of dl.snaps) {
+        const v = sn.rels[dnames[k]]; if (!v) continue;
         cur = v;
-        if (prev) {
-          for (const f of F) pend[f] += Math.max(0, (v[f] || 0) - (prev[f] || 0));
-          if (isWorkday(new Date(d + 'T12:00:00Z'))) { (incs[d] = incs[d] || {})[k] = pend; if (d === today) td = pend; pend = z(); }
-        }
+        const had = !!prev;
+        if (prev) for (const f of F) pend[f] += Math.max(0, (v[f] || 0) - (prev[f] || 0));
         prev = v;
+        // přírůstek se zapíše ke dni posledního snímku; víkend/svátek se přenese na další pracovní den
+        if (had && isWorkday(new Date(sn.date + 'T12:00:00Z'))) {
+          const o = (incs[sn.date] = incs[sn.date] || {})[k] = (incs[sn.date] || {})[k] || z();
+          for (const f of F) { o[f] += pend[f]; pend[f] = 0; }
+        }
       }
+      if (incs[today] && incs[today][k]) td = incs[today][k];
       const t = { pA: cur.pA || 0, pM: cur.pM || 0, tA: cur.tA || 0, tM: cur.tM || 0 };
       if (adjOn && adjOn.key === k) { t.pA += adjOn.count || 0; t.tA += adjOn.trips || 0; }
       rels.push(Object.assign({ key: k, name: prettyName(k), since: SINCE[k] || '', today: td }, t));
     }
+    const lastDate = dl.snaps.length ? dl.snaps[dl.snaps.length - 1].date : null;
     const outDays = Object.keys(incs).sort().reverse().slice(0, 60).map(d => ({ date: d, wd: true, rels: incs[d] }));
-    return { rels, days: outDays, lastDate: days[days.length - 1] || null, snapshot: true };
+    return { rels, days: outDays, lastDate, snapshot: true };
   })();
   if (split) for (const sr of split.rels) { const r = relations.find(x => x.key === sr.key); if (r) { r.count = sr.pA + sr.tA; r.agent = sr.pA; r.manual = sr.pM; r.trips = sr.tA; r.tripsManual = sr.tM; r.date = split.lastDate; r.todayAgent = sr.today.pA + sr.today.tA; r.todayManual = sr.today.pM + sr.today.tM; } }
   const hd = Object.keys(store.mem.agent);
