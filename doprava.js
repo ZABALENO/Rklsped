@@ -194,7 +194,7 @@ app.get('/api/agents', async (req, res) => {
   const histKeys = new Set();
   for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) if (!isTripKey(k)) histKeys.add(k);
   const txtKeys = (sheet.texts || []).map(t => nk(t.name));
-  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
+  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys, ...(sheet.daily ? sheet.daily.relations.map(nk) : [])].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
   const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
   // „Zbývá“: dnešní řádky relace (sloupec Tuz.Z / Relace), jejichž číslo objednávky nebo přepravy má za lomítkem a rokem písmeno (např. ZZ/26N13892); řádek se počítá jednou
   const pend = {};
@@ -217,7 +217,7 @@ app.get('/api/agents', async (req, res) => {
     const days = Object.keys(dl.days).sort();
     const F = ['pA', 'pM', 'tA', 'tM'], z = () => ({ pA: 0, pM: 0, tA: 0, tM: 0 });
     const incs = {}, rels = [];
-    for (const k of Object.keys(SINCE).filter(k => dnames[k])) {
+    for (const k of Object.keys(dnames)) {
       let prev = null, pend = z(), cur = z(), td = z();
       for (const d of days) {
         const v = dl.days[d][dnames[k]]; if (!v) continue;
@@ -230,7 +230,7 @@ app.get('/api/agents', async (req, res) => {
       }
       const t = { pA: cur.pA || 0, pM: cur.pM || 0, tA: cur.tA || 0, tM: cur.tM || 0 };
       if (adjOn && adjOn.key === k) { t.pA += adjOn.count || 0; t.tA += adjOn.trips || 0; }
-      rels.push(Object.assign({ key: k, name: prettyName(k), since: SINCE[k], today: td }, t));
+      rels.push(Object.assign({ key: k, name: prettyName(k), since: SINCE[k] || '', today: td }, t));
     }
     const outDays = Object.keys(incs).sort().reverse().slice(0, 60).map(d => ({ date: d, wd: true, rels: incs[d] }));
     return { rels, days: outDays, lastDate: days[days.length - 1] || null, snapshot: true };

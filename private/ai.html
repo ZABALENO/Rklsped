@@ -347,7 +347,8 @@
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
   function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
-    const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, since: x.since, ...t, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
+    const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, since: x.since, ...t, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0).sort((p, q) => (q.a + q.m) - (p.a + p.m));
     const W = 560, H = 316, L = 74, B = 108, T = 14, n = items.length, max = Math.max(1, ...items.map(x => x.a + x.m));
     const step = Math.pow(10, Math.floor(Math.log10(max))), nice = Math.ceil(max / step) * step, top = nice < max * 1.05 ? nice + step : nice;
     const bw = (W - L) / n, ph = H - B - T;
@@ -360,7 +361,7 @@
     items.forEach((x, i) => {
       const ha = ph * x.a / top, hm = ph * x.m / top, bx = L + i * bw + bw * .2, w = bw * .6, ya = T + ph - ha, ym = ya - hm, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
       b += `<g><defs><linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="${col}" stop-opacity=".25"/></linearGradient></defs>
-        <rect x="${bx}" y="${ya}" width="${w}" height="${Math.max(ha, x.a ? 2 : 0)}" fill="url(#bg${i})" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 7px ${col})"><title>${esc(x.name)}: agent ${nf.format(x.a)} (od ${fmtD(x.since)}), ručně ${nf.format(x.m)}</title></rect>
+        <rect x="${bx}" y="${ya}" width="${w}" height="${Math.max(ha, x.a ? 2 : 0)}" fill="url(#bg${i})" stroke="${col}" stroke-width="1" style="filter:drop-shadow(0 0 7px ${col})"><title>${esc(x.name)}: agent ${nf.format(x.a)}, ručně ${nf.format(x.m)}</title></rect>
         ${x.m ? `<rect x="${bx}" y="${ym}" width="${w}" height="${Math.max(hm, 3)}" fill="url(#pd)" stroke="#f2a516" stroke-width="1" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně ${nf.format(x.m)}</title></rect>` : ''}
         <text x="${bx + w / 2}" y="${ym - 5}" text-anchor="middle" fill="#fff" font-family="Inter" font-size="11" font-weight="600">${nf.format(x.a)}<tspan fill="#f2a516" dx="4">+${nf.format(x.m)}</tspan></text>
         <text class="dup" x="${bx + w / 2}" y="${H - B + 78}" text-anchor="middle" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.ta)} / <tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>
@@ -382,7 +383,7 @@
     let html = '<div class="pdgrid">';
     for (const r of S.rels) {
       const pts = days.map(d => { const v = d.rels[r.key]; return { date: d.date, wd: d.wd, ...(v ? AM(v) : { a: 0, m: 0 }), has: !!v }; }).filter(p => p.date >= r.since);
-      if (!pts.length) continue;
+      if (!pts.length || !pts.some(p => p.a + p.m)) continue;
       const W = 520, H = 190, L = 34, T = 12, B = 28, max = Math.max(1, ...pts.map(p => p.a + p.m)), ph = H - T - B, bw = (W - L) / pts.length, col = color(cI(r.key));
       let g = '';
       for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; g += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 5}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="9">${nf.format(Math.round(max * k / 3))}</text>`; }
@@ -398,7 +399,7 @@
     }
     html += '</div>';
     // souhrnná tabulka: každý den, u každé relace agent / ručně
-    const cols = S.rels;
+    const cols = S.rels.filter(r => S.days.some(d => d.rels[r.key] && AM(d.rels[r.key]).a + AM(d.rels[r.key]).m));
     html += `<div class="tblwrap"><table class="tbl"><thead><tr><th>Datum</th>${cols.map(r => `<th style="color:${color(cI(r.key))}">${esc(r.name)}<br><small>agent / ručně</small></th>`).join('')}<th>Celkem<br><small>agent / ručně</small></th></tr></thead><tbody>` +
       S.days.filter(d => Object.keys(d.rels).length).map(d => {
         let ta = 0, tm = 0;
