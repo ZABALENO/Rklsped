@@ -253,7 +253,7 @@
   </div>
 
   <div class="sec">Agent vs. ručně po dnech</div>
-  <div class="panel"><h3>Kolik pozic (vč. přeprav) denně zapsal agent a kolik někdo jiný – u každé relace</h3><div id="perday"></div></div>
+  <div class="panel"><h3>Denní přírůstek pozic (vč. přeprav) – kolik přibylo zápisem agenta a kolik ručně, u každé relace (jen pracovní dny)</h3><div id="perday"></div></div>
 
   <div class="sec">Na co agenty využíváme nejvíce</div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
@@ -369,7 +369,7 @@
     });
     const lbl = `<text class="dup" x="0" y="${H - B + 78}" fill="#3ddc84" font-family="Inter" font-size="11" font-weight="700">Dnes agent / ručně</text>`;
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern></defs>`;
-    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>součty od nasazení agenta: ${items.map(x => esc(x.name) + ' ' + fmtD(x.since)).join(', ')}</span></div>`;
+    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>sloupec = aktuální stav v tabulce, „Dnes“ = přírůstek oproti předchozímu snímku (jen pracovní dny)</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${g}${b}${lbl}</svg>${leg}`;
   }
 
