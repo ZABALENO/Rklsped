@@ -181,6 +181,17 @@ app.post('/api/agents/users/label', async (req, res) => {
   await store.put('aiuser', id, { ...u, label: String((req.body && req.body.label) || '').trim().slice(0, 40) });
   res.json({ ok: true });
 });
+// skrytá stránka s přepisem souhrnu agentizace (odškrtávání + poznámky, sdílené mezi zařízeními)
+app.get('/ai/plan', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'plan.html')); });
+app.get('/api/agents/plan', (req, res) => res.json({ items: store.mem.plan || {} }));
+app.post('/api/agents/plan', async (req, res) => {
+  const id = String((req.body && req.body.id) || '').slice(0, 40);
+  if (!/^[a-z0-9-]+$/i.test(id)) return res.status(400).json({ error: 'Neplatné ID.' });
+  const cur = store.mem.plan[id] || {}, b = req.body || {};
+  const next = { done: b.done === undefined ? !!cur.done : !!b.done, note: b.note === undefined ? (cur.note || '') : String(b.note).slice(0, 4000), at: new Date().toISOString() };
+  await store.put('plan', id, next.done || next.note ? next : null);
+  res.json({ ok: true });
+});
 app.get('/api/agents', async (req, res) => {
   await refreshSheet(false);
   const cur = new Map();
@@ -358,7 +369,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));

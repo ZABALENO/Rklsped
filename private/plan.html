@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Souhrn agentizace – plán</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#05070f;--panel:rgba(8,14,34,.88);--line:rgba(120,160,255,.35);--cy:#7aa2ff;--am:#f2a516;--gr:#3ddc84;--tx:#f2f5ff;--mut:#aab7d6;--in:rgba(255,255,255,.06)}
+  :root[data-theme=day]{--bg:#f3f5fb;--panel:#fff;--line:rgba(29,56,143,.25);--cy:#1d388f;--am:#b87400;--gr:#12803f;--tx:#14182b;--mut:#51597a;--in:rgba(29,56,143,.06)}
+  *{box-sizing:border-box}html{background:var(--bg)}
+  body{margin:0;color:var(--tx);font:500 15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",system-ui,sans-serif;background:var(--bg)}
+  .wrap{max-width:980px;margin:0 auto;padding:18px 16px 60px}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}
+  h1{margin:0;font:800 clamp(18px,3vw,26px)/1.1 inherit;letter-spacing:1.5px;text-transform:uppercase}
+  header a,header button{margin-left:auto;color:var(--cy);border:1px solid var(--line);background:transparent;padding:6px 12px;border-radius:4px;font:600 12px Inter,sans-serif;text-decoration:none;cursor:pointer}
+  header button{margin-left:0}
+  .lead{color:var(--mut);font-size:13px;margin:0 0 16px}
+  .tot{display:flex;gap:14px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+  .tot b{font-size:22px}.bar{flex:1;min-width:140px;height:8px;background:var(--in);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gr);transition:width .3s}
+  details.sec{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:10px}
+  details.sec>summary{cursor:pointer;list-style:none;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+  details.sec>summary::-webkit-details-marker{display:none}
+  details.sec>summary::before{content:"▸";color:var(--cy);transition:transform .15s}
+  details.sec[open]>summary::before{transform:rotate(90deg)}
+  .cnt{margin-left:auto;font-size:12px;font-weight:600;color:var(--mut);white-space:nowrap}.cnt.ok{color:var(--gr)}
+  .body{padding:0 14px 12px}
+  .grp{font:700 11px Inter,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--am);margin:12px 0 4px}
+  .it{display:grid;grid-template-columns:24px 1fr;gap:4px 10px;padding:8px 0;border-top:1px solid var(--line)}
+  .it:first-of-type{border-top:0}
+  .it input[type=checkbox]{width:20px;height:20px;accent-color:var(--gr);margin:1px 0 0;cursor:pointer}
+  .it .tx{cursor:pointer}.it.done .tx{text-decoration:line-through;opacity:.55}
+  .it textarea{grid-column:2;width:100%;min-height:34px;resize:vertical;background:var(--in);border:1px solid var(--line);color:var(--tx);border-radius:4px;padding:6px 8px;font:500 13px/1.4 inherit}
+  .it textarea::placeholder{color:var(--mut);opacity:.7}
+  .it .st{grid-column:2;font-size:11px;color:var(--mut);min-height:13px}
+  .it .note-btn{grid-column:2;justify-self:start;background:none;border:0;color:var(--cy);font:600 12px Inter,sans-serif;cursor:pointer;padding:0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}th,td{text-align:left;padding:6px 8px;border-top:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:600}
+  .warn{background:var(--in);border-left:3px solid var(--am);padding:8px 10px;font-size:13px;margin-top:10px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Souhrn agentizace RKL Opava</h1><button id="theme" type="button">☾ / ☀</button><a href="/ai">← zpět na dashboard</a></header>
+  <p class="lead">Přepis dokumentu „Kompletní souhrn – Agentizace RKL Opava“ (stav podkladů: říjen 2026, sestaveno 28. 10. 2026). Zaškrtni, co je hotové, a k bodům si piš poznámky – ukládá se automaticky a je to stejné na všech zařízeních. Stránka není nikde odkazovaná.</p>
+  <div class="tot"><b id="tp">0 / 0</b><span>splněno celkem</span><div class="bar"><i id="tb" style="width:0"></i></div></div>
+  <div id="root"></div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  // ---- obsah dokumentu ----
+  const SECTIONS = [
+    { id: 'a', title: '1. Manažerské shrnutí – hlavní doporučení', open: false, intro: 'Projekt zahrnuje nejméně 11 pojmenovaných pracovních oblastí: dispečink, zpracování dat, sklad, celní služby, sběrné služby, reklamace, technickou správu budov, personalistiku a mzdy, účetnictví a fakturaci, sekretariát a provozní dashboardy. Cílem je snížit ruční přepisování, zrychlit zpracování dokumentů, zavést opakovatelné procesy a přesunout zaměstnance od rutinních úkonů ke kontrole výjimek a důležitým rozhodnutím.',
+      items: ['Nejdříve ověřit skutečný stav úkolů, protože všechny viditelné termíny jsou k 28. 10. 2026 již v minulosti.', 'Jako první detailně standardizovat agenta dispečera a agenta zpracování dat.', 'Každému agentovi určit odpovědnou osobu, přesný rozsah oprávnění a pravidla předání případu člověku.', 'U každé automatizace ověřovat nejen provedení akce, ale i její výsledek.', 'Měřit počet dokončených případů, úspěšnost bez zásahu člověka, chybovost, dobu zpracování a skutečnou úsporu času.'] },
+    { id: 'b', title: '2. Pracovní oblasti a agenti', groups: [
+      ['1. Agent dispečer', ['Vytěžování a zapisování objednávek.', 'Vkládání volných přeprav na burzu Comarr podle skupin Z1–Z4, V1–V4, J a E.', 'Vyhledávání vhodných nakládek do volných vozidel a případné provolávání.', 'Kontrola odpovědí na poptávky.', 'Doplňování cen z ceníků.', 'Kontrola objednávek od spedicí.', 'Návrhy odpovědí na poptávky včetně ceny.', 'Blokace časových oken.', 'Kontrola, zda byly kroky provedeny a data uložena v termínu.']],
+      ['2. Agent zpracování dat', ['Kontrola naskenovaných dokumentů, případně i v nočních hodinách.', 'Uzavírání zpracovaných položek.', 'Komunikace s dopravci při zjištění chyb nebo problémů v dokumentech.', 'Doporučené doplnění: kontrola úplnosti, čitelnosti, správného přiřazení a duplicit.']],
+      ['3. Agent referent skladu', ['Zpracování podkladů pro mzdy skladníků.', 'Agenda nástupů zaměstnanců, smluv a souvisejících e-mailů.', 'Zpracování odměn zaměstnanců.', 'Upřesnit rozsah dalších skladových administrativních úkonů.']],
+      ['4. Agent celní služby', ['Digitalizace celních procesů.', 'První krok: digitalizace evidence a zrušení papírového sešitu.', 'Rozepsat další kroky (zatím nejsou v podkladech).']],
+      ['5. Agent sběrných služeb', ['Samostatná oblast automatizace sběrných přeprav.', 'Doplnit konkrétní kontrolní seznam a výstupy.']],
+      ['6. Agent reklamace', ['Samostatná agenda reklamací.', 'Doporučené doplnění: evidence případu, kontrola dokladů, termíny, komunikace, návrh řešení a uzavření reklamace.']],
+      ['7. Agent technika budova', ['Založený úkol pro automatizaci technické správy budov.', 'Doplnit kontrolní seznam, odpovědnosti a výstupy.']],
+      ['8. Agent personalistiky / mzdové účetní', ['Podklady pro mzdy řidičů a skladníků.', 'Nástupy zaměstnanců, smlouvy a související e-maily.', 'Zpracování odměn řidičů.', 'Oddělit působnost od agenta referenta skladu.']],
+      ['9. Agent účetní / fakturantka', ['Vyzvedávání faktur, případně i v nočních hodinách.', 'Dopracování zbývajících faktur k automatickému odesílání.', 'Propojení Plaud přes API s příslušným systémem.', 'Ukládání přepisů schůzek v textové podobě na SharePoint.', 'Vyhledávání informací napříč zápisy a předávání kontextu předchozích schůzek obchodnímu agentovi.', 'Propojení kontextu schůzek s výsledky LORI, například tržbami a počtem přeprav.']],
+      ['10. Agent sekretariát', ['Porovnávání cen pohonných hmot.', 'Vyhledávání e-mailů s největším počtem časově náročných operací.', 'Přidávání a odebírání narozenin v Outlooku.', 'Další administrativní úkoly po potvrzení odpovědnosti.']],
+      ['11. Dashboardy na dispečinky, spedice a dopravy', ['Založený úkol pro vytvoření provozních dashboardů.', 'Metriky: objem zpracovaných objednávek, využití kapacity, reakční doba, chybovost a podíl automatizovaných úkonů.', 'Dashboard by měl sjednotit výsledky agentů a umožnit jejich porovnání.']]
+    ] },
+    { id: 'c', title: '3. Další kontrolní body dispečinku', intro: 'Tyto body je vhodné sjednotit do jednoho procesu agenta dispečera, aby se kontrolní seznamy neduplikovaly a každá činnost měla jasný výstup.',
+      items: ['Burza přeprav – vkládání volných přeprav do Comarr podle určených skupin.', 'Nakládky – vyhledávání vhodných nakládek do volných vozidel.', 'Poptávky – kontrola odpovědí a příprava odpovědí s cenou.', 'Ceníky – doplňování cen z ceníku.', 'Objednávky – kontrola objednávek od spedicí.', 'Časová okna – blokování časových oken.', 'Dokončení – ověření, že všechny kroky byly provedeny a data uložena v termínu.'] },
+    { id: 'd', title: '4. Termíny a zachycený stav', table: [['Úkol', 'Termín', 'Stav na screenshotu'], ['Agent dispečer', '25. 10. 2026', 'Nezahájeno'], ['Agent zpracování dat', '14. 10. 2026', 'Nezahájeno'], ['Agent referent skladu', '14. 10. 2026', 'Nezahájeno'], ['Agent celní služby', '14. 10. 2026', 'Nezahájeno'], ['Agent sběrných služeb', '14. 10. 2026', 'Nezahájeno'], ['Agent reklamace', '14. 10. 2026', 'Nezahájeno'], ['Agent technika budova', '14. 10. 2026', 'Nezahájeno'], ['Agent personalistiky / mzdové účetní', '14. 10. 2026', 'Nezahájeno'], ['Agent účetní / fakturantka', '14. 10. 2026', 'Nezahájeno'], ['Agent sekretariát', '14. 10. 2026', 'Nezahájeno']],
+      warn: 'Termíny a stavy jsou přepsány z dodaných screenshotů. K 28. 10. 2026 jsou všechny uvedené termíny v minulosti. Aktuální stav v aplikaci nebyl živě ověřen.',
+      items: ['Ověřit, co bylo skutečně dokončeno, a zbylé úkoly přeplánovat.'] },
+    { id: 'e', title: '5. Zachycené počty kontrolních položek (Microsoft To Do)', table: [['Agent / oblast', 'Hotovo / celkem', 'Hlavní obsah'], ['Agent dispečer', '0 / 10', 'Objednávky a dispečerské činnosti'], ['Agent zpracování dat', '0 / 2', 'Dokumenty a komunikace s dopravci'], ['Agent referent skladu', '0 / 2', 'Skladová agenda a související úkoly'], ['Agent celní služby', '0 / 1', 'Digitalizace a zrušení sešitu'], ['Agent personalistiky / mzdové účetní', '0 / 3', 'Mzdové podklady, nástupy, odměny'], ['Agent účetní / fakturantka', '0 / 5', 'Faktury, Plaud, SharePoint, vyhledávání a LORI'], ['Agent sekretariát', '0 / 3', 'Pohonné hmoty, e-maily, narozeniny']],
+      warn: 'Počty odpovídají hodnotám viditelným na screenshotech. U některých dalších oblastí nebyl celkový počet položek viditelný.' },
+    { id: 'f', title: '6. Doporučené pořadí implementace', groups: [
+      ['Fáze 1 – Dispečink a zpracování dat (nejvyšší priorita)', ['Automatické vytěžování objednávek a dokumentů.', 'Kontrola povinných údajů a duplicit.', 'Návrhy cenových nabídek a kontrola odpovědí.', 'Záznam výsledku každé operace a eskalace nejasností člověku.']],
+      ['Fáze 2 – Fakturace a administrativa (druhá priorita)', ['Vyzvedávání a třídění faktur.', 'Kontrola úplnosti a příprava odesílání.', 'Automatizace sekretariátních úkolů.', 'Schválení před finančně nebo právně významnými akcemi.']],
+      ['Fáze 3 – Sklad, mzdy a personalistika (třetí priorita)', ['Digitalizace podkladů pro mzdy a odměny.', 'Příprava dokumentů k nástupu.', 'Kontrola úplnosti podkladů před předáním odpovědné osobě.']],
+      ['Fáze 4 – Specializované procesy (čtvrtá priorita)', ['Celní služby a digitalizace evidence.', 'Sběrné služby.', 'Reklamace.', 'Technická správa budov.']],
+      ['Fáze 5 – Provozní dashboardy (průběžně a po ověření dat)', ['Sjednocení výsledků agentů.', 'Měření výkonu a úspor.', 'Porovnání úspěšnosti automatizace mezi oblastmi.']]
+    ], warn: 'Toto pořadí je doporučení podle očekávaného provozního přínosu, nikoliv potvrzený plán vedení.' },
+    { id: 'g', title: '7. Co je potřeba dopracovat',
+      items: ['Termíny: ověřit, co bylo skutečně dokončeno, a zbylé úkoly přeplánovat.', 'Odpovědnosti: každému procesu určit odpovědnou osobu za výjimky a kontrolu výsledků.', 'Překryv kompetencí: oddělit odpovědnost referenta skladu a personalistiky/mzdové účetní – kdo připravuje data, kdo kontroluje a kdo schvaluje.', 'Kontrola dokončení: ověřovat výsledek akce, například uložení objednávky, přiřazení dokumentu nebo úspěšné odeslání.', 'Schvalování: stanovit, které úkony může agent provést sám a které vyžadují potvrzení člověka.', 'Měření přínosu: sledovat dokončené případy, chybovost, lidské zásahy a skutečně ušetřený čas.'] },
+    { id: 'h', title: '8. Jednotný standard pro každého AI agenta', table: [['Položka', 'Co musí být definováno'], ['Účel', 'Jakou konkrétní práci agent přebírá.'], ['Vstupy', 'Z jakých e-mailů, dokumentů, aplikací nebo dat vychází.'], ['Postup', 'Přesné pořadí kroků a pravidla rozhodování.'], ['Výstup', 'Co musí být po dokončení vytvořeno, uloženo nebo změněno.'], ['Kontrola', 'Jak se ověří správnost a úplnost.'], ['Výjimky', 'Kdy agent zastaví práci a předá případ člověku.'], ['Oprávnění', 'Co může provést sám a co vyžaduje potvrzení.'], ['Metriky', 'Počet případů, úspěšnost, chyby, čas a zásahy člověka.']],
+      items: ['Standard (účel, vstupy, postup, výstup, kontrola, výjimky, oprávnění, metriky) vypracovaný pro agenta dispečera.', 'Standard vypracovaný pro agenta zpracování dat.'] },
+    { id: 'i', title: '9. Doporučený dashboard pro vedení', table: [['Ukazatel', 'Co vyhodnocovat'], ['Objem práce', 'Kolik případů agent zpracoval.'], ['Úspěšnost', 'Kolik případů dokončil bez lidského zásahu.'], ['Chybovost', 'Kolik případů muselo být opraveno.'], ['Rychlost', 'Průměrná doba zpracování.'], ['Eskalace', 'Kolik případů předal zaměstnancům.'], ['Úspora času', 'Rozdíl mezi původní a skutečnou dobou práce.'], ['Finanční přínos', 'Ověřená úspora oproti provozním nákladům agenta.']],
+      warn: 'Dashboard by měl umožnit pohled podle agenta, dne, týdne a měsíce. Neúspěšné pokusy a případy pouze připravené, ale nedokončené, je nutné evidovat odděleně.' },
+    { id: 'j', title: '10. Závěr a první praktický krok', intro: 'Největší přínos lze očekávat tehdy, když budou jednotlivé agenty řídit jednotné procesy, měřitelná kritéria úspěchu a jasná pravidla pro lidské schválení.',
+      items: ['Ověřit stav úkolů s prošlými termíny.', 'Dokončit podrobné postupy dispečera a zpracování dat.', 'Teprve na ověřených procesech stavět další automatizace.'] }
+  ];
+  // přiřazení ID položkám (stabilní: sekce + pořadí)
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  for (const s of SECTIONS) { let n = 0; s.all = []; for (const t of s.items || []) s.all.push({ id: s.id + '-' + (++n), t }); for (const g of s.groups || []) { g.its = g[1].map(t => ({ id: s.id + '-' + (++n), t })); s.all.push(...g.its); } }
+  let ST = {}; const timers = {};
+  async function api(path, body) { const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}); if (r.status === 401) { location.href = '/ai'; throw 0; } return r.json(); }
+  const itemHtml = it => { const st = ST[it.id] || {}; return `<div class="it${st.done ? ' done' : ''}" data-id="${it.id}"><input type="checkbox" ${st.done ? 'checked' : ''} aria-label="Splněno"><div class="tx">${esc(it.t)}</div>${st.note ? '' : '<button class="note-btn" type="button">+ poznámka</button>'}<textarea ${st.note ? '' : 'hidden'} placeholder="Poznámka…" maxlength="4000">${esc(st.note || '')}</textarea><div class="st"></div></div>`; };
+  function counts() { let d = 0, t = 0; const per = {}; for (const s of SECTIONS) { const a = s.all.length, b = s.all.filter(i => (ST[i.id] || {}).done).length; per[s.id] = [b, a]; d += b; t += a; } return { d, t, per }; }
+  function updCounts() {
+    const c = counts();
+    $('tp').textContent = c.d + ' / ' + c.t; $('tb').style.width = (c.t ? 100 * c.d / c.t : 0) + '%';
+    for (const s of SECTIONS) { const el = document.querySelector(`[data-cnt="${s.id}"]`); if (!el) continue; const [b, a] = c.per[s.id]; el.textContent = a ? b + ' / ' + a : ''; el.classList.toggle('ok', a && b === a); }
+  }
+  function render() {
+    const opened = new Set([...document.querySelectorAll('details.sec[open]')].map(e => e.dataset.s));
+    $('root').innerHTML = SECTIONS.map(s => {
+      let h = `<details class="sec" data-s="${s.id}" ${opened.has(s.id) ? 'open' : ''}><summary>${esc(s.title)}<span class="cnt" data-cnt="${s.id}"></span></summary><div class="body">`;
+      if (s.intro) h += `<p class="lead" style="margin-top:0">${esc(s.intro)}</p>`;
+      if (s.table) h += '<table><thead><tr>' + s.table[0].map(x => `<th>${esc(x)}</th>`).join('') + '</tr></thead><tbody>' + s.table.slice(1).map(r => '<tr>' + r.map(x => `<td>${esc(x)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+      if (s.warn) h += `<div class="warn">${esc(s.warn)}</div>`;
+      const direct = s.all.filter(i => !(s.groups || []).some(g => g.its.includes(i)));
+      if (direct.length) h += `<div class="grp">${s.table ? 'Úkoly' : 'Body'}</div>` + direct.map(itemHtml).join('');
+      for (const g of s.groups || []) h += `<div class="grp">${esc(g[0])}</div>` + g.its.map(itemHtml).join('');
+      return h + '</div></details>';
+    }).join('');
+    updCounts();
+  }
+  function save(id, patch, el) {
+    const st = el.querySelector('.st'); st.textContent = 'ukládám…';
+    clearTimeout(timers[id]);
+    timers[id] = setTimeout(async () => { try { await api('/api/agents/plan', { id, ...patch }); st.textContent = 'uloženo'; setTimeout(() => { if (st.textContent === 'uloženo') st.textContent = ''; }, 1500); } catch (e) { st.textContent = 'chyba ukládání'; } }, patch.note !== undefined ? 600 : 0);
+  }
+  const root = $('root');
+  root.addEventListener('change', e => { const it = e.target.closest('.it'); if (!it || e.target.type !== 'checkbox') return; const id = it.dataset.id; ST[id] = { ...(ST[id] || {}), done: e.target.checked }; it.classList.toggle('done', e.target.checked); updCounts(); save(id, { done: e.target.checked }, it); });
+  root.addEventListener('input', e => { if (e.target.tagName !== 'TEXTAREA') return; const it = e.target.closest('.it'), id = it.dataset.id; ST[id] = { ...(ST[id] || {}), note: e.target.value }; save(id, { note: e.target.value }, it); });
+  root.addEventListener('click', e => {
+    const it = e.target.closest('.it'); if (!it) return;
+    if (e.target.classList.contains('note-btn')) { const ta = it.querySelector('textarea'); ta.hidden = false; e.target.remove(); ta.focus(); }
+    else if (e.target.classList.contains('tx')) { const cb = it.querySelector('input'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change', { bubbles: true })); }
+  });
+  // téma sdílené s dashboardem
+  try { const t = localStorage.getItem('rklAiTheme'); if ((t || '').split('|')[0] === 'day') document.documentElement.dataset.theme = 'day'; } catch (e) {}
+  $('theme').addEventListener('click', () => { const n = document.documentElement.dataset.theme === 'day' ? 'night' : 'day'; document.documentElement.dataset.theme = n; try { localStorage.setItem('rklAiTheme', n); } catch (e) {} });
+  (async () => { try { ST = (await api('/api/agents/plan')).items || {}; } catch (e) {} render(); })();
+})();
+</script>
+</body>
+</html>
