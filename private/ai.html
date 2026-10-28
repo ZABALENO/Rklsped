@@ -92,7 +92,7 @@
   tr.today td:first-child::after{content:" • dnes";color:var(--lm);font-size:11px}
 
   .phones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 18px}
-  .ph{align-self:start}.ph.empty{order:2}.ph.empty .dev{display:none}.ph.empty .t{cursor:pointer;padding:9px 12px;border:1px dashed var(--c);opacity:.7;margin:0}.ph.empty .t:hover{opacity:1;background:rgba(94,138,255,.08)}.ph .t{cursor:pointer}
+  .ph{align-self:start}.ph.empty{order:0}.ph.empty .dev{display:none}.ph.empty .t{cursor:pointer;padding:9px 12px;border:1px dashed var(--c);opacity:.7;margin:0}.ph.empty .t:hover{opacity:1;background:rgba(94,138,255,.08)}.ph .t{cursor:pointer}
   .ph .t{display:flex;align-items:center;gap:9px;margin-bottom:8px;font:700 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase}
   .ph .t i{width:10px;height:10px;transform:rotate(45deg);box-shadow:0 0 10px currentColor}
   .ph .t span{margin-left:auto;font:500 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);letter-spacing:0;text-transform:none}
@@ -464,13 +464,13 @@
         <div class="dev"><div class="rich"></div><textarea data-k="${esc(x.key)}" maxlength="6000" placeholder="Jak ${esc(x.name)} využívá agenta… (text se ukládá automaticky)" spellcheck="false"></textarea></div></div>`).join('');
       $('phones').querySelectorAll('textarea').forEach(bindText);
       $('phones').querySelectorAll('.ph .t').forEach(h => h.addEventListener('click', () => {
-        const p = h.parentElement; if (p.classList.contains('empty')) { p.dataset.open = '1'; p.classList.remove('empty'); p.querySelector('textarea').focus(); }
-        else if (!p.querySelector('textarea').value.trim()) { delete p.dataset.open; p.classList.add('empty'); }
+        const p = h.parentElement; if (p.classList.contains('empty')) { p.dataset.open = '1'; p.classList.remove('empty'); if (!p.querySelector('textarea').readOnly) p.querySelector('textarea').focus(); }
+        else { delete p.dataset.open; p.classList.add('empty'); }
       }));
     }
     $('phones').querySelectorAll('.ph').forEach(p => {
       const t = p.querySelector('textarea'), v0 = R.texts[t.dataset.k] || '';
-      p.classList.toggle('empty', !v0.trim() && !t.value.trim() && !p.dataset.open);
+      p.classList.toggle('empty', !p.dataset.open);
     });
     $('phones').querySelectorAll('textarea').forEach(t => {
       const fromSheet = (R.sheetKeys || []).includes(t.dataset.k);
