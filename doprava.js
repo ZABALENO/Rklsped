@@ -224,8 +224,8 @@ app.get('/api/agents', async (req, res) => {
         const had = !!prev;
         if (prev) for (const f of F) pend[f] += Math.max(0, (v[f] || 0) - (prev[f] || 0));
         prev = v;
-        // přírůstek se zapíše ke dni posledního snímku; víkend/svátek se přenese na další pracovní den
-        if (had && isWorkday(new Date(sn.date + 'T12:00:00Z'))) {
+        // přírůstek se zapíše ke dni posledního snímku; víkend/svátek se přenese na další pracovní den (dnešní den se ukáže vždy hned)
+        if (had && (sn.date === today || isWorkday(new Date(sn.date + 'T12:00:00Z')))) {
           const o = (incs[sn.date] = incs[sn.date] || {})[k] = (incs[sn.date] || {})[k] || z();
           for (const f of F) { o[f] += pend[f]; pend[f] = 0; }
         }
