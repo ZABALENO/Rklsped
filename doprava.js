@@ -208,6 +208,30 @@ app.get('/api/agents', async (req, res) => {
   if (adjOn) for (const r of relations) if (r.key === adjOn.key) {
     r.count = (r.count || 0) + (adjOn.count || 0); r.trips = (r.trips || 0) + (adjOn.trips || 0); r.date = r.date || today;
   }
+  // agent vs. ručně (list „Počty pozic“, denní řádky); součty jen od dne nasazení agenta, Západ 1 + základ
+  const SINCE = { 'zapad 1': '2026-10-12', 'vnitro 2': '2026-10-19', 'vnitro 1': '2026-10-26' };
+  const split = (() => {
+    const dl = sheet.daily; if (!dl) return null;
+    const dnames = {}; for (const n of dl.relations) dnames[nk(n)] = n;
+    const days = Object.keys(dl.days).sort();
+    const rels = Object.keys(SINCE).filter(k => dnames[k]).map(k => {
+      const t = { pA: 0, pM: 0, tA: 0, tM: 0 }, td = { pA: 0, pM: 0, tA: 0, tM: 0 };
+      for (const d of days) {
+        const v = dl.days[d][dnames[k]]; if (!v) continue;
+        if (d >= SINCE[k]) for (const f in t) t[f] += v[f] || 0;
+        if (d === today) for (const f in td) td[f] = v[f] || 0;
+      }
+      if (adjOn && adjOn.key === k) { t.pA += adjOn.count || 0; t.tA += adjOn.trips || 0; }
+      return Object.assign({ key: k, name: prettyName(k), since: SINCE[k], today: td }, t);
+    });
+    const outDays = days.filter(d => d >= '2026-10-12').reverse().slice(0, 60).map(d => {
+      const o = { date: d, wd: isWorkday(new Date(d + 'T12:00:00Z')), rels: {} };
+      for (const r of rels) { const v = dl.days[d][dnames[r.key]]; if (v && d >= r.since) o.rels[r.key] = v; }
+      return o;
+    });
+    return { rels, days: outDays, lastDate: days[days.length - 1] || null };
+  })();
+  if (split) for (const sr of split.rels) { const r = relations.find(x => x.key === sr.key); if (r) { r.count = sr.pA + sr.tA; r.agent = sr.pA; r.manual = sr.pM; r.trips = sr.tA; r.tripsManual = sr.tM; r.date = split.lastDate; r.todayAgent = sr.today.pA + sr.today.tA; r.todayManual = sr.today.pM + sr.today.tM; } }
   const hd = Object.keys(store.mem.agent);
   if (adjOn && !hd.includes(today)) hd.push(today);
   // každý den od prvního záznamu do dneška má řádek; úroveň relace se přenáší z předchozího dne (přírůstky počítá stránka)
@@ -231,9 +255,9 @@ app.get('/api/agents', async (req, res) => {
     changedAt: (store.mem.cfg.cnt || {}).at || null,
     trips: relations.reduce((a, r) => a + (r.trips || 0), 0),
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
-    hasSheet: !!(sheet.counts && sheet.counts.length), relations,
+    hasSheet: !!((sheet.counts && sheet.counts.length) || split), relations,
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
-    history, texts: Object.assign(Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])), sheetTexts),
+    split, history, texts: Object.assign(Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])), sheetTexts),
     workdaysSince: (() => {                       // pracovní dny od nejstaršího data v historii do dneška (včetně obou)
       const f = '2026-10-12';                         // pevný začátek měření ušetřeného času
       let n = 0; for (let d = new Date(f + 'T00:00:00Z'); d.toISOString().slice(0, 10) <= today; d = new Date(d.getTime() + 864e5)) if (isWorkday(d)) n++;
