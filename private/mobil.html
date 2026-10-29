@@ -18,13 +18,19 @@
   svg{display:block;width:100%;max-width:300px;margin:0 auto}
   .legend{display:grid;grid-template-columns:1fr;gap:6px;margin-top:14px;font-size:15px}
   .legend div{display:flex;align-items:center;gap:9px}.legend i{width:11px;height:11px;flex:none}.legend b{margin-left:auto;font-weight:700}.legend small{color:var(--mut);font-weight:500;min-width:38px;text-align:right}
+  h2{margin:26px 0 8px;font:800 13px Inter,sans-serif;letter-spacing:2px;text-transform:uppercase}
+  .row{display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:8px;margin:7px 0}.row .n{font-weight:600;font-size:14px}.row .v{font-weight:700;font-size:14px;white-space:nowrap}.row .v .a{color:var(--tx)}.row .v .m{color:#f2a516}
+  .bw{height:20px;display:flex;background:rgba(128,128,128,.12);border-radius:2px;overflow:hidden}.bw i{display:block;height:100%}
+  .barleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mut);margin-top:10px}.barleg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
+  .barleg .lb{background:var(--tx)}.barleg .lp{background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)}
+  .empty{color:var(--mut);font-size:14px;padding:6px 0}
   .upd{margin-top:16px;text-align:center;color:var(--mut);font-size:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Podíl dispečinků <a href="/ai">dashboard</a></h1>
-  <div id="pie"></div><div class="legend" id="legend"></div><div class="upd" id="upd">načítám…</div>
+  <div id="pie"></div><div class="legend" id="legend"></div><h2 id="dh">Dnes přibylo</h2><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div><div class="upd" id="upd">načítám…</div>
 </div>
 <script>
 (() => {
@@ -44,6 +50,22 @@
     const fg = theme === 'day' ? '#0f1b3d' : '#fff', mu = theme === 'day' ? '#51597a' : '#c3cfe8';
     return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<text x="${c}" y="${c + 6}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text x="${c}" y="${c + 24}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
   }
+  const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
+  function dayBars(j, rels) {
+    const S = j.split, t = todayIso(), d = S && S.days.find(x => x.date === t), [y, m, dd] = t.split('-');
+    $('dh').textContent = 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '. ';
+    const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: r.name, i: rels.find(x => x.key === r.key)?.i ?? 0, oA: q.pA, tA: q.tA, oM: q.pM, tM: q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
+    if (!items.length) { $('day').innerHTML = '<div class="empty">Dnes zatím žádné nové pozice.</div>'; return; }
+    items.sort((a, b) => (b.oA + b.tA + b.oM + b.tM) - (a.oA + a.tA + a.oM + a.tM));
+    const max = Math.max(...items.map(x => x.oA + x.tA + x.oM + x.tM));
+    $('day').innerHTML = items.map(x => {
+      const col = color(x.i), w = v => (100 * v / max) + '%', A = x.oA + x.tA, M = x.oM + x.tM;
+      return `<div class="row"><span class="n" style="color:${col}">${esc(x.name)}</span><div class="bw">` +
+        (x.oA ? `<i style="width:${w(x.oA)};background:${col}"></i>` : '') + (x.tA ? `<i style="width:${w(x.tA)};background:${col};opacity:.55"></i>` : '') +
+        (x.oM ? `<i style="width:${w(x.oM)};background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)"></i>` : '') + (x.tM ? `<i style="width:${w(x.tM)};background:rgba(242,165,22,.6)"></i>` : '') +
+        `</div><span class="v"><span class="a">+${A}</span> / <span class="m">+${M}</span></span></div>`;
+    }).join('');
+  }
   async function load() {
     try {
       const r = await fetch('/api/agents'); if (r.status === 401) { location.href = '/ai'; return; }
@@ -51,6 +73,7 @@
       const rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
       $('pie').innerHTML = donut(rels, total);
       $('legend').innerHTML = rels.filter(x => x.count).sort((a, b) => b.count - a.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b><small>${total ? Math.round(100 * x.count / total) : 0} %</small></div>`).join('') || '<div style="color:var(--mut)">zatím bez dat</div>';
+      dayBars(j, rels);
       $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' · automaticky každých 30 minut';
     } catch (e) { $('upd').textContent = 'Nepodařilo se načíst, zkusím to znovu za 30 minut.'; }
   }
