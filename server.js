@@ -166,7 +166,7 @@ function board(rate) {
   const pinT = k => (mem.pin[k] ? mem.pin[k].t : null);
   const offered = sheet.rows
     .filter(r => !hasPZ(r.prepr) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
-    .map(({ key, order, date, route, goods, weight, code, codeU, zipTo, incCzk, incEur }) => ({ key, order, date, route, goods, weight, zipTo, incCzk, incEur, codeL: code, codeU, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
+    .map(({ key, order, date, route, goods, weight, code, codeU, cust, zipTo, incCzk, incEur }) => ({ key, order, date, route, goods, weight, cust, zipTo, incCzk, incEur, codeL: code, codeU, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
     .sort((a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0)
       || (a.date || '9999').localeCompare(b.date || '9999'));
   const from = statsFrom();
@@ -351,7 +351,7 @@ app.post('/api/manual/resolve', async (req, res) => {
 });
 
 // šablony řazení a filtrů (sdílené v rámci relace – kdokoli je může načíst)
-const TPL_COLS = ['date', 'route', 'goods', 'weight', 'price', 'note'];
+const TPL_COLS = ['date', 'route', 'cust', 'goods', 'weight', 'price', 'note'];
 const cleanView = v => {
   const out = { sort: null, f: {} };
   if (v && v.sort && TPL_COLS.includes(v.sort.c)) out.sort = { c: v.sort.c, d: v.sort.d === 'desc' ? 'desc' : 'asc' };

@@ -147,6 +147,8 @@
   tbody tr.gone{transition:opacity .35s, transform .35s;opacity:0;transform:translateX(30px);background:var(--ok-bg)}
   th.c-chk,td.c-chk{width:74px;white-space:nowrap;padding-right:4px}
   td.c-goods{width:24%}
+  .c-cust{display:none}body.t-v2 th.c-cust,body.t-v2 td.c-cust{display:table-cell}
+  .cust{font-weight:600;color:#1d388f;word-break:break-word}
   td.c-route{min-width:270px}
   td.c-date{white-space:nowrap;width:108px;padding-left:6px}
   td.c-w{text-align:right;white-space:nowrap;width:110px}
@@ -304,7 +306,7 @@
     td.c-chk .chk span{display:none}
     td.c-date{grid-column:2}
     td.c-w{grid-column:3;grid-row:1;text-align:right}
-    td.c-route,td.c-goods,td.c-note{grid-column:2/4}
+    td.c-route,td.c-cust,td.c-goods,td.c-note{grid-column:2/4}
     td.c-price{grid-column:3;grid-row:2;text-align:right;width:auto}
     td.c-note{margin-top:6px}
     .kpi .big{font-size:32px}
@@ -347,7 +349,7 @@
     </div>
     <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – napiš libovolný text (město, zboží, datum…) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
     <table>
-      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
+      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th class="c-cust" data-col="cust">Objednatel</th><th data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th class="c-cust"><input data-fc="cust" placeholder="filtr…" aria-label="Filtr objednatel"></th><th><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
@@ -547,7 +549,7 @@
   const V2 = document.body.classList.contains('t-v2');
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
   /* řazení a filtry sloupců (jen Vnitro 2): aktuální stav se pamatuje v tomto prohlížeči, šablony jsou na serveru */
-  const COLS = ['date', 'route', 'goods', 'weight', 'price', 'note'];
+  const COLS = ['date', 'route', 'cust', 'goods', 'weight', 'price', 'note'];
   let view = { sort: null, f: {} };
   try { const v = JSON.parse(lsGet('rkl_v2_view', 'null')); if (v && typeof v === 'object') view = { sort: v.sort || null, f: v.f || {} }; } catch {}
   const saveView = () => lsSet('rkl_v2_view', JSON.stringify(view));
@@ -555,6 +557,7 @@
   const colText = (r, c) => {
     if (c === 'date') { const d = r.date ? new Date(r.date + 'T00:00:00') : null; return d ? [r.date, `${d.getDate()}. ${d.getMonth() + 1}.`, `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`, `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`, DOW[d.getDay()]].join(' ') : ''; }
     if (c === 'route') return [r.route, r.zipTo, r.order, r.codeL, r.codeU].join(' ');
+    if (c === 'cust') return r.cust || '';
     if (c === 'goods') return r.goods || '';
     if (c === 'weight') return r.weight == null ? '' : fmtW(r.weight) + ' ' + r.weight;
     if (c === 'price') return priceHtml(r).replace(/<[^>]*>/g, ' ');
@@ -578,6 +581,7 @@
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
         <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
+        <td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
         <td class="c-price num">${priceHtml(r)}</td>
@@ -588,12 +592,12 @@
     const t = m.id in pendingManual ? pendingManual[m.id] : m.text;
     return `<tr class="manual" draggable="true" data-key="m:${esc(m.id)}" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}>
         <td class="c-chk"><span class="grip" data-dk="m:${esc(m.id)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><button class="mdel" title="Smazat ruční objednávku" aria-label="Smazat">✕</button><span class="fbtns"><button data-f="vyvoz" data-fk="m:${esc(m.id)}">Vý</button><button data-f="dovoz" data-fk="m:${esc(m.id)}">Do</button><button data-f="none" data-fk="m:${esc(m.id)}">×</button></span></td>
-        <td colspan="5"><span class="mtag">RUČNĚ</span><textarea class="mtext" rows="1" maxlength="500" aria-label="Ruční objednávka">${esc(t)}</textarea></td>
+        <td colspan="6"><span class="mtag">RUČNĚ</span><textarea class="mtext" rows="1" maxlength="500" aria-label="Ruční objednávka">${esc(t)}</textarea></td>
         <td class="c-note"><small class="mwait">Čeká na načtení z Lori</small></td>
       </tr>`;
   }
   function suggHtml(m, r, today, folder) {
-    return `<tr class="sugg" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}><td colspan="7"><div class="sq"><b>Je to ta samá objednávka?</b> Z Lori přibyla řádka, která se podobá ručnímu zápisu „${esc(m.text.length > 60 ? m.text.slice(0, 60) + '…' : m.text)}“.
+    return `<tr class="sugg" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}><td colspan="8"><div class="sq"><b>Je to ta samá objednávka?</b> Z Lori přibyla řádka, která se podobá ručnímu zápisu „${esc(m.text.length > 60 ? m.text.slice(0, 60) + '…' : m.text)}“.
         <button class="sq-yes" data-mid="${esc(m.id)}" data-rk="${esc(r.key)}">Ano, nahradit</button><button class="sq-no" data-mid="${esc(m.id)}" data-rk="${esc(r.key)}">Ne</button></div></td></tr>` + rowHtml(r, today, { folder, cls: 'sugg-row' });
   }
   function renderRows(today) {
@@ -607,7 +611,7 @@
       const rest = list.filter(r => !F[r.key] || !FOLDERS.some(x => x[0] === F[r.key]));
       const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
       const manHtml = f => M.filter(m => (m.folder || null) === f && manualPass(m)).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
-      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="7"><b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
+      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="8"><b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
       v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join('')).join('')
         + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join('');
       shown = FOLDERS.flatMap(([f]) => inF(f)).concat(restShown, M);
@@ -891,7 +895,7 @@
     });
     const pop = $('diskPop');
     const viewDesc = v => {
-      const n = { date: 'Datum', route: 'Trasa', goods: 'Zboží', weight: 'Hmotnost', price: 'Cena', note: 'Poznámka' };
+      const n = { date: 'Datum', route: 'Trasa', cust: 'Objednatel', goods: 'Zboží', weight: 'Hmotnost', price: 'Cena', note: 'Poznámka' };
       const p = []; if (v.sort) p.push('řazení: ' + n[v.sort.c] + (v.sort.d === 'desc' ? ' ▼' : ' ▲'));
       Object.keys(v.f || {}).filter(c => (v.f[c] || '').trim()).forEach(c => p.push(n[c] + ' ∋ „' + v.f[c].trim() + '“'));
       return p.join(', ') || 'bez řazení a filtrů';
