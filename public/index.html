@@ -593,7 +593,7 @@
     return `<tr class="manual" draggable="true" data-key="m:${esc(m.id)}" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}>
         <td class="c-chk"><span class="grip" data-dk="m:${esc(m.id)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><button class="mdel" title="Smazat ruční objednávku" aria-label="Smazat">✕</button><span class="fbtns"><button data-f="vyvoz" data-fk="m:${esc(m.id)}">Vý</button><button data-f="dovoz" data-fk="m:${esc(m.id)}">Do</button><button data-f="none" data-fk="m:${esc(m.id)}">×</button></span></td>
         <td colspan="6"><span class="mtag">RUČNĚ</span><textarea class="mtext" rows="1" maxlength="500" aria-label="Ruční objednávka">${esc(t)}</textarea></td>
-        <td class="c-note"><small class="mwait">Čeká na načtení z Lori</small></td>
+        <td class="c-note"><small class="mwait">Čeká na přiřazení objednávky z Lori</small></td>
       </tr>`;
   }
   function suggHtml(m, r, today, folder) {
