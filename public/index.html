@@ -668,7 +668,7 @@
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
     else if (!shown.length && !(V2 && (B.manual || []).length) && query.trim() && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Nic nenalezeno.</b><br>Hledání „' + esc(query.trim()) + '“ neodpovídá žádnému řádku v nabídce.'; }
     else if (!shown.length && markOnly && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Žádná přeprava označená k prodeji.</b><br>Žádný řádek v nabídce nemá ve sloupci CODE nakl. „@@@“.'; }
-    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
+    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>' + (V2 ? 'Nic k naložení.' : 'Nic k prodeji.') + '</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
 
     const open = B.offered.length;
