@@ -5,15 +5,16 @@
   function get() { try { return localStorage.getItem(key()) || ''; } catch (e) { return ''; } }
   function set(v) { try { localStorage.setItem(key(), v); } catch (e) {} }
   var st = document.createElement('style');
-  st.textContent = 'html.bgm3 body::before{background:url(/bg-v3.jpg) center 55%/cover no-repeat !important;filter:none !important}' +
+  st.textContent = 'html.bgm4 body::before{background:url(/bg-v4.jpg) center 55%/cover no-repeat !important;filter:none !important}' +
+    'html.bgm3 body::before{background:url(/bg-v3.jpg) center 55%/cover no-repeat !important;filter:none !important}' +
     'html.bgm body::before{background:url(/bg-v2.jpg) center 55%/cover no-repeat !important;filter:none !important}' +
     '.bgstar{background:none;border:0;color:rgba(255,255,255,.5);font-size:17px;line-height:1;cursor:pointer;padding:4px 6px;margin:0 6px;align-self:center}' +
     '.bgstar:hover{color:#ffd54a}.bgstar.fix{position:fixed;left:10px;bottom:10px;z-index:50;margin:0}@media print{.bgstar{display:none}}';
   document.head.appendChild(st);
-  // volby: land (krajina) -> model (modelky) -> plaz (plavčíci); výchozí: Vnitro 2 = model, ostatní = land
-  var ORDER = ['land', 'model', 'plaz'];
+  // volby: land (krajina) -> model (modelky) -> plaz (plavčíci) -> auto (auto); výchozí: Vnitro 2 = model, ostatní = land
+  var ORDER = ['land', 'model', 'plaz', 'auto'];
   function cur() { var p = get(); return ORDER.indexOf(p) >= 0 ? p : (document.body.classList.contains('t-v2') ? 'model' : 'land'); }
-  function apply() { var c = cur(); document.documentElement.classList.toggle('bgm', c === 'model'); document.documentElement.classList.toggle('bgm3', c === 'plaz'); }
+  function apply() { var c = cur(); document.documentElement.classList.toggle('bgm', c === 'model'); document.documentElement.classList.toggle('bgm3', c === 'plaz'); document.documentElement.classList.toggle('bgm4', c === 'auto'); }
   function init() {
     apply();
     var b = document.createElement('button');
