@@ -305,7 +305,7 @@ app.post('/api/agents/text', async (req, res) => {
 
 require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava na cestě' });
 // sdílené obrázky (pozadí, logo) z RKL Spedice
-for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png', 'tv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const f of ['bg.jpg', 'bg-v2.jpg', 'bgtoggle.js', 'logo.jpg', 'favicon.png', 'tv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 app.use(express.static(path.join(__dirname, 'public-doprava'), { maxAge: 0 }));
 
 app.get('/api/trips', async (req, res) => {
