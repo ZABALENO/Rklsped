@@ -95,7 +95,7 @@
   tr.fold td{background:#e8eefb;border-bottom:2px solid #9db3e0;font-size:14px;padding:8px 12px}
   .ftog{border:0;background:rgba(0,0,0,.12);color:inherit;border-radius:6px;width:24px;height:24px;margin-right:8px;cursor:pointer;font-size:14px;line-height:1;vertical-align:middle}.ftog:hover{background:rgba(0,0,0,.25)}
   .dock{display:none}
-  body.t-v2.dragging-now .dock{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(15,25,60,.55);backdrop-filter:blur(6px)}
+  body.t-v2.dragging-now .dock{display:flex;position:fixed;left:0;right:0;top:0;z-index:60;gap:10px;padding:10px 14px;background:rgba(15,25,60,.55);backdrop-filter:blur(6px)}
   .dock .dk{flex:1;text-align:center;padding:16px 8px;border-radius:12px;font:700 18px inherit;border:3px dashed rgba(0,0,0,.35);color:#0a1f12}
   .dock .dk-vyvoz{background:#6cc588}.dock .dk-dovoz{background:#6c9fe6;color:#06214d}.dock .dk-none{background:#e8ecf3;color:#27324a}
   .dock .dk.drop-over{outline:4px solid #fff;transform:scale(1.03);border-style:solid}
@@ -948,18 +948,6 @@
       if (b.dataset.a === 'load') { view = { sort: t.view.sort || null, f: Object.assign({}, t.view.f || {}) }; syncInputs(); applyView(); pop.hidden = true; }
       if (b.dataset.a === 'del') { if (!confirm('Smazat šablonu „' + t.name + '“?')) return; try { await api('/api/tpl/delete', { id: t.id }); await paintPop(); } catch (err) { alert('Smazání se nepovedlo: ' + err.message); } }
     });
-    // automatické posouvání stránky při tažení řádku k hornímu / dolnímu okraji okna
-    let scrollV = 0, scrollT = null;
-    const stopScroll = () => { scrollV = 0; if (scrollT) { clearInterval(scrollT); scrollT = null; } };
-    document.addEventListener('dragover', e => {
-      if (!dragKey) return;
-      const EDGE = 140, h = window.innerHeight;
-      scrollV = e.clientY < EDGE ? -Math.ceil((EDGE - e.clientY) / 5 + 4) : 0;
-      if (scrollV && !scrollT) scrollT = setInterval(() => { if (!scrollV) return stopScroll(); window.scrollBy(0, scrollV); }, 16);
-      else if (!scrollV) stopScroll();
-    });
-    document.addEventListener('drop', stopScroll);
-    document.addEventListener('dragend', stopScroll);
     const rowsEl = $('rows');
     rowsEl.addEventListener('click', e => {
       const t = e.target.closest && e.target.closest('.ftog'); if (!t) return;
