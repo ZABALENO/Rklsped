@@ -30,7 +30,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
 /* ================= instance dashboardu (hlavní + relace Vnitro 1) ================= */
 // Každá instance má vlastní úložiště (tabulku v databázi), vlastní zdrojovou tabulku a vlastní stav.
-function makeTenant({ id, table, fileName, rowFilter, sharedUrl }) {
+function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
 const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual'];
@@ -133,8 +133,11 @@ async function refreshSheet(force) {
   if (inflight) return inflight;
   inflight = (async () => {
     try {
-      const out = await loadSheet(url);
-      if (rowFilter) { const all = out.rows.length; out.rows = rowFilter(out.rows, out); out.hiddenByFilter = all - out.rows.length; }
+      const out = await loadSheet(url, { sheetName });
+      // když existuje samostatný list s názvem relace (např. „Vnitro 2“), jsou v něm jen její řádky a filtr se nepoužije
+      const own = sheetName && out.sheet && deacc(out.sheet).replace(/\s+/g, '') === deacc(sheetName).replace(/\s+/g, '');
+      out.ownSheet = !!own;
+      if (rowFilter && !own) { const all = out.rows.length; out.rows = rowFilter(out.rows, out); out.hiddenByFilter = all - out.rows.length; }
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
       await require('./lib/change').trackChange(mem.cfg, put, out, url);
       await evaluateSales(out.rows);
@@ -230,7 +233,7 @@ function board(rate) {
   const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
     tenant: id,
-    hiddenByFilter: sheet.hiddenByFilter || 0, relaceCol: !!(sheet.columns && sheet.columns.relace),
+    hiddenByFilter: sheet.hiddenByFilter || 0, ownSheet: !!sheet.ownSheet, relaceCol: !!(sheet.columns && sheet.columns.relace),
     configured: !!sheetUrl(),
     url: sheetUrl(),
     fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
@@ -263,7 +266,7 @@ const vnitro1Filter = byRelace(/vnitro\s*1/, r => /^ZV\s*\//i.test(r.order || ''
 const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json', rowFilter: zapad1Filter });
 const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const vnitro2Filter = byRelace(/vnitro\s*2/);
-const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
+const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sheetName: 'Vnitro 2', sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const tenants = { main, vnitro1: v1, vnitro2: v2 };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
