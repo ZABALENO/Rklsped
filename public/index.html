@@ -942,6 +942,18 @@
       if (b.dataset.a === 'load') { view = { sort: t.view.sort || null, f: Object.assign({}, t.view.f || {}) }; syncInputs(); applyView(); pop.hidden = true; }
       if (b.dataset.a === 'del') { if (!confirm('Smazat šablonu „' + t.name + '“?')) return; try { await api('/api/tpl/delete', { id: t.id }); await paintPop(); } catch (err) { alert('Smazání se nepovedlo: ' + err.message); } }
     });
+    // automatické posouvání stránky při tažení řádku k hornímu / dolnímu okraji okna
+    let scrollV = 0, scrollT = null;
+    const stopScroll = () => { scrollV = 0; if (scrollT) { clearInterval(scrollT); scrollT = null; } };
+    document.addEventListener('dragover', e => {
+      if (!dragKey) return;
+      const EDGE = 140, h = window.innerHeight;
+      scrollV = e.clientY < EDGE ? -Math.ceil((EDGE - e.clientY) / 5 + 4) : e.clientY > h - EDGE ? Math.ceil((e.clientY - (h - EDGE)) / 5 + 4) : 0;
+      if (scrollV && !scrollT) scrollT = setInterval(() => { if (!scrollV) return stopScroll(); window.scrollBy(0, scrollV); }, 16);
+      else if (!scrollV) stopScroll();
+    });
+    document.addEventListener('drop', stopScroll);
+    document.addEventListener('dragend', stopScroll);
     const rowsEl = $('rows');
     rowsEl.addEventListener('click', e => {
       const t = e.target.closest && e.target.closest('.ftog'); if (!t) return;
