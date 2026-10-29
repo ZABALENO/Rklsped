@@ -513,7 +513,13 @@
     if (r.incCzk) out.push(`${nfEur.format(r.incCzk)} Kč`);
     return out.length ? out.join('<br>') : '<span style="color:var(--muted)">–</span>';
   }
-  function dateHtml(iso, today) {
+  function dateHtml(iso, today, to) {
+    if (V2 && iso && to && to !== iso) {
+      const d = new Date(iso + 'T12:00:00'), e = new Date(to + 'T12:00:00'), t = new Date(today + 'T12:00:00');
+      const diff = Math.round((d - t) / 864e5);
+      const tag = diff === 0 ? '<span class="tag t">DNES</span>' : diff === 1 ? '<span class="tag z">ZÍTRA</span>' : diff < 0 ? '<span class="tag p">PROŠLÉ</span>' : '';
+      return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}. – ${e.getDate()}. ${e.getMonth() + 1}.</span>${tag}<span class="dow">${DOW[d.getDay()]}–${DOW[e.getDay()]} ${e.getFullYear()}</span>`;
+    }
     if (!iso) return '<span class="dow">bez data</span>';
     const d = new Date(iso + 'T12:00:00'), t = new Date(today + 'T12:00:00');
     const diff = Math.round((d - t) / 864e5);
@@ -528,7 +534,7 @@
   let query = '';
   function rowText(r) {
     const d = r.date ? new Date(r.date + 'T00:00:00') : null;
-    const dt = d ? [r.date, `${d.getDate()}. ${d.getMonth() + 1}.`, `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`, `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`, DOW[d.getDay()]].join(' ') : '';
+    const dt = d ? [r.date, `${d.getDate()}. ${d.getMonth() + 1}.`, `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`, `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`, DOW[d.getDay()], r.dateLoadTo || ''].join(' ') : '';
     const price = priceHtml(r).replace(/<[^>]*>/g, ' ');
     const extra = Object.values(r).filter(v => typeof v === 'string' || typeof v === 'number').join(' ');
     return fold([dt, extra, fmtW(r.weight), r.weight, price, noteVal(r.key), B.notes[r.key] || ''].join(' '));
@@ -586,7 +592,7 @@
     const grip = V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '';
     return `<tr data-key="${esc(r.key)}"${V2 ? ' draggable="true"' : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
-        <td class="c-date">${dateHtml(r.date, today)}</td>
+        <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
         <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
