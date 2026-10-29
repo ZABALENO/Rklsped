@@ -344,7 +344,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'all';
+  let barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord';
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };

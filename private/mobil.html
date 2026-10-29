@@ -34,7 +34,7 @@
 <body>
 <div class="wrap">
   <h1>Podíl dispečinků <a href="/ai" style="background:rgba(255,255,255,.7)">dashboard</a></h1>
-  <div class="card"><div id="pie"></div><div class="legend" id="legend"></div></div><div class="card"><h2 id="dh" style="margin-top:0">Dnes přibylo</h2><div class="kt" id="kt"><button type="button" data-k="all" class="on">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
+  <div class="card"><div id="pie"></div><div class="legend" id="legend"></div></div><div class="card"><h2 id="dh" style="margin-top:0">Dnes přibylo</h2><div class="kt" id="kt"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord" class="on">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
 </div>
 <script>
 (() => {
@@ -55,7 +55,7 @@
     return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<text x="${c}" y="${c + 6}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text x="${c}" y="${c + 24}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
   }
   const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
-  let kind = 'all', last = null;
+  let kind = 'ord', last = null;
   function dayBars(j, rels) {
     last = [j, rels];
     const S = j.split, t = todayIso(), d = S && S.days.find(x => x.date === t), [y, m, dd] = t.split('-');
