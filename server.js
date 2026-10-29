@@ -33,7 +33,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 function makeTenant({ id, table, fileName, rowFilter, sharedUrl }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
-const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin'];
+const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual'];
 const mem = Object.fromEntries(NS.map(n => [n, {}]));
 let pool = null;
 const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), fileName);
@@ -207,6 +207,26 @@ function board(rate) {
   prov.value = Math.round(prov.income - prov.expense);
   prov.income = Math.round(prov.income); prov.expense = Math.round(prov.expense);
 
+  // Vnitro 2: složky Vývoz / Dovoz a ručně psané objednávky (s návrhem párování na nový řádek z Lori)
+  let v2 = null;
+  if (id === 'vnitro2') {
+    const fold = t => deacc(t);
+    const hay = r => fold([r.order, r.route, r.goods, r.zipTo, r.code, r.date, r.date ? r.date.split('-').reverse().map(Number).join('.') : '', r.date ? (+r.date.slice(8)) + '.' + (+r.date.slice(5, 7)) + '.' : ''].join(' '));
+    const toks = t => [...new Set(fold(t).split(/[^a-z0-9.]+/).map(x => x.replace(/^\.+|\.+$/g, '')).filter(x => x.length >= 3))];
+    const score = (m, r) => { const T = toks(m.text); if (!T.length) return 0; const h = hay(r); let hit = 0; for (const t of T) if (h.includes(t) || (t.length >= 6 && h.includes(t.slice(0, t.length - 1)))) hit++; return (hit >= 2 || (T.length === 1 && hit === 1 && T[0].length >= 5)) && hit / T.length >= 0.5 ? hit / T.length : 0; };
+    const taken = new Set();
+    const manual = Object.values(mem.manual).sort((a, b) => (a.created || '').localeCompare(b.created || '')).map(m => {
+      const base = new Set(m.base || []), dis = new Set(m.dismissed || []);
+      let best = null;
+      for (const r of offered) {
+        if (base.has(r.key) || dis.has(r.key) || taken.has(r.key)) continue;
+        const sc = score(m, r); if (sc && (!best || sc > best.score)) best = { key: r.key, score: Math.round(sc * 100) / 100 };
+      }
+      if (best) taken.add(best.key);
+      return { id: m.id, text: m.text, created: m.created, folder: (mem.folder['m:' + m.id] || {}).f || null, suggest: best };
+    });
+    v2 = { manual, folders: Object.fromEntries(Object.entries(mem.folder).filter(([k]) => !k.startsWith('m:')).map(([k, v]) => [k, v.f])) };
+  }
   const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
     tenant: id,
@@ -221,12 +241,14 @@ function board(rate) {
     provize: prov, rate, carriers, provAll, provLimits: [NEG_LIMIT, POS_LIMIT],
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
+    ...(v2 || {}),
   };
 }
 
 const store = { mem, put };
 async function boardNow() { return board(await eurRate(store)); }
-return { id, mem, put, store, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
+const sheetKeys = () => sheet.rows.map(r => r.key).slice(0, 5000);
+return { id, mem, put, store, sheetKeys, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
 }
 
 /* ================= HTTP ================= */
@@ -240,7 +262,9 @@ const zapad1Filter = byRelace(/zapad\s*1/);
 const vnitro1Filter = byRelace(/vnitro\s*1/, r => /^ZV\s*\//i.test(r.order || ''));
 const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json', rowFilter: zapad1Filter });
 const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
-const tenants = { main, vnitro1: v1 };
+const vnitro2Filter = byRelace(/vnitro\s*2/);
+const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
+const tenants = { main, vnitro1: v1, vnitro2: v2 };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
 const app = express();
@@ -252,6 +276,7 @@ app.use((req, res, next) => { req.t = tenants[req.tenantId] || main; next(); });
 const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
+  if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy v prodeji – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
   if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
@@ -271,6 +296,57 @@ app.post('/api/pin', async (req, res) => {
 });
 
 // vynulování leaderboardu a dnes prodaných (počítá se od teď; stav „Prodáno“ u řádků zůstává)
+// ---- Vnitro 2: složky Vývoz / Dovoz a ruční objednávky ----
+const needV2 = (req, res) => { if (req.t.id !== 'vnitro2') { res.status(404).json({ error: 'Tato funkce je jen v relaci Vnitro 2.' }); return false; } return true; };
+app.post('/api/folder', async (req, res) => {
+  if (!needV2(req, res)) return;
+  const { key, folder } = req.body || {};
+  if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
+  if (folder != null && !['vyvoz', 'dovoz'].includes(folder)) return res.status(400).json({ error: 'Neznámá složka' });
+  await req.t.put('folder', key, folder ? { f: folder, t: new Date().toISOString() } : null);
+  res.json({ ok: true });
+});
+app.post('/api/manual', async (req, res) => {
+  if (!needV2(req, res)) return;
+  const text = String((req.body && req.body.text) || '').trim().slice(0, 500);
+  if (!text) return res.status(400).json({ error: 'Napiš text objednávky.' });
+  const folder = ['vyvoz', 'dovoz'].includes(req.body.folder) ? req.body.folder : null;
+  const mid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  await req.t.put('manual', mid, { id: mid, text, created: new Date().toISOString(), base: req.t.sheetKeys(), dismissed: [] });
+  if (folder) await req.t.put('folder', 'm:' + mid, { f: folder, t: new Date().toISOString() });
+  res.json({ ok: true, id: mid });
+});
+app.post('/api/manual/edit', async (req, res) => {
+  if (!needV2(req, res)) return;
+  const m = req.t.mem.manual[String((req.body && req.body.id) || '')];
+  const text = String((req.body && req.body.text) || '').trim().slice(0, 500);
+  if (!m || !text) return res.status(400).json({ error: 'Neplatná ruční objednávka.' });
+  await req.t.put('manual', m.id, { ...m, text });
+  res.json({ ok: true });
+});
+app.post('/api/manual/delete', async (req, res) => {
+  if (!needV2(req, res)) return;
+  const id = String((req.body && req.body.id) || '');
+  await req.t.put('manual', id, null); await req.t.put('folder', 'm:' + id, null);
+  res.json({ ok: true });
+});
+// odpověď na návrh „je to ta samá objednávka?“: accept = ruční řádek se nahradí řádkem z Lori (složka a text se přenesou), jinak se návrh odmítne
+app.post('/api/manual/resolve', async (req, res) => {
+  if (!needV2(req, res)) return;
+  const { id, key, accept } = req.body || {};
+  const m = req.t.mem.manual[String(id || '')];
+  if (!m || typeof key !== 'string' || !key) return res.status(400).json({ error: 'Neplatná ruční objednávka.' });
+  if (accept) {
+    const f = req.t.mem.folder['m:' + m.id];
+    if (f) await req.t.put('folder', key, { f: f.f, t: new Date().toISOString() });
+    if (!(req.t.mem.note[key] && req.t.mem.note[key].text)) await req.t.put('note', key, { text: m.text.slice(0, 500), u: new Date().toISOString() });
+    await req.t.put('manual', m.id, null); await req.t.put('folder', 'm:' + m.id, null);
+  } else {
+    await req.t.put('manual', m.id, { ...m, dismissed: [...(m.dismissed || []), key].slice(-200) });
+  }
+  res.json({ ok: true });
+});
+
 app.post('/api/reset', async (req, res) => {
   await req.t.put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
   res.json(await req.t.boardNow());
@@ -321,12 +397,12 @@ app.post('/api/import', async (req, res) => {
 app.get('/healthz', (req, res) => res.send('ok'));
 
 if (require.main === module) {
-  Promise.all([main.initStore(), v1.initStore()]).then(async () => {
+  Promise.all([main.initStore(), v1.initStore(), v2.initStore()]).then(async () => {
     // jednorázové vynulování statistik (požadavek 12. 10. 2026)
     if (!main.mem.cfg.stats || !main.mem.cfg.stats.reset1) await main.put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
-    main.cleanup(); v1.cleanup();
+    main.cleanup(); v1.cleanup(); v2.cleanup();
     app.listen(PORT, () => console.log('RKL Spedice běží na portu ' + PORT));
-    for (const t of [main, v1]) { t.refreshSheet(true); setInterval(() => t.refreshSheet(true), BG_REFRESH); }
+    for (const t of [main, v1, v2]) { t.refreshSheet(true); setInterval(() => t.refreshSheet(true), BG_REFRESH); }
   }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
 }
 module.exports = { app, sellerOf, evaluateSales, mem };

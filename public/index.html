@@ -86,6 +86,31 @@
   tbody tr.pinned .route,tbody tr.pinned .goods{color:#7f1010}
   .urg{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:1px 6px;border-radius:5px;background:#d32f2f;color:#fff;margin-left:6px;vertical-align:1px}
 
+  /* --- relace Vnitro 2: složky Vývoz / Dovoz, ruční objednávky --- */
+  .mbar{display:none;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:#fffbe9}
+  body.t-v2 .mbar{display:flex}
+  .mbar input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  .mbar button{background:#1d388f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 13px inherit;cursor:pointer;white-space:nowrap}
+  tr.fold td{background:#e8eefb;border-bottom:2px solid #9db3e0;font-size:14px;padding:8px 12px}
+  tr.fold .fcnt{display:inline-block;min-width:22px;text-align:center;background:#1d388f;color:#fff;border-radius:11px;font-size:12px;padding:0 7px;margin-left:6px}
+  tr.fold .fhint{margin-left:12px;color:var(--muted);font-size:12px;font-weight:500}
+  tr.fold[data-drop=none] td{background:#f1f3f7;border-bottom-color:#c9d1de}
+  tr.drop-over td{outline:3px dashed #1d388f;outline-offset:-3px;background:#d4e0fb !important}
+  tr.dragging{opacity:.4}
+  .grip{display:inline-block;cursor:grab;font-size:20px;line-height:1;color:#5d6b80;padding:2px 4px;user-select:none;margin-top:4px}
+  .grip:active{cursor:grabbing}
+  .fbtns{display:none;gap:3px;margin-top:4px}.fbtns button{padding:2px 5px;font-size:11px;border:1px solid var(--line);background:#fff;border-radius:5px}
+  @media (hover:none){.fbtns{display:flex}}
+  tr.manual td{background:#fff8d6 !important}
+  .mtag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:1px 6px;border-radius:5px;background:#b87400;color:#fff;margin-right:8px;vertical-align:top;margin-top:6px}
+  textarea.mtext{width:calc(100% - 70px);resize:none;border:1px solid #e3d48a;background:#fffdf0;border-radius:6px;padding:6px 8px;font:inherit;vertical-align:top}
+  .mdel{border:0;background:none;color:#b42318;font-size:16px;cursor:pointer;padding:2px 4px}
+  .mwait{color:#8a6a00}
+  tr.sugg td{background:#e4f6e8 !important;border-bottom:0;padding:8px 12px}
+  tr.sugg .sq button{margin-left:8px;padding:5px 12px;border-radius:7px;border:1px solid #2e7d4a;background:#fff;color:#1b5e3a;font-weight:600;cursor:pointer}
+  tr.sugg .sq .sq-yes{background:#2e7d4a;color:#fff}
+  tr.sugg-row td{background:#f2fbf4 !important}tr.sugg-row td:first-child{box-shadow:inset 5px 0 0 #2e7d4a}
+  body:not(.t-v2) .grip,body:not(.t-v2) .fbtns{display:none}
   table{width:100%;border-collapse:collapse}
   thead th{background:#f5f7fa;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
   tbody td{padding:9px 12px;border-bottom:2px solid #c9d1de;vertical-align:top}
@@ -291,6 +316,7 @@
       <button class="markbtn" id="markBtn" aria-pressed="false" title="Zobrazit jen řádky s @@@ ve sloupci CODE nakl.">Označeno k prodeji <span class="n" id="markN">0</span></button>
       <span class="upd" id="upd"></span>
     </div>
+    <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – napiš libovolný text (město, zboží, datum…) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
     <table>
       <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th><th class="c-price">Cena</th><th>Poznámka</th></tr></thead>
       <tbody id="rows"></tbody>
@@ -489,19 +515,14 @@
   }
   const PIN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
 
-  function renderRows(today) {
-    const { shown } = visibleList();
-    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
-    if (sig === lastSig) return shown;
-    // zachovat rozepsanou poznámku (fokus + kurzor)
-    const ae = document.activeElement;
-    const focusKey = ae && ae.classList && ae.classList.contains('note') ? ae.closest('tr').dataset.key : null;
-    const sel = focusKey ? [ae.selectionStart, ae.selectionEnd] : null;
-    lastSig = sig;
-    $('rows').innerHTML = shown.map(r => {
-      const n = noteVal(r.key);
-      return `<tr data-key="${esc(r.key)}" class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''}">
-        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button></td>
+  const V2 = document.body.classList.contains('t-v2');
+  const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
+  const pendingManual = {};     // rozepsané ruční objednávky (ještě neuložené)
+  function rowHtml(r, today, extra) {
+    const n = noteVal(r.key);
+    const grip = V2 ? `<span class="grip" draggable="true" data-dk="${esc(r.key)}" title="Přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '';
+    return `<tr data-key="${esc(r.key)}"${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}">
+        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
         <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
@@ -509,12 +530,50 @@
         <td class="c-price num">${priceHtml(r)}</td>
         <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>
       </tr>`;
-    }).join('');
-    $('rows').querySelectorAll('.note').forEach(autosize);
+  }
+  function manualHtml(m, folder) {
+    const t = m.id in pendingManual ? pendingManual[m.id] : m.text;
+    return `<tr class="manual" data-key="m:${esc(m.id)}" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}>
+        <td class="c-chk"><span class="grip" draggable="true" data-dk="m:${esc(m.id)}" title="Přetáhni do složky Vývoz / Dovoz">⠿</span><button class="mdel" title="Smazat ruční objednávku" aria-label="Smazat">✕</button><span class="fbtns"><button data-f="vyvoz" data-fk="m:${esc(m.id)}">Vý</button><button data-f="dovoz" data-fk="m:${esc(m.id)}">Do</button><button data-f="none" data-fk="m:${esc(m.id)}">×</button></span></td>
+        <td colspan="5"><span class="mtag">RUČNĚ</span><textarea class="mtext" rows="1" maxlength="500" aria-label="Ruční objednávka">${esc(t)}</textarea></td>
+        <td class="c-note"><small class="mwait">Čeká na načtení z Lori</small></td>
+      </tr>`;
+  }
+  function suggHtml(m, r, today, folder) {
+    return `<tr class="sugg" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}><td colspan="7"><div class="sq"><b>Je to ta samá objednávka?</b> Z Lori přibyla řádka, která se podobá ručnímu zápisu „${esc(m.text.length > 60 ? m.text.slice(0, 60) + '…' : m.text)}“.
+        <button class="sq-yes" data-mid="${esc(m.id)}" data-rk="${esc(r.key)}">Ano, nahradit</button><button class="sq-no" data-mid="${esc(m.id)}" data-rk="${esc(r.key)}">Ne</button></div></td></tr>` + rowHtml(r, today, { folder, cls: 'sugg-row' });
+  }
+  function renderRows(today) {
+    const vis = visibleList(); let shown = vis.shown;
+    let v2html = null;
+    if (V2) {
+      const F = B.folders || {}, M = B.manual || [], byKey = new Map(B.offered.map(r => [r.key, r]));
+      const sugg = new Map(M.filter(m => m.suggest && byKey.has(m.suggest.key)).map(m => [m.suggest.key, m]));
+      const list = vis.list.filter(r => !sugg.has(r.key));
+      const inF = f => list.filter(r => F[r.key] === f);
+      const rest = list.filter(r => !F[r.key] || !FOLDERS.some(x => x[0] === F[r.key]));
+      const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
+      const manHtml = f => M.filter(m => (m.folder || null) === f).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
+      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="7"><b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
+      v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join('')).join('')
+        + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join('');
+      shown = FOLDERS.flatMap(([f]) => inF(f)).concat(restShown, M);
+      B._v2count = { list: rest.length + FOLDERS.reduce((a, [f]) => a + inF(f).length, 0), shownN: shown.length };
+    }
+    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (V2 ? JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
+    if (sig === lastSig) return shown;
+    // zachovat rozepsanou poznámku (fokus + kurzor)
+    const ae = document.activeElement;
+    const focusKey = ae && ae.classList && ae.classList.contains('note') ? ae.closest('tr').dataset.key : null;
+    const focusM = ae && ae.classList && ae.classList.contains('mtext') ? ae.closest('tr').dataset.mid : null;
+    const sel = (focusKey || focusM) ? [ae.selectionStart, ae.selectionEnd] : null;
+    lastSig = sig;
+    $('rows').innerHTML = V2 ? v2html : shown.map(r => rowHtml(r, today)).join('');
+    $('rows').querySelectorAll('.note,.mtext').forEach(autosize);
     if (window.RKL) RKL.page([...$('rows').children]);
-    if (focusKey) {
-      const tr = [...$('rows').children].find(t => t.dataset.key === focusKey);
-      const ta = tr && tr.querySelector('.note');
+    if (focusKey || focusM) {
+      const tr = [...$('rows').children].find(t => focusM ? (t.classList.contains('manual') && t.dataset.mid === focusM) : (t.dataset.key === focusKey && !t.classList.contains('manual')));
+      const ta = tr && tr.querySelector(focusM ? '.mtext' : '.note');
       if (ta) { ta.focus(); try { ta.setSelectionRange(sel[0], sel[1]); } catch {} }
     }
     return shown;
@@ -537,7 +596,7 @@
     const shown = renderRows(today);
     const empty = $('empty');
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
-    else if (!shown.length && query.trim() && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Nic nenalezeno.</b><br>Hledání „' + esc(query.trim()) + '“ neodpovídá žádnému řádku v nabídce.'; }
+    else if (!shown.length && !(V2 && (B.manual || []).length) && query.trim() && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Nic nenalezeno.</b><br>Hledání „' + esc(query.trim()) + '“ neodpovídá žádnému řádku v nabídce.'; }
     else if (!shown.length && markOnly && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Žádná přeprava označená k prodeji.</b><br>Žádný řádek v nabídce nemá ve sloupci CODE nakl. „@@@“.'; }
     else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
@@ -547,7 +606,7 @@
     $('kOpen').textContent = B.fetchedAt ? open : '–';
     $('markN').textContent = B.offered.filter(r => r.marked).length;
     $('markBtn').setAttribute('aria-pressed', markOnly);
-    $('cnt').textContent = B.fetchedAt ? (vis.searching ? `nalezeno ${shown.length} z ${vis.total}` : `${shown.length} z ${vis.list.length}`) : '';
+    $('cnt').textContent = B.fetchedAt ? (vis.searching ? `nalezeno ${shown.length} z ${vis.total}` : `${V2 && B._v2count ? B._v2count.shownN - (B.manual || []).length : shown.length} z ${vis.list.length}`) : '';
     $('allBtn').hidden = !B.fetchedAt || vis.searching || (!showAll && vis.list.length <= MAX_ROWS);
     $('allBtn').setAttribute('aria-pressed', showAll);
     $('allBtn').textContent = showAll ? `Jen prvních ${MAX_ROWS}` : `Zobrazit vše (${vis.list.length})`;
@@ -748,6 +807,57 @@
     saveNote(e.target.closest('tr').dataset.key, e.target);
   });
   $('rows').addEventListener('keydown', e => { if (e.target.classList.contains('note') && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } });
+
+
+  /* ---------- Vnitro 2: složky (drag & drop), ruční objednávky ---------- */
+  if (V2) {
+    const rowsEl = $('rows');
+    let dragKey = null;
+    async function setFolder(key, f) {
+      const folder = f === 'none' ? null : f;
+      if (key.startsWith('m:')) { const m = (B.manual || []).find(x => x.id === key.slice(2)); if (m) m.folder = folder; }
+      else { B.folders = B.folders || {}; if (folder) B.folders[key] = folder; else delete B.folders[key]; }
+      lastSig = ''; render();
+      try { await api('/api/folder', { key, folder }); } catch (e) { alert('Uložení složky se nepovedlo: ' + e.message); }
+      poll(false);
+    }
+    rowsEl.addEventListener('dragstart', e => {
+      const g = e.target.closest && e.target.closest('.grip'); if (!g) return;
+      dragKey = g.dataset.dk; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragKey);
+      const tr = g.closest('tr'); if (tr) setTimeout(() => tr.classList.add('dragging'), 0);
+    });
+    rowsEl.addEventListener('dragend', () => { dragKey = null; rowsEl.querySelectorAll('.dragging,.drop-over').forEach(x => x.classList.remove('dragging', 'drop-over')); });
+    const targetOf = e => { const tr = e.target.closest && e.target.closest('tr'); const f = tr && (tr.dataset.drop || tr.dataset.folder); return f ? { tr, f, head: rowsEl.querySelector(`tr.fold[data-drop="${f}"]`) } : null; };
+    rowsEl.addEventListener('dragover', e => { if (!dragKey) return; const t = targetOf(e); if (!t) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; rowsEl.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); if (t.head) t.head.classList.add('drop-over'); });
+    rowsEl.addEventListener('drop', e => { if (!dragKey) return; const t = targetOf(e); if (!t) return; e.preventDefault(); const k = dragKey; dragKey = null; setFolder(k, t.f); });
+    rowsEl.addEventListener('click', e => {
+      const fb = e.target.closest('.fbtns button'); if (fb) { setFolder(fb.dataset.fk, fb.dataset.f); return; }
+      const del = e.target.closest('.mdel'); if (del) { const id = del.closest('tr').dataset.mid; if (!confirm('Smazat ruční objednávku?')) return; B.manual = (B.manual || []).filter(m => m.id !== id); lastSig = ''; render(); api('/api/manual/delete', { id }).then(() => poll(false)).catch(err => alert('Smazání se nepovedlo: ' + err.message)); return; }
+      const yes = e.target.closest('.sq-yes'), no = e.target.closest('.sq-no');
+      if (yes || no) {
+        const b = yes || no, id = b.dataset.mid, key = b.dataset.rk, accept = !!yes;
+        const m = (B.manual || []).find(x => x.id === id);
+        if (m) { if (accept) { B.manual = B.manual.filter(x => x.id !== id); if (m.folder) { B.folders = B.folders || {}; B.folders[key] = m.folder; } } else m.suggest = null; }
+        lastSig = ''; render();
+        api('/api/manual/resolve', { id, key, accept }).then(() => poll(false)).catch(err => alert('Uložení se nepovedlo: ' + err.message));
+      }
+    });
+    const mTimers = {};
+    rowsEl.addEventListener('input', e => {
+      if (!e.target.classList.contains('mtext')) return;
+      const ta = e.target, id = ta.closest('tr').dataset.mid; pendingManual[id] = ta.value; autosize(ta);
+      clearTimeout(mTimers[id]);
+      mTimers[id] = setTimeout(async () => { const t = pendingManual[id]; if (t == null || !t.trim()) return; try { await api('/api/manual/edit', { id, text: t }); const m = (B.manual || []).find(x => x.id === id); if (m) m.text = t; if (pendingManual[id] === t) delete pendingManual[id]; } catch (err) {} }, 800);
+    });
+    async function addManual() {
+      const inp = $('mIn'), text = inp.value.trim(); if (!text) return;
+      inp.value = ''; inp.disabled = true;
+      try { await api('/api/manual', { text }); await poll(false); } catch (e) { alert('Přidání se nepovedlo: ' + e.message); inp.value = text; }
+      inp.disabled = false; inp.focus();
+    }
+    $('mAdd').onclick = addManual;
+    $('mIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addManual(); } });
+  }
 
   /* ---------- CODE u měst + TV 2 slidy ---------- */
   let noCode = lsGet('rkl_nocode', '0') === '1';
