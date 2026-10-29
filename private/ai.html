@@ -421,18 +421,31 @@
       const lbl = pts.map((q, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 9}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9">${+q.date.slice(8)}. ${+q.date.slice(5, 7)}.</text>` : '').join('');
       const dots = pts.map((q, i) => `<circle cx="${X(i)}" cy="${Y(q.m)}" r="3" fill="#f2a516"><title>${fmtD(q.date)} – ručně: ${nf.format(q.m)}</title></circle><circle cx="${X(i)}" cy="${Y(q.a)}" r="3.4" fill="${col}"><title>${fmtD(q.date)} – agent: ${nf.format(q.a)}, ručně: ${nf.format(q.m)}</title></circle>`).join('');
       const share = ta + tm ? Math.round(100 * ta / (ta + tm)) : 0;
-      return `<div class="pdc"><div class="pdt" style="color:${col}">${esc(name)} <span>agent ${nf.format(ta)} · ručně ${nf.format(tm)} · podíl agenta ${share} %</span></div><svg viewBox="0 0 ${W} ${H}">${g}${area}<path d="${line('m')}" fill="none" stroke="#f2a516" stroke-width="2" stroke-dasharray="5 4"/><path d="${line('a')}" fill="none" stroke="${col}" stroke-width="2.4"/>${dots}${lbl}</svg></div>`;
+      // popisky přímo u čar, ve stejném sklonu jako čára; na straně odvrácené od druhé čáry
+      const mi = Math.max(0, Math.min(pts.length - 2, Math.floor((pts.length - 1) / 2)));
+      const lab = (key, text, c, above) => {
+        const i2 = pts.length > 1 ? mi + 1 : 0, x1 = X(mi), y1 = Y(pts[mi][key]), x2 = X(i2), y2 = Y(pts[i2][key]);
+        const ang = pts.length > 1 ? Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI : 0, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        return `<text transform="translate(${mx.toFixed(1)} ${my.toFixed(1)}) rotate(${ang.toFixed(1)}) translate(0 ${above ? -8 : 15})" text-anchor="middle" fill="${c}" font-family="Inter" font-weight="700" font-size="11" stroke="#0a1230" stroke-width="3" paint-order="stroke">${text}</text>`;
+      };
+      const ym = (a, i) => Y(pts[i][a]), aboveAgent = pts.length > 1 ? ym('a', mi) + ym('a', mi + 1) <= ym('m', mi) + ym('m', mi + 1) : true;
+      const labels = lab('a', 'Agent', col, aboveAgent) + lab('m', 'Ručně', '#f2a516', !aboveAgent);
+      return `<div class="pdc"><div class="pdt" style="color:${col}">${esc(name)} <span>agent ${nf.format(ta)} · ručně ${nf.format(tm)} · podíl agenta ${share} %</span></div><svg viewBox="0 0 ${W} ${H}">${g}${area}<path d="${line('m')}" fill="none" stroke="#f2a516" stroke-width="2" stroke-dasharray="5 4"/><path d="${line('a')}" fill="none" stroke="${col}" stroke-width="2.4"/>${dots}${labels}${lbl}</svg></div>`;
     };
     const mk = key => days.map(d => ({ date: d.date, ...val(d.rels[key]) }));
     const all = days.map(d => { let a = 0, m = 0; for (const v of Object.values(d.rels)) { const q = val(v); a += q.a; m += q.m; } return { date: d.date, a, m }; });
     const legend = '<div class="sub" style="margin:0 0 10px"><b style="color:var(--tx)">━</b> agent (barva relace) &nbsp; <b style="color:#f2a516">┅</b> ručně (oranžově) &nbsp;· jen dny, kdy agent dané relace zapsal alespoň 1 položku (přírůstky mezi stavy tabulky)</div>';
     const allP = all.filter(q => q.a >= 1);
     let html = legend + '<div class="pdgrid">' + (allP.length ? card('Všechny relace dohromady', '#5e8aff', allP) : '');
+    const list = [];
     for (const r of S.rels) {
       const pts = mk(r.key).filter(q => q.date >= r.since && q.a >= 1);   // jen dny, kdy agent zapsal alespoň 1 položku
       if (!pts.length) continue;
-      html += card(r.name, color(cI(r.key)), pts);
+      const ta = pts.reduce((a, q) => a + q.a, 0), tm = pts.reduce((a, q) => a + q.m, 0);
+      list.push({ r, pts, share: ta / Math.max(1, ta + tm), ta });
     }
+    list.sort((x, y) => y.share - x.share || y.ta - x.ta);   // zleva od relací s nejvyšším podílem agenta
+    for (const x of list) html += card(x.r.name, color(cI(x.r.key)), x.pts);
     if (html.indexOf('class="pdc"') < 0) return '<div class="sub" style="padding:16px 0">Zatím žádný den, kdy by agent zapsal ' + (trMode === 'ord' ? 'objednávku' : trMode === 'trp' ? 'přepravu' : 'pozici') + '.</div>';
     return html + '</div>';
   }
