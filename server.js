@@ -33,7 +33,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
-const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual'];
+const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl'];
 const mem = Object.fromEntries(NS.map(n => [n, {}]));
 let pool = null;
 const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), fileName);
@@ -347,6 +347,33 @@ app.post('/api/manual/resolve', async (req, res) => {
   } else {
     await req.t.put('manual', m.id, { ...m, dismissed: [...(m.dismissed || []), key].slice(-200) });
   }
+  res.json({ ok: true });
+});
+
+// šablony řazení a filtrů (sdílené v rámci relace – kdokoli je může načíst)
+const TPL_COLS = ['date', 'route', 'goods', 'weight', 'price', 'note'];
+const cleanView = v => {
+  const out = { sort: null, f: {} };
+  if (v && v.sort && TPL_COLS.includes(v.sort.c)) out.sort = { c: v.sort.c, d: v.sort.d === 'desc' ? 'desc' : 'asc' };
+  if (v && v.f && typeof v.f === 'object') for (const c of TPL_COLS) { const t = String(v.f[c] || '').slice(0, 100); if (t.trim()) out.f[c] = t; }
+  return out;
+};
+app.get('/api/tpl', (req, res) => {
+  if (!needV2(req, res)) return;
+  res.json({ items: Object.values(req.t.mem.tpl).sort((a, b) => (b.created || '').localeCompare(a.created || '')) });
+});
+app.post('/api/tpl', async (req, res) => {
+  if (!needV2(req, res)) return;
+  const name = String((req.body && req.body.name) || '').trim().slice(0, 60);
+  if (!name) return res.status(400).json({ error: 'Napiš název šablony.' });
+  const same = Object.values(req.t.mem.tpl).find(t => t.name.toLowerCase() === name.toLowerCase());
+  const id = same ? same.id : Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  await req.t.put('tpl', id, { id, name, view: cleanView(req.body.view), created: new Date().toISOString() });
+  res.json({ ok: true, id });
+});
+app.post('/api/tpl/delete', async (req, res) => {
+  if (!needV2(req, res)) return;
+  await req.t.put('tpl', String((req.body && req.body.id) || ''), null);
   res.json({ ok: true });
 });
 

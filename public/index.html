@@ -111,6 +111,31 @@
   tr.sugg .sq .sq-yes{background:#2e7d4a;color:#fff}
   tr.sugg-row td{background:#f2fbf4 !important}tr.sugg-row td:first-child{box-shadow:inset 5px 0 0 #2e7d4a}
   body:not(.t-v2) .grip,body:not(.t-v2) .fbtns{display:none}
+  body.t-v2 .strip .chip.sold,body.t-v2 .strip .chip:not(.pgchip):not(.sold):not(.prov),body.t-v2 #provChip{display:none}
+  /* řazení, filtry, šablony (Vnitro 2) */
+  tr.frow{display:none}body.t-v2 tr.frow{display:table-row}
+  tr.frow th{background:#fbfcfe;padding:4px 8px;border-bottom:1px solid var(--line)}
+  tr.frow input{width:100%;min-width:0;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px;background:#fff;text-transform:none;letter-spacing:0}
+  tr.frow input.on{border-color:#1d388f;background:#eef3ff}
+  body.t-v2 th[data-col]{cursor:pointer;user-select:none}body.t-v2 th[data-col]:hover{color:#1d388f}
+  th .arr{margin-left:5px;color:#1d388f;font-size:11px}
+  .diskbtn{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:5px 8px;color:#1d388f;cursor:pointer}
+  body.t-v2 .diskbtn{display:inline-flex}.diskbtn.on{background:#1d388f;color:#fff}
+  .ph{position:relative}
+  .diskpop{position:absolute;right:12px;top:100%;z-index:30;width:min(360px,calc(100vw - 24px));background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.25);padding:12px}
+  .diskpop[hidden]{display:none}
+  .diskpop h4{margin:0 0 8px;font-size:13px}
+  .diskpop .row{display:flex;gap:6px;margin-bottom:10px}.diskpop input{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font:inherit}
+  .diskpop button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font:600 12px inherit;cursor:pointer}.diskpop .go{background:#1d388f;color:#fff;border-color:#1d388f}
+  .diskpop ul{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto}.diskpop li{display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.diskpop li span{flex:1;min-width:0}.diskpop li small{display:block;color:var(--muted)}
+  .diskpop .cur{font-size:12px;color:var(--muted);margin-bottom:8px}
+  /* barvy složek: Dovoz modrá, Vývoz zelená */
+  tbody tr.f-vyvoz{background:#e3f3e7}tbody tr.f-dovoz{background:#e0ebfa}
+  tbody tr.f-vyvoz:hover{background:#d6edde}tbody tr.f-dovoz:hover{background:#d2e3f8}
+  tr.fold[data-drop=vyvoz] td{background:#c6e6cf;border-bottom-color:#82bd93}tr.fold[data-drop=dovoz] td{background:#c4d8f4;border-bottom-color:#86a9dc}
+  tr.fold[data-drop=vyvoz] .fcnt{background:#2e7d4a}tr.fold[data-drop=dovoz] .fcnt{background:#2b5aa8}
+  tr.manual[data-folder=vyvoz] td:first-child{box-shadow:inset 5px 0 0 #2e7d4a}tr.manual[data-folder=dovoz] td:first-child{box-shadow:inset 5px 0 0 #2b5aa8}
+  body.t-v2 tbody tr[data-key]{cursor:grab}body.t-v2 tbody tr[data-key] textarea,body.t-v2 tbody tr[data-key] input{cursor:text}
   table{width:100%;border-collapse:collapse}
   thead th{background:#f5f7fa;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
   tbody td{padding:9px 12px;border-bottom:2px solid #c9d1de;vertical-align:top}
@@ -314,11 +339,13 @@
       <span class="cnt" id="cnt"></span>
       <button class="markbtn" id="allBtn" aria-pressed="false" hidden>Zobrazit vše</button>
       <button class="markbtn" id="markBtn" aria-pressed="false" title="Zobrazit jen řádky s @@@ ve sloupci CODE nakl.">Označeno k prodeji <span class="n" id="markN">0</span></button>
+      <button class="diskbtn" id="diskBtn" type="button" title="Šablony řazení a filtrů – uložit / načíst" aria-label="Šablony řazení a filtrů"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
       <span class="upd" id="upd"></span>
+      <div class="diskpop" id="diskPop" hidden></div>
     </div>
     <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – napiš libovolný text (město, zboží, datum…) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
     <table>
-      <thead><tr><th class="c-chk">Prodáno</th><th>Datum nakládky</th><th>Trasa</th><th>Popis zboží</th><th class="c-w">Hmotnost</th><th class="c-price">Cena</th><th>Poznámka</th></tr></thead>
+      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
@@ -517,11 +544,35 @@
 
   const V2 = document.body.classList.contains('t-v2');
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
+  /* řazení a filtry sloupců (jen Vnitro 2): aktuální stav se pamatuje v tomto prohlížeči, šablony jsou na serveru */
+  const COLS = ['date', 'route', 'goods', 'weight', 'price', 'note'];
+  let view = { sort: null, f: {} };
+  try { const v = JSON.parse(lsGet('rkl_v2_view', 'null')); if (v && typeof v === 'object') view = { sort: v.sort || null, f: v.f || {} }; } catch {}
+  const saveView = () => lsSet('rkl_v2_view', JSON.stringify(view));
+  const priceNum = r => (r.incCzk || 0) + (r.incEur || 0) * 25;
+  const colText = (r, c) => {
+    if (c === 'date') { const d = r.date ? new Date(r.date + 'T00:00:00') : null; return d ? [r.date, `${d.getDate()}. ${d.getMonth() + 1}.`, `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`, `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`, DOW[d.getDay()]].join(' ') : ''; }
+    if (c === 'route') return [r.route, r.zipTo, r.order, r.codeL, r.codeU].join(' ');
+    if (c === 'goods') return r.goods || '';
+    if (c === 'weight') return r.weight == null ? '' : fmtW(r.weight) + ' ' + r.weight;
+    if (c === 'price') return priceHtml(r).replace(/<[^>]*>/g, ' ');
+    return noteVal(r.key) || '';
+  };
+  const colKey = (r, c) => c === 'date' ? (r.date || '9999') : c === 'weight' ? (r.weight == null ? -1 : r.weight) : c === 'price' ? priceNum(r) : fold(colText(r, c));
+  const fWords = c => fold(view.f[c] || '').trim().split(/\s+/).filter(Boolean);
+  const passFilters = r => COLS.every(c => { const w = fWords(c); if (!w.length) return true; const t = fold(colText(r, c)); return w.every(x => t.includes(x)); });
+  const manualPass = m => COLS.every(c => { const w = fWords(c); if (!w.length) return true; const t = fold(m.text); return w.every(x => t.includes(x)); });
+  const sortRows = rows => {
+    if (!view.sort) return rows;
+    const pin = (a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0);
+    const { c, d } = view.sort, k = d === 'desc' ? -1 : 1;
+    return rows.slice().sort((a, b) => pin(a, b) || (((x, y) => (x < y ? -1 : x > y ? 1 : 0))(colKey(a, c), colKey(b, c)) * k));
+  };
   const pendingManual = {};     // rozepsané ruční objednávky (ještě neuložené)
   function rowHtml(r, today, extra) {
     const n = noteVal(r.key);
-    const grip = V2 ? `<span class="grip" draggable="true" data-dk="${esc(r.key)}" title="Přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '';
-    return `<tr data-key="${esc(r.key)}"${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}">
+    const grip = V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '';
+    return `<tr data-key="${esc(r.key)}"${V2 ? ' draggable="true"' : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today)}</td>
         <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
@@ -533,8 +584,8 @@
   }
   function manualHtml(m, folder) {
     const t = m.id in pendingManual ? pendingManual[m.id] : m.text;
-    return `<tr class="manual" data-key="m:${esc(m.id)}" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}>
-        <td class="c-chk"><span class="grip" draggable="true" data-dk="m:${esc(m.id)}" title="Přetáhni do složky Vývoz / Dovoz">⠿</span><button class="mdel" title="Smazat ruční objednávku" aria-label="Smazat">✕</button><span class="fbtns"><button data-f="vyvoz" data-fk="m:${esc(m.id)}">Vý</button><button data-f="dovoz" data-fk="m:${esc(m.id)}">Do</button><button data-f="none" data-fk="m:${esc(m.id)}">×</button></span></td>
+    return `<tr class="manual" draggable="true" data-key="m:${esc(m.id)}" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}>
+        <td class="c-chk"><span class="grip" data-dk="m:${esc(m.id)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><button class="mdel" title="Smazat ruční objednávku" aria-label="Smazat">✕</button><span class="fbtns"><button data-f="vyvoz" data-fk="m:${esc(m.id)}">Vý</button><button data-f="dovoz" data-fk="m:${esc(m.id)}">Do</button><button data-f="none" data-fk="m:${esc(m.id)}">×</button></span></td>
         <td colspan="5"><span class="mtag">RUČNĚ</span><textarea class="mtext" rows="1" maxlength="500" aria-label="Ruční objednávka">${esc(t)}</textarea></td>
         <td class="c-note"><small class="mwait">Čeká na načtení z Lori</small></td>
       </tr>`;
@@ -549,18 +600,18 @@
     if (V2) {
       const F = B.folders || {}, M = B.manual || [], byKey = new Map(B.offered.map(r => [r.key, r]));
       const sugg = new Map(M.filter(m => m.suggest && byKey.has(m.suggest.key)).map(m => [m.suggest.key, m]));
-      const list = vis.list.filter(r => !sugg.has(r.key));
+      const list = sortRows(vis.list.filter(r => !sugg.has(r.key) && passFilters(r)));
       const inF = f => list.filter(r => F[r.key] === f);
       const rest = list.filter(r => !F[r.key] || !FOLDERS.some(x => x[0] === F[r.key]));
       const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
-      const manHtml = f => M.filter(m => (m.folder || null) === f).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
+      const manHtml = f => M.filter(m => (m.folder || null) === f && manualPass(m)).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
       const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="7"><b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
       v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join('')).join('')
         + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join('');
       shown = FOLDERS.flatMap(([f]) => inF(f)).concat(restShown, M);
       B._v2count = { list: rest.length + FOLDERS.reduce((a, [f]) => a + inF(f).length, 0), shownN: shown.length };
     }
-    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (V2 ? JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
+    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (V2 ? JSON.stringify(view) + JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
     if (sig === lastSig) return shown;
     // zachovat rozepsanou poznámku (fokus + kurzor)
     const ae = document.activeElement;
@@ -811,6 +862,55 @@
 
   /* ---------- Vnitro 2: složky (drag & drop), ruční objednávky ---------- */
   if (V2) {
+    /* ----- řazení, filtry, šablony pod disketou ----- */
+    const theadEl = document.querySelector('thead');
+    const paintHead = () => {
+      theadEl.querySelectorAll('th[data-col]').forEach(th => {
+        let a = th.querySelector('.arr'); if (!a) { a = document.createElement('span'); a.className = 'arr'; th.appendChild(a); }
+        a.textContent = view.sort && view.sort.c === th.dataset.col ? (view.sort.d === 'desc' ? '▼' : '▲') : '';
+      });
+      theadEl.querySelectorAll('input[data-fc]').forEach(i => { i.classList.toggle('on', !!(view.f[i.dataset.fc] || '').trim()); });
+      $('diskBtn').classList.toggle('on', !!view.sort || COLS.some(c => (view.f[c] || '').trim()));
+    };
+    const syncInputs = () => theadEl.querySelectorAll('input[data-fc]').forEach(i => { i.value = view.f[i.dataset.fc] || ''; });
+    const applyView = () => { saveView(); paintHead(); lastSig = ''; render(); };
+    syncInputs(); paintHead();
+    theadEl.addEventListener('click', e => {
+      const th = e.target.closest('th[data-col]'); if (!th || e.target.closest('input')) return;
+      const c = th.dataset.col, cur = view.sort;
+      view.sort = !cur || cur.c !== c ? { c, d: 'asc' } : cur.d === 'asc' ? { c, d: 'desc' } : null;
+      applyView();
+    });
+    let ft = null;
+    theadEl.addEventListener('input', e => {
+      const i = e.target.closest('input[data-fc]'); if (!i) return;
+      view.f[i.dataset.fc] = i.value; clearTimeout(ft); ft = setTimeout(applyView, 200);
+    });
+    const pop = $('diskPop');
+    const viewDesc = v => {
+      const n = { date: 'Datum', route: 'Trasa', goods: 'Zboží', weight: 'Hmotnost', price: 'Cena', note: 'Poznámka' };
+      const p = []; if (v.sort) p.push('řazení: ' + n[v.sort.c] + (v.sort.d === 'desc' ? ' ▼' : ' ▲'));
+      Object.keys(v.f || {}).filter(c => (v.f[c] || '').trim()).forEach(c => p.push(n[c] + ' ∋ „' + v.f[c].trim() + '“'));
+      return p.join(', ') || 'bez řazení a filtrů';
+    };
+    async function paintPop() {
+      let items = [];
+      try { items = (await (await fetch('/api/tpl')).json()).items || []; } catch {}
+      pop.innerHTML = '<h4>Šablony řazení a filtrů</h4><div class="cur">Aktuálně: ' + esc(viewDesc(view)) + '</div><div class="row"><input id="tplName" placeholder="Název šablony…" maxlength="60"><button class="go" id="tplSave">Uložit</button></div>' +
+        '<ul>' + (items.length ? items.map(t => '<li data-id="' + esc(t.id) + '"><span><b>' + esc(t.name) + '</b><small>' + esc(viewDesc(t.view || {})) + '</small></span><button data-a="load">Načíst</button><button data-a="del" title="Smazat">✕</button></li>').join('') : '<li><span><small>Zatím žádná šablona.</small></span></li>') + '</ul>' +
+        '<div class="row" style="margin:10px 0 0"><button id="tplClear">Zrušit řazení a filtry</button></div>';
+      pop._items = items;
+    }
+    $('diskBtn').onclick = async e => { e.stopPropagation(); if (pop.hidden) { await paintPop(); pop.hidden = false; } else pop.hidden = true; };
+    document.addEventListener('click', e => { if (!pop.hidden && !pop.contains(e.target) && e.target !== $('diskBtn') && !$('diskBtn').contains(e.target)) pop.hidden = true; });
+    pop.addEventListener('click', async e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.id === 'tplSave') { const name = $('tplName').value.trim(); if (!name) { $('tplName').focus(); return; } try { await api('/api/tpl', { name, view }); await paintPop(); } catch (err) { alert('Uložení se nepovedlo: ' + err.message); } return; }
+      if (b.id === 'tplClear') { view = { sort: null, f: {} }; syncInputs(); applyView(); paintPop(); return; }
+      const li = b.closest('li'); if (!li) return; const t = (pop._items || []).find(x => x.id === li.dataset.id); if (!t) return;
+      if (b.dataset.a === 'load') { view = { sort: t.view.sort || null, f: Object.assign({}, t.view.f || {}) }; syncInputs(); applyView(); pop.hidden = true; }
+      if (b.dataset.a === 'del') { if (!confirm('Smazat šablonu „' + t.name + '“?')) return; try { await api('/api/tpl/delete', { id: t.id }); await paintPop(); } catch (err) { alert('Smazání se nepovedlo: ' + err.message); } }
+    });
     const rowsEl = $('rows');
     let dragKey = null;
     async function setFolder(key, f) {
@@ -822,10 +922,12 @@
       poll(false);
     }
     rowsEl.addEventListener('dragstart', e => {
-      const g = e.target.closest && e.target.closest('.grip'); if (!g) return;
-      dragKey = g.dataset.dk; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragKey);
-      const tr = g.closest('tr'); if (tr) setTimeout(() => tr.classList.add('dragging'), 0);
+      const tr = e.target.closest && e.target.closest('tr[data-key]'); if (!tr || tr.draggable === false) return;
+      dragKey = tr.dataset.key; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragKey);
+      setTimeout(() => tr.classList.add('dragging'), 0);
     });
+    // v textu (poznámka, ruční objednávka) a u tlačítek se řádek netáhne – jde normálně označovat text
+    rowsEl.addEventListener('mousedown', e => { const tr = e.target.closest && e.target.closest('tr[data-key]'); if (tr) tr.draggable = !e.target.closest('textarea,input,button,label,a'); });
     rowsEl.addEventListener('dragend', () => { dragKey = null; rowsEl.querySelectorAll('.dragging,.drop-over').forEach(x => x.classList.remove('dragging', 'drop-over')); });
     const targetOf = e => { const tr = e.target.closest && e.target.closest('tr'); const f = tr && (tr.dataset.drop || tr.dataset.folder); return f ? { tr, f, head: rowsEl.querySelector(`tr.fold[data-drop="${f}"]`) } : null; };
     rowsEl.addEventListener('dragover', e => { if (!dragKey) return; const t = targetOf(e); if (!t) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; rowsEl.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); if (t.head) t.head.classList.add('drop-over'); });
