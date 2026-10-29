@@ -121,6 +121,9 @@
   tr.frow input.on{border-color:#1d388f;background:#eef3ff}
   body.t-v2 th[data-col]{cursor:pointer;user-select:none}body.t-v2 th[data-col]:hover{color:#1d388f}
   th .arr{margin-left:5px;color:#1d388f;font-size:11px}
+  .refbtn{display:none;align-items:center;gap:9px;background:#1d388f;color:#fff;border:0;border-radius:10px;padding:11px 20px;font:700 16px inherit;cursor:pointer;box-shadow:0 3px 10px rgba(29,56,143,.35)}
+  .refbtn:hover{background:#274bb8}.refbtn:disabled{opacity:.75;cursor:wait}.refbtn.spin svg{animation:rspin .8s linear infinite}
+  body.t-v2 .refbtn{display:inline-flex}@keyframes rspin{to{transform:rotate(360deg)}}
   .diskbtn{display:none;background:none;border:1px solid var(--line);border-radius:8px;padding:5px 8px;color:#1d388f;cursor:pointer}
   body.t-v2 .diskbtn{display:inline-flex}.diskbtn.on{background:#1d388f;color:#fff}
   .ph{position:relative}
@@ -346,6 +349,7 @@
       <button class="markbtn" id="allBtn" aria-pressed="false" hidden>Zobrazit vše</button>
       <button class="markbtn" id="markBtn" aria-pressed="false" title="Zobrazit jen řádky s @@@ ve sloupci CODE nakl.">Označeno k prodeji <span class="n" id="markN">0</span></button>
       <button class="diskbtn" id="diskBtn" type="button" title="Šablony řazení a filtrů – uložit / načíst" aria-label="Šablony řazení a filtrů"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
+      <button class="refbtn" id="refBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span id="refTxt">Obnovit data z tabulky</span></button>
       <span class="upd" id="upd"></span>
       <div class="diskpop" id="diskPop" hidden></div>
     </div>
@@ -871,6 +875,16 @@
 
   /* ---------- Vnitro 2: složky (drag & drop), ruční objednávky ---------- */
   if (V2) {
+    const rb = $('refBtn'), rt = $('refTxt');
+    async function refreshNow() {
+      if (rb.disabled) return; rb.disabled = true; rb.classList.add('spin'); rt.textContent = 'Obnovuji…';
+      try { await poll(true); lastSig = ''; render(); rt.textContent = 'Obnoveno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); }
+      catch { rt.textContent = 'Obnovení se nepovedlo'; }
+      rb.classList.remove('spin'); rb.disabled = false;
+      setTimeout(() => { rt.textContent = 'Obnovit data z tabulky'; }, 4000);
+    }
+    rb.onclick = refreshNow;
+    setInterval(refreshNow, 30 * 60 * 1000);   // automatické obnovení po 30 minutách
     const h2 = document.querySelector('.ph h2'); if (h2) h2.textContent = 'Přepravy';
     /* ----- řazení, filtry, šablony pod disketou ----- */
     const theadEl = document.querySelector('thead');
