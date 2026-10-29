@@ -49,7 +49,7 @@
   html[data-skin] body::before{background:radial-gradient(800px 520px at 20% 0%,rgba(94,138,255,.38),transparent 65%),linear-gradient(180deg,#060b22,#02040c)}
   html[data-skin] h1,html[data-skin] h2,html[data-skin] .kt button,html[data-skin] .pt button,html[data-skin] .agbig b,html[data-skin] h1 a{font-family:var(--fh) !important}
   html[data-skin] svg text{font-family:var(--fb) !important;fill:var(--tx) !important}
-  html[data-skin] svg text:last-of-type{fill:var(--mut) !important}
+  html[data-skin] svg text.mu{fill:var(--mut) !important}
   html[data-skin] .card{background:var(--panel);border:1px solid var(--line);color:var(--tx);box-shadow:0 0 22px rgba(94,138,255,.22);position:relative;z-index:1}
   html[data-skin] .wrap{position:relative;z-index:1}
   html[data-skin] h1 a{background:rgba(255,255,255,.07) !important;color:var(--cy);border-color:var(--line)}
@@ -163,7 +163,7 @@
       arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color(x.i)}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})"/>`; acc += len; });
     if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(128,128,128,.2)" stroke-width="${w}"/>`;
     const fg = theme === 'day' ? '#0f1b3d' : '#fff', mu = theme === 'day' ? '#51597a' : '#c3cfe8';
-    return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<text x="${c}" y="${c + 6}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text x="${c}" y="${c + 24}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
+    return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<text x="${c}" y="${c + 2}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text class="mu" x="${c}" y="${c + 18}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text><text class="mu" x="${c}" y="${c + 32}" text-anchor="middle" fill="${mu}" font-family="Inter" font-weight="700" font-size="7.5" letter-spacing="1.2">ZAPSÁNO AGENTEM</text></svg>`;
   }
   const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
   let kind = 'ord', last = null;
