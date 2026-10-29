@@ -516,8 +516,8 @@
   function dateHtml(iso, today, to) {
     if (V2 && iso && to && to !== iso) {
       const d = new Date(iso + 'T12:00:00'), e = new Date(to + 'T12:00:00'), t = new Date(today + 'T12:00:00');
-      const diff = Math.round((d - t) / 864e5);
-      const tag = diff === 0 ? '<span class="tag t">DNES</span>' : diff === 1 ? '<span class="tag z">ZÍTRA</span>' : diff < 0 ? '<span class="tag p">PROŠLÉ</span>' : '';
+      const diff = Math.round((d - t) / 864e5), diffE = Math.round((e - t) / 864e5);
+      const tag = diff <= 0 && diffE >= 0 ? '<span class="tag t">DNES</span>' : diff === 1 ? '<span class="tag z">ZÍTRA</span>' : diffE < 0 ? '<span class="tag p">PROŠLÉ</span>' : '';
       return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}. – ${e.getDate()}. ${e.getMonth() + 1}.</span>${tag}<span class="dow">${DOW[d.getDay()]}–${DOW[e.getDay()]} ${e.getFullYear()}</span>`;
     }
     if (!iso) return '<span class="dow">bez data</span>';
