@@ -254,9 +254,6 @@
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
   </div>
 
-  <div class="sec">Agent vs. ručně po dnech</div>
-  <div class="panel"><h3>Denní přírůstek pozic (vč. přeprav) – kolik přibylo zápisem agenta a kolik ručně, u každé relace (jen pracovní dny)</h3><div id="perday"></div></div>
-
   <div class="sec">Na co agenty využíváme nejvíce</div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
     <div class="panel"><h3>Činnosti všech agentů ze všech relací dohromady</h3><div id="useAll"></div></div>
@@ -454,7 +451,6 @@
     if (barMode === 'day') dn.innerHTML = `<button type="button" data-d="1" ${dayOff >= 7 ? 'disabled' : ''} aria-label="Předchozí den">‹</button><span class="dlbl">${dayLbl(dayOff)}</span><button type="button" data-d="-1" ${dayOff <= 0 ? 'disabled' : ''} aria-label="Další den">›</button>`;
     const wt = $('weekTgl'); wt.hidden = barMode !== 'week';
     if (barMode === 'week') wt.innerHTML = WEEK_NAMES.map((n, i) => { const r = weekRange(i); return `<button type="button" data-w="${i}" class="${i === weekOff ? 'on' : ''}" title="${fmtD(r[0])} – ${fmtD(r[1])}">${n}</button>`; }).join('');
-    if ($('perday')) $('perday').innerHTML = perDay(rels);
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
