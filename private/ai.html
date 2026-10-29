@@ -250,7 +250,7 @@
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
     <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
-    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
+    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
   </div>
 
@@ -344,7 +344,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let barMode = 'day', weekOff = 0, dayOff = 0;
+  let barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'all';
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -361,8 +361,17 @@
       wk = weekRange(weekOff);
       items.forEach(x => { const z = { pA: 0, pM: 0, tA: 0, tM: 0 }; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) for (const f in z) z[f] += d.rels[x.key][f] || 0; x.oA = z.pA; x.tA = z.tA; x.oM = z.pM; x.tM = z.tM; x.a = z.pA + z.tA; x.m = z.pM + z.tM; });
     }
+    if (kindMode !== 'all') {
+      const ord = kindMode === 'ord';
+      items.forEach(x => {
+        if (ord) { x.tA = 0; x.tM = 0; } else { x.oA = 0; x.oM = 0; }
+        x.a = x.oA + x.tA; x.m = x.oM + x.tM;
+        const q = S.rels.find(r => r.key === x.key).today; x.ta = ord ? q.pA : q.tA; x.tm = ord ? q.pM : q.tM;
+      });
+      for (let i = items.length - 1; i >= 0; i--) if (items[i].a + items[i].m <= 0) items.splice(i, 1);
+    }
     items.sort((p, q) => (q.a + q.m) - (p.a + p.m));
-    if (!items.some(x => x.a + x.m)) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné přírůstky.' + (barMode === 'day' ? '' : '') + '</div>';
+    if (!items.some(x => x.a + x.m)) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
     const n = items.length, W = 600, RH = 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
     const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
     let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W - 54, 'OBJ. / PŘEP.', 'text-anchor="end"') + hd(W, '% AGENT', 'text-anchor="end"');
@@ -447,6 +456,7 @@
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
     document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
+    document.querySelectorAll('#kindTgl button').forEach(b => b.classList.toggle('on', b.dataset.k === kindMode));
     const dn = $('dayNav'); dn.hidden = barMode !== 'day';
     if (barMode === 'day') dn.innerHTML = `<button type="button" data-d="1" ${dayOff >= 7 ? 'disabled' : ''} aria-label="Předchozí den">‹</button><span class="dlbl">${dayLbl(dayOff)}</span><button type="button" data-d="-1" ${dayOff <= 0 ? 'disabled' : ''} aria-label="Další den">›</button>`;
     const wt = $('weekTgl'); wt.hidden = barMode !== 'week';
@@ -662,6 +672,7 @@
     setTimeout(() => b.classList.remove('spin'), 500);
   });
   document.querySelectorAll('#barTgl button').forEach(b => b.addEventListener('click', () => { barMode = b.dataset.m; render(); }));
+  $('kindTgl').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { kindMode = b.dataset.k; render(); } });
   $('dayNav').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if (b && !b.disabled) { dayOff = Math.max(0, Math.min(7, dayOff + +b.dataset.d)); render(); } });
   $('weekTgl').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { weekOff = +b.dataset.w; render(); } });
   load(); setInterval(load, 60000);
