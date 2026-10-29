@@ -130,11 +130,13 @@
   .diskpop ul{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto}.diskpop li{display:flex;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.diskpop li span{flex:1;min-width:0}.diskpop li small{display:block;color:var(--muted)}
   .diskpop .cur{font-size:12px;color:var(--muted);margin-bottom:8px}
   /* barvy složek: Dovoz modrá, Vývoz zelená */
-  tbody tr.f-vyvoz{background:#e3f3e7}tbody tr.f-dovoz{background:#e0ebfa}
-  tbody tr.f-vyvoz:hover{background:#d6edde}tbody tr.f-dovoz:hover{background:#d2e3f8}
-  tr.fold[data-drop=vyvoz] td{background:#c6e6cf;border-bottom-color:#82bd93}tr.fold[data-drop=dovoz] td{background:#c4d8f4;border-bottom-color:#86a9dc}
-  tr.fold[data-drop=vyvoz] .fcnt{background:#2e7d4a}tr.fold[data-drop=dovoz] .fcnt{background:#2b5aa8}
-  tr.manual[data-folder=vyvoz] td:first-child{box-shadow:inset 5px 0 0 #2e7d4a}tr.manual[data-folder=dovoz] td:first-child{box-shadow:inset 5px 0 0 #2b5aa8}
+  tbody tr.f-vyvoz{background:#b5e3c1}tbody tr.f-dovoz{background:#b3cff5}
+  tbody tr.f-vyvoz:hover{background:#a3d9b2}tbody tr.f-dovoz:hover{background:#9fc2f0}
+  tbody tr.f-vyvoz td:first-child{box-shadow:inset 7px 0 0 #1f8a45}tbody tr.f-dovoz td:first-child{box-shadow:inset 7px 0 0 #1f5fc4}
+  tbody tr.f-vyvoz td,tbody tr.f-dovoz td{border-bottom-color:rgba(0,0,0,.14)}
+  tr.fold[data-drop=vyvoz] td{background:#6cc588;color:#052e14;border-bottom-color:#1f8a45}tr.fold[data-drop=dovoz] td{background:#6c9fe6;color:#06214d;border-bottom-color:#1f5fc4}
+  tr.fold[data-drop=vyvoz] .fcnt{background:#126b32}tr.fold[data-drop=dovoz] .fcnt{background:#164a9c}
+  tr.manual[data-folder=vyvoz] td:first-child{box-shadow:inset 7px 0 0 #1f8a45}tr.manual[data-folder=dovoz] td:first-child{box-shadow:inset 7px 0 0 #1f5fc4}
   body.t-v2 tbody tr[data-key]{cursor:grab}body.t-v2 tbody tr[data-key] textarea,body.t-v2 tbody tr[data-key] input{cursor:text}
   table{width:100%;border-collapse:collapse}
   thead th{background:#f5f7fa;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
