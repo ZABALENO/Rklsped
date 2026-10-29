@@ -25,7 +25,8 @@
   .legend div{display:flex;align-items:center;gap:9px}.legend i{width:11px;height:11px;flex:none}.legend b{margin-left:auto;font-weight:700}.legend small{color:var(--mut);font-weight:500;min-width:38px;text-align:right}
   h2{margin:26px 0 8px;font:800 13px Inter,sans-serif;letter-spacing:2px;text-transform:uppercase}
   .row{display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:8px;margin:7px 0}.row .n{font-weight:600;font-size:14px}.row .v{font-weight:700;font-size:14px;white-space:nowrap}.row .v .a{color:var(--tx)}.row .v .m{color:#f2a516}
-  .bw{height:20px;display:flex;background:rgba(128,128,128,.12);border-radius:2px;overflow:hidden}.bw i{display:block;height:100%}
+  .bw{position:relative;height:20px;display:flex;background:rgba(128,128,128,.12);border-radius:2px;overflow:hidden}.bw i{display:block;height:100%}
+  .bw .pc{position:absolute;left:6px;top:0;bottom:0;display:flex;align-items:center;font:800 12px Inter,sans-serif;color:#fff;letter-spacing:.2px;text-shadow:0 0 3px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.85);pointer-events:none}
   .barleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mut);margin-top:10px}.barleg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
   .barleg .lb{background:var(--tx)}.barleg .lp{background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)}
   .kt{display:flex;gap:6px;margin:0 0 8px}.kt button{flex:1;background:transparent;color:var(--mut);border:1px solid var(--line);padding:7px 4px;font:600 12px Inter,sans-serif;border-radius:6px}.kt button.on{background:#1d388f;color:#fff;border-color:#1d388f}
@@ -190,7 +191,7 @@
       return `<div class="row"><span class="n" style="color:${col}">${esc(x.name)}</span><div class="bw">` +
         (x.oA ? `<i style="width:${w(x.oA)};background:${col}"></i>` : '') + (x.tA ? `<i style="width:${w(x.tA)};background:${col};opacity:.55"></i>` : '') +
         (x.oM ? `<i style="width:${w(x.oM)};background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)"></i>` : '') + (x.tM ? `<i style="width:${w(x.tM)};background:rgba(242,165,22,.6)"></i>` : '') +
-        `</div><span class="v"><span class="a">+${A}</span> / <span class="m">+${M}</span></span></div>`;
+        `<span class="pc">${(A + M) ? Math.round(100 * A / (A + M)) : 0} %</span></div><span class="v"><span class="a">+${A}</span> / <span class="m">+${M}</span></span></div>`;
     }).join('');
   }
   async function load() {
