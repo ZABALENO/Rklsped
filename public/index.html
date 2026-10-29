@@ -92,6 +92,8 @@
   .mbar input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
   .mbar button{background:#1d388f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 13px inherit;cursor:pointer;white-space:nowrap}
   tr.fold td{background:#e8eefb;border-bottom:2px solid #9db3e0;font-size:14px;padding:8px 12px}
+  .ftog{border:0;background:rgba(0,0,0,.12);color:inherit;border-radius:6px;width:24px;height:24px;margin-right:8px;cursor:pointer;font-size:14px;line-height:1;vertical-align:middle}.ftog:hover{background:rgba(0,0,0,.25)}
+  tr.fold[data-drop] b{vertical-align:middle}
   tr.fold .fcnt{display:inline-block;min-width:22px;text-align:center;background:#1d388f;color:#fff;border-radius:11px;font-size:12px;padding:0 7px;margin-left:6px}
   tr.fold .fhint{margin-left:12px;color:var(--muted);font-size:12px;font-weight:500}
   tr.fold[data-drop=none] td{background:#f1f3f7;border-bottom-color:#c9d1de}
@@ -552,6 +554,7 @@
   const COLS = ['date', 'route', 'cust', 'goods', 'weight', 'price', 'note'];
   let view = { sort: null, f: {} };
   try { const v = JSON.parse(lsGet('rkl_v2_view', 'null')); if (v && typeof v === 'object') view = { sort: v.sort || null, f: v.f || {} }; } catch {}
+  let collapsed = []; try { collapsed = JSON.parse(lsGet('rkl_v2_col', '[]')) || []; } catch {}
   const saveView = () => lsSet('rkl_v2_view', JSON.stringify(view));
   const priceNum = r => (r.incCzk || 0) + (r.incEur || 0) * 25;
   const colText = (r, c) => {
@@ -611,13 +614,13 @@
       const rest = list.filter(r => !F[r.key] || !FOLDERS.some(x => x[0] === F[r.key]));
       const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
       const manHtml = f => M.filter(m => (m.folder || null) === f && manualPass(m)).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
-      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="8"><b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
-      v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join('')).join('')
+      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="8">${f === 'none' ? '' : `<button class="ftog" data-tog="${f}" aria-expanded="${!collapsed.includes(f)}" title="Sbalit / rozbalit">${collapsed.includes(f) ? '▸' : '▾'}</button>`}<b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
+      v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + (collapsed.includes(f) ? '' : manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join(''))).join('')
         + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join('');
-      shown = FOLDERS.flatMap(([f]) => inF(f)).concat(restShown, M);
+      shown = FOLDERS.flatMap(([f]) => collapsed.includes(f) ? [] : inF(f)).concat(restShown, M);
       B._v2count = { list: rest.length + FOLDERS.reduce((a, [f]) => a + inF(f).length, 0), shownN: shown.length };
     }
-    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (V2 ? JSON.stringify(view) + JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
+    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (V2 ? JSON.stringify(view) + collapsed.join() + JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
     if (sig === lastSig) return shown;
     // zachovat rozepsanou poznámku (fokus + kurzor)
     const ae = document.activeElement;
@@ -919,6 +922,11 @@
       if (b.dataset.a === 'del') { if (!confirm('Smazat šablonu „' + t.name + '“?')) return; try { await api('/api/tpl/delete', { id: t.id }); await paintPop(); } catch (err) { alert('Smazání se nepovedlo: ' + err.message); } }
     });
     const rowsEl = $('rows');
+    rowsEl.addEventListener('click', e => {
+      const t = e.target.closest && e.target.closest('.ftog'); if (!t) return;
+      const f = t.dataset.tog; collapsed = collapsed.includes(f) ? collapsed.filter(x => x !== f) : collapsed.concat(f);
+      lsSet('rkl_v2_col', JSON.stringify(collapsed)); lastSig = ''; render();
+    });
     let dragKey = null;
     async function setFolder(key, f) {
       const folder = f === 'none' ? null : f;
