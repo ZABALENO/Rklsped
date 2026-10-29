@@ -6,7 +6,7 @@
 <title>Agentizace RKL Opava</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;600&family=Audiowide&family=Rajdhani:wght@500;600;700&family=Michroma&family=Share+Tech+Mono&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#000; --bg2:#1d1d1b; --panel:rgba(2,5,16,.84); --line:rgba(120,160,255,.6);
@@ -234,84 +234,142 @@
   @media (prefers-reduced-motion:reduce){.live i{animation:none}}
 </style>
 <style id="skins">
-  /* ===== 5 FUTURISTICKÝCH SKINŮ (hvězdička v liště) =====
-     1 Pulse (jemné) · 2 Network · 3 Neon · 4 Hologram · 5 Terminál (největší změna) */
-  #net,.beam,.hud,.floor{display:none}
+  /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
+     1 Pulse (nejjemnější) · 2 Network · 3 Neon · 4 Hologram · 5 Terminál (největší změna) */
+  #net,.hud,.floor{display:none}
   .pdc svg path[data-ln=m]{stroke-dasharray:5 4}
-  html:not([data-skin]) .panel,html[data-skin="0"] .panel{animation:none}
-  .panel:hover{transition:box-shadow .3s,border-color .3s}
-  /* --- společné pro 1–5 --- */
-  html[data-skin] .beam{display:block;position:fixed;left:0;right:0;top:0;height:140px;z-index:99;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(122,162,255,.10) 70%,rgba(160,200,255,.35) 99%,transparent 100%);animation:beam 9s linear infinite;mix-blend-mode:screen}
-  @keyframes beam{from{transform:translateY(-160px)}to{transform:translateY(105vh)}}
+  .tbtn::after{display:none}
+  html[data-skin] .tbtn svg{display:none}
+  html[data-skin] .tbtn::after{display:inline;font-size:17px;line-height:1}
+  html[data-skin] .tbtn{display:inline-flex;align-items:center;justify-content:center}
+  html[data-skin] body{font-family:var(--fb)}
+  html[data-skin] h1,html[data-skin] h2,html[data-skin] h3,html[data-skin] .sec,html[data-skin] .big,html[data-skin] .hr a,html[data-skin] .tgl button,html[data-skin] .hud,html[data-skin] .lbl,html[data-skin] .sub{font-family:var(--fh) !important}
+  html[data-skin] svg text{font-family:var(--fb) !important}
   html[data-skin] .panel{animation:pin .7s cubic-bezier(.2,.8,.2,1) both}
   @keyframes pin{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
   html[data-skin] .panel:nth-child(2){animation-delay:.08s}html[data-skin] .panel:nth-child(3){animation-delay:.16s}html[data-skin] .panel:nth-child(4){animation-delay:.24s}
-  html[data-skin] .panel h3::before{content:"› ";color:var(--cy);text-shadow:0 0 8px var(--cy)}
-  html[data-skin] .sec{text-shadow:0 0 14px var(--cy)}
-  html[data-skin] .big{text-shadow:0 0 28px var(--cy),0 0 60px rgba(94,138,255,.4);animation:flick 6s infinite}
+  html[data-skin] .big{animation:flick 6s infinite}
   @keyframes flick{0%,92%,100%{opacity:1}93%{opacity:.82}94%{opacity:1}96%{opacity:.9}}
   html[data-skin] .pdc svg path[data-ln=a]{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.6s ease-out .2s forwards}@keyframes draw{to{stroke-dashoffset:0}}
   html[data-skin] .pdc svg path[data-ln=m]{stroke-dasharray:6 5}
   html[data-skin] .pdc svg circle{filter:drop-shadow(0 0 4px currentColor)}
-  html[data-skin] .row .bw i{box-shadow:0 0 10px currentColor}
-  /* --- 2 Network a výš: částice, radar, HUD lišta --- */
+  .hud i{width:7px;height:7px;border-radius:50%;background:#7dd3a0;box-shadow:0 0 8px #7dd3a0;animation:pulse 1.8s infinite}
+  html[data-skin="2"] .hud,html[data-skin="3"] .hud,html[data-skin="4"] .hud,html[data-skin="5"] .hud{display:flex;position:fixed;left:50%;bottom:8px;translate:-50% 0;z-index:98;gap:14px;align-items:center;padding:4px 16px;font-size:10px;line-height:1;letter-spacing:2.5px;text-transform:uppercase;color:var(--cy);background:rgba(2,8,28,.7);border:1px solid var(--line);pointer-events:none}
   html[data-skin="2"] #net,html[data-skin="3"] #net,html[data-skin="5"] #net{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.6}
-  html[data-skin="2"] .panel::after,html[data-skin="3"] .panel::after,html[data-skin="4"] .panel::after{content:"";position:absolute;right:0;bottom:0;width:34px;height:2px;background:var(--cy);box-shadow:0 0 10px var(--cy)}
-  html[data-skin="2"] .panel:hover{border-color:rgba(160,200,255,.95);box-shadow:inset 0 0 60px rgba(94,138,255,.12)}
-  html[data-skin="2"] #pie,html[data-skin="3"] #pie,html[data-skin="4"] #pie{position:relative}
+  html[data-skin] #pie{position:relative}
   html[data-skin="2"] #pie::before,html[data-skin="3"] #pie::before,html[data-skin="4"] #pie::before{content:"";position:absolute;left:50%;top:50%;width:min(300px,92%);aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;
     background:conic-gradient(from 0deg,transparent 0deg,transparent 300deg,var(--cy) 360deg);opacity:.7;
     -webkit-mask:radial-gradient(circle,transparent 62%,#000 63%,#000 64%,transparent 65%);mask:radial-gradient(circle,transparent 62%,#000 63%,#000 64%,transparent 65%);animation:radar 5s linear infinite}
   @keyframes radar{to{rotate:360deg}}
-  html[data-skin="2"] .hud,html[data-skin="3"] .hud,html[data-skin="4"] .hud,html[data-skin="5"] .hud{display:flex;position:fixed;left:50%;bottom:8px;translate:-50% 0;z-index:98;gap:14px;align-items:center;padding:4px 16px;font:600 10px/1 "Inter",system-ui,sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--cy);background:rgba(2,8,28,.7);border:1px solid var(--line);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);pointer-events:none}
-  .hud i{width:7px;height:7px;border-radius:50%;background:#7dd3a0;box-shadow:0 0 8px #7dd3a0;animation:pulse 1.8s infinite}
-  /* --- 3 Neon: azurová + magenta, glitch nadpisy, perspektivní mřížka --- */
-  html[data-skin="3"]{--cy:#00f0ff;--mg:#ff2bd6;--line:rgba(0,240,255,.6);--panel:rgba(6,0,24,.82)}
+
+  /* ---- 1 PULSE: Chakra Petch, zkosené rohy, jemná záře ---- */
+  html[data-skin="1"]{--fh:"Chakra Petch",sans-serif;--fb:"Chakra Petch",sans-serif}
+  html[data-skin="1"] .tbtn#skinBtn::after{content:"✧"}html[data-skin="1"] #themeBtn::after{content:"◐"}html[data-skin="1"] #refBtn::after{content:"↻"}html[data-skin="1"] #mobBtn::after{content:"▯"}html[data-skin="1"] #planBtn::after{content:"☰"}
+  html[data-skin="1"] .panel h3::before{content:"› ";color:var(--cy)}
+  html[data-skin="1"] .big{text-shadow:0 0 24px var(--cy)}
+  html[data-skin="1"] .sec::before{content:"◢";color:var(--cy)}
+  html[data-skin="1"] .sec{text-shadow:0 0 12px var(--cy)}
+
+  /* ---- 2 NETWORK: Orbitron + Exo 2, osmiúhelníkové panely, síť částic, radar ---- */
+  html[data-skin="2"]{--fh:"Orbitron",sans-serif;--fb:"Exo 2",sans-serif;--line:rgba(122,162,255,.6)}
+  html[data-skin="2"] h1{letter-spacing:4px;font-weight:900}
+  html[data-skin="2"] .panel{clip-path:polygon(22px 0,calc(100% - 22px) 0,100% 22px,100% calc(100% - 22px),calc(100% - 22px) 100%,22px 100%,0 calc(100% - 22px),0 22px);padding:18px 22px}
+  html[data-skin="2"] .panel h3{letter-spacing:3px;font-size:11px}
+  html[data-skin="2"] .panel h3::before{content:"⬡ ";color:var(--cy);text-shadow:0 0 8px var(--cy)}
+  html[data-skin="2"] .tbtn#skinBtn::after{content:"⬡"}html[data-skin="2"] #themeBtn::after{content:"◑"}html[data-skin="2"] #refBtn::after{content:"⟳"}html[data-skin="2"] #mobBtn::after{content:"▭"}html[data-skin="2"] #planBtn::after{content:"≣"}
+  html[data-skin="2"] .tgl button{clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);border-radius:0;padding:5px 16px}
+  html[data-skin="2"] .big{text-shadow:0 0 28px var(--cy),0 0 60px rgba(94,138,255,.4);font-weight:900}
+  html[data-skin="2"] .sec::before{content:"⬢";color:var(--cy);margin-right:2px}
+  html[data-skin="2"] .panel:hover{border-color:rgba(160,200,255,.95);box-shadow:inset 0 0 60px rgba(94,138,255,.12)}
+
+  /* ---- 3 NEON: Audiowide + Rajdhani, zakulacené panely se zářícím rámem, glitch, perspektivní mřížka ---- */
+  html[data-skin="3"]{--fh:"Audiowide",sans-serif;--fb:"Rajdhani",sans-serif;--cy:#00f0ff;--mg:#ff2bd6;--line:rgba(0,240,255,.7);--panel:rgba(8,0,28,.82)}
+  html[data-skin="3"] body{font-weight:600;font-size:16px}
   html[data-skin="3"] .bgimg.l3{background:radial-gradient(900px 600px at 15% 0%,rgba(255,43,214,.45),transparent 65%),radial-gradient(900px 600px at 100% 100%,rgba(0,240,255,.4),transparent 60%),linear-gradient(180deg,rgba(10,0,30,.92),rgba(0,6,30,.92))}
-  html[data-skin="3"] .panel{border-color:var(--cy);box-shadow:inset 0 0 40px rgba(0,240,255,.07),0 0 18px rgba(0,240,255,.25)}
-  html[data-skin="3"] h1{background:linear-gradient(90deg,#fff,#00f0ff 45%,#ff2bd6);-webkit-background-clip:text;background-clip:text;animation:glitch 5s infinite}
-  @keyframes glitch{0%,94%,100%{text-shadow:0 0 30px rgba(0,240,255,.35);transform:none}95%{text-shadow:3px 0 #ff2bd6,-3px 0 #00f0ff;transform:translateX(2px)}97%{text-shadow:-3px 0 #ff2bd6,3px 0 #00f0ff;transform:translateX(-2px)}}
-  html[data-skin="3"] .sec{color:#ff2bd6;text-shadow:0 0 16px #ff2bd6}
-  html[data-skin="3"] .panel h3::before{color:#ff2bd6;text-shadow:0 0 8px #ff2bd6}
+  html[data-skin="3"] .panel{clip-path:none;border-radius:16px;border:2px solid var(--cy);box-shadow:inset 0 0 30px rgba(0,240,255,.12),0 0 20px rgba(0,240,255,.45),0 0 2px #fff}
+  html[data-skin="3"] .panel::before{display:none}
+  html[data-skin="3"] .panel h3{color:#ff2bd6;text-shadow:0 0 10px #ff2bd6;letter-spacing:2px}
+  html[data-skin="3"] .panel h3::before{content:"◆ ";color:#00f0ff;text-shadow:0 0 8px #00f0ff}
+  html[data-skin="3"] .tbtn{border-radius:50%;clip-path:none;width:36px;height:36px;border-color:#ff2bd6;color:#ff2bd6;box-shadow:0 0 12px rgba(255,43,214,.6),inset 0 0 8px rgba(255,43,214,.3)}
+  html[data-skin="3"] .tbtn::after{text-shadow:0 0 8px currentColor}
+  html[data-skin="3"] .tbtn#skinBtn::after{content:"✦"}html[data-skin="3"] #themeBtn::after{content:"☾"}html[data-skin="3"] #refBtn::after{content:"⟲"}html[data-skin="3"] #mobBtn::after{content:"▮"}html[data-skin="3"] #planBtn::after{content:"✚"}
+  html[data-skin="3"] .tgl button{border-radius:999px;border-color:#ff2bd6;color:#ff9aea}
+  html[data-skin="3"] .tgl button.on{background:rgba(255,43,214,.25);box-shadow:0 0 12px rgba(255,43,214,.7)}
+  html[data-skin="3"] h1{background:linear-gradient(90deg,#fff,#00f0ff 45%,#ff2bd6);-webkit-background-clip:text;background-clip:text;animation:glitch 5s infinite;font-weight:400}
+  @keyframes glitch{0%,94%,100%{filter:drop-shadow(0 0 14px rgba(0,240,255,.5));transform:none}95%{filter:drop-shadow(4px 0 #ff2bd6) drop-shadow(-4px 0 #00f0ff);transform:translateX(2px)}97%{filter:drop-shadow(-4px 0 #ff2bd6) drop-shadow(4px 0 #00f0ff);transform:translateX(-2px)}}
+  html[data-skin="3"] .sec{color:#ff2bd6;text-shadow:0 0 16px #ff2bd6;font-weight:400}
+  html[data-skin="3"] .sec::before{content:"▶";color:#00f0ff}
+  html[data-skin="3"] .big{color:#fff;text-shadow:0 0 12px #00f0ff,0 0 40px #00f0ff,0 0 70px #ff2bd6;font-weight:400}
+  html[data-skin="3"] .row .bw i,html[data-skin="3"] .bar i{border-radius:999px;box-shadow:0 0 12px currentColor}
+  html[data-skin="3"] .hud{border-radius:999px;border-color:#ff2bd6;color:#ff9aea}
   html[data-skin="3"] .floor{display:block;position:fixed;left:-50%;right:-50%;bottom:0;height:42vh;z-index:0;pointer-events:none;transform:perspective(420px) rotateX(62deg);transform-origin:50% 100%;
     background-image:linear-gradient(rgba(255,43,214,.55) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.5) 1px,transparent 1px);background-size:60px 60px;animation:floor 2.4s linear infinite;
     -webkit-mask-image:linear-gradient(0deg,#000,transparent 85%);mask-image:linear-gradient(0deg,#000,transparent 85%);opacity:.55}
   @keyframes floor{to{background-position:0 60px,0 0}}
-  /* --- 4 Hologram: skleněné panely, aurora, duhový lesk --- */
-  html[data-skin="4"]{--cy:#9ae6ff;--mg:#c79bff;--line:rgba(170,220,255,.5);--panel:rgba(120,170,255,.08)}
+
+  /* ---- 4 HOLOGRAM: Michroma + Exo 2 light, skleněné kulaté panely, aurora, lesk ---- */
+  html[data-skin="4"]{--fh:"Michroma",sans-serif;--fb:"Exo 2",sans-serif;--cy:#9ae6ff;--mg:#c79bff;--line:rgba(170,220,255,.55);--panel:rgba(120,170,255,.09)}
+  html[data-skin="4"] body{font-weight:300}
   html[data-skin="4"] .bgimg.l3{background:linear-gradient(120deg,rgba(20,40,160,.75),rgba(120,40,200,.6),rgba(0,170,200,.6),rgba(20,40,160,.75));background-size:300% 300%;animation:aurora 16s ease-in-out infinite}
   @keyframes aurora{50%{background-position:100% 50%}}
-  html[data-skin="4"] .panel{backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-image:linear-gradient(135deg,rgba(154,230,255,.9),rgba(199,155,255,.5),rgba(154,230,255,.9)) 1;overflow:hidden}
+  html[data-skin="4"] .panel{clip-path:none;border-radius:26px;border:1px solid rgba(190,230,255,.55);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);overflow:hidden;padding:18px 22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 40px rgba(20,10,80,.35)}
+  html[data-skin="4"] .panel::before{display:none}
   html[data-skin="4"] .panel>*{position:relative;z-index:1}
-  html[data-skin="4"] .panel::after{width:60%;height:100%;left:-80%;right:auto;top:0;bottom:auto;background:linear-gradient(100deg,transparent,rgba(255,255,255,.14),transparent);box-shadow:none;animation:shim 7s ease-in-out infinite;pointer-events:none;z-index:0}
+  html[data-skin="4"] .panel::after{content:"";position:absolute;width:60%;height:100%;left:-80%;top:0;background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);animation:shim 7s ease-in-out infinite;pointer-events:none;z-index:0}
   @keyframes shim{0%,60%{left:-80%}100%{left:140%}}
-  html[data-skin="4"] h1{background:linear-gradient(90deg,#fff,#9ae6ff 30%,#c79bff 60%,#ffd0f5);-webkit-background-clip:text;background-clip:text;background-size:200%;animation:holo 6s linear infinite}
+  html[data-skin="4"] .panel h3{letter-spacing:2px;font-size:10.5px;font-weight:400}
+  html[data-skin="4"] .panel h3::before{content:"◦ ";color:#c79bff}
+  html[data-skin="4"] .tbtn{border-radius:50%;clip-path:none;border-color:rgba(190,230,255,.6);background:rgba(255,255,255,.1);backdrop-filter:blur(6px);width:36px;height:36px}
+  html[data-skin="4"] .tbtn#skinBtn::after{content:"◇"}html[data-skin="4"] #themeBtn::after{content:"◌"}html[data-skin="4"] #refBtn::after{content:"⟳"}html[data-skin="4"] #mobBtn::after{content:"◫"}html[data-skin="4"] #planBtn::after{content:"≡"}
+  html[data-skin="4"] .tgl button{border-radius:999px;background:rgba(255,255,255,.08);border-color:rgba(190,230,255,.45)}
+  html[data-skin="4"] .tgl button.on{background:rgba(255,255,255,.28)}
+  html[data-skin="4"] h1{background:linear-gradient(90deg,#fff,#9ae6ff 30%,#c79bff 60%,#ffd0f5,#fff);-webkit-background-clip:text;background-clip:text;background-size:200%;animation:holo 6s linear infinite;font-size:clamp(17px,2.2vw,27px);letter-spacing:5px;font-weight:400}
   @keyframes holo{to{background-position:200% 0}}
-  html[data-skin="4"] .sec{color:#c79bff;text-shadow:0 0 16px rgba(199,155,255,.8)}
-  /* --- 5 Terminál: zelená, monospace, digitální déšť, CRT --- */
-  html[data-skin="5"]{--cy:#39ff88;--mg:#d6ff3a;--lm:#39ff88;--line:rgba(57,255,136,.55);--panel:rgba(0,10,4,.86);--tx:#d8ffe6;--mut:#8fe8b0}
-  html[data-skin="5"] body,html[data-skin="5"] h1,html[data-skin="5"] h2,html[data-skin="5"] h3,html[data-skin="5"] .sec,html[data-skin="5"] .big,html[data-skin="5"] .sub,html[data-skin="5"] button,html[data-skin="5"] .hr{font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace !important}
+  html[data-skin="4"] .sec{color:#d9b8ff;text-shadow:0 0 16px rgba(199,155,255,.8);font-weight:400;letter-spacing:4px}
+  html[data-skin="4"] .sec::before{content:"◈";color:#9ae6ff}
+  html[data-skin="4"] .big{font-weight:400;background:linear-gradient(180deg,#fff,#9ae6ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 18px rgba(154,230,255,.7))}
+  html[data-skin="4"] .big{zoom:.82}
+  html[data-skin="4"] .row .bw i,html[data-skin="4"] .bar i{border-radius:999px}
+  html[data-skin="4"] .hud{border-radius:999px}
+
+  /* ---- 5 TERMINÁL: Share Tech Mono všude, zelené, hranaté, digitální déšť, CRT, ASCII ikony ---- */
+  html[data-skin="5"]{--fh:"Share Tech Mono",monospace;--fb:"Share Tech Mono",monospace;--cy:#39ff88;--mg:#d6ff3a;--lm:#39ff88;--line:rgba(57,255,136,.6);--panel:rgba(0,10,4,.86);--tx:#d8ffe6;--mut:#8fe8b0}
+  html[data-skin="5"] *{border-radius:0 !important}
   html[data-skin="5"] .bgimg{filter:grayscale(1) contrast(1.2) brightness(.28) sepia(1) hue-rotate(70deg) saturate(3)}
   html[data-skin="5"] .bgimg.l2{opacity:.2}
   html[data-skin="5"] .bgimg.l3{background:radial-gradient(900px 600px at 20% 0%,rgba(57,255,136,.25),transparent 65%),linear-gradient(180deg,rgba(0,12,4,.88),rgba(0,6,2,.92))}
   html[data-skin="5"] body::before{background-image:linear-gradient(rgba(57,255,136,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,136,.08) 1px,transparent 1px)}
-  html[data-skin="5"] body::after{opacity:.16;animation:crt 0.15s infinite}
+  html[data-skin="5"] body::after{opacity:.16;animation:crt .15s infinite}
   @keyframes crt{50%{opacity:.12}}
-  html[data-skin="5"] h1{background:none;color:#39ff88;-webkit-text-fill-color:#39ff88;text-shadow:0 0 14px #39ff88;letter-spacing:4px}
+  html[data-skin="5"] h1{background:none;color:#39ff88;-webkit-text-fill-color:#39ff88;text-shadow:0 0 14px #39ff88;letter-spacing:3px;font-weight:400}
+  html[data-skin="5"] h1::before{content:"> "}
   html[data-skin="5"] h1::after{content:"_";animation:blink 1s steps(2) infinite}@keyframes blink{50%{opacity:0}}
-  html[data-skin="5"] .panel{clip-path:none;border-radius:0;border:1px solid var(--line);box-shadow:0 0 14px rgba(57,255,136,.18),inset 0 0 30px rgba(57,255,136,.05)}
-  html[data-skin="5"] .big{color:#39ff88;text-shadow:0 0 18px #39ff88,0 0 46px rgba(57,255,136,.5)}
-  html[data-skin="5"] .sec{color:#39ff88}
+  html[data-skin="5"] .panel{clip-path:none;border:1px solid var(--line);box-shadow:0 0 14px rgba(57,255,136,.18),inset 0 0 30px rgba(57,255,136,.05)}
+  html[data-skin="5"] .panel::before{display:none}
+  html[data-skin="5"] .panel h3{color:#8fe8b0;letter-spacing:1px;text-transform:lowercase;font-size:13px}
+  html[data-skin="5"] .panel h3::before{content:"$ ";color:#39ff88}
+  html[data-skin="5"] .tbtn{clip-path:none;width:auto;min-width:40px;padding:0 6px;height:30px;color:#39ff88;border-color:#39ff88;background:rgba(57,255,136,.08)}
+  html[data-skin="5"] .tbtn::after{font-size:13px}
+  html[data-skin="5"] .tbtn#skinBtn::after{content:"[*]"}html[data-skin="5"] #themeBtn::after{content:"[t]"}html[data-skin="5"] #refBtn::after{content:"[r]"}html[data-skin="5"] #mobBtn::after{content:"[m]"}html[data-skin="5"] #planBtn::after{content:"[p]"}
+  html[data-skin="5"] .tgl button{clip-path:none;border-color:#39ff88;color:#8fe8b0;text-transform:lowercase;font-size:12px}
+  html[data-skin="5"] .tgl button::before{content:"[ "}html[data-skin="5"] .tgl button::after{content:" ]"}
+  html[data-skin="5"] .tgl button.on{background:#39ff88;color:#001a08}
+  html[data-skin="5"] .big{color:#39ff88;text-shadow:0 0 18px #39ff88,0 0 46px rgba(57,255,136,.5);font-weight:400}
+  html[data-skin="5"] .sec{color:#39ff88;text-transform:lowercase;letter-spacing:2px;font-weight:400}
+  html[data-skin="5"] .sec::before{content:"//";color:#d6ff3a}
+  html[data-skin="5"] .row .bw i,html[data-skin="5"] .bar i{background-image:repeating-linear-gradient(90deg,transparent 0 6px,rgba(0,0,0,.65) 6px 8px) !important}
   html[data-skin="5"] .hud{color:#39ff88;background:rgba(0,10,4,.85)}
-  [data-theme="day"] #net,[data-theme="day"] .beam,[data-theme="day"] .hud,[data-theme="day"] .floor,[data-theme="day"] #pie::before{display:none !important}
+  html[data-skin="5"] .hud span:first-of-type::before{content:"> "}
+
+  [data-theme="day"] #net,[data-theme="day"] .hud,[data-theme="day"] .floor,[data-theme="day"] #pie::before{display:none !important}
   .skintag{position:fixed;top:64px;right:22px;z-index:120;padding:6px 14px;font:700 11px "Inter",system-ui,sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:#fff;background:rgba(10,20,60,.85);border:1px solid var(--line);opacity:0;transform:translateY(-6px);transition:.3s;pointer-events:none}
   .skintag.on{opacity:1;transform:none}
-  @media (prefers-reduced-motion:reduce){.beam,#net,.floor,#pie::before{display:none !important}html[data-skin] .panel,html[data-skin] .big,html[data-skin] h1,html[data-skin] body::after{animation:none}html[data-skin] .pdc svg path[data-ln=a]{animation:none;stroke-dashoffset:0}}
+  @media (prefers-reduced-motion:reduce){#net,.floor,#pie::before{display:none !important}html[data-skin] .panel,html[data-skin] .big,html[data-skin] h1,html[data-skin] body::after{animation:none}html[data-skin] .pdc svg path[data-ln=a]{animation:none;stroke-dashoffset:0}}
   @media (max-width:700px){.hud{display:none !important}}
 </style>
 </head>
 <body>
-<div class="bgimg"></div><div class="bgimg l2"></div><div class="bgimg l3"></div><canvas id="net"></canvas><div class="floor"></div><div class="beam"></div><div class="hud"><i></i><span>Agent network online</span><span id="hudT"></span></div><div class="skintag" id="skinTag"></div><canvas id="net"></canvas><div class="beam"></div><div class="hud"><i></i><span>Agent network online</span><span id="hudT"></span></div>
+<div class="bgimg"></div><div class="bgimg l2"></div><div class="bgimg l3"></div><canvas id="net"></canvas><div class="floor"></div><div class="hud"><i></i><span>Agent network online</span><span id="hudT"></span></div><div class="skintag" id="skinTag"></div>
 <div class="wrap">
   <header>
     <img src="/logo.jpg" alt="RKL">
