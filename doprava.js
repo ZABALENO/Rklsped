@@ -235,8 +235,8 @@ app.get('/api/agents', async (req, res) => {
         const had = !!prev;
         if (prev) for (const f of F) pend[f] += Math.max(0, (v[f] || 0) - (prev[f] || 0));
         prev = v;
-        // přírůstek se zapíše ke dni posledního snímku; víkend/svátek se přenese na další pracovní den (dnešní den se ukáže vždy hned)
-        if (had && (sn.date === today || isWorkday(new Date(sn.date + 'T12:00:00Z')))) {
+        // přírůstek se zapíše ke dni daného zápisu (i když je to víkend nebo svátek)
+        if (had) {
           const o = (incs[sn.date] = incs[sn.date] || {})[k] = (incs[sn.date] || {})[k] || z();
           for (const f of F) { o[f] += pend[f]; pend[f] = 0; }
         }
@@ -247,7 +247,7 @@ app.get('/api/agents', async (req, res) => {
       rels.push(Object.assign({ key: k, name: prettyName(k), since: SINCE[k] || '', today: td }, t));
     }
     const lastDate = dl.snaps.length ? dl.snaps[dl.snaps.length - 1].date : null;
-    const outDays = Object.keys(incs).sort().reverse().slice(0, 60).map(d => ({ date: d, wd: true, rels: incs[d] }));
+    const outDays = Object.keys(incs).sort().reverse().slice(0, 60).map(d => ({ date: d, wd: isWorkday(new Date(d + 'T12:00:00Z')), rels: incs[d] }));
     return { rels, days: outDays, lastDate, snapshot: true };
   })();
   if (split) for (const sr of split.rels) { const r = relations.find(x => x.key === sr.key); if (r) { r.count = sr.pA + sr.tA; r.agent = sr.pA; r.manual = sr.pM; r.trips = sr.tA; r.tripsManual = sr.tM; r.date = split.lastDate; r.todayAgent = sr.today.pA + sr.today.tA; r.todayManual = sr.today.pM + sr.today.tM; } }
