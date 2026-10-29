@@ -614,10 +614,10 @@
       const rest = list.filter(r => !F[r.key] || !FOLDERS.some(x => x[0] === F[r.key]));
       const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
       const manHtml = f => M.filter(m => (m.folder || null) === f && manualPass(m)).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
-      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="8">${f === 'none' ? '' : `<button class="ftog" data-tog="${f}" aria-expanded="${!collapsed.includes(f)}" title="Sbalit / rozbalit">${collapsed.includes(f) ? '▸' : '▾'}</button>`}<b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
+      const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="8">${`<button class="ftog" data-tog="${f}" aria-expanded="${!collapsed.includes(f)}" title="Sbalit / rozbalit">${collapsed.includes(f) ? '▸' : '▾'}</button>`}<b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
       v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + (collapsed.includes(f) ? '' : manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join(''))).join('')
-        + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join('');
-      shown = FOLDERS.flatMap(([f]) => collapsed.includes(f) ? [] : inF(f)).concat(restShown, M);
+        + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + (collapsed.includes('none') ? '' : manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join(''));
+      shown = FOLDERS.flatMap(([f]) => collapsed.includes(f) ? [] : inF(f)).concat(collapsed.includes('none') ? [] : restShown, M);
       B._v2count = { list: rest.length + FOLDERS.reduce((a, [f]) => a + inF(f).length, 0), shownN: shown.length };
     }
     const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (V2 ? JSON.stringify(view) + collapsed.join() + JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
