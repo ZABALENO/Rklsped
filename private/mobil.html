@@ -6,7 +6,8 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Podíl dispečinků</title>
 <link rel="icon" type="image/png" href="/favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;600&family=Audiowide&family=Rajdhani:wght@500;600;700&family=Michroma&family=Share+Tech+Mono&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#02040c;--tx:#fff;--mut:#c3cfe8;--line:rgba(120,160,255,.35);--ring:rgba(94,138,255,.25)}
   :root[data-theme=day]{--bg:#f3f5fb;--tx:#0f1b3d;--mut:#51597a;--line:rgba(29,56,143,.25);--ring:rgba(29,56,143,.25)}
@@ -31,11 +32,117 @@
   .empty{color:var(--mut);font-size:14px;padding:6px 0}
   .upd{margin-top:16px;text-align:center;color:#9aa3bd;font-size:12px}
 </style>
+<style id="skins">
+  /* 5 futuristických skinů jako na /ai (hvězdička nahoře přepíná: Základ → 1 Pulse → 2 Network → 3 Neon → 4 Hologram → 5 Terminál) */
+  #net,.floor,.skintag{display:none}
+  h1 .sbtn{margin-left:auto;width:30px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:rgba(255,255,255,.7);color:var(--mut);border-radius:4px;cursor:pointer}
+  h1 .sbtn svg{width:15px;height:15px;margin:0}
+  h1 .sbtn::after{display:none}
+  h1 a{margin-left:0}
+  .pt{display:flex;gap:6px;margin:0 0 8px}.pt button{flex:1;background:transparent;color:var(--mut);border:1px solid var(--line);padding:6px 4px;font:700 12px Inter,sans-serif;border-radius:6px}.pt button.on{background:#0f1b3d;color:#fff;border-color:#0f1b3d}
+  .skintag{position:fixed;top:56px;right:14px;z-index:120;padding:6px 12px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#fff;background:rgba(10,20,60,.88);border:1px solid var(--line);opacity:0;transform:translateY(-6px);transition:.3s;pointer-events:none;display:block}
+  .skintag.on{opacity:1;transform:none}
+
+  html[data-theme][data-skin]{--tx:#e8f0ff;--mut:#a9bbe0;--line:rgba(122,162,255,.5);--ring:rgba(122,162,255,.4);--cy:#7ac0ff;--fh:"Chakra Petch",sans-serif;--fb:"Chakra Petch",sans-serif;--panel:rgba(6,12,38,.8)}
+  html[data-skin] body{font-family:var(--fb);color:var(--tx)}
+  html[data-skin] body::before{background:radial-gradient(800px 520px at 20% 0%,rgba(94,138,255,.38),transparent 65%),linear-gradient(180deg,#060b22,#02040c)}
+  html[data-skin] h1,html[data-skin] h2,html[data-skin] .kt button,html[data-skin] .pt button,html[data-skin] .agbig b,html[data-skin] h1 a{font-family:var(--fh) !important}
+  html[data-skin] svg text{font-family:var(--fb) !important;fill:var(--tx) !important}
+  html[data-skin] svg text:last-of-type{fill:var(--mut) !important}
+  html[data-skin] .card{background:var(--panel);border:1px solid var(--line);color:var(--tx);box-shadow:0 0 22px rgba(94,138,255,.22);position:relative;z-index:1}
+  html[data-skin] .wrap{position:relative;z-index:1}
+  html[data-skin] h1 a{background:rgba(255,255,255,.07) !important;color:var(--cy);border-color:var(--line)}
+  html[data-skin] h1 .sbtn{background:rgba(255,255,255,.07);color:var(--cy)}
+  html[data-skin] h1 .sbtn svg{display:none}
+  html[data-skin] h1 .sbtn::after{display:inline;font-size:16px;line-height:1}
+  html[data-skin] .kt button,html[data-skin] .pt button{color:var(--mut);border-color:var(--line);background:transparent}
+  html[data-skin] .kt button.on,html[data-skin] .pt button.on{background:var(--cy);color:#02081c;border-color:var(--cy)}
+  html[data-skin] .agbig b{color:var(--cy);text-shadow:0 0 20px var(--cy)}
+  html[data-skin] .row .v .a{color:var(--tx)}
+  html[data-skin] .bw{background:rgba(255,255,255,.09)}
+  html[data-skin] .barleg .lb{background:var(--tx)}
+  html[data-skin] .upd{color:var(--mut)}
+  html[data-skin] #pie svg circle{filter:drop-shadow(0 0 4px currentColor)}
+
+  /* 1 PULSE */
+  html[data-theme][data-skin="1"]{--cy:#6fd3ff}
+  html[data-skin="1"] .card{border-radius:6px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+  html[data-skin="1"] h1 .sbtn::after{content:"✧"}
+  html[data-skin="1"] h2::before{content:"› ";color:var(--cy)}
+  html[data-skin="1"] .agbig b{text-shadow:0 0 24px var(--cy)}
+
+  /* 2 NETWORK */
+  html[data-theme][data-skin="2"]{--fh:"Orbitron",sans-serif;--fb:"Exo 2",sans-serif;--line:rgba(122,162,255,.6)}
+  html[data-skin="2"] #net{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.6}
+  html[data-skin="2"] .card{clip-path:polygon(18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px),0 18px);padding:18px 20px 14px;border-radius:0}
+  html[data-skin="2"] h1{letter-spacing:3px;font-weight:900}
+  html[data-skin="2"] h2{letter-spacing:3px;font-size:11px}
+  html[data-skin="2"] h2::before{content:"⬡ ";color:var(--cy)}
+  html[data-skin="2"] h1 .sbtn::after{content:"⬡"}
+  html[data-skin="2"] .kt button,html[data-skin="2"] .pt button{clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);border-radius:0}
+  html[data-skin="2"] .agbig b{font-weight:900;text-shadow:0 0 28px var(--cy),0 0 60px rgba(94,138,255,.4)}
+
+  /* 3 NEON */
+  html[data-theme][data-skin="3"]{--fh:"Audiowide",sans-serif;--fb:"Rajdhani",sans-serif;--cy:#00f0ff;--line:rgba(0,240,255,.7);--panel:rgba(8,0,28,.84)}
+  html[data-skin="3"] body{font-weight:600;font-size:16px}
+  html[data-skin="3"] body::before{background:radial-gradient(800px 520px at 15% 0%,rgba(255,43,214,.45),transparent 65%),radial-gradient(800px 520px at 100% 100%,rgba(0,240,255,.4),transparent 60%),linear-gradient(180deg,#0a001e,#00061e)}
+  html[data-skin="3"] #net{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.5}
+  html[data-skin="3"] .floor{display:block;position:fixed;left:-50%;right:-50%;bottom:0;height:40vh;z-index:0;pointer-events:none;transform:perspective(420px) rotateX(62deg);transform-origin:50% 100%;background-image:linear-gradient(rgba(255,43,214,.55) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.5) 1px,transparent 1px);background-size:60px 60px;-webkit-mask-image:linear-gradient(0deg,#000,transparent 85%);mask-image:linear-gradient(0deg,#000,transparent 85%);opacity:.5}
+  html[data-skin="3"] .card{border-radius:16px;border:2px solid var(--cy);box-shadow:inset 0 0 30px rgba(0,240,255,.12),0 0 20px rgba(0,240,255,.45)}
+  html[data-skin="3"] h1{background:linear-gradient(90deg,#fff,#00f0ff 45%,#ff2bd6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:400}
+  html[data-skin="3"] h1 a{-webkit-text-fill-color:var(--cy)}
+  html[data-skin="3"] h2{color:#ff2bd6;text-shadow:0 0 12px #ff2bd6;font-weight:400}
+  html[data-skin="3"] h2::before{content:"◆ ";color:#00f0ff}
+  html[data-skin="3"] h1 .sbtn{border-radius:50%;border-color:#ff2bd6;color:#ff2bd6;box-shadow:0 0 12px rgba(255,43,214,.6)}
+  html[data-skin="3"] h1 .sbtn::after{content:"✦"}
+  html[data-skin="3"] .kt button,html[data-skin="3"] .pt button{border-radius:999px;border-color:#ff2bd6;color:#ff9aea}
+  html[data-skin="3"] .kt button.on,html[data-skin="3"] .pt button.on{background:rgba(255,43,214,.3);color:#fff;box-shadow:0 0 12px rgba(255,43,214,.7)}
+  html[data-skin="3"] .agbig b{color:#fff;font-weight:400;text-shadow:0 0 12px #00f0ff,0 0 40px #00f0ff,0 0 70px #ff2bd6}
+  html[data-skin="3"] .bw,html[data-skin="3"] .bw i{border-radius:999px}
+  html[data-skin="3"] .bw i{box-shadow:0 0 10px currentColor}
+
+  /* 4 HOLOGRAM */
+  html[data-theme][data-skin="4"]{--fh:"Michroma",sans-serif;--fb:"Exo 2",sans-serif;--cy:#9ae6ff;--line:rgba(170,220,255,.55);--panel:rgba(120,170,255,.1)}
+  html[data-skin="4"] body{font-weight:300}
+  html[data-skin="4"] body::before{background:linear-gradient(120deg,#142aa0,#7828c8,#00aac8,#142aa0);background-size:300% 300%;animation:aurora 16s ease-in-out infinite}
+  @keyframes aurora{50%{background-position:100% 50%}}
+  html[data-skin="4"] .card{border-radius:26px;border:1px solid rgba(190,230,255,.55);backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 40px rgba(20,10,80,.35)}
+  html[data-skin="4"] h1{background:linear-gradient(90deg,#fff,#9ae6ff 30%,#c79bff 60%,#ffd0f5,#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:holo 6s linear infinite;letter-spacing:4px;font-weight:400;font-size:14px}
+  @keyframes holo{to{background-position:200% 0}}
+  html[data-skin="4"] h1 a{-webkit-text-fill-color:var(--cy)}
+  html[data-skin="4"] h2{color:#d9b8ff;text-shadow:0 0 14px rgba(199,155,255,.8);font-weight:400;letter-spacing:3px;font-size:11px}
+  html[data-skin="4"] h2::before{content:"◈ ";color:#9ae6ff}
+  html[data-skin="4"] h1 .sbtn{border-radius:50%}
+  html[data-skin="4"] h1 .sbtn::after{content:"◇"}
+  html[data-skin="4"] .kt button,html[data-skin="4"] .pt button{border-radius:999px;background:rgba(255,255,255,.08)}
+  html[data-skin="4"] .kt button.on,html[data-skin="4"] .pt button.on{background:rgba(255,255,255,.3);color:#fff}
+  html[data-skin="4"] .agbig b{font-weight:400;background:linear-gradient(180deg,#fff,#9ae6ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 16px rgba(154,230,255,.7))}
+  html[data-skin="4"] .bw,html[data-skin="4"] .bw i{border-radius:999px}
+
+  /* 5 TERMINÁL */
+  html[data-theme][data-skin="5"]{--fh:"Share Tech Mono",monospace;--fb:"Share Tech Mono",monospace;--cy:#39ff88;--line:rgba(57,255,136,.6);--panel:rgba(0,10,4,.88);--tx:#d8ffe6;--mut:#8fe8b0;--ring:rgba(57,255,136,.4)}
+  html[data-skin="5"] *{border-radius:0 !important}
+  html[data-skin="5"] #net{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.55}
+  html[data-skin="5"] body::before{background:radial-gradient(800px 520px at 20% 0%,rgba(57,255,136,.22),transparent 65%),linear-gradient(180deg,#000c04,#000602)}
+  html[data-skin="5"] h1{color:#39ff88;text-shadow:0 0 14px #39ff88;letter-spacing:2px;font-weight:400}
+  html[data-skin="5"] h1::before{content:"> "}
+  html[data-skin="5"] h1 .sbtn{width:auto;min-width:34px;padding:0 4px}
+  html[data-skin="5"] h1 .sbtn::after{content:"[*]";font-size:12px}
+  html[data-skin="5"] h2{color:#8fe8b0;text-transform:lowercase;letter-spacing:1px;font-weight:400}
+  html[data-skin="5"] h2::before{content:"$ ";color:#39ff88}
+  html[data-skin="5"] .kt button,html[data-skin="5"] .pt button{text-transform:lowercase;color:#8fe8b0;border-color:#39ff88;font-size:11px;white-space:nowrap;padding:7px 1px}
+  html[data-skin="5"] .kt button::before,html[data-skin="5"] .pt button::before{content:"[ "}html[data-skin="5"] .kt button::after,html[data-skin="5"] .pt button::after{content:" ]"}
+  html[data-skin="5"] .kt button.on,html[data-skin="5"] .pt button.on{background:#39ff88;color:#001a08}
+  html[data-skin="5"] .agbig b{color:#39ff88;font-weight:400;text-shadow:0 0 18px #39ff88,0 0 46px rgba(57,255,136,.5)}
+  html[data-skin="5"] .bw i{background-image:repeating-linear-gradient(90deg,transparent 0 6px,rgba(0,0,0,.6) 6px 8px) !important}
+  @media (prefers-reduced-motion:reduce){#net,.floor{display:none !important}html[data-skin] body::before,html[data-skin] h1{animation:none}}
+</style>
 </head>
 <body>
+<canvas id="net"></canvas><div class="floor"></div><div class="skintag" id="skinTag"></div>
 <div class="wrap">
-  <h1>Podíl dispečinků <a href="/ai" style="background:rgba(255,255,255,.7)">dashboard</a></h1>
-  <div class="card"><div id="pie"></div><div class="legwrap"><div class="legend" id="legend"></div><div class="agbig" id="agbig"></div></div></div><div class="card"><h2 id="dh" style="margin-top:0">Dnes přibylo</h2><div class="kt" id="kt"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord" class="on">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
+  <h1>Podíl dispečinků <button class="sbtn" id="skinBtn" type="button" title="Přepnout futuristický skin" aria-label="Přepnout skin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.2 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg></button><a href="/ai" style="background:rgba(255,255,255,.7)">dashboard</a></h1>
+  <div class="card"><div id="pie"></div><div class="legwrap"><div class="legend" id="legend"></div><div class="agbig" id="agbig"></div></div></div><div class="card"><h2 id="dh" style="margin-top:0">Dnes přibylo</h2><div class="pt" id="pt"><button type="button" data-p="day" class="on">Dnes</button><button type="button" data-p="week">Tento týden</button></div><div class="kt" id="kt"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord" class="on">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
 </div>
 <script>
 (() => {
@@ -44,7 +151,9 @@
   const PAL_D = ['#1d388f', '#f2b300', '#1f9d55', '#7b3fc4', '#0aa5b8', '#d62839', '#f26b21', '#d6409f', '#a21caf', '#2f7de1', '#5c6370', '#8a4b1f'];
   const theme = 'day';  // stránka má pevnou světlou paletu na tapetě s přechodem
   document.documentElement.dataset.theme = theme;
-  const color = i => (theme === 'day' ? PAL_D : PAL_N)[i % 12];
+  const PAL_S = ['#5e8aff', '#19e3ff', '#ff4fa8', '#b8ff5e', '#c79bff', '#ffffff', '#7dd3a0', '#ff8a5e', '#9db6ff', '#ffd0f5', '#39ff88', '#00f0ff'];
+  const PAL_T = ['#39ff88', '#d6ff3a', '#8fe8b0', '#19e3ff', '#ffffff', '#b8ff5e', '#7dd3a0', '#c8ffd9', '#5ef0c0', '#a0ff70', '#e0ff9a', '#00c060'];
+  const color = i => { const k = document.documentElement.getAttribute('data-skin'); return (k === '5' ? PAL_T : k ? PAL_S : PAL_D)[i % 12]; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function donut(rels, total) {
     const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, n = rels.filter(y => y.count).length;
@@ -59,14 +168,21 @@
   let kind = 'ord', last = null;
   const short = n => { const m = String(n || '').trim().match(/^(\S+)\s*(\d+)?/); if (!m) return n; const f = m[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '')[0].toUpperCase(); return f + (m[2] || ''); };
 
+  let per = 'day';
+  const mondayOf = iso => { const d = new Date(iso + 'T12:00:00Z'), w = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - w); return d.toISOString().slice(0, 10); };
   function dayBars(j, rels) {
     last = [j, rels];
-    const S = j.split, t = todayIso(), d = S && S.days.find(x => x.date === t), [y, m, dd] = t.split('-');
-    const agentSum = d ? Object.values(d.rels).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0) : 0;
-    $('dh').innerHTML = 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '.';
-    $('agbig').innerHTML = '<b title="Objednávky + přepravy zapsané agentem dnes">' + nf.format(agentSum) + '</b><span>dnes agent</span>';
+    const S = j.split, t = todayIso(), [y, m, dd] = t.split('-');
+    const from = per === 'week' ? mondayOf(t) : t;
+    const dl = S ? S.days.filter(x => x.date >= from && x.date <= t) : [];
+    const d = { rels: {} };
+    dl.forEach(x => Object.entries(x.rels).forEach(([k, q]) => { const z = d.rels[k] || (d.rels[k] = { pA: 0, pM: 0, tA: 0, tM: 0 }); z.pA += q.pA || 0; z.pM += q.pM || 0; z.tA += q.tA || 0; z.tM += q.tM || 0; }));
+    const agentSum = Object.values(d.rels).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0);
+    const f = from.split('-');
+    $('dh').innerHTML = per === 'week' ? 'Tento týden · ' + (+f[2]) + '.–' + (+dd) + '. ' + (+m) + '.' : 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '.';
+    $('agbig').innerHTML = '<b title="Objednávky + přepravy zapsané agentem">' + nf.format(agentSum) + '</b><span>' + (per === 'week' ? 'týden agent' : 'dnes agent') + '</span>';
     const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
-    if (!items.length) { $('day').innerHTML = '<div class="empty">Dnes zatím žádné nové ' + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
+    if (!items.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden zatím žádné nové ' : 'Dnes zatím žádné nové ') + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
     items.sort((a, b) => ((b.oA + b.tA) - (a.oA + a.tA)) || ((b.oM + b.tM) - (a.oM + a.tM)));
     const max = Math.max(...items.map(x => x.oA + x.tA + x.oM + x.tM));
     $('day').innerHTML = items.map(x => {
@@ -80,16 +196,64 @@
   async function load() {
     try {
       const r = await fetch('/api/agents'); if (r.status === 401) { location.href = '/ai'; return; }
-      const j = await r.json();
+      cache = await r.json(); paint();
+      $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' · automaticky každých 30 minut';
+    } catch (e) { $('upd').textContent = 'Nepodařilo se načíst, zkusím to znovu za 30 minut.'; }
+  }
+  let cache = null;
+  function paint() {
+    if (!cache) return;
+    {
+      const j = cache;
       const rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
       $('pie').innerHTML = donut(rels, total);
       $('legend').innerHTML = rels.filter(x => x.count).sort((a, b) => b.count - a.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(short(x.name))}</span><b>${nf.format(x.count)}</b><small>${total ? Math.round(100 * x.count / total) : 0} %</small></div>`).join('') || '<div style="color:var(--mut)">zatím bez dat</div>';
       dayBars(j, rels);
-      $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' · automaticky každých 30 minut';
-    } catch (e) { $('upd').textContent = 'Nepodařilo se načíst, zkusím to znovu za 30 minut.'; }
+    }
   }
+  window.__repaint = paint;
   $('kt').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; kind = b.dataset.k; document.querySelectorAll('#kt button').forEach(x => x.classList.toggle('on', x === b)); if (last) dayBars(...last); });
+  $('pt').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; per = b.dataset.p; document.querySelectorAll('#pt button').forEach(x => x.classList.toggle('on', x === b)); if (last) dayBars(...last); });
   load(); setInterval(load, 30 * 60 * 1000);
+})();
+</script>
+<script>
+/* skiny: hvězdička v liště přepíná Základ → 1 Pulse → 2 Network → 3 Neon → 4 Hologram → 5 Terminál; volba se pamatuje v prohlížeči */
+(function () {
+  var NAMES = ['Základ', '1 · Pulse', '2 · Network', '3 · Neon', '4 · Hologram', '5 · Terminál'];
+  var KEY = 'rkl_mob_skin', skin = 0;
+  try { var v = localStorage.getItem(KEY); if (v !== null && NAMES[+v]) skin = +v; } catch (e) {}
+  var c = document.getElementById('net'), x = c.getContext('2d'), W, H, P = [], drops = [], raf = 0, reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function size() { W = c.width = innerWidth; H = c.height = innerHeight; var n = Math.min(60, Math.round(W * H / 14000)); while (P.length < n) P.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35 }); P.length = n; drops = []; for (var i = 0; i < Math.ceil(W / 18); i++) drops.push(Math.random() * H / 18); }
+  size(); addEventListener('resize', size);
+  function netFrame(col) {
+    x.clearRect(0, 0, W, H);
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i]; p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1;
+      for (var j = i + 1; j < P.length; j++) { var q = P[j], dx = p.x - q.x, dy = p.y - q.y, d = dx * dx + dy * dy; if (d < 18000) { x.strokeStyle = 'rgba(' + col + ',' + (0.35 * (1 - d / 18000)).toFixed(3) + ')'; x.lineWidth = 1; x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(q.x, q.y); x.stroke(); } }
+      x.fillStyle = 'rgba(' + col + ',.85)'; x.beginPath(); x.arc(p.x, p.y, 1.6, 0, 6.283); x.fill();
+    }
+  }
+  var rainT = 0;
+  function rainFrame() {
+    if (++rainT % 2) return;
+    x.fillStyle = 'rgba(0,10,4,.14)'; x.fillRect(0, 0, W, H); x.font = '14px monospace';
+    for (var i = 0; i < drops.length; i++) { x.fillStyle = Math.random() > .96 ? '#eaffef' : '#39ff88'; x.fillText(String.fromCharCode(0x30A0 + Math.random() * 90), i * 18, drops[i] * 18); if (drops[i] * 18 > H && Math.random() > .975) drops[i] = 0; drops[i]++; }
+  }
+  function loop() {
+    if (skin === 2) netFrame('122,162,255'); else if (skin === 3) netFrame('0,240,255'); else if (skin === 5) rainFrame(); else { cancelAnimationFrame(raf); raf = 0; return; }
+    raf = document.hidden ? setTimeout(function () { raf = requestAnimationFrame(loop); }, 1000) : requestAnimationFrame(loop);
+  }
+  function apply(show) {
+    var h = document.documentElement;
+    if (skin) h.setAttribute('data-skin', skin); else h.removeAttribute('data-skin');
+    x.clearRect(0, 0, W, H); cancelAnimationFrame(raf); raf = 0;
+    if (!reduce && (skin === 2 || skin === 3 || skin === 5)) loop();
+    if (window.__repaint) window.__repaint();
+    if (show) { var t = document.getElementById('skinTag'); t.textContent = 'Skin ' + NAMES[skin]; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove('on'); }, 1600); }
+  }
+  document.getElementById('skinBtn').onclick = function () { skin = (skin + 1) % NAMES.length; try { localStorage.setItem(KEY, skin); } catch (e) {} apply(true); };
+  apply(false);
 })();
 </script>
 </body>
