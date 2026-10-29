@@ -182,6 +182,7 @@ app.post('/api/agents/users/label', async (req, res) => {
   res.json({ ok: true });
 });
 // skrytá stránka s přepisem souhrnu agentizace (odškrtávání + poznámky, sdílené mezi zařízeními)
+app.get('/ai/mobil', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'mobil.html')); });
 app.get('/ai/plan', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'plan.html')); });
 app.get('/api/agents/plan', (req, res) => res.json({ items: store.mem.plan || {} }));
 app.post('/api/agents/plan', async (req, res) => {

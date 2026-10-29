@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Podíl dispečinků</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#02040c;--tx:#fff;--mut:#c3cfe8;--line:rgba(120,160,255,.35);--ring:rgba(94,138,255,.25)}
+  :root[data-theme=day]{--bg:#f3f5fb;--tx:#0f1b3d;--mut:#51597a;--line:rgba(29,56,143,.25);--ring:rgba(29,56,143,.25)}
+  *{box-sizing:border-box}html{background:var(--bg)}
+  body{margin:0;min-height:100vh;color:var(--tx);font:500 15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;padding:max(14px,env(safe-area-inset-top)) 16px 24px}
+  .wrap{max-width:420px;margin:0 auto}
+  h1{margin:4px 0 14px;font:800 15px Inter,sans-serif;letter-spacing:2.5px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  h1 a{margin-left:auto;font:600 12px Inter,sans-serif;letter-spacing:0;text-transform:none;color:var(--mut);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:4px}
+  svg{display:block;width:100%;max-width:300px;margin:0 auto}
+  .legend{display:grid;grid-template-columns:1fr;gap:6px;margin-top:14px;font-size:15px}
+  .legend div{display:flex;align-items:center;gap:9px}.legend i{width:11px;height:11px;flex:none}.legend b{margin-left:auto;font-weight:700}.legend small{color:var(--mut);font-weight:500;min-width:38px;text-align:right}
+  .upd{margin-top:16px;text-align:center;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Podíl dispečinků <a href="/ai">dashboard</a></h1>
+  <div id="pie"></div><div class="legend" id="legend"></div><div class="upd" id="upd">načítám…</div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id), nf = new Intl.NumberFormat('cs-CZ');
+  const PAL_N = ['#5e8aff', '#f2a516', '#ffffff', '#2f5bd6', '#ffcf6b', '#9db6ff', '#c98a0d', '#7dd3a0', '#b8c4e6', '#ff8a5e', '#3d4f8f', '#e6d3a1'];
+  const PAL_D = ['#1d388f', '#f2b300', '#1f9d55', '#7b3fc4', '#0aa5b8', '#d62839', '#f26b21', '#d6409f', '#a21caf', '#2f7de1', '#5c6370', '#8a4b1f'];
+  let theme = 'night'; try { const t = (localStorage.getItem('rklAiTheme') || '').split('|')[0]; if (t === 'day') theme = 'day'; } catch (e) {}
+  document.documentElement.dataset.theme = theme;
+  const color = i => (theme === 'day' ? PAL_D : PAL_N)[i % 12];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function donut(rels, total) {
+    const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, n = rels.filter(y => y.count).length;
+    let acc = 0, arcs = '';
+    rels.forEach(x => { if (!x.count) return; const len = C * x.count / total, gap = n > 1 ? 2.5 : 0;
+      arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color(x.i)}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})"/>`; acc += len; });
+    if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(128,128,128,.2)" stroke-width="${w}"/>`;
+    const fg = theme === 'day' ? '#0f1b3d' : '#fff', mu = theme === 'day' ? '#51597a' : '#c3cfe8';
+    return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<text x="${c}" y="${c + 6}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text x="${c}" y="${c + 24}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
+  }
+  async function load() {
+    try {
+      const r = await fetch('/api/agents'); if (r.status === 401) { location.href = '/ai'; return; }
+      const j = await r.json();
+      const rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
+      $('pie').innerHTML = donut(rels, total);
+      $('legend').innerHTML = rels.filter(x => x.count).sort((a, b) => b.count - a.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b><small>${total ? Math.round(100 * x.count / total) : 0} %</small></div>`).join('') || '<div style="color:var(--mut)">zatím bez dat</div>';
+      $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' · automaticky každých 30 minut';
+    } catch (e) { $('upd').textContent = 'Nepodařilo se načíst, zkusím to znovu za 30 minut.'; }
+  }
+  load(); setInterval(load, 30 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
