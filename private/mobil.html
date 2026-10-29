@@ -65,7 +65,7 @@
     $('dh').innerHTML = 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '. <span style="color:#0b5d2a;font-weight:800;margin-left:6px" title="Objednávky + přepravy zapsané agentem dnes">' + nf.format(agentSum) + '</span>';
     const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
     if (!items.length) { $('day').innerHTML = '<div class="empty">Dnes zatím žádné nové ' + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
-    items.sort((a, b) => (b.oA + b.tA + b.oM + b.tM) - (a.oA + a.tA + a.oM + a.tM));
+    items.sort((a, b) => ((b.oA + b.tA) - (a.oA + a.tA)) || ((b.oM + b.tM) - (a.oM + a.tM)));
     const max = Math.max(...items.map(x => x.oA + x.tA + x.oM + x.tM));
     $('day').innerHTML = items.map(x => {
       const col = color(x.i), w = v => (100 * v / max) + '%', A = x.oA + x.tA, M = x.oM + x.tM;
