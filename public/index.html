@@ -94,6 +94,11 @@
   .mbar button{background:#1d388f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 13px inherit;cursor:pointer;white-space:nowrap}
   tr.fold td{background:#e8eefb;border-bottom:2px solid #9db3e0;font-size:14px;padding:8px 12px}
   .ftog{border:0;background:rgba(0,0,0,.12);color:inherit;border-radius:6px;width:24px;height:24px;margin-right:8px;cursor:pointer;font-size:14px;line-height:1;vertical-align:middle}.ftog:hover{background:rgba(0,0,0,.25)}
+  .dock{display:none}
+  body.t-v2.dragging-now .dock{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;gap:10px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(15,25,60,.55);backdrop-filter:blur(6px)}
+  .dock .dk{flex:1;text-align:center;padding:16px 8px;border-radius:12px;font:700 18px inherit;border:3px dashed rgba(0,0,0,.35);color:#0a1f12}
+  .dock .dk-vyvoz{background:#6cc588}.dock .dk-dovoz{background:#6c9fe6;color:#06214d}.dock .dk-none{background:#e8ecf3;color:#27324a}
+  .dock .dk.drop-over{outline:4px solid #fff;transform:scale(1.03);border-style:solid}
   tr.fold[data-drop] b{vertical-align:middle}
   tr.fold .fcnt{display:inline-block;min-width:22px;text-align:center;background:#1d388f;color:#fff;border-radius:11px;font-size:12px;padding:0 7px;margin-left:6px}
   tr.fold .fhint{margin-left:12px;color:var(--muted);font-size:12px;font-weight:500}
@@ -429,6 +434,7 @@
 
 <div class="toast" id="toast"><span id="toastMsg"></span><button id="toastUndo">Vrátit</button></div>
 
+<div class="dock" id="dock" aria-hidden="true"><div class="dk dk-vyvoz" data-f="vyvoz">Vývoz</div><div class="dk dk-dovoz" data-f="dovoz">Dovoz</div><div class="dk dk-none" data-f="none">Ostatní</div></div>
 <script>
 (() => {
   const MAX_ROWS = 30;
@@ -948,7 +954,7 @@
     document.addEventListener('dragover', e => {
       if (!dragKey) return;
       const EDGE = 140, h = window.innerHeight;
-      scrollV = e.clientY < EDGE ? -Math.ceil((EDGE - e.clientY) / 5 + 4) : e.clientY > h - EDGE ? Math.ceil((e.clientY - (h - EDGE)) / 5 + 4) : 0;
+      scrollV = e.clientY < EDGE ? -Math.ceil((EDGE - e.clientY) / 5 + 4) : 0;
       if (scrollV && !scrollT) scrollT = setInterval(() => { if (!scrollV) return stopScroll(); window.scrollBy(0, scrollV); }, 16);
       else if (!scrollV) stopScroll();
     });
@@ -971,11 +977,17 @@
     }
     rowsEl.addEventListener('dragstart', e => {
       const tr = e.target.closest && e.target.closest('tr[data-key]'); if (!tr || tr.draggable === false) return;
+      document.body.classList.add('dragging-now');
       dragKey = tr.dataset.key; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragKey);
       setTimeout(() => tr.classList.add('dragging'), 0);
     });
     // v textu (poznámka, ruční objednávka) a u tlačítek se řádek netáhne – jde normálně označovat text
     rowsEl.addEventListener('mousedown', e => { const tr = e.target.closest && e.target.closest('tr[data-key]'); if (tr) tr.draggable = !e.target.closest('textarea,input,button,label,a'); });
+    const dock = $('dock'), dockOff = () => { document.body.classList.remove('dragging-now'); dock.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); };
+    document.addEventListener('dragend', dockOff); document.addEventListener('drop', dockOff);
+    dock.addEventListener('dragover', e => { if (!dragKey) return; const d = e.target.closest('.dk'); if (!d) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; dock.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); d.classList.add('drop-over'); });
+    dock.addEventListener('dragleave', e => { const d = e.target.closest('.dk'); if (d) d.classList.remove('drop-over'); });
+    dock.addEventListener('drop', e => { if (!dragKey) return; const d = e.target.closest('.dk'); if (!d) return; e.preventDefault(); const k = dragKey; dragKey = null; setFolder(k, d.dataset.f); dockOff(); });
     rowsEl.addEventListener('dragend', () => { dragKey = null; rowsEl.querySelectorAll('.dragging,.drop-over').forEach(x => x.classList.remove('dragging', 'drop-over')); });
     const targetOf = e => { const tr = e.target.closest && e.target.closest('tr'); const f = tr && (tr.dataset.drop || tr.dataset.folder); return f ? { tr, f, head: rowsEl.querySelector(`tr.fold[data-drop="${f}"]`) } : null; };
     rowsEl.addEventListener('dragover', e => { if (!dragKey) return; const t = targetOf(e); if (!t) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; rowsEl.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); if (t.head) t.head.classList.add('drop-over'); });
