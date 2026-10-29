@@ -61,7 +61,8 @@
   function dayBars(j, rels) {
     last = [j, rels];
     const S = j.split, t = todayIso(), d = S && S.days.find(x => x.date === t), [y, m, dd] = t.split('-');
-    $('dh').textContent = 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '. ';
+    const agentSum = d ? Object.values(d.rels).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0) : 0;
+    $('dh').innerHTML = 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '. <span style="color:#0b5d2a;font-weight:800;margin-left:6px" title="Objednávky + přepravy zapsané agentem dnes">' + nf.format(agentSum) + '</span>';
     const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
     if (!items.length) { $('day').innerHTML = '<div class="empty">Dnes zatím žádné nové ' + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
     items.sort((a, b) => (b.oA + b.tA + b.oM + b.tM) - (a.oA + a.tA + a.oM + a.tM));
