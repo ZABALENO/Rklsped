@@ -111,7 +111,7 @@
   tr.sugg .sq .sq-yes{background:#2e7d4a;color:#fff}
   tr.sugg-row td{background:#f2fbf4 !important}tr.sugg-row td:first-child{box-shadow:inset 5px 0 0 #2e7d4a}
   body:not(.t-v2) .grip,body:not(.t-v2) .fbtns{display:none}
-  body.t-v2 .strip .chip.sold,body.t-v2 .strip .chip:not(.pgchip):not(.sold):not(.prov),body.t-v2 #provChip{display:none}
+  body.t-v2 .strip .chip.sold,body.t-v2 .strip .chip:not(.pgchip):not(.sold):not(.prov),body.t-v2 #provChip,body.t-v2 #markBtn{display:none}
   /* řazení, filtry, šablony (Vnitro 2) */
   tr.frow{display:none}body.t-v2 tr.frow{display:table-row}
   tr.frow th{background:#fbfcfe;padding:4px 8px;border-bottom:1px solid var(--line)}
@@ -862,6 +862,7 @@
 
   /* ---------- Vnitro 2: složky (drag & drop), ruční objednávky ---------- */
   if (V2) {
+    const h2 = document.querySelector('.ph h2'); if (h2) h2.textContent = 'Přepravy';
     /* ----- řazení, filtry, šablony pod disketou ----- */
     const theadEl = document.querySelector('thead');
     const paintHead = () => {

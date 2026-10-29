@@ -279,7 +279,7 @@ app.use((req, res, next) => { req.t = tenants[req.tenantId] || main; next(); });
 const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
-  if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy v prodeji – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
+  if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
   if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
