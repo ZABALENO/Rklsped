@@ -19,6 +19,7 @@
   html,body{margin:0}
   body{background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif;min-height:100vh}
   /* fotka areálu jako pozadí – rozmazaná a překrytá světlým závojem, aby nerušila čitelnost */
+  body.t-v2::before{background:url(/bg-v2.jpg) center 55%/cover no-repeat !important;filter:none !important}
   body::before{content:"";position:fixed;inset:-24px;background:url(/bg.jpg) center 40%/cover no-repeat;filter:blur(3px) saturate(1.1);z-index:-2}
   body::after{content:"";position:fixed;inset:0;z-index:-1;
     background:linear-gradient(180deg,rgba(21,42,110,.45) 0,rgba(238,241,245,.62) 320px,rgba(238,241,245,.74) 700px,rgba(238,241,245,.80) 100%)}
