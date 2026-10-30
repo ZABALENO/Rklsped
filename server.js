@@ -33,7 +33,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
-const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl', 'hist'];
+const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl', 'hist', 'carr', 'asg'];
 const mem = Object.fromEntries(NS.map(n => [n, {}]));
 let pool = null;
 const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), fileName);
@@ -155,6 +155,7 @@ function cleanup() {
   for (const [k, v] of Object.entries(mem.sold)) if ((v.u || '') < limit) put('sold', k, null);
   for (const [k, v] of Object.entries(mem.note)) if ((v.u || '') < limit) put('note', k, null);
   for (const [k, v] of Object.entries(mem.pin)) if ((v.t || '') < limit) put('pin', k, null);
+  for (const [k, v] of Object.entries(mem.asg)) if ((v.t || '') < limit) put('asg', k, null);
 }
 
 // od kdy se počítají statistiky (leaderboard, dnes prodané, graf, provize) – nastavuje „vynulování“
@@ -246,6 +247,7 @@ function board(rate) {
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
     ...(v2 || {}),
+    ...(id === 'vnitro1' ? { carr: (mem.carr.list && mem.carr.list.carriers) || [], carrAt: (mem.carr.list && mem.carr.list.at) || null, asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
   };
 }
 
@@ -281,7 +283,7 @@ const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
   if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
-  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
+  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf t-asg">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
@@ -320,6 +322,53 @@ async function logHist(req, act, to, label) {
   for (const k of ks.slice(0, Math.max(0, ks.length - 1000))) await t.put('hist', k, null);
 }
 const needSF = (req, res) => { if (!['vnitro1', 'vnitro2'].includes(req.t.id)) { res.status(404).json({ error: 'Tato funkce je jen v relacích Vnitro.' }); return false; } return true; };
+
+// ---- Vnitro 1: poddopravci a řidiči (import z xlsx) + přiřazení objednávek drag & drop ----
+const needV1 = (req, res) => { if (req.t.id !== 'vnitro1') { res.status(404).json({ error: 'Tato funkce je jen v relaci Vnitro 1.' }); return false; } return true; };
+const slugId = s => require('crypto').createHash('sha1').update(String(s)).digest('hex').slice(0, 10);
+function parseCarriers(buf) {
+  const XLSX = require('xlsx');
+  const wb = XLSX.read(buf, { type: 'buffer' });
+  const norm = x => String(x == null ? '' : x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  for (const name of wb.SheetNames) {
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null, raw: true });
+    let hi = -1, cc = -1;
+    for (let i = 0; i < Math.min(20, aoa.length); i++) { const j = (aoa[i] || []).findIndex(c => norm(c).startsWith('nazev dopravce')); if (j >= 0) { hi = i; cc = j; break; } }
+    if (hi < 0) continue;
+    const carriers = []; let cur = null;
+    for (const r of aoa.slice(hi + 1)) {
+      const cname = String(r[cc] == null ? '' : r[cc]).replace(/\s+/g, ' ').trim(), dname = String(r[cc + 1] == null ? '' : r[cc + 1]).replace(/\s+/g, ' ').trim();
+      const phone = String(r[cc + 2] == null ? '' : r[cc + 2]).replace(/\s+/g, ' ').trim(), spz = String(r[cc + 3] == null ? '' : r[cc + 3]).replace(/\s+/g, ' ').trim().toUpperCase();
+      if (!cname && !dname && !spz) continue;
+      if (cname) { cur = { id: slugId('c|' + cname), name: cname, drivers: [] }; carriers.push(cur); }
+      if (!cur) continue;
+      cur.drivers.push({ id: slugId('d|' + cur.name + '|' + dname + '|' + spz), name: dname || '(řidič)', phone, spz });
+    }
+    if (carriers.length) return carriers;
+  }
+  throw new Error('V souboru jsem nenašel tabulku se sloupcem „Název dopravce“.');
+}
+app.post('/api/carriers/import', async (req, res) => {
+  if (!needV1(req, res)) return;
+  try {
+    const b64 = String((req.body && req.body.file) || '');
+    if (!b64 || b64.length > 4.5 * 1024 * 1024) return res.status(400).json({ error: 'Chybí soubor nebo je příliš velký.' });
+    const carriers = parseCarriers(Buffer.from(b64, 'base64'));
+    await req.t.put('carr', 'list', { carriers, at: new Date().toISOString() });
+    res.json({ ok: true, carriers: carriers.length, drivers: carriers.reduce((a, c) => a + c.drivers.length, 0) });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+app.post('/api/assign', async (req, res) => {
+  if (!needV1(req, res)) return;
+  const { key, driver } = req.body || {};
+  if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
+  if (driver != null) {
+    const ok = ((req.t.mem.carr.list && req.t.mem.carr.list.carriers) || []).some(c => c.drivers.some(d => d.id === driver));
+    if (!ok) return res.status(400).json({ error: 'Neznámý řidič' });
+  }
+  await req.t.put('asg', key, driver ? { d: driver, t: new Date().toISOString() } : null);
+  res.json({ ok: true });
+});
 app.post('/api/folder', async (req, res) => {
   if (!needV2(req, res)) return;
   const { key, folder } = req.body || {};
