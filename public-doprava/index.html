@@ -43,6 +43,7 @@
   tbody tr:last-child td{border-bottom:0}
   tbody tr:nth-child(even){background:#fafbfd}
   tbody tr:hover{background:#f1f6ff}
+  tbody tr.ext,tbody tr.ext:nth-child(even){background:#fff1e0}tbody tr.ext:hover{background:#ffe6c7}tbody tr.ext td:first-child{box-shadow:inset 4px 0 0 #f0a04b}
   tbody td.c-route{white-space:normal;line-height:1.25;overflow:visible;text-overflow:clip}
   .route .pl{white-space:nowrap}
   .route .z{font-family:"IBM Plex Mono",monospace;font-size:.78em;font-weight:600;color:#3d4a5e;background:#eef2f7;border-radius:3px;padding:0 3px;margin-left:3px;vertical-align:1px}
@@ -351,7 +352,7 @@
       const tags = `<span class="d ${x.firstLoad === D.today ? 'today' : ''}" title="první nakládka">↑ <b>${dd(x.firstLoad)}</b></span>` +
         `<span class="d ${x.lastUnload === D.today ? 'today' : ''}" title="poslední termín vykládky${x.unloaded ? ' · vyloženo ' + x.unloaded + ' z ' + x.orders : ''}">↓ <b>${dd(x.lastUnload)}</b></span>`;
       const breakdown = `CZK ${nf.format(x.czk)} + EUR ${nf2.format(x.eur)} × ${nf2.format(D.rate.value)}`;
-      return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}">
+      return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}${x.carrier ? ' ext' : ''}">
         <td class="c-spz" title="${esc(x.prepr || '')}">${firstOfSpz ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') + (x.carrier ? `<small class="cr">${esc(x.carrier)}</small>` : '') : ''}</td>
         <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
         <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}">${routeHtml(x.route)}</td>
@@ -513,7 +514,7 @@
     $('hRows').innerHTML = o.map(x => {
       const first = x.spz !== last; last = x.spz;
       const route = String(x.route || '').split(/\s*\/\/\s*/).map(esc).join(' <span class="a" style="color:var(--accent);font-weight:700">→</span> ') + (x.to ? ` <span class="zip">${esc(x.to)}</span>` : '');
-      return `<tr class="${first ? 'grp' : ''}">
+      return `<tr class="${first ? 'grp' : ''}${x.cr ? ' ext' : ''}">
         <td class="h-spz">${first ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') : ''}</td>
         <td class="h-who">${x.who ? `<span class="who">${esc(x.who)}</span>` : ''}</td>
         <td class="h-pz"><span class="pz num">${esc(x.pz || '—')}</span></td>
