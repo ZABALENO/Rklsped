@@ -2,7 +2,7 @@
 (() => {
   const LIST = 'https://iptv-org.github.io/iptv/countries/cz.m3u';
   const HLS_JS = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js';
-  let panel = null, chans = null, hidden = 0, hls = null, box = null;
+  let panel = null, chans = null, hidden = 0, hls = null, box = null, curUrl = '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const css = document.createElement('style');
   css.textContent = `
@@ -38,10 +38,10 @@
     const r = await fetch(LIST, { cache: 'no-store' }); if (!r.ok) throw new Error('seznam se nenačetl (' + r.status + ')');
     chans = parse(await r.text()); return chans;
   }
-  function stop() { if (hls) { hls.destroy(); hls = null; } if (box) { const v = box.querySelector('video'); v.pause(); v.removeAttribute('src'); v.load(); box.remove(); box = null; } panel && panel.querySelectorAll('li.on').forEach(x => x.classList.remove('on')); }
+  function stop() { curUrl = ''; if (hls) { hls.destroy(); hls = null; } if (box) { const v = box.querySelector('video'); v.pause(); v.removeAttribute('src'); v.load(); box.remove(); box = null; } panel && panel.querySelectorAll('li.on').forEach(x => x.classList.remove('on')); }
   function hlsLib() { return window.Hls ? Promise.resolve() : new Promise((ok, no) => { const s = document.createElement('script'); s.src = HLS_JS; s.onload = ok; s.onerror = () => no(new Error('knihovna přehrávače se nenačetla')); document.head.appendChild(s); }); }
   async function play(ch) {
-    stop();
+    stop(); curUrl = ch.url;
     box = document.createElement('div'); box.id = 'iptvV';
     box.innerHTML = `<video playsinline muted autoplay controls></video><div class="err"></div><div class="bar"><b>${esc(ch.name)}</b><button data-a="mute" title="Zvuk">🔇</button><button data-a="big" title="Větší / menší">⤢</button><button data-a="x" title="Zavřít">✕</button></div>`;
     document.body.appendChild(box);
@@ -61,7 +61,7 @@
     } catch (e) { fail(e.message); }
   }
   async function toggle() {
-    if (panel) { panel.remove(); panel = null; stop(); return; }
+    if (panel) { panel.remove(); panel = null; return; }   // zavření seznamu nechá video běžet
     panel = document.createElement('div'); panel.id = 'iptvP';
     panel.innerHTML = '<header><span>TV stanice</span><button data-a="x">✕</button></header><input placeholder="Hledat kanál…"><ul><li>Načítám…</li></ul><div class="note"></div>';
     document.body.appendChild(panel);
@@ -72,7 +72,7 @@
       const draw = () => {
         const q = inp.value.trim().toLowerCase();
         const f = list.filter(c => !q || c.name.toLowerCase().includes(q));
-        ul.innerHTML = f.map(c => `<li data-i="${list.indexOf(c)}">${esc(c.name)}<small>${esc(c.group)}</small></li>`).join('') || '<li>Nic nenalezeno</li>';
+        ul.innerHTML = f.map(c => `<li data-i="${list.indexOf(c)}"${c.url === curUrl ? ' class="on"' : ''}>${esc(c.name)}<small>${esc(c.group)}</small></li>`).join('') || '<li>Nic nenalezeno</li>';
       };
       draw(); inp.oninput = draw;
       panel.querySelector('.note').textContent = list.length + ' kanálů' + (hidden ? ' (' + hidden + ' skryto – nešifrovaný odkaz http)' : '') + '. Část kanálů nemusí jít přehrát (omezení vysílatele).';
