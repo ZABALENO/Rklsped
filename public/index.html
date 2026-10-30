@@ -160,6 +160,11 @@
   tbody tr.gone{transition:opacity .35s, transform .35s;opacity:0;transform:translateX(30px);background:var(--ok-bg)}
   th.c-chk,td.c-chk{width:74px;white-space:nowrap;padding-right:4px}
   td.c-goods{width:24%}
+  body.t-v2 .c-goods{display:none!important}
+  body.t-v2 td.c-route{width:auto;min-width:0;white-space:nowrap}body.t-v2 td.c-route .route{white-space:nowrap}body.t-v2 main{max-width:none}
+  body.t-v2 td.c-cust{width:15%;white-space:normal}
+  input.mdate,input.mroute{border:1px solid #e3d48a;background:#fffdf0;border-radius:6px;padding:6px 8px;font:inherit;width:100%;box-sizing:border-box}
+  .mnote{display:flex;align-items:center;gap:8px}.mnote .mtag{margin:0}
   .c-cust{display:none}body.t-v2 th.c-cust,body.t-v2 td.c-cust{display:table-cell}
   .cust{font-weight:600;color:#1d388f;word-break:break-word}
   td.c-route{min-width:270px}
@@ -362,9 +367,9 @@
       <div class="diskpop" id="diskPop" hidden></div>
     </div>
     <div class="v2hint" id="v2hint">☑ Zaškrtnutí = přeprava je vyřešena a zmizí ze seznamu.</div>
-    <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – napiš libovolný text (město, zboží, datum…) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
+    <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – nejdřív datum nakládky, pak trasa (např. 5.11. Ostrava – Praha) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
     <table>
-      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th class="c-cust" data-col="cust">Objednatel</th><th data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th class="c-cust"><input data-fc="cust" placeholder="filtr…" aria-label="Filtr objednatel"></th><th><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
+      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th class="c-cust" data-col="cust">Objednatel</th><th class="c-goods" data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th class="c-cust"><input data-fc="cust" placeholder="filtr…" aria-label="Filtr objednatel"></th><th class="c-goods"><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
@@ -571,6 +576,7 @@
   const PIN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
 
   const V2 = document.body.classList.contains('t-v2');
+  if (V2) document.querySelectorAll('thead tr').forEach(tr => { const c = tr.querySelector('.c-cust'), d = tr.children[1]; if (c && d) d.after(c); });
   const SOLD_W = V2 ? 'Vyřešeno' : 'Prodáno';
   if (V2) { document.querySelector('th.c-chk').textContent = 'Vyřešeno'; document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; document.getElementById('panelH2').textContent = 'Přepravy'; document.getElementById('weekH2').textContent = 'Vyřešeno – posledních 7 dní'; }
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
@@ -603,24 +609,36 @@
   const pendingManual = {};     // rozepsané ruční objednávky (ještě neuložené)
   function rowHtml(r, today, extra) {
     const n = noteVal(r.key);
+    const custTd = `<td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>`;
     const grip = V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '';
     return `<tr data-key="${esc(r.key)}"${V2 ? ' draggable="true"' : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
+        ${V2 ? custTd : ''}
         <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
-        <td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>
+        ${V2 ? '' : custTd}
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
         <td class="c-price num">${priceHtml(r)}</td>
         <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>
       </tr>`;
   }
+  // ruční objednávka: první hodnota = datum nakládky (i rozmezí), zbytek = trasa
+  function splitManual(t) {
+    t = String(t || '');
+    const D = '\\d{1,2}\\.\\s?\\d{1,2}\\.?(?:\\s?\\d{2,4})?';
+    const m = t.match(new RegExp('^\\s*(' + D + '(?:\\s*[-–]\\s*' + D + ')?)(?:\\s+(.*))?$', 's')) || t.match(/^\s*(\S+)(?:\s+(.*))?$/s);
+    return m ? { d: m[1] || '', r: (m[2] || '').trim() } : { d: '', r: '' };
+  }
   function manualHtml(m, folder) {
     const t = m.id in pendingManual ? pendingManual[m.id] : m.text;
+    const sp = splitManual(t);
     return `<tr class="manual" draggable="true" data-key="m:${esc(m.id)}" data-mid="${esc(m.id)}"${folder ? ` data-folder="${folder}"` : ''}>
         <td class="c-chk"><span class="grip" data-dk="m:${esc(m.id)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><button class="mdel" title="Smazat ruční objednávku" aria-label="Smazat">✕</button><span class="fbtns"><button data-f="vyvoz" data-fk="m:${esc(m.id)}">Vý</button><button data-f="dovoz" data-fk="m:${esc(m.id)}">Do</button><button data-f="none" data-fk="m:${esc(m.id)}">×</button></span></td>
-        <td colspan="6"><span class="mtag">RUČNĚ</span><textarea class="mtext" rows="1" maxlength="500" aria-label="Ruční objednávka">${esc(t)}</textarea></td>
-        <td class="c-note"><small class="mwait">Čeká na přiřazení objednávky z Lori</small></td>
+        <td class="c-date"><input class="mtext mdate" data-part="d" maxlength="60" placeholder="Datum nakládky" aria-label="Datum nakládky" value="${esc(sp.d)}"></td>
+        <td class="c-cust"></td>
+        <td colspan="4"><input class="mtext mroute" data-part="r" maxlength="440" placeholder="Trasa" aria-label="Trasa" value="${esc(sp.r)}"></td>
+        <td class="c-note"><div class="mnote"><span class="mtag">RUČNĚ</span><small class="mwait">Čeká na přiřazení objednávky z Lori</small></div></td>
       </tr>`;
   }
   function suggHtml(m, r, today, folder) {
@@ -650,6 +668,7 @@
     const ae = document.activeElement;
     const focusKey = ae && ae.classList && ae.classList.contains('note') ? ae.closest('tr').dataset.key : null;
     const focusM = ae && ae.classList && ae.classList.contains('mtext') ? ae.closest('tr').dataset.mid : null;
+    const focusPart = focusM ? ae.dataset.part : null;
     const sel = (focusKey || focusM) ? [ae.selectionStart, ae.selectionEnd] : null;
     lastSig = sig;
     $('rows').innerHTML = V2 ? v2html : shown.map(r => rowHtml(r, today)).join('');
@@ -657,7 +676,7 @@
     if (window.RKL) RKL.page([...$('rows').children]);
     if (focusKey || focusM) {
       const tr = [...$('rows').children].find(t => focusM ? (t.classList.contains('manual') && t.dataset.mid === focusM) : (t.dataset.key === focusKey && !t.classList.contains('manual')));
-      const ta = tr && tr.querySelector(focusM ? '.mtext' : '.note');
+      const ta = tr && tr.querySelector(focusM ? '.mtext[data-part="' + focusPart + '"]' : '.note');
       if (ta) { ta.focus(); try { ta.setSelectionRange(sel[0], sel[1]); } catch {} }
     }
     return shown;
@@ -1016,7 +1035,8 @@
     const mTimers = {};
     rowsEl.addEventListener('input', e => {
       if (!e.target.classList.contains('mtext')) return;
-      const ta = e.target, id = ta.closest('tr').dataset.mid; pendingManual[id] = ta.value; autosize(ta);
+      const ta = e.target, tr = ta.closest('tr'), id = tr.dataset.mid;
+      pendingManual[id] = ((tr.querySelector('.mdate') || {}).value || '').trim() + ' ' + ((tr.querySelector('.mroute') || {}).value || '').trim();
       clearTimeout(mTimers[id]);
       mTimers[id] = setTimeout(async () => { const t = pendingManual[id]; if (t == null || !t.trim()) return; try { await api('/api/manual/edit', { id, text: t }); const m = (B.manual || []).find(x => x.id === id); if (m) m.text = t; if (pendingManual[id] === t) delete pendingManual[id]; } catch (err) {} }, 800);
     });
