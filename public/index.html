@@ -99,18 +99,19 @@
   .dock{display:none}
   #adock,.asgonly{display:none}
   body.t-asg .asgonly{display:inline-flex}
-  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.72);backdrop-filter:blur(3px)}
+  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.8)}
   #dragGhost{position:fixed;left:-9999px;top:0;width:min(900px,92vw);background:#fff;border:2px solid #1d388f;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);padding:10px 16px;font:600 15px inherit;color:#14204a;display:flex;gap:18px;align-items:center;opacity:.8}
   #dragGhost b{color:#1d388f}
-  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{background:radial-gradient(ellipse at 50% 120%,rgba(120,20,0,.9),rgba(25,4,0,.86) 70%);isolation:isolate;backdrop-filter:none}
-  #adock::before,#adock::after{content:'';position:fixed;left:-10%;right:-10%;bottom:-8%;height:85%;pointer-events:none;z-index:-1;mix-blend-mode:screen;filter:blur(14px)}
-  #adock::before{background:radial-gradient(ellipse 14% 55% at 8% 100%,#ff3d00 0,transparent 70%),radial-gradient(ellipse 12% 70% at 24% 100%,#ff9100 0,transparent 70%),radial-gradient(ellipse 16% 60% at 42% 100%,#ff5a00 0,transparent 70%),radial-gradient(ellipse 12% 75% at 60% 100%,#ffb300 0,transparent 70%),radial-gradient(ellipse 15% 58% at 78% 100%,#ff3d00 0,transparent 70%),radial-gradient(ellipse 12% 68% at 94% 100%,#ff9100 0,transparent 70%);animation:flameA 1.3s ease-in-out infinite alternate;transform-origin:50% 100%}
-  #adock::after{background:radial-gradient(ellipse 10% 45% at 16% 100%,#ffe14d 0,transparent 70%),radial-gradient(ellipse 9% 52% at 35% 100%,#ffcc00 0,transparent 70%),radial-gradient(ellipse 11% 46% at 52% 100%,#fff176 0,transparent 70%),radial-gradient(ellipse 9% 54% at 70% 100%,#ffd54f 0,transparent 70%),radial-gradient(ellipse 10% 44% at 87% 100%,#ffe14d 0,transparent 70%);animation:flameB .9s ease-in-out infinite alternate;transform-origin:50% 100%}
-  @keyframes flameA{0%{transform:scaleY(.82) scaleX(1.02);opacity:.85}35%{transform:scaleY(1.05) scaleX(.97);opacity:1}70%{transform:scaleY(.9) scaleX(1.03);opacity:.9}100%{transform:scaleY(1.12) scaleX(.98);opacity:1}}
-  @keyframes flameB{0%{transform:scaleY(1.1) translateX(-1.5%);opacity:.8}50%{transform:scaleY(.8) translateX(1.5%);opacity:1}100%{transform:scaleY(1.05) translateX(-1%);opacity:.85}}
-  body.nofire #adock::before,body.nofire #adock::after{display:none}
-  body.nofire.t-asg.dragging-now #adock,body.nofire.t-asg.picking #adock{background:rgba(12,22,58,.72);backdrop-filter:blur(3px)}
-  @media (prefers-reduced-motion:reduce){#adock::before,#adock::after{animation:none}}
+  #adock .road{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+  #adock{isolation:isolate}
+  #adock .veh{position:absolute;left:0;color:#fff;opacity:.11;will-change:transform}
+  #adock .veh svg{display:block;width:100%;height:auto}
+  #adock .veh.r{animation-name:driveR}#adock .veh.l{animation-name:driveL}
+  #adock .veh{animation-timing-function:linear;animation-iteration-count:infinite}
+  @keyframes driveR{from{transform:translateX(-30vw)}to{transform:translateX(112vw)}}
+  @keyframes driveL{from{transform:translateX(112vw) scaleX(-1)}to{transform:translateX(-30vw) scaleX(-1)}}
+  body.nofire #adock .road{display:none}
+  @media (prefers-reduced-motion:reduce){#adock .veh{animation:none}}
   #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:14px;color:#fff;font:700 20px inherit}
   #adock .ahd small{font:500 14px inherit;opacity:.75}
   #adock .ahd .x{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:9px;padding:8px 16px;font:600 14px inherit;cursor:pointer}
@@ -1073,9 +1074,14 @@
     const rowsEl = $('rows'), ad = $('adock');
     let dk = null, pickKey = null;
     const body = document.body;
+    const TRUCK = '<svg viewBox="0 0 240 70" fill="currentColor"><rect x="0" y="6" width="156" height="46" rx="3"/><path d="M162 18h42l22 20v18h-64z"/><rect x="170" y="23" width="26" height="13" rx="2" fill="#0c163a"/><circle cx="34" cy="58" r="10"/><circle cx="62" cy="58" r="10"/><circle cx="124" cy="58" r="10"/><circle cx="196" cy="58" r="10"/></svg>';
+    const SOLO = '<svg viewBox="0 0 190 70" fill="currentColor"><rect x="0" y="8" width="118" height="44" rx="3"/><path d="M124 22h34l22 18v16h-56z"/><rect x="132" y="27" width="20" height="11" rx="2" fill="#0c163a"/><circle cx="28" cy="58" r="10"/><circle cx="92" cy="58" r="10"/><circle cx="154" cy="58" r="10"/></svg>';
+    const VAN = '<svg viewBox="0 0 130 64" fill="currentColor"><path d="M4 12h66l-1 0h18l24 22v22H4z"/><rect x="92" y="22" width="18" height="11" rx="2" fill="#0c163a"/><circle cx="30" cy="54" r="9"/><circle cx="96" cy="54" r="9"/></svg>';
+    const ROAD = (() => { const L = [[TRUCK, 330, 'r', 24, 4, 78], [VAN, 170, 'l', 19, 1, 66], [SOLO, 250, 'r', 21, 12, 52], [TRUCK, 300, 'l', 28, 9, 40], [VAN, 150, 'r', 17, 8, 28], [SOLO, 230, 'l', 23, 3, 16]];
+      return '<div class="road">' + L.map(([s, w, d, dur, dl, top]) => `<div class="veh ${d}" style="top:${top}%;width:${w}px;animation-duration:${dur}s;animation-delay:-${dl}s">${s}</div>`).join('') + '</div>'; })();
     function buildDock() {
       const C = B.carr || [], ib = $('carBtn'); if (ib) ib.style.display = B.carrSrc === 'sheet' ? 'none' : '';
-      ad.innerHTML = '<div class="ahd">Kam přiřadit objednávku?<small>pusť řádek na řidiče / vozidlo</small><button class="x" data-x="1">Zavřít ✕</button></div><div class="back" data-d="-">↩ Zpět do „Nenaloženo“</div>' + (C.length ? '<div class="grid">' + C.map((c, ci) => `<div class="cc" style="${carCol(ci)}"><h4>${esc(c.name)}</h4>${c.drivers.map(d => `<div class="dk2" data-d="${esc(d.id)}"><span>${esc(d.name)}</span>${d.spz ? `<span class="sp">${esc(d.spz)}</span>` : ''}</div>`).join('')}</div>`).join('') + '</div>' : '<div class="ahd">Seznam dopravců zatím není – přidej v tabulce list „Poddopravci“.</div>');
+      ad.innerHTML = ROAD + '<div class="ahd">Kam přiřadit objednávku?<small>pusť řádek na řidiče / vozidlo</small><button class="x" data-x="1">Zavřít ✕</button></div><div class="back" data-d="-">↩ Zpět do „Nenaloženo“</div>' + (C.length ? '<div class="grid">' + C.map((c, ci) => `<div class="cc" style="${carCol(ci)}"><h4>${esc(c.name)}</h4>${c.drivers.map(d => `<div class="dk2" data-d="${esc(d.id)}"><span>${esc(d.name)}</span>${d.spz ? `<span class="sp">${esc(d.spz)}</span>` : ''}</div>`).join('')}</div>`).join('') + '</div>' : '<div class="ahd">Seznam dopravců zatím není – přidej v tabulce list „Poddopravci“.</div>');
     }
     async function assign(key, did) {
       B.asg = B.asg || {}; if (did === '-') delete B.asg[key]; else B.asg[key] = did;
