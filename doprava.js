@@ -32,7 +32,7 @@ async function refreshSheet(force) {
       const out = await loadSheet(url);
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
       await require('./lib/change').trackChange(store.mem.cfg, store.put, out, url);
-      await updateHistory(out.rows);
+      await updateHistory(zapadRows(out.rows));
       await updateAgents(out.counts);
       if (out.counts) {                                   // kdy se hodnoty počtů v tabulce naposledy opravdu změnily
         const sig = require('crypto').createHash('sha1').update(JSON.stringify(out.counts.map(c => [nk(c.name), c.entries[0] ? c.entries[0].count : null, c.entries[0] ? c.entries[0].date : null]).sort())).digest('hex');
@@ -46,6 +46,10 @@ async function refreshSheet(force) {
   })();
   return inflight;
 }
+
+// rkldoprava zajímá jen relace „Západ 1“ (sloupec Relace / Tuz.Z); když tabulka sloupec nemá, filtr se nepoužije
+const deacc = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const zapadRows = rows => (sheet.columns && sheet.columns.relace ? rows.filter(r => /zapad\s*1/.test(deacc(r.relace))) : rows);
 
 /* ---------- historie nakládek ----------
    Pro každý den (Datum nakl.od) se v databázi drží seznam zásilek RKL: SPZ, dispečer, přeprava, trasa…
@@ -312,7 +316,8 @@ app.get('/api/trips', async (req, res) => {
   await refreshSheet(req.query.force === '1');
   const today = pragueToday();
   const rate = await eurRate(store);
-  const trips = sheet.rows.length ? await buildTrips(sheet.rows, today, rate.value) : [];
+  const zrows = zapadRows(sheet.rows);
+  const trips = zrows.length ? await buildTrips(zrows, today, rate.value) : [];
   const missing = sheet.columns ? ['spz', 'prepr', 'carrier', 'date', 'unlTo', 'incCzk', 'incEur'].filter(k => !sheet.columns[k]) : [];
   res.json({
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url),
