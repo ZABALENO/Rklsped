@@ -99,7 +99,9 @@
   .dock{display:none}
   #adock,.asgonly{display:none}
   body.t-asg .asgonly{display:inline-flex}
-  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.93);backdrop-filter:blur(8px)}
+  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.72);backdrop-filter:blur(3px)}
+  #dragGhost{position:fixed;left:-9999px;top:0;width:min(900px,92vw);background:#fff;border:2px solid #1d388f;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);padding:10px 16px;font:600 15px inherit;color:#14204a;display:flex;gap:18px;align-items:center;opacity:.8}
+  #dragGhost b{color:#1d388f}
   #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:14px;color:#fff;font:700 20px inherit}
   #adock .ahd small{font:500 14px inherit;opacity:.75}
   #adock .ahd .x{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:9px;padding:8px 16px;font:600 14px inherit;cursor:pointer}
@@ -1063,7 +1065,13 @@
     const off = () => { body.classList.remove('dragging-now', 'picking'); pickKey = null; ad.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); };
     rowsEl.addEventListener('dragstart', e => {
       const tr = e.target.closest && e.target.closest('tr[data-key]'); if (!tr) return;
-      dk = tr.dataset.key; buildDock(); setTimeout(() => body.classList.add('dragging-now'), 0); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dk);
+      dk = tr.dataset.key; buildDock();
+      try {
+        const rr = (B.offered || []).find(x => x.key === dk);
+        let gh = document.getElementById('dragGhost'); if (!gh) { gh = document.createElement('div'); gh.id = 'dragGhost'; document.body.appendChild(gh); }
+        gh.innerHTML = rr ? `<span>${esc(fmtDate(rr.date))}${rr.dateLoadTo ? ' – ' + esc(fmtDate(rr.dateLoadTo)) : ''}</span><b>${esc(rr.cust || '')}</b><span>${esc(rr.route || '')}</span><span>${esc(rr.goods || '')}</span>` : esc(dk);
+        e.dataTransfer.setDragImage(gh, 40, 22);
+      } catch {} setTimeout(() => body.classList.add('dragging-now'), 0); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dk);
       setTimeout(() => tr.classList.add('dragging'), 0);
     });
     rowsEl.addEventListener('mousedown', e => { const tr = e.target.closest && e.target.closest('tr[data-key]'); if (tr) tr.draggable = !e.target.closest('textarea,input,button,label,a'); });
