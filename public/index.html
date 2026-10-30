@@ -20,7 +20,7 @@
   html,body{margin:0}
   body{background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif;min-height:100vh}
   /* fotka areálu jako pozadí – rozmazaná a překrytá světlým závojem, aby nerušila čitelnost */
-  body::before{content:"";position:fixed;inset:-24px;background:url(/bg-hd.jpg) center 40%/cover no-repeat;filter:blur(3px) saturate(1.1);z-index:-2}
+  body::before{content:"";position:fixed;inset:-24px;background:url(/bg.jpg) center 40%/cover no-repeat;filter:blur(3px) saturate(1.1);z-index:-2}
   body::after{content:"";position:fixed;inset:0;z-index:-1;
     background:linear-gradient(180deg,rgba(21,42,110,.45) 0,rgba(238,241,245,.62) 320px,rgba(238,241,245,.74) 700px,rgba(238,241,245,.80) 100%)}
   .panel,.kpi,.card,.settings{box-shadow:0 1px 2px rgba(15,27,45,.06),0 6px 20px rgba(15,27,45,.07)}
@@ -29,7 +29,7 @@
   header{background:rgba(29,56,143,.86);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
   .bar{max-width:1320px;margin:0 auto;padding:6px 20px;display:flex;align-items:center;gap:14px}
   .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:.2px;line-height:1.15;flex:none}
-  .brand .logo{width:26px;height:26px;border-radius:7px;opacity:.9;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+  .brand .logo{width:32px;height:32px;border-radius:8px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
   .brand small{display:block;font-weight:400;font-size:11.5px;opacity:.75;letter-spacing:0}
   .strip{display:flex;gap:8px;flex:1;min-width:0;justify-content:center;flex-wrap:wrap}
   .chip{background:rgba(255,255,255,.13);border-radius:8px;padding:3px 12px;display:flex;align-items:baseline;gap:7px;white-space:nowrap}
@@ -99,12 +99,12 @@
   .dock{display:none}
   #adock,.asgonly{display:none}
   body.t-asg .asgonly{display:inline-flex}
-  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:linear-gradient(rgba(8,16,42,.5),rgba(8,16,42,.62)),url(/bg-hd.jpg) center 40%/cover no-repeat}
+  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.8)}
   #dragGhost{position:fixed;left:-9999px;top:0;width:min(900px,92vw);background:#fff;border:2px solid #1d388f;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);padding:10px 16px;font:600 15px inherit;color:#14204a;display:flex;gap:18px;align-items:center;opacity:.8}
   #dragGhost b{color:#1d388f}
   #adock .road{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
   #adock{isolation:isolate}
-  #adock .veh{position:absolute;left:0;color:#fff;opacity:.2;will-change:transform}
+  #adock .veh{position:absolute;left:0;color:#fff;opacity:.11;will-change:transform}
   #adock .veh svg{display:block;width:100%;height:auto}
   #adock .veh.r{animation-name:driveR}#adock .veh.l{animation-name:driveL}
   #adock .veh{animation-timing-function:linear;animation-iteration-count:infinite}
