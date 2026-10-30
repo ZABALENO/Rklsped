@@ -227,7 +227,7 @@
   <div class="bar">
     <div class="brand"><img src="/logo.jpg" alt="RKL"><div>RKL Doprava<small>Vlastní doprava na cestě</small></div></div>
     <div class="strip">
-      <div class="chip"><b class="num" id="sTrips">–</b><span>přeprav na cestě</span></div>
+      <div class="chip"><b class="num" id="sTrips">–</b><span>SPZ na cestě</span></div>
       <div class="chip lu"><span>dnes</span><b class="num" id="sLoads">–</b><span>nakl.</span><b class="num" id="sUnl">–</b><span>vykl.</span></div>
       <div class="chip lu"><b class="num" id="sKg">–</b><span>t celkem</span></div>
       <div class="chip sum"><b class="num" id="sSum">–</b><span>příjem celkem</span></div>
@@ -446,7 +446,7 @@
       if (!tv2) { td.style.fontSize = ''; return; }
       const rt = td.firstElementChild; if (!rt || !td.offsetParent) return;
       let s = 52; td.style.fontSize = s + 'px';
-      while (s > 24 && (rt.scrollHeight > rt.clientHeight + 1 || rt.scrollWidth > rt.clientWidth + 1)) { s -= 1; td.style.fontSize = s + 'px'; }
+      while (s > 16 && (rt.scrollHeight > rt.clientHeight + 1 || rt.scrollWidth > rt.clientWidth + 1)) { s -= 1; td.style.fontSize = s + 'px'; }
     });
   }
   function pageNow() { if (window.RKL) { RKL.page(pageRows()); fitRoutes(); } }
