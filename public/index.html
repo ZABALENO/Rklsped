@@ -99,16 +99,22 @@
   .dock{display:none}
   #adock,.asgonly{display:none}
   body.t-asg .asgonly{display:inline-flex}
-  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:block;position:fixed;left:0;right:0;top:0;z-index:60;max-height:46vh;overflow:auto;padding:10px 14px;background:rgba(15,25,60,.82);backdrop-filter:blur(6px)}
-  #adock .ac{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
-  #adock .acn{color:#fff;font:700 13px inherit;min-width:150px}
-  #adock .dk2{padding:7px 12px;border-radius:9px;background:#e8ecf3;color:#14204a;font:600 13px inherit;border:2px dashed rgba(0,0,0,.35);cursor:pointer}
-  #adock .dk2 small{opacity:.7;font-weight:500}
-  #adock .dk2.drop-over,#adock .dk2:hover{background:#fff;outline:3px solid #6c9fe6}
-  #adock .dk2.none{background:#ffd9a8}
+  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.93);backdrop-filter:blur(8px)}
+  #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:14px;color:#fff;font:700 20px inherit}
+  #adock .ahd small{font:500 14px inherit;opacity:.75}
+  #adock .ahd .x{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:9px;padding:8px 16px;font:600 14px inherit;cursor:pointer}
+  #adock .back{padding:16px 20px;margin-bottom:16px;border-radius:14px;background:#ffd9a8;color:#4a2b00;font:700 18px inherit;text-align:center;border:3px dashed #c98a2b;cursor:pointer}
+  #adock .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;align-items:start}
+  #adock .cc{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+  #adock .cc h4{margin:0;padding:10px 14px;font:700 15px inherit;color:#14204a;background:var(--ch)}
+  #adock .dk2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid #e3e8f3;cursor:pointer;font:600 15px inherit;color:#14204a;background:#fff}
+  #adock .dk2 .sp{font:700 14px ui-monospace,monospace;background:var(--ch);padding:3px 8px;border-radius:7px;white-space:nowrap}
+  #adock .dk2.drop-over,#adock .dk2:hover,#adock .back.drop-over,#adock .back:hover{background:#dff0ff;outline:4px solid #1d388f;outline-offset:-4px}
   tr.afold td{background:#e8eefb;border-bottom:1px solid #9db3e0;font-size:14px;padding:7px 12px}
-  tr.afold.car td{background:#dbe5fa;border-top:3px solid #9db3e0;font-size:15px}
-  tr.afold.drv td{padding-left:34px;background:#eef3fc}
+  tr.afold.car td{background:var(--ch,#dbe5fa);border-top:3px solid var(--cb,#9db3e0);font-size:15px;cursor:pointer;user-select:none}
+  tr.afold.drv td{padding-left:34px;background:var(--ct,#eef3fc)}
+  tr.cr>td{background:var(--ct)}tr.cr>td:first-child{box-shadow:inset 6px 0 0 var(--cb)}
+  .ctog{display:inline-block;width:22px;font-size:13px}
   tr.afold.none td{background:#fde9c9;border-top:3px solid #e2b66b}
   tr.afold .fcnt{font-weight:600;opacity:.7;margin-left:6px}
   tr.afold .tel{opacity:.7;margin-left:10px;font-size:12px}
@@ -361,7 +367,7 @@
       <div class="chip sold"><span>Dnes prodáno</span><b class="num" id="kToday">0</b></div>
       <div class="chip"><span>Dnes k prodeji</span><b class="num" id="kOpen">–</b></div>
       <div class="chip prov" id="provChip"><span>Dnešní provize</span><b class="num" id="kProv">–</b></div>
-      <button class="srchbtn asgonly" id="impBtn" title="Nahrát seznam poddopravců (xlsx)">Dopravci…</button><input type="file" id="impFile" accept=".xlsx,.xls" hidden>
+      <button class="srchbtn asgonly" id="carBtn" title="Nahrát seznam poddopravců (xlsx)">Dopravci…</button><input type="file" id="carFile" accept=".xlsx,.xls" hidden>
       <button class="srchbtn" id="codeBtn" aria-pressed="true" title="Zobrazit / skrýt CODE u měst">Code</button>
       <div class="chip pgchip"><b class="num" id="pgInd"></b></div>
       <div class="srch"><button class="srchbtn" id="srchBtn" aria-pressed="false" title="Hledat v seznamu (jako Ctrl+F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Hledat</button><input id="q" type="search" placeholder="Hledat v seznamu…" aria-label="Hledat" autocomplete="off" hidden></div>
@@ -596,6 +602,8 @@
 
   const V2 = document.body.classList.contains('t-v2');
   const ASG = document.body.classList.contains('t-asg');
+  const carCol = i => { const hu = (i * 47 + 210) % 360; return `--ch:hsl(${hu} 60% 84%);--ct:hsl(${hu} 70% 95%);--cb:hsl(${hu} 55% 52%)`; };
+  let carCollapsed = []; try { carCollapsed = JSON.parse(lsGet('rkl_v1_car', '[]')) || []; } catch {}
   const SF = document.body.classList.contains('t-sf');   // řazení + filtry + sloupec Objednatel (Vnitro 1 i 2)
   if (SF) document.querySelectorAll('thead tr').forEach(tr => { const c = tr.querySelector('.c-cust'), d = tr.children[1]; if (c && d) d.after(c); });
   const SOLD_W = V2 ? 'Vyřešeno' : 'Prodáno';
@@ -634,7 +642,7 @@
     const custTd = `<td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>`;
     const agrip = ASG ? `<span class="agrip" data-pk="${esc(r.key)}" title="Chyť řádek a přetáhni k dopravci / řidiči (nebo klikni a vyber)">⠿</span>` : '';
     const grip = agrip + (V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '');
-    return `<tr data-key="${esc(r.key)}"${V2 || ASG ? ' draggable="true"' : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
+    return `<tr data-key="${esc(r.key)}"${V2 || ASG ? ' draggable="true"' : ''}${extra && extra.col ? ` style="${extra.col}"` : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}${extra && extra.col ? ' cr' : ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
         ${SF ? custTd : ''}
@@ -684,10 +692,11 @@
       list.forEach(r => { const id = A[r.key]; if (id && dmap.has(id)) { if (!by.has(id)) by.set(id, []); by.get(id).push(r); } else rest.push(r); });
       const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
       let out = '';
-      C.forEach(c => {
+      C.forEach((c, ci) => {
         const ds = c.drivers.filter(d => by.has(d.id)); if (!ds.length) return;
-        out += `<tr class="afold car"><td colspan="8"><b>${esc(c.name)}</b><span class="fcnt">${ds.reduce((a, d) => a + by.get(d.id).length, 0)}</span></td></tr>`;
-        ds.forEach(d => { out += `<tr class="afold drv" data-adrop="${esc(d.id)}"><td colspan="8">👤 <b>${esc(d.name)}</b>${d.spz ? ` · <b>${esc(d.spz)}</b>` : ''}<span class="tel">${esc(d.phone)}</span><span class="fcnt">${by.get(d.id).length}</span></td></tr>` + by.get(d.id).map(r => rowHtml(r, today, { folder: 'x' })).join(''); });
+        const col = carCol(ci), cl = carCollapsed.includes(c.id), n = ds.reduce((a, d) => a + by.get(d.id).length, 0);
+        out += `<tr class="afold car" data-ctog="${esc(c.id)}" style="${col}"><td colspan="8"><span class="ctog">${cl ? '▸' : '▾'}</span><b>${esc(c.name)}</b><span class="fcnt">${n} obj. · ${ds.length} ${ds.length === 1 ? 'řidič' : 'řidiči'}</span></td></tr>`;
+        if (!cl) ds.forEach(d => { out += `<tr class="afold drv" data-adrop="${esc(d.id)}" style="${col}"><td colspan="8">👤 <b>${esc(d.name)}</b>${d.spz ? ` · <b>${esc(d.spz)}</b>` : ''}<span class="tel">${esc(d.phone)}</span><span class="fcnt">${by.get(d.id).length}</span></td></tr>` + by.get(d.id).map(r => rowHtml(r, today, { folder: 'x', col })).join(''); });
       });
       out += `<tr class="afold none" data-adrop="-"><td colspan="8"><b>Nenaloženo</b><span class="fcnt">${rest.length}</span><span class="fhint" style="margin-left:12px;opacity:.7;font-size:12px">sem přetáhni řádek, aby se vrátil z dopravce</span></td></tr>` + restShown.map(r => rowHtml(r, today)).join('');
       v2html = out;
@@ -707,7 +716,7 @@
       shown = FOLDERS.flatMap(([f]) => collapsed.includes(f) ? [] : inF(f)).concat(collapsed.includes('none') ? [] : restShown, M);
       B._v2count = { list: rest.length + FOLDERS.reduce((a, [f]) => a + inF(f).length, 0), shownN: shown.length };
     }
-    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (SF ? JSON.stringify(view) : '') + (ASG ? JSON.stringify([B.asg, B.carrAt]) : '') + (V2 ? collapsed.join() + JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
+    const sig = today + '|' + markOnly + showAll + '|' + query + '|' + (SF ? JSON.stringify(view) : '') + (ASG ? JSON.stringify([B.asg, B.carrAt, carCollapsed]) : '') + (V2 ? collapsed.join() + JSON.stringify([B.folders, (B.manual || []).map(m => [m.id, m.folder, m.suggest && m.suggest.key])]) + '|' : '') + shown.map(r => r.key + '\u0001' + (B.notes[r.key] || '') + '\u0001' + (r.pinned || '') + (r.marked ? 'm' : '')).join('\u0002');
     if (sig === lastSig) return shown;
     // zachovat rozepsanou poznámku (fokus + kurzor)
     const ae = document.activeElement;
@@ -1041,9 +1050,8 @@
     let dk = null, pickKey = null;
     const body = document.body;
     function buildDock() {
-      const C = B.carr || [];
-      const ib = $('impBtn'); if (ib) ib.style.display = B.carrSrc === 'sheet' ? 'none' : '';
-      ad.innerHTML = '<div class="ac"><span class="acn">Nenaloženo</span><span class="dk2 none" data-d="-">↩ Zpět do Nenaloženo</span></div>' + (C.length ? C.map(c => `<div class="ac"><span class="acn">${esc(c.name)}</span>${c.drivers.map(d => `<span class="dk2" data-d="${esc(d.id)}">${esc(d.name)}${d.spz ? ` <small>${esc(d.spz)}</small>` : ''}</span>`).join('')}</div>`).join('') : '<div class="acn">Seznam dopravců zatím není nahraný – přidej v tabulce list „Poddopravci“ (nebo klikni nahoře na „Dopravci…“ a nahraj xlsx).</div>');
+      const C = B.carr || [], ib = $('carBtn'); if (ib) ib.style.display = B.carrSrc === 'sheet' ? 'none' : '';
+      ad.innerHTML = '<div class="ahd">Kam přiřadit objednávku?<small>pusť řádek na řidiče / vozidlo</small><button class="x" data-x="1">Zavřít ✕</button></div><div class="back" data-d="-">↩ Zpět do „Nenaloženo“</div>' + (C.length ? '<div class="grid">' + C.map((c, ci) => `<div class="cc" style="${carCol(ci)}"><h4>${esc(c.name)}</h4>${c.drivers.map(d => `<div class="dk2" data-d="${esc(d.id)}"><span>${esc(d.name)}</span>${d.spz ? `<span class="sp">${esc(d.spz)}</span>` : ''}</div>`).join('')}</div>`).join('') + '</div>' : '<div class="ahd">Seznam dopravců zatím není – přidej v tabulce list „Poddopravci“.</div>');
     }
     async function assign(key, did) {
       B.asg = B.asg || {}; if (did === '-') delete B.asg[key]; else B.asg[key] = did;
@@ -1051,32 +1059,33 @@
       try { await api('/api/assign', { key, driver: did === '-' ? null : did }); } catch (e) { alert('Uložení přiřazení se nepovedlo: ' + e.message); }
       poll(false);
     }
-    setInterval(() => { const ib = $('impBtn'); if (ib && B) ib.style.display = B.carrSrc === 'sheet' ? 'none' : ''; }, 1500);
+    setInterval(() => { const ib = $('carBtn'); if (ib && B) ib.style.display = B.carrSrc === 'sheet' ? 'none' : ''; }, 1500);
     const off = () => { body.classList.remove('dragging-now', 'picking'); pickKey = null; ad.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); };
     rowsEl.addEventListener('dragstart', e => {
       const tr = e.target.closest && e.target.closest('tr[data-key]'); if (!tr) return;
-      dk = tr.dataset.key; buildDock(); body.classList.add('dragging-now'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dk);
+      dk = tr.dataset.key; buildDock(); setTimeout(() => body.classList.add('dragging-now'), 0); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dk);
       setTimeout(() => tr.classList.add('dragging'), 0);
     });
     rowsEl.addEventListener('mousedown', e => { const tr = e.target.closest && e.target.closest('tr[data-key]'); if (tr) tr.draggable = !e.target.closest('textarea,input,button,label,a'); });
     document.addEventListener('dragend', () => { dk = null; off(); rowsEl.querySelectorAll('.dragging,.drop-over').forEach(x => x.classList.remove('dragging', 'drop-over')); });
-    ad.addEventListener('dragover', e => { if (!dk) return; const d = e.target.closest('.dk2'); if (!d) return; e.preventDefault(); ad.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); d.classList.add('drop-over'); });
-    ad.addEventListener('drop', e => { if (!dk) return; const d = e.target.closest('.dk2'); if (!d) return; e.preventDefault(); const k = dk; dk = null; off(); assign(k, d.dataset.d); });
+    ad.addEventListener('dragover', e => { if (!dk) return; const d = e.target.closest('.dk2,.back'); if (!d) return; e.preventDefault(); ad.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); d.classList.add('drop-over'); });
+    ad.addEventListener('drop', e => { if (!dk) return; const d = e.target.closest('.dk2,.back'); if (!d) return; e.preventDefault(); const k = dk; dk = null; off(); assign(k, d.dataset.d); });
     rowsEl.addEventListener('dragover', e => { if (!dk) return; const t = e.target.closest('tr.afold[data-adrop]'); if (!t) return; e.preventDefault(); rowsEl.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); t.classList.add('drop-over'); });
     rowsEl.addEventListener('drop', e => { if (!dk) return; const t = e.target.closest('tr.afold[data-adrop]'); if (!t) return; e.preventDefault(); const k = dk; dk = null; off(); assign(k, t.dataset.adrop); });
+    rowsEl.addEventListener('click', e => { const t = e.target.closest('tr[data-ctog]'); if (!t) return; const id = t.dataset.ctog; carCollapsed = carCollapsed.includes(id) ? carCollapsed.filter(x => x !== id) : carCollapsed.concat(id); lsSet('rkl_v1_car', JSON.stringify(carCollapsed)); lastSig = ''; render(); });
     // klik na úchyt = výběr dopravce/řidiče bez tažení
     rowsEl.addEventListener('click', e => { const g = e.target.closest('.agrip'); if (!g) return; pickKey = g.dataset.pk; buildDock(); body.classList.add('picking'); e.stopPropagation(); });
-    ad.addEventListener('click', e => { const d = e.target.closest('.dk2'); if (!d || !pickKey) return; const k = pickKey; off(); assign(k, d.dataset.d); });
+    ad.addEventListener('click', e => { if (e.target.closest('[data-x]') || e.target === ad) { off(); return; } const d = e.target.closest('.dk2,.back'); if (!d || !pickKey) return; const k = pickKey; off(); assign(k, d.dataset.d); });
     document.addEventListener('click', e => { if (pickKey && !e.target.closest('#adock,.agrip')) off(); });
-    $('impBtn').onclick = () => $('impFile').click();
-    $('impFile').onchange = async () => {
-      const f = $('impFile').files[0]; if (!f) return;
+    $('carBtn').onclick = () => $('carFile').click();
+    $('carFile').onchange = async () => {
+      const f = $('carFile').files[0]; if (!f) return;
       try {
         const buf = new Uint8Array(await f.arrayBuffer()); let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
         const r = await api('/api/carriers/import', { file: btoa(bin) });
         alert('Načteno: ' + r.carriers + ' dopravců, ' + r.drivers + ' řidičů.'); await poll(false);
       } catch (e) { alert('Import se nepovedl: ' + e.message); }
-      $('impFile').value = '';
+      $('carFile').value = '';
     };
    }
    if (V2) {
