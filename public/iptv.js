@@ -28,7 +28,7 @@
     const out = []; let cur = null, skip = 0;
     for (const raw of t.split(/\r?\n/)) {
       const l = raw.trim();
-      if (l.startsWith('#EXTINF')) { const m = l.match(/,(.*)$/); const g = l.match(/group-title="([^"]*)"/); cur = { name: (m ? m[1] : '').trim() || 'Kanál', group: g ? g[1] : '' }; }
+      if (l.startsWith('#EXTINF')) { const g = l.match(/group-title="([^"]*)"/); const bare = l.replace(/"[^"]*"/g, '""'); const k = bare.lastIndexOf(','); cur = { name: (k >= 0 ? bare.slice(k + 1) : '').trim() || 'Kanál', group: g ? g[1] : '' }; }
       else if (l && !l.startsWith('#') && cur) { if (/^https:\/\//i.test(l)) out.push({ ...cur, url: l }); else skip++; cur = null; }
     }
     hidden = skip; return out;
