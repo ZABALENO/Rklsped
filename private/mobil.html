@@ -221,13 +221,6 @@
     }).join('');
   }
   window.RKLTV_HOOK = on => { tvOn = !!on; document.body.classList.toggle('tvmode', tvOn); if (tvOn) tvChart(); };
-  // 3× klik na číslo uprostřed koláče otevře seznam TV stanic
-  let cn = 0, ct = 0;
-  $('pie').addEventListener('click', e => {
-    if (!e.target.closest('.ctr, text')) return;
-    const now = Date.now(); cn = now - ct < 700 ? cn + 1 : 1; ct = now;
-    if (cn >= 3) { cn = 0; if (window.RKLTV_OPEN) window.RKLTV_OPEN(); }
-  });
   async function load() {
     try {
       const r = await fetch('/api/agents'); if (r.status === 401) { location.href = '/ai'; return; }

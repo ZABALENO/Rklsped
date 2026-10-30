@@ -53,7 +53,7 @@
     stop(); curUrl = ch.url;
     box = document.createElement('div'); box.id = 'iptvV';
     box.innerHTML = `<video playsinline muted autoplay controls></video><div class="err"></div><div class="bar"><b>${esc(ch.name)}</b><button data-a="mute" title="Zvuk">🔇</button><button data-a="big" title="Větší / menší">⤢</button><button data-a="x" title="Zavřít">✕</button></div>`;
-    vHidden = false; document.body.appendChild(box); hook(true);
+    vHidden = false; wasMuted = true; document.body.appendChild(box); hook(true);
     const v = box.querySelector('video'), er = box.querySelector('.err');
     const fail = m => { er.textContent = 'Kanál se nepodařilo přehrát: ' + m; er.style.display = 'block'; };
     box.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a; if (a === 'x') stop(); if (a === 'big') box.classList.toggle('big'); if (a === 'mute') { v.muted = !v.muted; b.textContent = v.muted ? '🔇' : '🔊'; } });
@@ -89,12 +89,31 @@
     } catch (e) { ul.innerHTML = '<li>Seznam se nepodařilo načíst: ' + esc(e.message) + '</li>'; }
   }
   window.RKLTV_OPEN = toggle;
-  // klikání na logo RKL v záhlaví: 3× = seznam TV stanic; 1× při běžícím videu = skrýt / znovu zobrazit přehrávač (video dál hraje)
-  let vHidden = false;
-  function setHidden(h) { vHidden = h; if (box) { box.style.visibility = h ? 'hidden' : ''; box.style.pointerEvents = h ? 'none' : ''; } if (MOB) hook(!h); }
+  // Skrytí přehrávače: video dál běží, ale je neviditelné a ztlumené; zobrazení vrátí původní stav zvuku.
+  let vHidden = false, wasMuted = true;
+  function setHidden(h) {
+    if (!box || h === vHidden) { if (!box) vHidden = false; return; }
+    vHidden = h;
+    const v = box.querySelector('video'), mb = box.querySelector('[data-a=mute]');
+    if (h) { wasMuted = v.muted; v.muted = true; } else { v.muted = wasMuted; }
+    if (mb) mb.textContent = v.muted ? '🔇' : '🔊';
+    box.style.visibility = h ? 'hidden' : ''; box.style.pointerEvents = h ? 'none' : '';
+    if (MOB) hook(!h);
+  }
+  // spouštěče: logo RKL v záhlaví (dashboardy) a číslo uprostřed koláče (/ai/mobil)
+  const isTrigger = e => { const t = e.target; if (!t || !t.closest) return false;
+    const img = t.closest('img'); if (img && /logo\.jpg/.test(img.getAttribute('src') || '')) return true;
+    return !!(MOB && t.closest('#pie') && t.closest('.ctr, text')); };
+  // klik kamkoliv jinde než na přehrávač (nebo seznam stanic) přehrávač skryje a ztlumí
+  document.addEventListener('click', e => {
+    if (!box || vHidden || isTrigger(e)) return;
+    if (box.contains(e.target) || (panel && panel.contains(e.target))) return;
+    setHidden(true);
+  }, true);
+  // 3× klik na spouštěč = seznam stanic; 1× klik při běžícím videu = skrýt / znovu zobrazit (rozhoduje se po krátké pauze)
   let n = 0, tm = null;
   document.addEventListener('click', e => {
-    const img = e.target.closest && e.target.closest('img'); if (!img || !/logo\.jpg/.test(img.getAttribute('src') || '')) return;
+    if (!isTrigger(e)) return;
     n++; clearTimeout(tm);
     tm = setTimeout(() => { const c = n; n = 0; if (c >= 3) toggle(); else if (c === 1 && box) setHidden(!vHidden); }, 450);
   });
