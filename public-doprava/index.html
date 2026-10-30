@@ -62,6 +62,7 @@
   .est{color:var(--muted);font-size:11px}
   .spz{display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;border:1.5px solid #20262f;border-radius:4px;padding:0 6px;background:#fff;line-height:18px;letter-spacing:.3px;box-shadow:inset 6px 0 0 #1d4fb5}
   .cr{display:block;font-size:11px;opacity:.65;margin-top:2px}
+  .route .ol+.ol{margin-top:.12em;padding-top:.12em;border-top:1px dotted #c9d2e0}
   .spz.none{border-style:dashed;border-color:#b9c2cf;color:#9aa6b6;box-shadow:none;font-weight:500}
   .pz{color:var(--muted);font-size:13px}
   .route .p{font-weight:600}
@@ -357,7 +358,7 @@
       return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}${x.carrier ? ' ext' : ''}">
         <td class="c-spz" title="${esc(x.prepr || '')}">${firstOfSpz ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') + (x.carrier ? `<small class="cr">${esc(x.carrier)}</small>` : '') : ''}</td>
         <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
-        <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}"><div class="rt"><div class="rti">${routeHtml(x.route)}</div></div></td>
+        <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}"><div class="rt"><div class="rti">${(x.lines && x.lines.length ? x.lines : [{ route: x.route }]).map(l => `<div class="ol">${routeHtml(l.route)}</div>`).join('')}</div></div></td>
         <td class="c-n num">${x.orders}</td>
         <td class="c-day">${tags}</td>
         <td class="c-kg num" title="${nf.format(x.kg)} kg">${nf1.format(x.kg / 1000)} t</td>
