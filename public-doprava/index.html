@@ -404,6 +404,9 @@
     const tag = diff === 0 ? '<span class="tg">DNES</span>' : diff === 1 ? '<span class="tg z">ZÍTRA</span>' : diff < 0 ? '<span class="tg z">MINULÉ</span>' : '';
     return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}.</span>${tag}<span class="dn">${DOW[d.getDay()]} ${d.getFullYear()}</span>`;
   }
+  // ve „Střídat“ se z RKL Spedice ukazují jen připnuté (urgentní) přepravy
+  const spList = () => (SP && SP.offered ? (view === 'a' ? SP.offered.filter(r => r.pinned) : SP.offered) : []);
+  const spHasPins = () => !!(SP && SP.ok && SP.offered && SP.offered.some(r => r.pinned));
   function renderSp() {
     const body = $('spRows');
     if (!SP || !SP.ok) {
@@ -415,7 +418,7 @@
     }
     $('spSold').textContent = SP.soldToday ?? '–'; $('spOpen').textContent = SP.open ?? SP.offered.length;
     $('spSt').textContent = SP.changedAt ? 'data v tabulce změněna ' + new Date(SP.changedAt).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-    body.innerHTML = SP.offered.map(r => {
+    body.innerHTML = spList().map(r => {
       const price = [r.incEur ? nfK.format(r.incEur) + ' €' : '', r.incCzk ? nfK.format(r.incCzk) + ' Kč' : ''].filter(Boolean).join('<br>') || '–';
       return `<tr class="${r.pinned ? 'pinned' : ''}">
         <td class="sp-date">${spDate(r.date)}</td>
@@ -425,8 +428,8 @@
         <td class="sp-price num">${price}</td>
         <td class="sp-note">${esc((SP.notes && SP.notes[r.key]) || '')}</td></tr>`;
     }).join('');
-    const e = $('spEmpty'); e.hidden = SP.offered.length > 0;
-    if (!SP.offered.length) e.innerHTML = '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(SP.until) + '.';
+    const e = $('spEmpty'); e.hidden = spList().length > 0;
+    if (!spList().length) e.innerHTML = view === 'a' ? '<b>Žádná připnutá přeprava.</b>' : '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(SP.until) + '.';
   }
   async function loadSp(force) {
     if (spBusy || (!force && Date.now() - spLoadedAt < 25000)) return;
@@ -453,6 +456,7 @@
     $('histPanel').hidden = shownView !== 'd';
     document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === view));
     if (view !== 'd') loadSp(false);
+    renderSp();
     pageNow();
   }
   document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => {
@@ -463,12 +467,12 @@
   if (window.RKL) {
     RKL.onChange = applyView; RKL.afterSlice = fitRoutes; addEventListener('resize', fitRoutes);
     // po posledním slidu jednoho pohledu přepnout na druhý (jen ve „Střídat“)
-    RKL.onWrap = () => { if (view !== 'a') return false; shownView = shownView === 'd' ? 's' : 'd'; applyView(); return true; };
+    RKL.onWrap = () => { if (view !== 'a') return false; shownView = shownView === 'd' && spHasPins() ? 's' : 'd'; applyView(); return true; };
   }
   // mimo TV 2 (celá stránka najednou) se pohledy ve „Střídat“ přepínají po 1,5× době slidu
   (function altLoop() {
     setTimeout(() => {
-      if (view === 'a' && (!window.RKL || RKL.mode() !== 2)) { shownView = shownView === 'd' ? 's' : 'd'; applyView(); }
+      if (view === 'a' && (!window.RKL || RKL.mode() !== 2)) { shownView = shownView === 'd' && spHasPins() ? 's' : 'd'; applyView(); }
       altLoop();
     }, Math.round((window.RKL ? RKL.sec() : 20) * 1500));
   })();
