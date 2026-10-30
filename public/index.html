@@ -99,7 +99,7 @@
   .dock{display:none}
   #adock,.asgonly{display:none}
   body.t-asg .asgonly{display:inline-flex}
-  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.8)}
+  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:14px 22px 14px;background:rgba(12,22,58,.8)}
   #dragGhost{position:fixed;left:-9999px;top:0;width:min(900px,92vw);background:#fff;border:2px solid #1d388f;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);padding:10px 16px;font:600 15px inherit;color:#14204a;display:flex;gap:18px;align-items:center;opacity:.8}
   #dragGhost b{color:#1d388f}
   #adock .road{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
@@ -112,15 +112,16 @@
   @keyframes driveL{from{transform:translateX(112vw) scaleX(-1)}to{transform:translateX(-30vw) scaleX(-1)}}
   body.nofire #adock .road{display:none}
   @media (prefers-reduced-motion:reduce){#adock .veh{animation:none}}
-  #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:14px;color:#fff;font:700 20px inherit}
-  #adock .ahd small{font:500 14px inherit;opacity:.75}
+  #adock{--s:1;--n:5}
+  #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:calc(12px*var(--s));color:#fff;font:700 calc(20px*var(--s)) inherit}
+  #adock .ahd small{font:500 calc(14px*var(--s)) inherit;opacity:.75}
   #adock .ahd .x{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:9px;padding:8px 16px;font:600 14px inherit;cursor:pointer}
-  #adock .back{padding:16px 20px;margin-bottom:16px;border-radius:14px;background:#ffd9a8;color:#4a2b00;font:700 18px inherit;text-align:center;border:3px dashed #c98a2b;cursor:pointer}
-  #adock .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;align-items:start}
-  #adock .cc{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.35)}
-  #adock .cc h4{margin:0;padding:10px 14px;font:700 15px inherit;color:#14204a;background:var(--ch)}
-  #adock .dk2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid #e3e8f3;cursor:pointer;font:600 15px inherit;color:#14204a;background:#fff}
-  #adock .dk2 .sp{font:700 14px ui-monospace,monospace;background:var(--ch);padding:3px 8px;border-radius:7px;white-space:nowrap}
+  #adock .back{padding:calc(14px*var(--s)) 20px;margin-bottom:calc(14px*var(--s));border-radius:14px;background:#ffd9a8;color:#4a2b00;font:700 calc(18px*var(--s)) inherit;text-align:center;border:3px dashed #c98a2b;cursor:pointer}
+  #adock .grid{columns:var(--n);column-gap:calc(14px*var(--s))}
+  #adock .cc{break-inside:avoid;margin-bottom:calc(14px*var(--s));background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+  #adock .cc h4{margin:0;padding:calc(10px*var(--s)) 14px;font:700 calc(15px*var(--s)) inherit;color:#14204a;background:var(--ch)}
+  #adock .dk2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:calc(11px*var(--s)) 14px;border-top:1px solid #e3e8f3;cursor:pointer;font:600 calc(15px*var(--s)) inherit;color:#14204a;background:#fff}
+  #adock .dk2 .sp{font:700 calc(14px*var(--s)) ui-monospace,monospace;background:var(--ch);padding:3px 8px;border-radius:7px;white-space:nowrap}
   #adock .dk2.drop-over,#adock .dk2:hover,#adock .back.drop-over,#adock .back:hover{background:#dff0ff;outline:4px solid #1d388f;outline-offset:-4px}
   tr.afold td{background:#e8eefb;border-bottom:1px solid #9db3e0;font-size:14px;padding:7px 12px}
   tr.afold.car td{background:var(--ch,#dbe5fa);border-top:3px solid var(--cb,#9db3e0);font-size:15px;cursor:pointer;user-select:none}
@@ -1083,6 +1084,21 @@
       const C = B.carr || [], ib = $('carBtn'); if (ib) ib.style.display = B.carrSrc === 'sheet' ? 'none' : '';
       ad.innerHTML = ROAD + '<div class="ahd">Kam přiřadit objednávku?<small>pusť řádek na řidiče / vozidlo</small><button class="x" data-x="1">Zavřít ✕</button></div><div class="back" data-d="-">↩ Zpět do „Nenaloženo“</div>' + (C.length ? '<div class="grid">' + C.map((c, ci) => `<div class="cc" style="${carCol(ci)}"><h4>${esc(c.name)}</h4>${c.drivers.map(d => `<div class="dk2" data-d="${esc(d.id)}"><span>${esc(d.name)}</span>${d.spz ? `<span class="sp">${esc(d.spz)}</span>` : ''}</div>`).join('')}</div>`).join('') + '</div>' : '<div class="ahd">Seznam dopravců zatím není – přidej v tabulce list „Poddopravci“.</div>');
     }
+    function fitDock() {   // všichni dopravci i SPZ se musí vejít na obrazovku: hledá se nejvyšší měřítko a vhodný počet sloupců
+      if (!body.classList.contains('dragging-now') && !body.classList.contains('picking')) return;
+      const W = ad.clientWidth, H = ad.clientHeight; if (!W || !H) return;
+      let best = null;
+      for (let n = 2; n <= 10; n++) {
+        for (let s = 1.15; s >= 0.34; s -= 0.04) {
+          if (W / n < 150 * s + 40) break;
+          ad.style.setProperty('--n', n); ad.style.setProperty('--s', s.toFixed(2));
+          if (ad.scrollHeight <= H + 1) { if (!best || s > best.s + 0.001) best = { n, s }; break; }
+        }
+      }
+      if (!best) best = { n: Math.max(2, Math.min(10, Math.floor(W / 150))), s: 0.34 };
+      ad.style.setProperty('--n', best.n); ad.style.setProperty('--s', best.s.toFixed(2));
+    }
+    window.addEventListener('resize', fitDock);
     async function assign(key, did) {
       B.asg = B.asg || {}; if (did === '-') delete B.asg[key]; else B.asg[key] = did;
       lastSig = ''; render();
@@ -1099,7 +1115,7 @@
         let gh = document.getElementById('dragGhost'); if (!gh) { gh = document.createElement('div'); gh.id = 'dragGhost'; document.body.appendChild(gh); }
         gh.innerHTML = rr ? `<span>${esc(fmtDate(rr.date))}${rr.dateLoadTo ? ' – ' + esc(fmtDate(rr.dateLoadTo)) : ''}</span><b>${esc(rr.cust || '')}</b><span>${esc(rr.route || '')}</span><span>${esc(rr.goods || '')}</span>` : esc(dk);
         e.dataTransfer.setDragImage(gh, 40, 22);
-      } catch {} setTimeout(() => body.classList.add('dragging-now'), 0); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dk);
+      } catch {} setTimeout(() => { body.classList.add('dragging-now'); fitDock(); }, 0); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dk);
       setTimeout(() => tr.classList.add('dragging'), 0);
     });
     rowsEl.addEventListener('mousedown', e => { const tr = e.target.closest && e.target.closest('tr[data-key]'); if (tr) tr.draggable = !e.target.closest('textarea,input,button,label,a'); });
@@ -1110,7 +1126,7 @@
     rowsEl.addEventListener('drop', e => { if (!dk) return; const t = e.target.closest('tr.afold[data-adrop]'); if (!t) return; e.preventDefault(); const k = dk; dk = null; off(); assign(k, t.dataset.adrop); });
     rowsEl.addEventListener('click', e => { const t = e.target.closest('tr[data-ctog]'); if (!t) return; const id = t.dataset.ctog; carCollapsed = carCollapsed.includes(id) ? carCollapsed.filter(x => x !== id) : carCollapsed.concat(id); lsSet('rkl_v1_car', JSON.stringify(carCollapsed)); lastSig = ''; render(); });
     // klik na úchyt = výběr dopravce/řidiče bez tažení
-    rowsEl.addEventListener('click', e => { const g = e.target.closest('.agrip'); if (!g) return; pickKey = g.dataset.pk; buildDock(); body.classList.add('picking'); e.stopPropagation(); });
+    rowsEl.addEventListener('click', e => { const g = e.target.closest('.agrip'); if (!g) return; pickKey = g.dataset.pk; buildDock(); body.classList.add('picking'); fitDock(); e.stopPropagation(); });
     ad.addEventListener('click', e => { if (e.target.closest('[data-x]') || e.target === ad) { off(); return; } const d = e.target.closest('.dk2,.back'); if (!d || !pickKey) return; const k = pickKey; off(); assign(k, d.dataset.d); });
     document.addEventListener('click', e => { if (pickKey && !e.target.closest('#adock,.agrip')) off(); });
     $('carBtn').onclick = () => $('carFile').click();
