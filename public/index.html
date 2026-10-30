@@ -108,6 +108,8 @@
   #adock::after{background:radial-gradient(ellipse 10% 45% at 16% 100%,#ffe14d 0,transparent 70%),radial-gradient(ellipse 9% 52% at 35% 100%,#ffcc00 0,transparent 70%),radial-gradient(ellipse 11% 46% at 52% 100%,#fff176 0,transparent 70%),radial-gradient(ellipse 9% 54% at 70% 100%,#ffd54f 0,transparent 70%),radial-gradient(ellipse 10% 44% at 87% 100%,#ffe14d 0,transparent 70%);animation:flameB .9s ease-in-out infinite alternate;transform-origin:50% 100%}
   @keyframes flameA{0%{transform:scaleY(.82) scaleX(1.02);opacity:.85}35%{transform:scaleY(1.05) scaleX(.97);opacity:1}70%{transform:scaleY(.9) scaleX(1.03);opacity:.9}100%{transform:scaleY(1.12) scaleX(.98);opacity:1}}
   @keyframes flameB{0%{transform:scaleY(1.1) translateX(-1.5%);opacity:.8}50%{transform:scaleY(.8) translateX(1.5%);opacity:1}100%{transform:scaleY(1.05) translateX(-1%);opacity:.85}}
+  body.nofire #adock::before,body.nofire #adock::after{display:none}
+  body.nofire.t-asg.dragging-now #adock,body.nofire.t-asg.picking #adock{background:rgba(12,22,58,.72);backdrop-filter:blur(3px)}
   @media (prefers-reduced-motion:reduce){#adock::before,#adock::after{animation:none}}
   #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:14px;color:#fff;font:700 20px inherit}
   #adock .ahd small{font:500 14px inherit;opacity:.75}
@@ -617,6 +619,12 @@
 
   const V2 = document.body.classList.contains('t-v2');
   const ASG = document.body.classList.contains('t-asg');
+  if (ASG) {   // dvojklik na název v hlavičce zapne / vypne animaci ohně
+    const ttl = document.querySelector('.brand > div');
+    const setFire = on => { document.body.classList.toggle('nofire', !on); lsSet('rkl_v1_fire', on ? '1' : '0'); };
+    document.body.classList.toggle('nofire', lsGet('rkl_v1_fire', '1') === '0');
+    if (ttl) { ttl.style.cursor = 'default'; ttl.addEventListener('dblclick', e => { e.preventDefault(); getSelection && getSelection().removeAllRanges(); setFire(document.body.classList.contains('nofire')); ttl.title = document.body.classList.contains('nofire') ? 'Animace vypnuta (dvojklik = zapnout)' : 'Animace zapnuta (dvojklik = vypnout)'; }); }
+  }
   const carCol = i => { const hu = (i * 47 + 210) % 360; return `--ch:hsl(${hu} 60% 84%);--ct:hsl(${hu} 70% 95%);--cb:hsl(${hu} 55% 52%)`; };
   let carCollapsed = []; try { carCollapsed = JSON.parse(lsGet('rkl_v1_car', '[]')) || []; } catch {}
   const SF = document.body.classList.contains('t-sf');   // řazení + filtry + sloupec Objednatel (Vnitro 1 i 2)
