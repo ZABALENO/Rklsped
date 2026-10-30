@@ -6,7 +6,7 @@ const express = require('express');
 const path = require('path');
 const { loadSheet, validUrl } = require('./lib/sheet');
 const { createStore } = require('./lib/store');
-const { buildTrips, isRKL } = require('./lib/trips');
+const { buildTrips, isRKL, ownShort, prettySpz } = require('./lib/trips');
 const { sellerOf } = require('./lib/sellers');
 const geo = require('./lib/geo');
 const { pragueToday, subWorkdays, isWorkday } = require('./lib/workdays');
@@ -53,7 +53,7 @@ async function refreshSheet(force) {
 const HIST_DAYS = 400;
 function histRow(r) {
   const s = sellerOf(r.prepr);
-  return { k: r.key, spz: r.spz || '', pz: r.prepr || '', who: s ? s.name : '', route: r.route || '', goods: r.goods || '',
+  return { k: r.key, spz: prettySpz(r.spz), cr: ownShort(r.carrier), pz: r.prepr || '', who: s ? s.name : '', route: r.route || '', goods: r.goods || '',
     kg: r.weight || 0, to: r.zipTo || '', ul: r.unlTo || r.unlFrom || '' };
 }
 async function updateHistory(rows) {

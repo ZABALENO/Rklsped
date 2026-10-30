@@ -60,6 +60,7 @@
   .d.today b{background:#ffe9b3;border-radius:4px;padding:0 3px}
   .est{color:var(--muted);font-size:11px}
   .spz{display:inline-block;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;border:1.5px solid #20262f;border-radius:4px;padding:0 6px;background:#fff;line-height:18px;letter-spacing:.3px;box-shadow:inset 6px 0 0 #1d4fb5}
+  .cr{display:block;font-size:11px;opacity:.65;margin-top:2px}
   .spz.none{border-style:dashed;border-color:#b9c2cf;color:#9aa6b6;box-shadow:none;font-weight:500}
   .pz{color:var(--muted);font-size:13px}
   .route .p{font-weight:600}
@@ -343,13 +344,15 @@
     $('sUpd').textContent = !D.configured ? 'tabulka není nastavena' : D.changedAt ? (() => { const d = new Date(D.changedAt), t = d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); return 'data v tabulce změněna ' + (d.toDateString() === new Date().toDateString() ? 'dnes' : d.getDate() + '. ' + (d.getMonth() + 1) + '.') + ' v ' + t; })() : (D.fetchedAt ? 'načteno ' + new Date(D.fetchedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '');
 
     const open = new Set([...$('rows').querySelectorAll('tr.open')].map(tr => tr.dataset.key));
+    let lastSpz = null;
     $('rows').innerHTML = t.map(x => {
+      const firstOfSpz = x.spz !== lastSpz; lastSpz = x.spz;
       const dd = iso => { if (!iso) return '?'; const [, m, d] = iso.split('-'); return `${+d}.${+m}.`; };
       const tags = `<span class="d ${x.firstLoad === D.today ? 'today' : ''}" title="první nakládka">↑ <b>${dd(x.firstLoad)}</b></span>` +
         `<span class="d ${x.lastUnload === D.today ? 'today' : ''}" title="poslední termín vykládky${x.unloaded ? ' · vyloženo ' + x.unloaded + ' z ' + x.orders : ''}">↓ <b>${dd(x.lastUnload)}</b></span>`;
       const breakdown = `CZK ${nf.format(x.czk)} + EUR ${nf2.format(x.eur)} × ${nf2.format(D.rate.value)}`;
       return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}">
-        <td class="c-spz" title="${esc(x.prepr || '')}">${x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>'}</td>
+        <td class="c-spz" title="${esc(x.prepr || '')}">${firstOfSpz ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') + (x.carrier ? `<small class="cr">${esc(x.carrier)}</small>` : '') : ''}</td>
         <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
         <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}">${routeHtml(x.route)}</td>
         <td class="c-n num">${x.orders}</td>
