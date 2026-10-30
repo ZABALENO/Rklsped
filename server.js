@@ -280,8 +280,8 @@ app.use((req, res, next) => { req.t = tenants[req.tenantId] || main; next(); });
 const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
-  if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
-  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
+  if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
+  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
@@ -319,6 +319,7 @@ async function logHist(req, act, to, label) {
   const ks = Object.keys(t.mem.hist).sort();
   for (const k of ks.slice(0, Math.max(0, ks.length - 1000))) await t.put('hist', k, null);
 }
+const needSF = (req, res) => { if (!['vnitro1', 'vnitro2'].includes(req.t.id)) { res.status(404).json({ error: 'Tato funkce je jen v relacích Vnitro.' }); return false; } return true; };
 app.post('/api/folder', async (req, res) => {
   if (!needV2(req, res)) return;
   const { key, folder } = req.body || {};
@@ -380,11 +381,11 @@ const cleanView = v => {
   return out;
 };
 app.get('/api/tpl', (req, res) => {
-  if (!needV2(req, res)) return;
+  if (!needSF(req, res)) return;
   res.json({ items: Object.values(req.t.mem.tpl).sort((a, b) => (b.created || '').localeCompare(a.created || '')) });
 });
 app.post('/api/tpl', async (req, res) => {
-  if (!needV2(req, res)) return;
+  if (!needSF(req, res)) return;
   const name = String((req.body && req.body.name) || '').trim().slice(0, 60);
   if (!name) return res.status(400).json({ error: 'Napiš název šablony.' });
   const same = Object.values(req.t.mem.tpl).find(t => t.name.toLowerCase() === name.toLowerCase());
@@ -393,7 +394,7 @@ app.post('/api/tpl', async (req, res) => {
   res.json({ ok: true, id });
 });
 app.post('/api/tpl/delete', async (req, res) => {
-  if (!needV2(req, res)) return;
+  if (!needSF(req, res)) return;
   await req.t.put('tpl', String((req.body && req.body.id) || ''), null);
   res.json({ ok: true });
 });
