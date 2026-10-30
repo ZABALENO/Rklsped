@@ -178,10 +178,12 @@
   html.tv2 .c-pz,html.tv2 .c-n,html.tv2 th.c-pz,html.tv2 th.c-n{display:none}
   html.tv2 th.c-spz,html.tv2 td.c-spz{width:235px}
   html.tv2 .spz{font-size:30px;line-height:42px;padding:0 12px 0 22px;box-shadow:inset 12px 0 0 #1d4fb5;border-width:2.5px;white-space:nowrap}
-  html.tv2 td.c-route{font-size:31px;line-height:1.2}
-  html.tv2 .route .cc{font-size:17px}
-  html.tv2 .route .z{font-size:18px}
-  html.tv2 .route .cd{font-size:15px}
+  html.tv2 td.c-route{font-size:40px;line-height:1.15}
+  html.tv2 .rt{height:calc(var(--rowh,110px) - 10px);overflow:hidden;display:flex;align-items:flex-start}
+  html.tv2 .rti{margin:auto 0}
+  html.tv2 .route .cc{font-size:.52em}
+  html.tv2 .route .z{font-size:.56em}
+  html.tv2 .route .cd{font-size:.48em}
   html.tv2 th.c-day,html.tv2 td.c-day{width:165px}
   html.tv2 .d{font-size:20px;display:block;margin:2px 0}
   html.tv2 th.c-kg,html.tv2 td.c-kg{width:110px} html.tv2 td.c-kg{font-size:24px}
@@ -355,7 +357,7 @@
       return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}${x.carrier ? ' ext' : ''}">
         <td class="c-spz" title="${esc(x.prepr || '')}">${firstOfSpz ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') + (x.carrier ? `<small class="cr">${esc(x.carrier)}</small>` : '') : ''}</td>
         <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
-        <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}">${routeHtml(x.route)}</td>
+        <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}"><div class="rt"><div class="rti">${routeHtml(x.route)}</div></div></td>
         <td class="c-n num">${x.orders}</td>
         <td class="c-day">${tags}</td>
         <td class="c-kg num" title="${nf.format(x.kg)} kg">${nf1.format(x.kg / 1000)} t</td>
@@ -433,7 +435,17 @@
     finally { spBusy = false; }
   }
   const pageRows = () => [...($(shownView === 'd' ? 'rows' : 'spRows')).children];
-  function pageNow() { if (window.RKL) RKL.page(pageRows()); }
+  // TV 2: písmo trasy se zvětší na největší velikost, která se ještě vejde do řádku
+  function fitRoutes() {
+    const tv2 = window.RKL && RKL.mode() === 2;
+    document.querySelectorAll('#rows td.c-route').forEach(td => {
+      if (!tv2) { td.style.fontSize = ''; return; }
+      const rt = td.firstElementChild; if (!rt || !td.offsetParent) return;
+      let s = 52; td.style.fontSize = s + 'px';
+      while (s > 24 && (rt.scrollHeight > rt.clientHeight + 1 || rt.scrollWidth > rt.clientWidth + 1)) { s -= 1; td.style.fontSize = s + 'px'; }
+    });
+  }
+  function pageNow() { if (window.RKL) { RKL.page(pageRows()); fitRoutes(); } }
   function applyView() {
     $('tripPanel').hidden = shownView !== 'd';
     $('spPanel').hidden = shownView !== 's';
@@ -448,7 +460,7 @@
     applyView();
   });
   if (window.RKL) {
-    RKL.onChange = applyView;
+    RKL.onChange = applyView; RKL.afterSlice = fitRoutes; addEventListener('resize', fitRoutes);
     // po posledním slidu jednoho pohledu přepnout na druhý (jen ve „Střídat“)
     RKL.onWrap = () => { if (view !== 'a') return false; shownView = shownView === 'd' ? 's' : 'd'; applyView(); return true; };
   }

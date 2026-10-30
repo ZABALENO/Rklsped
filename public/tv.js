@@ -46,6 +46,7 @@
     if (cur >= pages) cur = 0;
     rows.forEach((tr, i) => tr.classList.toggle('pg-off', mode === 2 && Math.floor(i / per) !== cur));
     fit(); indicator(pages);
+    if (R.afterSlice) R.afterSlice();
     return pages;
   }
   // stránka zavolá po každém vykreslení se seznamem řádků (tr) aktuálního pohledu
