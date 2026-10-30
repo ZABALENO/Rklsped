@@ -1042,7 +1042,8 @@
     const body = document.body;
     function buildDock() {
       const C = B.carr || [];
-      ad.innerHTML = '<div class="ac"><span class="acn">Nenaloženo</span><span class="dk2 none" data-d="-">↩ Zpět do Nenaloženo</span></div>' + (C.length ? C.map(c => `<div class="ac"><span class="acn">${esc(c.name)}</span>${c.drivers.map(d => `<span class="dk2" data-d="${esc(d.id)}">${esc(d.name)}${d.spz ? ` <small>${esc(d.spz)}</small>` : ''}</span>`).join('')}</div>`).join('') : '<div class="acn">Seznam dopravců zatím není nahraný – klikni nahoře na „Dopravci…“ a vyber PODDOPRAVCI_web.xlsx.</div>');
+      const ib = $('impBtn'); if (ib) ib.style.display = B.carrSrc === 'sheet' ? 'none' : '';
+      ad.innerHTML = '<div class="ac"><span class="acn">Nenaloženo</span><span class="dk2 none" data-d="-">↩ Zpět do Nenaloženo</span></div>' + (C.length ? C.map(c => `<div class="ac"><span class="acn">${esc(c.name)}</span>${c.drivers.map(d => `<span class="dk2" data-d="${esc(d.id)}">${esc(d.name)}${d.spz ? ` <small>${esc(d.spz)}</small>` : ''}</span>`).join('')}</div>`).join('') : '<div class="acn">Seznam dopravců zatím není nahraný – přidej v tabulce list „Poddopravci“ (nebo klikni nahoře na „Dopravci…“ a nahraj xlsx).</div>');
     }
     async function assign(key, did) {
       B.asg = B.asg || {}; if (did === '-') delete B.asg[key]; else B.asg[key] = did;
@@ -1050,6 +1051,7 @@
       try { await api('/api/assign', { key, driver: did === '-' ? null : did }); } catch (e) { alert('Uložení přiřazení se nepovedlo: ' + e.message); }
       poll(false);
     }
+    setInterval(() => { const ib = $('impBtn'); if (ib && B) ib.style.display = B.carrSrc === 'sheet' ? 'none' : ''; }, 1500);
     const off = () => { body.classList.remove('dragging-now', 'picking'); pickKey = null; ad.querySelectorAll('.drop-over').forEach(x => x.classList.remove('drop-over')); };
     rowsEl.addEventListener('dragstart', e => {
       const tr = e.target.closest && e.target.closest('tr[data-key]'); if (!tr) return;

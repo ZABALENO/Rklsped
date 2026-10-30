@@ -7,7 +7,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { loadSheet, validUrl } = require('./lib/sheet');
+const { loadSheet, validUrl } = require('./lib/sheet'), sheetLib = require('./lib/sheet');
 
 const PORT = process.env.PORT || 3000;
 const HORIZON_WORKDAYS = 7;               // nabídka = nakládka nejpozději dnes + 7 pracovních dní
@@ -247,7 +247,7 @@ function board(rate) {
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
     ...(v2 || {}),
-    ...(id === 'vnitro1' ? { carr: (mem.carr.list && mem.carr.list.carriers) || [], carrAt: (mem.carr.list && mem.carr.list.at) || null, asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
+    ...(id === 'vnitro1' ? { carr: carriersFor({ mem }), carrAt: (sheet.carriers && sheet.carriers.length) ? sheet.fetchedAt : ((mem.carr.list && mem.carr.list.at) || null), carrSrc: (sheet.carriers && sheet.carriers.length) ? 'sheet' : 'db', asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
   };
 }
 
@@ -324,30 +324,9 @@ async function logHist(req, act, to, label) {
 const needSF = (req, res) => { if (!['vnitro1', 'vnitro2'].includes(req.t.id)) { res.status(404).json({ error: 'Tato funkce je jen v relacích Vnitro.' }); return false; } return true; };
 
 // ---- Vnitro 1: poddopravci a řidiči (import z xlsx) + přiřazení objednávek drag & drop ----
+const carriersFor = t => (sheet.carriers && sheet.carriers.length) ? sheet.carriers : ((t.mem.carr.list && t.mem.carr.list.carriers) || []);
 const needV1 = (req, res) => { if (req.t.id !== 'vnitro1') { res.status(404).json({ error: 'Tato funkce je jen v relaci Vnitro 1.' }); return false; } return true; };
-const slugId = s => require('crypto').createHash('sha1').update(String(s)).digest('hex').slice(0, 10);
-function parseCarriers(buf) {
-  const XLSX = require('xlsx');
-  const wb = XLSX.read(buf, { type: 'buffer' });
-  const norm = x => String(x == null ? '' : x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-  for (const name of wb.SheetNames) {
-    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null, raw: true });
-    let hi = -1, cc = -1;
-    for (let i = 0; i < Math.min(20, aoa.length); i++) { const j = (aoa[i] || []).findIndex(c => norm(c).startsWith('nazev dopravce')); if (j >= 0) { hi = i; cc = j; break; } }
-    if (hi < 0) continue;
-    const carriers = []; let cur = null;
-    for (const r of aoa.slice(hi + 1)) {
-      const cname = String(r[cc] == null ? '' : r[cc]).replace(/\s+/g, ' ').trim(), dname = String(r[cc + 1] == null ? '' : r[cc + 1]).replace(/\s+/g, ' ').trim();
-      const phone = String(r[cc + 2] == null ? '' : r[cc + 2]).replace(/\s+/g, ' ').trim(), spz = String(r[cc + 3] == null ? '' : r[cc + 3]).replace(/\s+/g, ' ').trim().toUpperCase();
-      if (!cname && !dname && !spz) continue;
-      if (cname) { cur = { id: slugId('c|' + cname), name: cname, drivers: [] }; carriers.push(cur); }
-      if (!cur) continue;
-      cur.drivers.push({ id: slugId('d|' + cur.name + '|' + dname + '|' + spz), name: dname || '(řidič)', phone, spz });
-    }
-    if (carriers.length) return carriers;
-  }
-  throw new Error('V souboru jsem nenašel tabulku se sloupcem „Název dopravce“.');
-}
+function parseCarriers(buf) { return sheetLib.carriersFromWb(require('xlsx').read(buf, { type: 'buffer' }), true); }
 app.post('/api/carriers/import', async (req, res) => {
   if (!needV1(req, res)) return;
   try {
@@ -363,7 +342,7 @@ app.post('/api/assign', async (req, res) => {
   const { key, driver } = req.body || {};
   if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
   if (driver != null) {
-    const ok = ((req.t.mem.carr.list && req.t.mem.carr.list.carriers) || []).some(c => c.drivers.some(d => d.id === driver));
+    const ok = carriersFor(req.t).some(c => c.drivers.some(d => d.id === driver));
     if (!ok) return res.status(400).json({ error: 'Neznámý řidič' });
   }
   await req.t.put('asg', key, driver ? { d: driver, t: new Date().toISOString() } : null);
