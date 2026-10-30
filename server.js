@@ -33,7 +33,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
-const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl'];
+const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl', 'hist'];
 const mem = Object.fromEntries(NS.map(n => [n, {}]));
 let pool = null;
 const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), fileName);
@@ -228,7 +228,8 @@ function board(rate) {
       if (best) taken.add(best.key);
       return { id: m.id, text: m.text, created: m.created, folder: (mem.folder['m:' + m.id] || {}).f || null, suggest: best };
     });
-    v2 = { manual, folders: Object.fromEntries(Object.entries(mem.folder).filter(([k]) => !k.startsWith('m:')).map(([k, v]) => [k, v.f])) };
+    const hist = Object.values(mem.hist).sort((a, b) => b.t.localeCompare(a.t)).slice(0, 200);
+    v2 = { hist, manual, folders: Object.fromEntries(Object.entries(mem.folder).filter(([k]) => !k.startsWith('m:')).map(([k, v]) => [k, v.f])) };
   }
   const missing = sheet.columns ? ['date', 'route', 'goods', 'weight', 'prepr', 'carrier'].filter(k => !sheet.columns[k]) : [];
   return {
@@ -301,12 +302,32 @@ app.post('/api/pin', async (req, res) => {
 // vynulování leaderboardu a dnes prodaných (počítá se od teď; stav „Prodáno“ u řádků zůstává)
 // ---- Vnitro 2: složky Vývoz / Dovoz a ruční objednávky ----
 const needV2 = (req, res) => { if (req.t.id !== 'vnitro2') { res.status(404).json({ error: 'Tato funkce je jen v relaci Vnitro 2.' }); return false; } return true; };
+
+// ---- Vnitro 2: historie přesunů (kdo / odkud / kdy) ----
+function whoOf(req) {
+  const ua = String(req.headers['user-agent'] || '');
+  const br = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'prohlížeč';
+  const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
+  const dev = String(req.headers['x-device'] || '').replace(/[^a-z0-9]/gi, '').slice(0, 12);
+  const ip = String(req.ip || '').replace(/^::ffff:/, '');
+  return { dev, ip, ua: [br, os].filter(Boolean).join(' / ') };
+}
+async function logHist(req, act, to, label) {
+  const t = req.t; if (t.id !== 'vnitro2') return;
+  const now = new Date().toISOString(), id = now + Math.random().toString(36).slice(2, 5);
+  await t.put('hist', id, { t: now, act, to: to || null, label: String(label || '').slice(0, 200), who: whoOf(req) });
+  const ks = Object.keys(t.mem.hist).sort();
+  for (const k of ks.slice(0, Math.max(0, ks.length - 1000))) await t.put('hist', k, null);
+}
 app.post('/api/folder', async (req, res) => {
   if (!needV2(req, res)) return;
   const { key, folder } = req.body || {};
   if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
   if (folder != null && !['vyvoz', 'dovoz'].includes(folder)) return res.status(400).json({ error: 'Neznámá složka' });
+  const prev = (req.t.mem.folder[key] || {}).f || null;
   await req.t.put('folder', key, folder ? { f: folder, t: new Date().toISOString() } : null);
+  const lab = key.startsWith('m:') ? '✎ ' + ((req.t.mem.manual[key.slice(2)] || {}).text || 'ruční objednávka') : (req.body.label || key);
+  if (prev !== folder) await logHist(req, 'move', folder || 'none', lab + (prev ? '|' + prev : '|none'));
   res.json({ ok: true });
 });
 app.post('/api/manual', async (req, res) => {
@@ -395,6 +416,7 @@ app.post('/api/sold', async (req, res) => {
   if (typeof key !== 'string' || !key || key.length > 300) return res.status(400).json({ error: 'Chybný klíč' });
   const now = new Date().toISOString();
   await req.t.put('sold', key, { sold: !!sold, at: sold ? now : null, u: now, label: String(label || '').slice(0, 200) });
+  await logHist(req, sold ? 'done' : 'undone', null, label || key);
   res.json({ ok: true, at: now });
 });
 
