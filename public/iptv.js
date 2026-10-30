@@ -47,13 +47,13 @@
     const r = await fetch(LIST, { cache: 'no-store' }); if (!r.ok) throw new Error('seznam se nenačetl (' + r.status + ')');
     chans = parse(await r.text()); return chans;
   }
-  function stop() { const had = !!box; curUrl = ''; if (hls) { hls.destroy(); hls = null; } if (box) { const v = box.querySelector('video'); v.pause(); v.removeAttribute('src'); v.load(); box.remove(); box = null; } panel && panel.querySelectorAll('li.on').forEach(x => x.classList.remove('on')); if (had) hook(false); }
+  function stop() { const had = !!box; vHidden = false; curUrl = ''; if (hls) { hls.destroy(); hls = null; } if (box) { const v = box.querySelector('video'); v.pause(); v.removeAttribute('src'); v.load(); box.remove(); box = null; } panel && panel.querySelectorAll('li.on').forEach(x => x.classList.remove('on')); if (had) hook(false); }
   function hlsLib() { return window.Hls ? Promise.resolve() : new Promise((ok, no) => { const s = document.createElement('script'); s.src = HLS_JS; s.onload = ok; s.onerror = () => no(new Error('knihovna přehrávače se nenačetla')); document.head.appendChild(s); }); }
   async function play(ch) {
     stop(); curUrl = ch.url;
     box = document.createElement('div'); box.id = 'iptvV';
     box.innerHTML = `<video playsinline muted autoplay controls></video><div class="err"></div><div class="bar"><b>${esc(ch.name)}</b><button data-a="mute" title="Zvuk">🔇</button><button data-a="big" title="Větší / menší">⤢</button><button data-a="x" title="Zavřít">✕</button></div>`;
-    document.body.appendChild(box); hook(true);
+    vHidden = false; document.body.appendChild(box); hook(true);
     const v = box.querySelector('video'), er = box.querySelector('.err');
     const fail = m => { er.textContent = 'Kanál se nepodařilo přehrát: ' + m; er.style.display = 'block'; };
     box.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a; if (a === 'x') stop(); if (a === 'big') box.classList.toggle('big'); if (a === 'mute') { v.muted = !v.muted; b.textContent = v.muted ? '🔇' : '🔊'; } });
@@ -89,11 +89,13 @@
     } catch (e) { ul.innerHTML = '<li>Seznam se nepodařilo načíst: ' + esc(e.message) + '</li>'; }
   }
   window.RKLTV_OPEN = toggle;
-  // trojklik na logo RKL v záhlaví
-  let n = 0, t0 = 0;
+  // klikání na logo RKL v záhlaví: 3× = seznam TV stanic; 1× při běžícím videu = skrýt / znovu zobrazit přehrávač (video dál hraje)
+  let vHidden = false;
+  function setHidden(h) { vHidden = h; if (box) { box.style.visibility = h ? 'hidden' : ''; box.style.pointerEvents = h ? 'none' : ''; } if (MOB) hook(!h); }
+  let n = 0, tm = null;
   document.addEventListener('click', e => {
     const img = e.target.closest && e.target.closest('img'); if (!img || !/logo\.jpg/.test(img.getAttribute('src') || '')) return;
-    const now = Date.now(); n = now - t0 < 700 ? n + 1 : 1; t0 = now;
-    if (n >= 3) { n = 0; toggle(); }
+    n++; clearTimeout(tm);
+    tm = setTimeout(() => { const c = n; n = 0; if (c >= 3) toggle(); else if (c === 1 && box) setHidden(!vHidden); }, 450);
   });
 })();
