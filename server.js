@@ -247,14 +247,14 @@ function board(rate) {
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
     ...(v2 || {}),
-    ...(id === 'vnitro1' ? { carr: carriersFor({ mem }), carrAt: (sheet.carriers && sheet.carriers.length) ? sheet.fetchedAt : ((mem.carr.list && mem.carr.list.at) || null), carrSrc: (sheet.carriers && sheet.carriers.length) ? 'sheet' : 'db', asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
+    ...(id === 'vnitro1' ? { carr: carriersFor({ mem, sheet }), carrAt: (sheet.carriers && sheet.carriers.length) ? sheet.fetchedAt : ((mem.carr.list && mem.carr.list.at) || null), carrSrc: (sheet.carriers && sheet.carriers.length) ? 'sheet' : 'db', asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
   };
 }
 
 const store = { mem, put };
 async function boardNow() { return board(await eurRate(store)); }
 const sheetKeys = () => sheet.rows.map(r => r.key).slice(0, 5000);
-return { id, mem, put, store, sheetKeys, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
+return { id, mem, put, store, get sheet() { return sheet; }, sheetKeys, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
 }
 
 /* ================= HTTP ================= */
@@ -324,7 +324,7 @@ async function logHist(req, act, to, label) {
 const needSF = (req, res) => { if (!['vnitro1', 'vnitro2'].includes(req.t.id)) { res.status(404).json({ error: 'Tato funkce je jen v relacích Vnitro.' }); return false; } return true; };
 
 // ---- Vnitro 1: poddopravci a řidiči (import z xlsx) + přiřazení objednávek drag & drop ----
-const carriersFor = t => (sheet.carriers && sheet.carriers.length) ? sheet.carriers : ((t.mem.carr.list && t.mem.carr.list.carriers) || []);
+const carriersFor = t => (t.sheet && t.sheet.carriers && t.sheet.carriers.length) ? t.sheet.carriers : ((t.mem.carr.list && t.mem.carr.list.carriers) || []);
 const needV1 = (req, res) => { if (req.t.id !== 'vnitro1') { res.status(404).json({ error: 'Tato funkce je jen v relaci Vnitro 1.' }); return false; } return true; };
 function parseCarriers(buf) { return sheetLib.carriersFromWb(require('xlsx').read(buf, { type: 'buffer' }), true); }
 app.post('/api/carriers/import', async (req, res) => {
