@@ -102,6 +102,13 @@
   body.t-asg.dragging-now #adock,body.t-asg.picking #adock{display:flex;flex-direction:column;position:fixed;inset:0;z-index:80;overflow:auto;padding:18px 22px 40px;background:rgba(12,22,58,.72);backdrop-filter:blur(3px)}
   #dragGhost{position:fixed;left:-9999px;top:0;width:min(900px,92vw);background:#fff;border:2px solid #1d388f;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);padding:10px 16px;font:600 15px inherit;color:#14204a;display:flex;gap:18px;align-items:center;opacity:.8}
   #dragGhost b{color:#1d388f}
+  body.t-asg.dragging-now #adock,body.t-asg.picking #adock{background:radial-gradient(ellipse at 50% 120%,rgba(120,20,0,.9),rgba(25,4,0,.86) 70%);isolation:isolate;backdrop-filter:none}
+  #adock::before,#adock::after{content:'';position:fixed;left:-10%;right:-10%;bottom:-8%;height:85%;pointer-events:none;z-index:-1;mix-blend-mode:screen;filter:blur(14px)}
+  #adock::before{background:radial-gradient(ellipse 14% 55% at 8% 100%,#ff3d00 0,transparent 70%),radial-gradient(ellipse 12% 70% at 24% 100%,#ff9100 0,transparent 70%),radial-gradient(ellipse 16% 60% at 42% 100%,#ff5a00 0,transparent 70%),radial-gradient(ellipse 12% 75% at 60% 100%,#ffb300 0,transparent 70%),radial-gradient(ellipse 15% 58% at 78% 100%,#ff3d00 0,transparent 70%),radial-gradient(ellipse 12% 68% at 94% 100%,#ff9100 0,transparent 70%);animation:flameA 1.3s ease-in-out infinite alternate;transform-origin:50% 100%}
+  #adock::after{background:radial-gradient(ellipse 10% 45% at 16% 100%,#ffe14d 0,transparent 70%),radial-gradient(ellipse 9% 52% at 35% 100%,#ffcc00 0,transparent 70%),radial-gradient(ellipse 11% 46% at 52% 100%,#fff176 0,transparent 70%),radial-gradient(ellipse 9% 54% at 70% 100%,#ffd54f 0,transparent 70%),radial-gradient(ellipse 10% 44% at 87% 100%,#ffe14d 0,transparent 70%);animation:flameB .9s ease-in-out infinite alternate;transform-origin:50% 100%}
+  @keyframes flameA{0%{transform:scaleY(.82) scaleX(1.02);opacity:.85}35%{transform:scaleY(1.05) scaleX(.97);opacity:1}70%{transform:scaleY(.9) scaleX(1.03);opacity:.9}100%{transform:scaleY(1.12) scaleX(.98);opacity:1}}
+  @keyframes flameB{0%{transform:scaleY(1.1) translateX(-1.5%);opacity:.8}50%{transform:scaleY(.8) translateX(1.5%);opacity:1}100%{transform:scaleY(1.05) translateX(-1%);opacity:.85}}
+  @media (prefers-reduced-motion:reduce){#adock::before,#adock::after{animation:none}}
   #adock .ahd{display:flex;align-items:center;gap:16px;margin-bottom:14px;color:#fff;font:700 20px inherit}
   #adock .ahd small{font:500 14px inherit;opacity:.75}
   #adock .ahd .x{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:9px;padding:8px 16px;font:600 14px inherit;cursor:pointer}
