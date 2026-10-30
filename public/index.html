@@ -90,6 +90,7 @@
   /* --- relace Vnitro 2: složky Vývoz / Dovoz, ruční objednávky --- */
   .mbar{display:none;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:#fffbe9}
   body.t-v2 .mbar{display:flex}
+  .v2hint{display:none;margin:0 0 8px;padding:7px 12px;border-radius:8px;background:#eaf6ee;border:1px solid #b9dfc6;color:#1b5e3a;font-size:13.5px;font-weight:600}body.t-v2 .v2hint{display:block}
   .mbar input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
   .mbar button{background:#1d388f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 13px inherit;cursor:pointer;white-space:nowrap}
   tr.fold td{background:#e8eefb;border-bottom:2px solid #9db3e0;font-size:14px;padding:8px 12px}
@@ -350,7 +351,7 @@
 
   <section class="panel">
     <div class="ph">
-      <h2>Přepravy k prodeji</h2>
+      <h2 id="panelH2">Přepravy k prodeji</h2>
       <span class="cnt" id="cnt"></span>
       <button class="markbtn" id="allBtn" aria-pressed="false" hidden>Zobrazit vše</button>
       <button class="markbtn" id="markBtn" aria-pressed="false" title="Zobrazit jen řádky s @@@ ve sloupci CODE nakl.">Označeno k prodeji <span class="n" id="markN">0</span></button>
@@ -359,6 +360,7 @@
       <span class="upd" id="upd"></span>
       <div class="diskpop" id="diskPop" hidden></div>
     </div>
+    <div class="v2hint" id="v2hint">☑ Zaškrtnutí = přeprava je vyřešena a zmizí ze seznamu.</div>
     <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – napiš libovolný text (město, zboží, datum…) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
     <table>
       <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th class="c-cust" data-col="cust">Objednatel</th><th data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th class="c-cust"><input data-fc="cust" placeholder="filtr…" aria-label="Filtr objednatel"></th><th><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
@@ -368,7 +370,7 @@
   </section>
 
   <section class="card weekcard">
-    <h2>Prodáno – posledních 7 dní</h2>
+    <h2 id="weekH2">Prodáno – posledních 7 dní</h2>
     <div class="week" id="week"></div>
   </section>
 
@@ -566,6 +568,8 @@
   const PIN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>';
 
   const V2 = document.body.classList.contains('t-v2');
+  const SOLD_W = V2 ? 'Vyřešeno' : 'Prodáno';
+  if (V2) { document.querySelector('th.c-chk').textContent = 'Vyřešeno'; document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; document.getElementById('panelH2').textContent = 'Přepravy'; document.getElementById('weekH2').textContent = 'Vyřešeno – posledních 7 dní'; }
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
   /* řazení a filtry sloupců (jen Vnitro 2): aktuální stav se pamatuje v tomto prohlížeči, šablony jsou na serveru */
   const COLS = ['date', 'route', 'cust', 'goods', 'weight', 'price', 'note'];
@@ -598,7 +602,7 @@
     const n = noteVal(r.key);
     const grip = V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '';
     return `<tr data-key="${esc(r.key)}"${V2 ? ' draggable="true"' : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
-        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="Prodáno"><span>Prodáno</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
+        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
         <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         <td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>
@@ -720,7 +724,7 @@
     const counted = list.filter(([, v]) => !v.rkl);
     const daySum = counted.reduce((a, [k]) => a + (pv(k) != null && !pvSkip(k) ? pv(k) : 0), 0);
     $('soldN').textContent = counted.length;
-    $('soldTitle').textContent = day === today ? 'Dnes prodané přepravy' : 'Prodané přepravy ' + fmtDate(day).replace(/ \d{4}$/, '');
+    $('soldTitle').textContent = day === today ? (V2 ? 'Dnes vyřešené přepravy' : 'Dnes prodané přepravy') : (V2 ? 'Vyřešené přepravy ' : 'Prodané přepravy ') + fmtDate(day).replace(/ \d{4}$/, '');
     $('sdDate').value = day; $('sdDate').max = today;
     $('sdNext').disabled = day >= today; $('sdToday').disabled = day === today;
     $('sdSum').innerHTML = counted.length ? `provize dne <b>${nfKc.format(daySum)} Kč</b>` : '';
@@ -825,7 +829,7 @@
     tr.classList.add('gone');
     setSold(row.key, true, `${fmtDate(row.date)} · ${row.route}`);
     render();
-    toast(`Prodáno: ${row.route}`, row);
+    toast(`${SOLD_W}: ${row.route}`, row);
   });
   $('toastUndo').onclick = () => { if (lastSold) { setSold(lastSold.key, false); lastSig = ''; lastSold = null; } $('toast').classList.remove('show'); };
   const shiftDay = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDay(d); };
