@@ -127,7 +127,7 @@ button{margin-top:12px;width:100%;padding:12px;background:#1d388f;border:1px sol
 <input type="password" id="pw" placeholder="Heslo" autocomplete="current-password" autofocus><button>Vstoupit</button><div class="e" id="e"></div><div class="by">Robin Balcar</div></form>
 <script>document.getElementById('f').onsubmit=async e=>{e.preventDefault();const r=await fetch('/ai/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})});
 if(r.ok)location.href='/ai';else{const j=await r.json().catch(()=>({}));document.getElementById('e').textContent=j.error||'Chyba';}};</script></body></html>`;
-for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
+for (const f of ['bg.jpg', 'logo.jpg', 'favicon.png', 'iptv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 
 // ---------- evidence přihlášených do /ai: anonymní ID zařízení (cookie rkl_aiv), IP, prohlížeč; historie připojení ----------
 const aiSeen = new Map(); // id -> čas posledního pingu (v paměti)

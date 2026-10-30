@@ -17,6 +17,9 @@
   .card{background:rgba(255,255,255,.9);border:1px solid rgba(0,0,0,.12);border-radius:16px;padding:14px 14px 12px;margin-bottom:14px;box-shadow:0 6px 22px rgba(0,0,0,.25)}
   body{margin:0;min-height:100vh;background:transparent;color:var(--tx);font:500 15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;padding:max(14px,env(safe-area-inset-top)) 16px 24px}
   .wrap{max-width:420px;margin:0 auto}
+  #tvDay{display:none;position:fixed;left:0;right:0;bottom:0;height:50vh;max-width:none;overflow:auto;padding:10px 12px 12px;box-sizing:border-box;z-index:5}.tvmode #tvDay{display:block}.tvmode #mainWrap,.tvmode .upd{display:none}
+  #tvDay .card{max-width:420px;margin:0 auto 8px}#tvDay .tvbig{display:flex;align-items:baseline;gap:10px;justify-content:center;margin-bottom:4px}#tvDay .tvbig b{font-size:46px;font-weight:800;line-height:1;color:var(--tx)}#tvDay .tvbig span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+  #tvDay .row{margin:5px 0}
   h1{margin:4px 0 14px;font:800 15px Inter,sans-serif;letter-spacing:2.5px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
   h1 a{margin-left:auto;font:600 12px Inter,sans-serif;letter-spacing:0;text-transform:none;color:var(--mut);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:4px}
   svg{display:block;width:100%;max-width:300px;margin:0 auto}
@@ -143,10 +146,12 @@
 </head>
 <body>
 <canvas id="net"></canvas><div class="floor"></div><div class="skintag" id="skinTag"></div>
-<div class="wrap">
+<div class="wrap" id="mainWrap">
   <h1>Podíl dispečinků <button class="sbtn" id="refBtn" type="button" title="Obnovit data" aria-label="Obnovit data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="sbtn" id="skinBtn" type="button" title="Přepnout futuristický skin" aria-label="Přepnout skin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.2 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg></button><a href="/ai" style="background:rgba(255,255,255,.7)">dashboard</a></h1>
   <div class="card"><div id="pie"></div><div class="legwrap"><div class="legend" id="legend"></div><div class="agbig" id="agbig"></div></div></div><div class="card"><h2 id="dh" style="margin-top:0">Dnes přibylo</h2><div class="pt" id="pt"><button type="button" data-p="day" class="on">Dnes</button><button type="button" data-p="week">Tento týden</button></div><div class="kt" id="kt"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord" class="on">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
 </div>
+<div class="wrap" id="tvDay"><div class="card"><div class="tvbig" id="tvBig"></div><div id="tvBars"></div></div></div>
+<script>window.RKLTV_MOBILE = true;</script><script src="/iptv.js" defer></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id), nf = new Intl.NumberFormat('cs-CZ');
@@ -165,7 +170,7 @@
       arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color(x.i)}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})"/>`; acc += len; });
     if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(128,128,128,.2)" stroke-width="${w}"/>`;
     const fg = theme === 'day' ? '#0f1b3d' : '#fff', mu = theme === 'day' ? '#51597a' : '#c3cfe8';
-    return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<text x="${c}" y="${c + 2}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text class="mu" x="${c}" y="${c + 18}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text><text class="mu" x="${c}" y="${c + 32}" text-anchor="middle" fill="${mu}" font-family="Inter" font-weight="700" font-size="7.5" letter-spacing="1.2">ZAPSÁNO AGENTEM</text></svg>`;
+    return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<circle class="ctr" cx="${c}" cy="${c}" r="60" fill="transparent"/><text x="${c}" y="${c + 2}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text class="mu" x="${c}" y="${c + 18}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text><text class="mu" x="${c}" y="${c + 32}" text-anchor="middle" fill="${mu}" font-family="Inter" font-weight="700" font-size="7.5" letter-spacing="1.2">ZAPSÁNO AGENTEM</text></svg>`;
   }
   const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
   let kind = 'ord', last = null;
@@ -196,6 +201,33 @@
         `<span class="pc">${(A + M) ? Math.round(100 * A / (A + M)) : 0} %</span></div><span class="v"><span class="a">+${A}</span> / <span class="m">+${M}</span></span></div>`;
     }).join('');
   }
+  // režim TV: dole jen dnešní objednávky zapsané agentem po relacích (relace, kde dnes agent zapsal) + celkové číslo dnešních pozic agentem
+  let tvOn = false;
+  function tvChart() {
+    if (!tvOn || !cache) return;
+    const j = cache, S = j.split, t = todayIso(), rels = j.relations.map((x, i) => ({ ...x, i }));
+    const day = S ? S.days.find(x => x.date === t) : null;
+    const rr = day ? day.rels : {};
+    const total = Object.values(rr).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0);
+    $('tvBig').innerHTML = '<b>' + nf.format(total) + '</b><span>pozic dnes zadal agent</span>';
+    const items = S ? S.rels.map(r => { const q = rr[r.key]; return q && q.pA > 0 ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, A: q.pA, M: q.pM || 0 } : null; }).filter(Boolean) : [];
+    if (!items.length) { $('tvBars').innerHTML = '<div class="empty">Dnes zatím agent nezapsal žádnou objednávku.</div>'; return; }
+    items.sort((a, b) => (b.A - a.A) || (b.M - a.M));
+    const max = Math.max(...items.map(x => x.A + x.M));
+    $('tvBars').innerHTML = '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:2px">Dnes zadané objednávky</div>' + items.map(x => {
+      const col = color(x.i), w = v => (100 * v / max) + '%';
+      return `<div class="row"><span class="n" style="color:${col}">${esc(x.name)}</span><div class="bw"><i style="width:${w(x.A)};background:${col}"></i>` + (x.M ? `<i style="width:${w(x.M)};background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)"></i>` : '') +
+        `<span class="pc">${Math.round(100 * x.A / (x.A + x.M))} %</span></div><span class="v"><span class="a">+${x.A}</span> / <span class="m">+${x.M}</span></span></div>`;
+    }).join('');
+  }
+  window.RKLTV_HOOK = on => { tvOn = !!on; document.body.classList.toggle('tvmode', tvOn); if (tvOn) tvChart(); };
+  // 3× klik na číslo uprostřed koláče otevře seznam TV stanic
+  let cn = 0, ct = 0;
+  $('pie').addEventListener('click', e => {
+    if (!e.target.closest('.ctr, text')) return;
+    const now = Date.now(); cn = now - ct < 700 ? cn + 1 : 1; ct = now;
+    if (cn >= 3) { cn = 0; if (window.RKLTV_OPEN) window.RKLTV_OPEN(); }
+  });
   async function load() {
     try {
       const r = await fetch('/api/agents'); if (r.status === 401) { location.href = '/ai'; return; }
@@ -211,7 +243,7 @@
       const rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
       $('pie').innerHTML = donut(rels, total);
       $('legend').innerHTML = rels.filter(x => x.count).sort((a, b) => b.count - a.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(short(x.name))}</span><b>${nf.format(x.count)}</b><small>${total ? Math.round(100 * x.count / total) : 0} %</small></div>`).join('') || '<div style="color:var(--mut)">zatím bez dat</div>';
-      dayBars(j, rels);
+      dayBars(j, rels); tvChart();
     }
   }
   window.__repaint = paint;
