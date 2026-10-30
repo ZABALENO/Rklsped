@@ -9,7 +9,7 @@ const { createStore } = require('./lib/store');
 const { buildTrips, isRKL, ownShort, prettySpz } = require('./lib/trips');
 const { sellerOf } = require('./lib/sellers');
 const geo = require('./lib/geo');
-const { pragueToday, subWorkdays, isWorkday } = require('./lib/workdays');
+const { pragueToday, subWorkdays, addWorkdays, isWorkday } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
 
 const PORT = process.env.PORT || 3000;
@@ -318,6 +318,15 @@ app.get('/api/trips', async (req, res) => {
   const rate = await eurRate(store);
   const zrows = zapadRows(sheet.rows);
   const trips = zrows.length ? await buildTrips(zrows, today, rate.value) : [];
+  // průvodce filtry: kolik řádků zbude po každém kroku (pro vysvětlení, proč se zobrazuje tolik SPZ)
+  const diag = (() => {
+    const all = sheet.rows.filter(Boolean), own = all.filter(r => isRKL(r.carrier)), z = zapadRows(own), p = z.filter(r => String(r.prepr || '').trim());
+    const from = subWorkdays(today, 5), to = addWorkdays(today, 2), inR = x => !!x && x >= from && x <= to;
+    const w = p.filter(r => inR(r.date) || inR(r.dateLoadTo) || inR(r.unlFrom) || inR(r.unlTo));
+    const relCol = !!(sheet.columns && sheet.columns.relace);
+    return { rows: all.length, own: own.length, noCarrier: all.filter(r => !String(r.carrier || '').trim()).length, relaceCol: relCol, zapad: z.length, prepr: p.length, inWindow: w.length, from, to, spz: new Set(w.map(r => prettySpz(r.spz) || '?' + r.prepr)).size,
+      carriers: Object.entries(all.reduce((m, r) => { const c = (r.carrier || '').trim(); if (c) m[c] = (m[c] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 12) };
+  })();
   const missing = sheet.columns ? ['spz', 'prepr', 'carrier', 'date', 'unlTo', 'incCzk', 'incEur'].filter(k => !sheet.columns[k]) : [];
   res.json({
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url),
