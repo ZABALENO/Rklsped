@@ -247,7 +247,7 @@ function board(rate) {
     sellers: SELLER_ORDER,
     storage: pool ? 'db' : 'file',
     ...(v2 || {}),
-    ...(id === 'vnitro1' ? { carr: carriersFor({ mem, sheet }), carrAt: (sheet.carriers && sheet.carriers.length) ? sheet.fetchedAt : ((mem.carr.list && mem.carr.list.at) || null), carrSrc: (sheet.carriers && sheet.carriers.length) ? 'sheet' : 'db', asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
+    ...(id === 'vnitro1' ? { carr: carriersFor({ mem, sheet }), carrAt: (sheet.carriers && sheet.carriers.length) ? sheet.fetchedAt : ((mem.carr.list && mem.carr.list.at) || null), carrSrc: (sheet.carriers && sheet.carriers.length) ? 'sheet' : 'db', hist: Object.values(mem.hist).sort((a, b) => b.t.localeCompare(a.t)).slice(0, 200), asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
   };
 }
 
@@ -283,7 +283,7 @@ const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
   if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
-  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf t-asg">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy v prodeji – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
+  if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf t-asg">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
@@ -315,7 +315,7 @@ function whoOf(req) {
   return { dev, ip, ua: [br, os].filter(Boolean).join(' / ') };
 }
 async function logHist(req, act, to, label) {
-  const t = req.t; if (t.id !== 'vnitro2') return;
+  const t = req.t; if (!['vnitro1', 'vnitro2'].includes(t.id)) return;
   const now = new Date().toISOString(), id = now + Math.random().toString(36).slice(2, 5);
   await t.put('hist', id, { t: now, act, to: to || null, label: String(label || '').slice(0, 200), who: whoOf(req) });
   const ks = Object.keys(t.mem.hist).sort();
@@ -345,7 +345,10 @@ app.post('/api/assign', async (req, res) => {
     const ok = carriersFor(req.t).some(c => c.drivers.some(d => d.id === driver));
     if (!ok) return res.status(400).json({ error: 'Neznámý řidič' });
   }
+  const nm = id => { for (const c of carriersFor(req.t)) for (const d of c.drivers) if (d.id === id) return `${c.name} – ${d.name}${d.spz ? ' · ' + d.spz : ''}`; return ''; };
+  const prev = (req.t.mem.asg[key] || {}).d || null;
   await req.t.put('asg', key, driver ? { d: driver, t: new Date().toISOString() } : null);
+  if ((prev || null) !== (driver || null)) await logHist(req, 'assign', driver ? nm(driver) : null, String(req.body.label || key).slice(0, 150) + '|' + (prev ? nm(prev) : ''));
   res.json({ ok: true });
 });
 app.post('/api/folder', async (req, res) => {

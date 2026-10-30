@@ -90,7 +90,7 @@
   /* --- relace Vnitro 2: složky Vývoz / Dovoz, ruční objednávky --- */
   .mbar{display:none;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:#fffbe9}
   body.t-v2 .mbar{display:flex}
-  .v2hist{display:none;margin-top:14px}body.t-v2 .v2hist{display:block}.v2hist summary{cursor:pointer;font-size:15px;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}.v2hist summary::-webkit-details-marker{display:none}.v2hist summary::before{content:'▸';color:#1d388f}.v2hist details[open]>summary::before{content:'▾'}.v2hist .hcnt{font-weight:500;font-size:12px;opacity:.65}.v2hist .hnote{font-size:12px;opacity:.7;margin:2px 0 8px}.hwrap{max-height:340px;overflow:auto}.htab{width:100%;border-collapse:collapse;font-size:13px}.htab th,.htab td{text-align:left;padding:5px 8px;border-bottom:1px solid rgba(128,128,128,.25);vertical-align:top}.htab small{opacity:.65}
+  .v2hist{display:none;margin-top:14px}body.t-v2 .v2hist,body.t-asg .v2hist{display:block}.v2hist summary{cursor:pointer;font-size:15px;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}.v2hist summary::-webkit-details-marker{display:none}.v2hist summary::before{content:'▸';color:#1d388f}.v2hist details[open]>summary::before{content:'▾'}.v2hist .hcnt{font-weight:500;font-size:12px;opacity:.65}.v2hist .hnote{font-size:12px;opacity:.7;margin:2px 0 8px}.hwrap{max-height:340px;overflow:auto}.htab{width:100%;border-collapse:collapse;font-size:13px}.htab th,.htab td{text-align:left;padding:5px 8px;border-bottom:1px solid rgba(128,128,128,.25);vertical-align:top}.htab small{opacity:.65}
 .v2hint{display:none;margin:0 0 8px;padding:7px 12px;border-radius:8px;background:#eaf6ee;border:1px solid #b9dfc6;color:#1b5e3a;font-size:13.5px;font-weight:600}body.t-v2 .v2hint{display:block}
   .mbar input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
   .mbar button{background:#1d388f;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 13px inherit;cursor:pointer;white-space:nowrap}
@@ -355,6 +355,7 @@
     .kpi .big{font-size:32px}
   }
   /* relace Vnitro 1: bez leaderboardu a historie (prodáno za 7 dní, prodané přepravy po dnech) */
+  body.t-asg .strip .chip:not(.pgchip),body.t-asg #markBtn{display:none!important}
   body.t-v1 .weekcard, body.t-v1 section.two{display:none!important}
 </style>
 </head>
@@ -608,7 +609,8 @@
   let carCollapsed = []; try { carCollapsed = JSON.parse(lsGet('rkl_v1_car', '[]')) || []; } catch {}
   const SF = document.body.classList.contains('t-sf');   // řazení + filtry + sloupec Objednatel (Vnitro 1 i 2)
   if (SF) document.querySelectorAll('thead tr').forEach(tr => { const c = tr.querySelector('.c-cust'), d = tr.children[1]; if (c && d) d.after(c); });
-  const SOLD_W = V2 ? 'Vyřešeno' : 'Prodáno';
+  const SOLD_W = V2 ? 'Vyřešeno' : ASG ? 'Hotovo' : 'Prodáno';
+  if (ASG) { document.querySelector('th.c-chk').textContent = 'Hotovo'; document.getElementById('panelH2').textContent = 'Přepravy'; }
   if (V2) { document.querySelector('th.c-chk').textContent = 'Vyřešeno'; document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; document.getElementById('panelH2').textContent = 'Přepravy'; document.getElementById('weekH2').textContent = 'Vyřešeno – posledních 7 dní'; }
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
   /* řazení a filtry sloupců (jen Vnitro 2): aktuální stav se pamatuje v tomto prohlížeči, šablony jsou na serveru */
@@ -739,15 +741,15 @@
   }
 
   function renderHist() {
-    const el = $('histRows'); if (!el || !V2) return;
+    const el = $('histRows'); if (!el || !(V2 || ASG)) return;
     const FN = { vyvoz: 'Vývoz', dovoz: 'Dovoz', none: 'Ostatní' };
     const me = devId();
     const fmt = t => { const d = new Date(t); return d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' }) + ' ' + d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); };
     const hc = $('histCnt'); if (hc) hc.textContent = (B.hist || []).length ? '(' + B.hist.length + ')' : '';
     el.innerHTML = (B.hist || []).map(h => {
       let lab = h.label || '', from = '';
-      if (h.act === 'move') { const p = lab.lastIndexOf('|'); if (p >= 0) { from = lab.slice(p + 1); lab = lab.slice(0, p); } }
-      const kam = h.act === 'move' ? `${FN[from] || '—'} → <b>${FN[h.to] || '—'}</b>` : h.act === 'done' ? '<b>Vyřešeno</b>' : 'Vráceno do seznamu';
+      if (h.act === 'move' || h.act === 'assign') { const p = lab.lastIndexOf('|'); if (p >= 0) { from = lab.slice(p + 1); lab = lab.slice(0, p); } }
+      const kam = h.act === 'assign' ? `${esc(from || 'Nenaloženo')} → <b>${esc(h.to || 'Nenaloženo')}</b>` : h.act === 'move' ? `${FN[from] || '—'} → <b>${FN[h.to] || '—'}</b>` : h.act === 'done' ? (ASG ? '<b>Hotovo</b>' : '<b>Vyřešeno</b>') : 'Vráceno do seznamu';
       const w = h.who || {};
       return `<tr><td>${esc(fmt(h.t))}</td><td>${esc(lab)}</td><td>${kam}</td><td>${esc(w.dev ? '#' + w.dev.slice(0, 4) : '?')}${w.dev && w.dev.startsWith(me.slice(0, 12)) && me !== 'anon' ? ' (ty)' : ''}<br><small>${esc(w.ip || '')} · ${esc(w.ua || '')}</small></td></tr>`;
     }).join('') || '<tr><td colspan="4" style="opacity:.6">Zatím žádné přesuny.</td></tr>';
@@ -764,15 +766,15 @@
     else if (B.error) showBanner('Tabulku se nepodařilo načíst: ' + B.error + (B.fetchedAt ? ' Zobrazuji poslední načtená data.' : ''), true);
     else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', prepr: 'Přeprava', carrier: 'Dopravce' }[k])).join(', '), true);
     else showBanner('');
-    $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (B.fetchedAt ? 'načteno ' + hhmm(new Date(B.fetchedAt)) : '');
-    $('chg').textContent = B.changedAt ? 'data v tabulce změněna ' + fmtChg(B.changedAt) : (B.configured ? '' : 'tabulka není nastavena');
+    $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (ASG ? (B.changedAt || B.fetchedAt ? 'načteno ' + fmtChg(B.changedAt || B.fetchedAt) : '') : (B.fetchedAt ? 'načteno ' + hhmm(new Date(B.fetchedAt)) : ''));
+    if (ASG) $('chg').textContent = B.configured ? '' : 'tabulka není nastavena'; else $('chg').textContent = B.changedAt ? 'data v tabulce změněna ' + fmtChg(B.changedAt) : (B.configured ? '' : 'tabulka není nastavena');
 
     const shown = renderRows(today);
     const empty = $('empty');
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
     else if (!shown.length && !(V2 && (B.manual || []).length) && query.trim() && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Nic nenalezeno.</b><br>Hledání „' + esc(query.trim()) + '“ neodpovídá žádnému řádku v nabídce.'; }
     else if (!shown.length && markOnly && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Žádná přeprava označená k prodeji.</b><br>Žádný řádek v nabídce nemá ve sloupci CODE nakl. „@@@“.'; }
-    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>' + (V2 ? 'Nic k naložení.' : 'Nic k prodeji.') + '</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
+    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>' + (V2 || ASG ? 'Nic k naložení.' : 'Nic k prodeji.') + '</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
 
     const open = B.offered.length;
@@ -1058,7 +1060,7 @@
     async function assign(key, did) {
       B.asg = B.asg || {}; if (did === '-') delete B.asg[key]; else B.asg[key] = did;
       lastSig = ''; render();
-      try { await api('/api/assign', { key, driver: did === '-' ? null : did }); } catch (e) { alert('Uložení přiřazení se nepovedlo: ' + e.message); }
+      try { const rr = (B.offered || []).find(x => x.key === key); await api('/api/assign', { key, driver: did === '-' ? null : did, label: rr ? `${fmtDate(rr.date)} · ${rr.route}` : key }); } catch (e) { alert('Uložení přiřazení se nepovedlo: ' + e.message); }
       poll(false);
     }
     setInterval(() => { const ib = $('carBtn'); if (ib && B) ib.style.display = B.carrSrc === 'sheet' ? 'none' : ''; }, 1500);
