@@ -79,28 +79,11 @@
       ul.onclick = e => { const li = e.target.closest('li[data-i]'); if (!li) return; ul.querySelectorAll('li.on').forEach(x => x.classList.remove('on')); li.classList.add('on'); play(list[+li.dataset.i]); };
     } catch (e) { ul.innerHTML = '<li>Seznam se nepodařilo načíst: ' + esc(e.message) + '</li>'; }
   }
-  // druhá stránka ve spodní polovině obrazovky (6× klik na logo): dashboard nahoře zůstává plně použitelný
-  const SPLIT_URL = 'https://www.nfsu2.xyz';
-  let split = null;
-  function toggleSplit() {
-    if (split) { split.remove(); split = null; document.body.style.paddingBottom = ''; return; }
-    split = document.createElement('div'); split.id = 'splitV';
-    split.innerHTML = `<div class="sb"><b>${esc(SPLIT_URL.replace(/^https?:\/\//, ''))}</b><a href="${SPLIT_URL}" target="_blank" rel="noopener">↗ otevřít v nové záložce</a><button data-a="x" title="Zavřít">✕</button></div><iframe src="${SPLIT_URL}" referrerpolicy="no-referrer" allow="fullscreen; autoplay; gamepad; keyboard-map" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals"></iframe>`;
-    split.querySelector('[data-a=x]').onclick = toggleSplit;
-    document.body.appendChild(split);
-    document.body.style.paddingBottom = '50vh';   // obsah dashboardu se dá dojet nad spodní polovinu
-  }
-  const css2 = document.createElement('style');
-  css2.textContent = `#splitV{position:fixed;left:0;right:0;bottom:0;height:50vh;background:#0b1226;border-top:3px solid #1d388f;z-index:8900;display:flex;flex-direction:column}
-  #splitV .sb{display:flex;gap:12px;align-items:center;padding:4px 10px;background:#101a33;color:#fff;font:13px system-ui,sans-serif}
-  #splitV .sb b{flex:1}#splitV .sb a{color:#9db8ff}#splitV .sb button{border:0;background:#2a3a66;color:#fff;border-radius:6px;padding:2px 9px;cursor:pointer}
-  #splitV iframe{flex:1;width:100%;border:0;background:#fff}`;
-  document.head.appendChild(css2);
-  // klikání na logo RKL v záhlaví: 3× = TV stanice, 6× = druhá stránka dole (rozhoduje se až po krátké pauze)
-  let n = 0, tm = null;
+  // trojklik na logo RKL v záhlaví
+  let n = 0, t0 = 0;
   document.addEventListener('click', e => {
     const img = e.target.closest && e.target.closest('img'); if (!img || !/logo\.jpg/.test(img.getAttribute('src') || '')) return;
-    n++; clearTimeout(tm);
-    tm = setTimeout(() => { const c = n; n = 0; if (c === 3) toggle(); else if (c === 6) toggleSplit(); }, 650);
+    const now = Date.now(); n = now - t0 < 700 ? n + 1 : 1; t0 = now;
+    if (n >= 3) { n = 0; toggle(); }
   });
 })();
