@@ -390,7 +390,7 @@
 
   <div class="sec">Trend zadávání po dnech</div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-    <div class="panel"><h3>Agent vs. ručně – vývoj po jednotlivých dnech</h3><div class="tgl" id="trKind"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="trendDay"></div></div>
+    <div class="panel"><h3>Agent vs. ručně – procentuální poměr po jednotlivých dnech</h3><div class="tgl" id="trKind"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="trendDay"></div></div>
   </div>
 
   <div class="sec">Na co agenty využíváme nejvíce</div>
@@ -543,17 +543,19 @@
     const days = S.days.filter(d => Object.keys(d.rels).length && (d.wd || Object.values(d.rels).some(v => { const q = val(v); return q.a + q.m > 0; }))).slice().reverse();
     if (!days.length) return '<div class="sub">Zatím bez dat.</div>';
     const cI = k => rels.find(r => r.key === k)?.i ?? 0;
-    const card = (name, col, pts) => {
+    const card = (name, col, pts) => {   // pts: počty po dnech, níže se přepočtou na procenta
       const ta = pts.reduce((a, q) => a + q.a, 0), tm = pts.reduce((a, q) => a + q.m, 0);
-      const W = 520, H = 190, L = 34, R_ = 12, T = 12, B = 28, ph = H - T - B, pw = W - L - R_, max = Math.max(1, ...pts.map(q => Math.max(q.a, q.m)));
+      // graf ukazuje procentuální poměr agent / ručně pro každý den (ne počty); počty zůstávají v popisku bodu
+      pts = pts.map(q => { const t = q.a + q.m; return { date: q.date, ra: q.a, rm: q.m, a: t ? 100 * q.a / t : 0, m: t ? 100 * q.m / t : 0 }; });
+      const W = 520, H = 190, L = 40, R_ = 12, T = 12, B = 28, ph = H - T - B, pw = W - L - R_, max = 100;
       const X = i => L + (pts.length === 1 ? pw / 2 : pw * i / (pts.length - 1)), Y = v => T + ph - ph * v / max;
       let g = '';
-      for (let k = 0; k <= 3; k++) { const y = T + ph - ph * k / 3; g += `<line x1="${L}" x2="${W - R_}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 5}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="9">${nf.format(Math.round(max * k / 3))}</text>`; }
+      for (let k = 0; k <= 2; k++) { const y = T + ph - ph * k / 2; g += `<line x1="${L}" x2="${W - R_}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 5}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="9">${Math.round(max * k / 2)} %</text>`; }
       const line = key => pts.map((q, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(q[key]).toFixed(1)).join(' ');
       const area = pts.length > 1 ? `<path d="${line('a')} L${X(pts.length - 1).toFixed(1)} ${T + ph} L${X(0).toFixed(1)} ${T + ph} Z" fill="${col}" opacity=".16"/>` : '';
       const every = Math.ceil(pts.length / 8);
       const lbl = pts.map((q, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 9}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9">${+q.date.slice(8)}. ${+q.date.slice(5, 7)}.</text>` : '').join('');
-      const dots = pts.map((q, i) => `<circle cx="${X(i)}" cy="${Y(q.m)}" r="3" fill="#f2a516"><title>${fmtD(q.date)} – ručně: ${nf.format(q.m)}</title></circle><circle cx="${X(i)}" cy="${Y(q.a)}" r="3.4" fill="${col}"><title>${fmtD(q.date)} – agent: ${nf.format(q.a)}, ručně: ${nf.format(q.m)}</title></circle>`).join('');
+      const dots = pts.map((q, i) => `<circle cx="${X(i)}" cy="${Y(q.m)}" r="3" fill="#f2a516"><title>${fmtD(q.date)} – ručně: ${Math.round(q.m)} % (${nf.format(q.rm)})</title></circle><circle cx="${X(i)}" cy="${Y(q.a)}" r="3.4" fill="${col}"><title>${fmtD(q.date)} – agent: ${Math.round(q.a)} % (${nf.format(q.ra)}), ručně: ${Math.round(q.m)} % (${nf.format(q.rm)})</title></circle>`).join('');
       const share = ta + tm ? Math.round(100 * ta / (ta + tm)) : 0;
       // popisky přímo u čar, ve stejném sklonu jako čára; na straně odvrácené od druhé čáry
       const mi = Math.max(0, Math.min(pts.length - 2, Math.floor((pts.length - 1) / 2)));
