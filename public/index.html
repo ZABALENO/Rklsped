@@ -374,6 +374,7 @@
   body.t-asg .strip .chip:not(.pgchip),body.t-asg #markBtn{display:none!important}
   body.t-v1 .weekcard, body.t-v1 section.two{display:none!important}
 </style>
+
 <!--DARK--><style id="darkcss">
 /* TMAVÝ REŽIM – barvy a tapeta z rozcestníku (font, text a zalamování zůstávají) */
 html.dark{--bg:#04123f;--panel:rgba(9,15,40,.84);--ink:#e9edf7;--muted:#8793ad;--line:rgba(94,138,255,.26);--navy:#4d7bff;--navy-2:#6a91ff;--accent:#f2a516;--ok:#3ddc97;--ok-bg:rgba(61,220,151,.16);--today:rgba(242,165,22,.14);color-scheme:dark;background:#04123f}
@@ -498,7 +499,8 @@ html.dark .dock .dk-none{background:#2a3350;color:#e9edf7}
 html.dark #dragGhost{background:#0a1130;color:#e9edf7;border-color:#5e8aff}html.dark #dragGhost b{color:#8ab0ff}
 html.dark #adock .cc{background:#0a1130}
 html.dark #adock .cc h4{color:#0b1330}
-html.dark #adock .dk2{border-top-color:rgba(94,138,255,.25);color:#e9edf7}
+html.dark #adock .dk2{border-top-color:rgba(94,138,255,.25);color:#e9edf7;background:transparent}
+html.dark #adock .dk2 .sp{color:#0b1330}
 html.dark #adock .dk2.drop-over,html.dark #adock .dk2:hover,html.dark #adock .back.drop-over,html.dark #adock .back:hover{background:rgba(94,138,255,.3);outline-color:#5e8aff}
 html.dark #adock .back{background:#f2a516;color:#1a1000}
 html.dark .v2hist summary{color:#e9edf7}
@@ -545,8 +547,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   setInterval(paint,60000);
   document.addEventListener('visibilitychange',paint);
 })();
-</script><!--/DARK-->
-</head>
+</script><!--/DARK--></head>
 <body>
 <header>
   <div class="bar">

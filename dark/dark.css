@@ -121,7 +121,8 @@ html.dark .dock .dk-none{background:#2a3350;color:#e9edf7}
 html.dark #dragGhost{background:#0a1130;color:#e9edf7;border-color:#5e8aff}html.dark #dragGhost b{color:#8ab0ff}
 html.dark #adock .cc{background:#0a1130}
 html.dark #adock .cc h4{color:#0b1330}
-html.dark #adock .dk2{border-top-color:rgba(94,138,255,.25);color:#e9edf7}
+html.dark #adock .dk2{border-top-color:rgba(94,138,255,.25);color:#e9edf7;background:transparent}
+html.dark #adock .dk2 .sp{color:#0b1330}
 html.dark #adock .dk2.drop-over,html.dark #adock .dk2:hover,html.dark #adock .back.drop-over,html.dark #adock .back:hover{background:rgba(94,138,255,.3);outline-color:#5e8aff}
 html.dark #adock .back{background:#f2a516;color:#1a1000}
 html.dark .v2hist summary{color:#e9edf7}
