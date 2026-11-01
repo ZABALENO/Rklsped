@@ -125,6 +125,11 @@ body::before{content:"";position:fixed;inset:-16px;background:url(/bg.jpg) cente
 body::after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,6,34,.78),rgba(8,24,86,.72))}
 .grid{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(94,138,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.14) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);background-size:48px 48px,48px 48px,auto;mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%)}
 .scene{position:fixed;left:0;right:0;bottom:0;width:100%;height:62vh;min-height:300px;z-index:-1;pointer-events:none;opacity:.55}
+html::after{content:"";position:fixed;inset:0;z-index:100;pointer-events:none;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.4),transparent 60%),linear-gradient(160deg,#00030f,#04123f);clip-path:circle(150vmax at 50% 50%);animation:arrR .7s .05s cubic-bezier(.65,0,.25,1) forwards}
+@keyframes arrR{to{clip-path:circle(0 at 50% 50%)}}
+form{animation:arrIn .7s .2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes arrIn{from{opacity:0;transform:translateY(14px) scale(.98);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@media (prefers-reduced-motion:reduce){html::after{display:none}form{animation:none}}
 form{position:relative;width:100%;max-width:380px;background:rgba(6,10,24,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(94,138,255,.5);padding:30px 26px;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);box-shadow:0 0 50px rgba(94,138,255,.3)}
 form::before{content:"";position:absolute;left:0;top:0;width:60px;height:2px;background:#5e8aff;box-shadow:0 0 12px #5e8aff}
 img{width:48px;height:48px;border-radius:10px;display:block;margin-bottom:14px}h1{margin:0 0 4px;font-size:20px;letter-spacing:3px;text-transform:uppercase}p{margin:0 0 18px;color:#8793ad;font-size:13px;letter-spacing:1px}

@@ -23,6 +23,29 @@
   @keyframes driveR{from{transform:translateX(-30vw)}to{transform:translateX(112vw)}}
   @keyframes driveL{from{transform:translateX(112vw) scaleX(-1)}to{transform:translateX(-30vw) scaleX(-1)}}
   @media (prefers-reduced-motion:reduce){.veh{animation:none}}
+  /* futuristický přechod po kliknutí na dlaždici */
+  #portal{position:fixed;inset:0;z-index:50;pointer-events:none;visibility:hidden;clip-path:circle(0 at var(--x,50%) var(--y,50%));background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.4),transparent 60%),linear-gradient(160deg,#00030f,#04123f);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;color:#fff}
+  #portal::before{content:"";position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--pc,#5e8aff) 22%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--pc,#5e8aff) 22%,transparent) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse at 50% 50%,#000 20%,transparent 75%)}
+  #portal .pr{position:absolute;left:var(--x,50%);top:var(--y,50%);width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid var(--pc,#5e8aff);box-shadow:0 0 40px var(--pc,#5e8aff),inset 0 0 40px var(--pc,#5e8aff);opacity:0}
+  #portal .pt{position:relative;font:700 clamp(22px,4vw,38px)/1 "IBM Plex Sans",system-ui,sans-serif;letter-spacing:8px;text-transform:uppercase;text-shadow:0 0 30px var(--pc,#5e8aff);opacity:0;transform:scale(.9)}
+  #portal .pb{position:relative;width:min(320px,70vw);height:3px;background:rgba(255,255,255,.12);overflow:hidden;opacity:0}
+  #portal .pb::after{content:"";position:absolute;inset:0;background:var(--pc,#5e8aff);box-shadow:0 0 14px var(--pc,#5e8aff);transform:scaleX(0);transform-origin:0 50%}
+  #portal .ps{position:relative;font:500 11px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:4px;text-transform:uppercase;color:#8793ad;opacity:0}
+  body.going #portal{visibility:visible;animation:pOpen .75s cubic-bezier(.65,0,.25,1) forwards}
+  body.going #portal .pr{animation:pRing .75s ease-out forwards}
+  body.going #portal .pt{animation:pIn .45s .25s ease-out forwards}
+  body.going #portal .ps{animation:pIn .45s .3s ease-out forwards}
+  body.going #portal .pb{animation:pIn .3s .3s ease-out forwards}
+  body.going #portal .pb::after{animation:pBar .5s .3s ease-in forwards}
+  body.going main .tile{transition:transform .5s cubic-bezier(.65,0,.25,1),opacity .4s ease,filter .4s ease}
+  body.going main .tile:not(.sel){opacity:0;transform:scale(.88) translateY(14px);filter:blur(5px)}
+  body.going main .tile.sel{transform:scale(1.06);box-shadow:0 0 90px 4px var(--c);border-color:var(--c)}
+  body.going header,body.going h1,body.going p.lead,body.going footer{opacity:0;transition:opacity .35s}
+  @keyframes pOpen{from{clip-path:circle(0 at var(--x,50%) var(--y,50%))}to{clip-path:circle(150vmax at var(--x,50%) var(--y,50%))}}
+  @keyframes pRing{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(26)}}
+  @keyframes pIn{to{opacity:1;transform:none}}
+  @keyframes pBar{to{transform:scaleX(1)}}
+  @media (prefers-reduced-motion:reduce){body.going #portal,body.going #portal *{animation-duration:.01s!important;animation-delay:0s!important}}
   header{padding:18px 28px}
   .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:15px;letter-spacing:3px;text-transform:uppercase;line-height:1.15}
   .brand .logo{width:40px;height:40px;border-radius:10px;display:block;box-shadow:0 0 0 1px rgba(94,138,255,.5),0 0 18px rgba(94,138,255,.35)}
@@ -92,5 +115,25 @@
   </div>
 </main>
 <footer>airkl.cz · Robin Balcar</footer>
+<div id="portal" aria-hidden="true"><div class="pr"></div><div class="pt" id="ptxt"></div><div class="pb"></div><div class="ps" id="pst">Navazuji spojení</div></div>
+<script>
+(function(){
+  var go=false;
+  function leave(a,e){
+    if(go||e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    e.preventDefault();go=true;
+    var b=a.getBoundingClientRect(),cs=getComputedStyle(a),root=document.documentElement;
+    var x=(e.clientX||b.left+b.width/2),y=(e.clientY||b.top+b.height/2);
+    var p=document.getElementById('portal');
+    p.style.setProperty('--x',x+'px');p.style.setProperty('--y',y+'px');p.style.setProperty('--pc',cs.getPropertyValue('--c')||'#5e8aff');
+    document.getElementById('ptxt').textContent=(a.querySelector('h2')||{}).textContent||'';
+    a.classList.add('sel');document.body.classList.add('going');
+    var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+    setTimeout(function(){location.href=a.href},reduce?30:850);
+  }
+  [].forEach.call(document.querySelectorAll('a.tile'),function(a){a.addEventListener('click',function(e){leave(a,e)})});
+  window.addEventListener('pageshow',function(e){if(e.persisted){go=false;document.body.classList.remove('going');[].forEach.call(document.querySelectorAll('a.tile.sel'),function(a){a.classList.remove('sel')})}});
+})();
+</script>
 </body>
 </html>
