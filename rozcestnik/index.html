@@ -75,6 +75,14 @@
   footer{padding:18px 28px;font-size:10px;letter-spacing:2px;text-align:center;opacity:.35}
   @media (max-width:560px){header{padding:14px 16px}main{padding:8px 16px 40px}a.tile{min-height:0}}
 </style>
+<style id="rozbg">
+  /* pozadí areálu: výraznější a jen mírně rozmazané, přes něj AI vrstva (mřížka, záře, siluety) */
+  body::before{filter:saturate(.85) brightness(.62) contrast(1.05) blur(3px);inset:-24px}
+  .hl{display:none}
+  body::after{background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.30),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.16),transparent 60%),linear-gradient(160deg,rgba(0,3,20,.62),rgba(4,14,56,.5))}
+  html:root.light body::before{filter:saturate(.9) brightness(1.08) contrast(1.02) blur(3px)!important;opacity:1;mix-blend-mode:normal}
+  html:root.light body::after{background:radial-gradient(900px 520px at 12% -10%,rgba(94,138,255,.28),transparent 62%),radial-gradient(760px 520px at 92% 110%,rgba(242,165,22,.2),transparent 62%),linear-gradient(160deg,rgba(234,241,255,.5),rgba(200,216,246,.46))}
+</style>
 <!--THEME--><style id="lightcss">/* SVĚTLÝ MOTIV – denní: modrá obloha, skleněné světlé dlaždice, sytější akcenty */
 html.light body{background:#dbe6fa;color:#0f1b3d}
 html.light body::before{filter:grayscale(.55) contrast(1.05) brightness(1.12) saturate(.9) blur(2px)!important;opacity:1}
