@@ -1,5 +1,5 @@
 (function(){
-  /* Světlý motiv přes den, tmavý po západu slunce v Opavě (74601); měsíc vpravo nahoře přepíná ručně do příštího východu/západu */
+  /* Výchozí je tmavý motiv; měsíc vpravo nahoře přepíná na světlý a volba se pamatuje v prohlížeči */
   var K='rkl_light2',d=document.documentElement,LAT=49.9387,LON=17.9026,R=Math.PI/180;
   function ut(day,rise){
     var N=Math.floor((Date.UTC(day.getFullYear(),day.getMonth(),day.getDate())-Date.UTC(day.getFullYear(),0,0))/864e5);
@@ -16,10 +16,10 @@
   function isNight(){var n=new Date();return n.getTime()<ut(n,true)||n.getTime()>=ut(n,false)}
   function ov(){try{return JSON.parse(localStorage.getItem(K)||'null')}catch(e){return null}}
   function setOv(o){try{if(o)localStorage.setItem(K,JSON.stringify(o));else localStorage.removeItem(K)}catch(e){}}
-  function wantLight(){var a=isNight(),o=ov();if(o&&o.a===a)return !!o.v;if(o)setOv(null);return !a}
+  function wantLight(){var o=ov();return !!(o&&o.v)}
   function paint(){
     var on=wantLight();d.classList.toggle('light',on);
-    var b=document.getElementById('thBtn');if(b){b.setAttribute('aria-pressed',on?'false':'true');b.title=(on?'Světlý motiv – klikni pro tmavý':'Tmavý motiv – klikni pro světlý')+' (automaticky podle východu a západu slunce v Opavě)'}
+    var b=document.getElementById('thBtn');if(b){b.setAttribute('aria-pressed',on?'false':'true');b.title=(on?'Světlý motiv – klikni pro tmavý':'Tmavý motiv – klikni pro světlý')+''}
   }
   paint();
   function init(){
@@ -27,7 +27,7 @@
     if(!b){b=document.createElement('button');b.type='button';b.id='thBtn';b.className='thbtn';b.setAttribute('aria-label','Světlý / tmavý motiv');
       b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
       document.body.appendChild(b)}
-    b.onclick=function(){setOv({v:!d.classList.contains('light'),a:isNight()});paint()};
+    b.onclick=function(){setOv({v:!d.classList.contains('light')});paint()};
     paint();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
