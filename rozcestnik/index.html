@@ -12,10 +12,17 @@
   *{box-sizing:border-box}
   html,body{margin:0}
   body{min-height:100vh;display:flex;flex-direction:column;background:#1d388f;color:#e9edf7;font:16px/1.4 "IBM Plex Sans",system-ui,sans-serif;overflow-x:hidden}
-  body::before{content:"";position:fixed;inset:-16px;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.5) blur(1px);z-index:-3}
-  .hl{position:fixed;inset:-16px;z-index:-3;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(3.2) brightness(.85) blur(1.3px);mix-blend-mode:screen;opacity:.45}
-  body::after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,6,34,.78),rgba(8,24,86,.72))}
+  body::before{content:"";position:fixed;inset:-16px;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.3) blur(1px);z-index:-3}
+  .hl{position:fixed;inset:-16px;z-index:-3;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(3.2) brightness(.85) blur(1.3px);mix-blend-mode:screen;opacity:.22}
+  body::after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,3,20,.9),rgba(4,14,56,.86))}
   .grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(94,138,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.14) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);background-size:48px 48px,48px 48px,auto;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%)}
+  .road{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+  .veh{position:absolute;left:0;color:#fff;opacity:.13;will-change:transform;animation-timing-function:linear;animation-iteration-count:infinite}
+  .veh svg{display:block;width:100%;height:auto}
+  .veh.r{animation-name:driveR}.veh.l{animation-name:driveL}
+  @keyframes driveR{from{transform:translateX(-30vw)}to{transform:translateX(112vw)}}
+  @keyframes driveL{from{transform:translateX(112vw) scaleX(-1)}to{transform:translateX(-30vw) scaleX(-1)}}
+  @media (prefers-reduced-motion:reduce){.veh{animation:none}}
   header{padding:18px 28px}
   .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:15px;letter-spacing:3px;text-transform:uppercase;line-height:1.15}
   .brand .logo{width:40px;height:40px;border-radius:10px;display:block;box-shadow:0 0 0 1px rgba(94,138,255,.5),0 0 18px rgba(94,138,255,.35)}
@@ -39,6 +46,14 @@
 </head>
 <body>
 <div class="hl"></div><div class="grid-bg"></div>
+<div class="road" aria-hidden="true">
+  <div class="veh r" style="top:78%;width:330px;animation-duration:24s;animation-delay:-4s"><svg viewBox="0 0 240 70" fill="currentColor"><rect x="0" y="6" width="156" height="46" rx="3"/><path d="M162 18h42l22 20v18h-64z"/><rect x="170" y="23" width="26" height="13" rx="2" fill="#050b24"/><circle cx="34" cy="58" r="10"/><circle cx="62" cy="58" r="10"/><circle cx="124" cy="58" r="10"/><circle cx="196" cy="58" r="10"/></svg></div>
+  <div class="veh l" style="top:66%;width:170px;animation-duration:19s;animation-delay:-1s"><svg viewBox="0 0 130 64" fill="currentColor"><path d="M4 12h66l-1 0h18l24 22v22H4z"/><rect x="92" y="22" width="18" height="11" rx="2" fill="#050b24"/><circle cx="30" cy="54" r="9"/><circle cx="96" cy="54" r="9"/></svg></div>
+  <div class="veh r" style="top:52%;width:250px;animation-duration:21s;animation-delay:-12s"><svg viewBox="0 0 190 70" fill="currentColor"><rect x="0" y="8" width="118" height="44" rx="3"/><path d="M124 22h34l22 18v16h-56z"/><rect x="132" y="27" width="20" height="11" rx="2" fill="#050b24"/><circle cx="28" cy="58" r="10"/><circle cx="92" cy="58" r="10"/><circle cx="154" cy="58" r="10"/></svg></div>
+  <div class="veh l" style="top:40%;width:300px;animation-duration:28s;animation-delay:-9s"><svg viewBox="0 0 240 70" fill="currentColor"><rect x="0" y="6" width="156" height="46" rx="3"/><path d="M162 18h42l22 20v18h-64z"/><rect x="170" y="23" width="26" height="13" rx="2" fill="#050b24"/><circle cx="34" cy="58" r="10"/><circle cx="62" cy="58" r="10"/><circle cx="124" cy="58" r="10"/><circle cx="196" cy="58" r="10"/></svg></div>
+  <div class="veh r" style="top:28%;width:150px;animation-duration:17s;animation-delay:-8s"><svg viewBox="0 0 130 64" fill="currentColor"><path d="M4 12h66l-1 0h18l24 22v22H4z"/><rect x="92" y="22" width="18" height="11" rx="2" fill="#050b24"/><circle cx="30" cy="54" r="9"/><circle cx="96" cy="54" r="9"/></svg></div>
+  <div class="veh l" style="top:14%;width:230px;animation-duration:23s;animation-delay:-3s"><svg viewBox="0 0 190 70" fill="currentColor"><rect x="0" y="8" width="118" height="44" rx="3"/><path d="M124 22h34l22 18v16h-56z"/><rect x="132" y="27" width="20" height="11" rx="2" fill="#050b24"/><circle cx="28" cy="58" r="10"/><circle cx="92" cy="58" r="10"/><circle cx="154" cy="58" r="10"/></svg></div>
+</div>
 <header><div class="brand"><img class="logo" src="/logo.jpg" alt="RKL" width="40" height="40"><div>RKL Opava<small>Rozcestník</small></div></div></header>
 <main>
   <h1>Kam chceš jít?</h1>
