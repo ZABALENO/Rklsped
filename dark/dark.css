@@ -1,0 +1,133 @@
+/* TMAVÝ REŽIM – barvy a tapeta z rozcestníku (font, text a zalamování zůstávají) */
+html.dark{--bg:#04123f;--panel:rgba(9,15,40,.84);--ink:#e9edf7;--muted:#8793ad;--line:rgba(94,138,255,.26);--navy:#4d7bff;--navy-2:#6a91ff;--accent:#f2a516;--ok:#3ddc97;--ok-bg:rgba(61,220,151,.16);--today:rgba(242,165,22,.14);color-scheme:dark;background:#04123f}
+html.dark body{background:#04123f;color:#e9edf7}
+html.dark body::before{inset:-16px;background:url(/bg.jpg) center/cover no-repeat!important;filter:grayscale(1) contrast(1.35) brightness(.3) blur(1px)!important;z-index:-3}
+html.dark body::after{z-index:-2;background:
+ linear-gradient(rgba(94,138,255,.12) 1px,transparent 1px) 0 0/56px 56px,
+ linear-gradient(90deg,rgba(94,138,255,.12) 1px,transparent 1px) 0 0/56px 56px,
+ radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.16),transparent 60%),linear-gradient(160deg,rgba(0,3,20,.9),rgba(4,14,56,.86))}
+/* hlavička */
+html.dark header{background:rgba(4,10,34,.82);border-bottom:1px solid rgba(94,138,255,.35);box-shadow:0 0 30px -6px rgba(94,138,255,.45)}
+html.dark .chip,html.dark .srchbtn,html.dark .detbtn,html.dark .seg{background:rgba(94,138,255,.14);border:1px solid rgba(94,138,255,.28)}
+html.dark .srchbtn:hover,html.dark .srchbtn[aria-pressed=true],html.dark .detbtn:hover{background:rgba(94,138,255,.3)}
+html.dark .seg{padding:2px}
+html.dark .chip.sold b,html.dark .chip.sum b{color:#3ddc97}
+html.dark .chip.prov b{color:#f2a516}
+html.dark #q{background:rgba(4,10,34,.85);color:#e9edf7;border:1px solid rgba(94,138,255,.4)}
+html.dark #q::placeholder{color:#8793ad}
+html.dark #q:focus{outline:2px solid #5e8aff}
+html.dark .srchbtn[aria-pressed=true]#codeBtn,html.dark .detbtn[aria-pressed=true],html.dark .seg button[aria-pressed=true]{background:#f2a516;color:#1a1000;border-color:#f2a516}
+/* panely, karty */
+html.dark .panel,html.dark .kpi,html.dark .card,html.dark .settings{background:linear-gradient(155deg,rgba(14,22,52,.88),rgba(4,8,22,.9));border-color:rgba(94,138,255,.32);box-shadow:0 0 36px -10px rgba(94,138,255,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html.dark .kpi.sold{border-left-color:#3ddc97}
+html.dark .banner{background:rgba(242,165,22,.12);border-color:rgba(242,165,22,.5);color:#f6c869}
+html.dark .banner.err{background:rgba(255,107,94,.12);border-color:rgba(255,107,94,.5);color:#ff9a90}
+html.dark .week .b{background:rgba(94,138,255,.45)}
+html.dark .week .d.t .b{background:#3ddc97}
+/* tabulky */
+html.dark thead th,html.dark tr.frow th{background:rgba(6,12,36,.92);color:#8793ad;border-bottom-color:rgba(94,138,255,.3)}
+html.dark tbody td{border-bottom-color:rgba(94,138,255,.2)}
+html.dark tbody tr:nth-child(even){background:rgba(94,138,255,.04)}
+html.dark tbody tr:hover{background:rgba(94,138,255,.13)}
+html.dark tbody tr.is-today{background:rgba(242,165,22,.12)}
+html.dark tbody tr.gone{background:rgba(61,220,151,.18)}
+html.dark tbody tr.ext,html.dark tbody tr.ext:nth-child(even){background:rgba(242,165,22,.12)}
+html.dark tbody tr.ext:hover{background:rgba(242,165,22,.22)}
+html.dark tbody tr.ext td:first-child{box-shadow:inset 4px 0 0 #f2a516}
+html.dark tbody tr.pinned{background:rgba(255,107,94,.2)!important;box-shadow:inset 5px 0 0 #ff6b5e}
+html.dark tbody tr.pinned .route,html.dark tbody tr.pinned .goods{color:#ffb3ab}
+html.dark tbody tr.f-vyvoz{background:rgba(61,220,151,.16)}html.dark tbody tr.f-dovoz{background:rgba(94,138,255,.2)}
+html.dark tbody tr.f-vyvoz:hover{background:rgba(61,220,151,.26)}html.dark tbody tr.f-dovoz:hover{background:rgba(94,138,255,.3)}
+html.dark tbody tr.f-vyvoz td,html.dark tbody tr.f-dovoz td{border-bottom-color:rgba(255,255,255,.12)}
+html.dark tr.fold td{background:rgba(94,138,255,.18);border-bottom-color:rgba(94,138,255,.5);color:#e9edf7}
+html.dark tr.fold[data-drop=vyvoz] td{background:rgba(61,220,151,.24);color:#c9ffe6;border-bottom-color:#3ddc97}
+html.dark tr.fold[data-drop=dovoz] td{background:rgba(94,138,255,.32);color:#d6e2ff;border-bottom-color:#5e8aff}
+html.dark tr.fold[data-drop=none] td{background:rgba(135,147,173,.16);border-bottom-color:rgba(135,147,173,.4)}
+html.dark tr.fold .fcnt{background:#4d7bff;color:#fff}
+html.dark tr.drop-over td{background:rgba(94,138,255,.35)!important;outline-color:#5e8aff}
+html.dark tr.afold td{background:rgba(94,138,255,.16);border-bottom-color:rgba(94,138,255,.4)}
+html.dark tr.afold.car td{background:var(--ch,rgba(94,138,255,.2));border-top-color:var(--cb,#5e8aff)}
+html.dark tr.afold.drv td{background:var(--ct,rgba(94,138,255,.12))}
+html.dark tr.cr>td{background:var(--ct)}
+html.dark tr.afold.none td{background:rgba(242,165,22,.18);border-top-color:#f2a516}
+html.dark tr.afold.drop-over td{outline-color:#5e8aff}
+html.dark tr.manual td{background:rgba(242,165,22,.14)!important}
+html.dark tr.sugg td{background:rgba(61,220,151,.18)!important}
+html.dark tr.sugg-row td{background:rgba(61,220,151,.1)!important}
+html.dark tr.sugg .sq button{background:rgba(4,10,34,.8);color:#3ddc97;border-color:#3ddc97}
+html.dark tr.sugg .sq .sq-yes{background:#3ddc97;color:#04210f}
+html.dark tr.frow input{background:rgba(4,10,34,.85);color:#e9edf7;border-color:rgba(94,138,255,.35)}
+html.dark tr.frow input.on{background:rgba(94,138,255,.25);border-color:#5e8aff}
+html.dark th .arr,html.dark body.t-sf th[data-col]:hover{color:#8ab0ff}
+html.dark body.t-v2 tbody tr[data-key]{color:#e9edf7}
+/* texty a štítky */
+html.dark .cust{color:#8ab0ff}
+html.dark td.c-price{color:#3ddc97}
+html.dark .goods,html.dark .htable .goods{color:#c6cfe4}
+html.dark .route .zip,html.dark .route .z,html.dark .htable .zip{background:rgba(94,138,255,.2);color:#b7c6e8}
+html.dark .route .cd{background:rgba(94,138,255,.16);color:#8793ad}
+html.dark .route .arr,html.dark .route .a{color:#f2a516}
+html.dark .tag.t,html.dark .markbtn[aria-pressed=true]{background:#f2a516;color:#1a1000;border-color:#f2a516}
+html.dark .tag.z,html.dark .tag.u,html.dark .who{background:rgba(94,138,255,.22);color:#b9ceff}
+html.dark .tag.p{background:rgba(255,107,94,.2);color:#ff9a90}
+html.dark .tag.l{background:rgba(61,220,151,.2);color:#7ff0bd}
+html.dark .mk{background:rgba(242,165,22,.22);color:#f6c869}
+html.dark .d.today b{background:rgba(242,165,22,.3);color:#fff}
+html.dark .spz{background:rgba(4,10,34,.9);color:#e9edf7;border-color:#8ab0ff}
+html.dark .spz.none{border-color:#4a5675;color:#6c7794;background:transparent}
+html.dark .pin{color:#6c7794}html.dark .pin:hover{background:rgba(255,107,94,.2);color:#ff9a90}
+html.dark .markbtn .n{background:rgba(94,138,255,.25)}
+html.dark .htable tr.grp td{border-top-color:rgba(94,138,255,.4)}
+/* formuláře, tlačítka */
+html.dark button,html.dark .daynav button{background:rgba(94,138,255,.12);color:#e9edf7;border-color:rgba(94,138,255,.4)}
+html.dark button:hover{background:rgba(94,138,255,.26)}
+html.dark button.primary,html.dark .settings button,html.dark .refbtn,html.dark .mbar button{background:#3f6df0;border-color:#5e8aff;color:#fff}
+html.dark button.primary:hover,html.dark .refbtn:hover{background:#5e8aff}
+html.dark .markbtn[aria-pressed=true],html.dark .markbtn[aria-pressed=true]:hover{background:#f2a516;color:#1a1000}
+html.dark .seg button,html.dark .seg button+button{background:transparent;color:#cfd8ee;border-color:rgba(94,138,255,.3)}
+html.dark .seg button.on{background:#4d7bff;color:#fff}
+html.dark .gear{background:rgba(94,138,255,.14);color:#b7c6e8;opacity:.9;border:1px solid rgba(94,138,255,.28)}
+html.dark .gear[aria-pressed=true]{background:#5e8aff;color:#fff;opacity:1}
+html.dark .diskbtn{color:#8ab0ff;border-color:rgba(94,138,255,.4);background:transparent}html.dark .diskbtn.on{background:#4d7bff;color:#fff}
+html.dark input,html.dark select,html.dark textarea{background:rgba(4,10,34,.85);color:#e9edf7;border-color:rgba(94,138,255,.35)}
+html.dark input::placeholder,html.dark textarea::placeholder,html.dark .note::placeholder{color:#6c7794}
+html.dark .settings input[type=url],html.dark .mbar input,html.dark .scoretools input,html.dark .scoretools select,html.dark .daynav input{background:rgba(4,10,34,.85);color:#e9edf7}
+html.dark .note{background:rgba(94,138,255,.1);color:#e9edf7}
+html.dark .note:hover{border-color:rgba(94,138,255,.4)}
+html.dark .note:focus{background:rgba(4,10,34,.9);border-color:#5e8aff}
+html.dark .note.has{background:rgba(242,165,22,.16);border-color:rgba(242,165,22,.5)}
+html.dark .note.saved{border-color:#3ddc97}
+html.dark textarea.mtext,html.dark input.mdate,html.dark input.mroute{background:rgba(242,165,22,.12);border-color:rgba(242,165,22,.45);color:#e9edf7}
+html.dark .mbar{background:rgba(242,165,22,.1)}
+html.dark .mtag{background:#b87400}
+html.dark .settings .tools a{color:#8ab0ff}
+html.dark .settings .tools .danger{color:#ff9a90;border-color:rgba(255,107,94,.5)}
+html.dark .settings .status.err{color:#ff9a90}
+html.dark .mdel{color:#ff9a90}
+html.dark .diskpop{background:#0a1130;border-color:rgba(94,138,255,.45)}
+html.dark .diskpop button{background:rgba(94,138,255,.14);color:#e9edf7}html.dark .diskpop .go{background:#3f6df0;color:#fff}
+html.dark .diskpop li{border-top-color:rgba(94,138,255,.25)}
+html.dark .toast{background:#0a1130;border:1px solid rgba(94,138,255,.5);color:#e9edf7}
+html.dark .score .tr{background:rgba(94,138,255,.16)}
+html.dark .score .fl{background:#4d7bff}html.dark .score li.lead .fl{background:#f2a516}
+html.dark .soldlist li{border-top-color:rgba(94,138,255,.2)}
+html.dark .soldlist .who{background:rgba(94,138,255,.22);color:#b9ceff}html.dark .soldlist .who.none{background:rgba(135,147,173,.18);color:#8793ad}
+html.dark .soldlist .car{background:rgba(94,138,255,.1);color:#c6cfe4;border-color:rgba(94,138,255,.3)}
+html.dark .soldlist .car.rkl{background:transparent;color:#8793ad}
+html.dark .soldlist .pv.neg{color:#ff9a90}
+html.dark .diag{color:#8793ad}
+/* přetahování – pruh a výběr dopravců */
+html.dark .dock .dk-none{background:#2a3350;color:#e9edf7}
+html.dark #dragGhost{background:#0a1130;color:#e9edf7;border-color:#5e8aff}html.dark #dragGhost b{color:#8ab0ff}
+html.dark #adock .cc{background:#0a1130}
+html.dark #adock .cc h4{color:#0b1330}
+html.dark #adock .dk2{border-top-color:rgba(94,138,255,.25);color:#e9edf7}
+html.dark #adock .dk2.drop-over,html.dark #adock .dk2:hover,html.dark #adock .back.drop-over,html.dark #adock .back:hover{background:rgba(94,138,255,.3);outline-color:#5e8aff}
+html.dark #adock .back{background:#f2a516;color:#1a1000}
+html.dark .v2hist summary{color:#e9edf7}
+html.dark ::selection{background:rgba(94,138,255,.45)}
+/* přepínač – měsíc vpravo nahoře */
+.darkbtn{flex:none;margin-left:6px;width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.13);color:#fff;cursor:pointer}
+.darkbtn:hover{background:rgba(255,255,255,.28)}
+html.dark .darkbtn{background:rgba(242,165,22,.18);border-color:#f2a516;color:#f2a516;box-shadow:0 0 14px rgba(242,165,22,.45)}
+html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
