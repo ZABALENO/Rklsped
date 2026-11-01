@@ -24,25 +24,25 @@
   @keyframes driveL{from{transform:translateX(112vw) scaleX(-1)}to{transform:translateX(-30vw) scaleX(-1)}}
   @media (prefers-reduced-motion:reduce){.veh{animation:none}}
   /* futuristický přechod po kliknutí na dlaždici */
-  #portal{position:fixed;inset:0;z-index:50;pointer-events:none;visibility:hidden;clip-path:circle(0 at var(--x,50%) var(--y,50%));background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.4),transparent 60%),linear-gradient(160deg,#00030f,#04123f);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;color:#fff}
+  #portal{position:fixed;inset:0;z-index:50;pointer-events:none;visibility:hidden;clip-path:inset(0 0 0 100%);background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.4),transparent 60%),linear-gradient(160deg,#00030f,#04123f);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;color:#fff}
   #portal::before{content:"";position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb,var(--pc,#5e8aff) 22%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--pc,#5e8aff) 22%,transparent) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse at 50% 50%,#000 20%,transparent 75%)}
-  #portal .pr{position:absolute;left:var(--x,50%);top:var(--y,50%);width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid var(--pc,#5e8aff);box-shadow:0 0 40px var(--pc,#5e8aff),inset 0 0 40px var(--pc,#5e8aff);opacity:0}
+  #portal .pr{position:absolute;top:0;bottom:0;left:0;width:4px;background:var(--pc,#5e8aff);box-shadow:0 0 40px 10px var(--pc,#5e8aff);opacity:0;transform:translateX(100vw)}
   #portal .pt{position:relative;font:700 clamp(22px,4vw,38px)/1 "IBM Plex Sans",system-ui,sans-serif;letter-spacing:8px;text-transform:uppercase;text-shadow:0 0 30px var(--pc,#5e8aff);opacity:0;transform:scale(.9)}
   #portal .pb{position:relative;width:min(320px,70vw);height:3px;background:rgba(255,255,255,.12);overflow:hidden;opacity:0}
   #portal .pb::after{content:"";position:absolute;inset:0;background:var(--pc,#5e8aff);box-shadow:0 0 14px var(--pc,#5e8aff);transform:scaleX(0);transform-origin:0 50%}
   #portal .ps{position:relative;font:500 11px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:4px;text-transform:uppercase;color:#8793ad;opacity:0}
   body.going #portal{visibility:visible;animation:pOpen .75s cubic-bezier(.65,0,.25,1) forwards}
-  body.going #portal .pr{animation:pRing .75s ease-out forwards}
+  body.going #portal .pr{animation:pRing .75s cubic-bezier(.65,0,.25,1) forwards}
   body.going #portal .pt{animation:pIn .45s .25s ease-out forwards}
   body.going #portal .ps{animation:pIn .45s .3s ease-out forwards}
   body.going #portal .pb{animation:pIn .3s .3s ease-out forwards}
   body.going #portal .pb::after{animation:pBar .5s .3s ease-in forwards}
   body.going main .tile{transition:transform .5s cubic-bezier(.65,0,.25,1),opacity .4s ease,filter .4s ease}
-  body.going main .tile:not(.sel){opacity:0;transform:scale(.88) translateY(14px);filter:blur(5px)}
-  body.going main .tile.sel{transform:scale(1.06);box-shadow:0 0 90px 4px var(--c);border-color:var(--c)}
+  body.going main .tile:not(.sel){opacity:0;transform:translateX(-60px);filter:blur(5px)}
+  body.going main .tile.sel{transform:translateX(-30px);box-shadow:0 0 90px 4px var(--c);border-color:var(--c)}
   body.going header,body.going h1,body.going p.lead,body.going footer{opacity:0;transition:opacity .35s}
-  @keyframes pOpen{from{clip-path:circle(0 at var(--x,50%) var(--y,50%))}to{clip-path:circle(150vmax at var(--x,50%) var(--y,50%))}}
-  @keyframes pRing{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(26)}}
+  @keyframes pOpen{from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0 0 0 0)}}
+  @keyframes pRing{0%{opacity:1;transform:translateX(100vw)}85%{opacity:1}100%{opacity:0;transform:translateX(0)}}
   @keyframes pIn{to{opacity:1;transform:none}}
   @keyframes pBar{to{transform:scaleX(1)}}
   @media (prefers-reduced-motion:reduce){body.going #portal,body.going #portal *{animation-duration:.01s!important;animation-delay:0s!important}}
