@@ -92,6 +92,7 @@
   tr.today td:first-child::after{content:" • dnes";color:var(--lm);font-size:11px}
 
   .phones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 18px}
+  .phones[hidden]{display:none}
   .ph{align-self:start}.ph.empty{order:0}.ph.empty .dev{display:none}.ph.empty .t{cursor:pointer;padding:9px 12px;border:1px dashed var(--c);opacity:.7;margin:0}.ph.empty .t:hover{opacity:1;background:rgba(94,138,255,.08)}.ph .t{cursor:pointer}
   .ph .t{display:flex;align-items:center;gap:9px;margin-bottom:8px;font:700 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:2px;text-transform:uppercase}
   .ph .t i{width:10px;height:10px;transform:rotate(45deg);box-shadow:0 0 10px currentColor}
@@ -399,8 +400,8 @@
   </div>
 
 
-  <div class="sec">Jak agenta využíváme</div>
-  <div class="phones" id="phones"></div>
+  <div class="sec" id="phSec" role="button" tabindex="0" aria-expanded="false" aria-controls="phones" style="cursor:pointer;user-select:none"><span id="phArr" aria-hidden="true">▸</span> Jak agenta využíváme</div>
+  <div class="phones" id="phones" hidden></div>
   <button class="adminbtn" id="adminBtn" type="button" aria-expanded="false" aria-controls="admin">admin</button>
   <div id="admin" hidden>
     <div class="sec">Přehled problémů agentů</div>
@@ -908,6 +909,15 @@
   document.getElementById('skinBtn').onclick = function () { skin = (skin + 1) % NAMES.length; try { localStorage.setItem(KEY, skin); } catch (e) {} apply(true); };
   var t = document.getElementById('hudT'); function clk() { if (t) t.textContent = new Date().toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague' }); } clk(); setInterval(clk, 1000);
   apply(false);
+})();
+</script>
+<script>
+(function(){var s=document.getElementById('phSec'),p=document.getElementById('phones'),a=document.getElementById('phArr');if(!s||!p)return;
+ function set(o){p.hidden=!o;s.setAttribute('aria-expanded',o?'true':'false');a.textContent=o?'▾':'▸';try{localStorage.setItem('rklAiPhones',o?'1':'0')}catch(e){}}
+ var o=false;try{o=localStorage.getItem('rklAiPhones')==='1'}catch(e){}
+ set(o);
+ s.addEventListener('click',function(){set(p.hidden)});
+ s.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();set(p.hidden)}});
 })();
 </script>
 <script src="/iptv.js" defer></script>
