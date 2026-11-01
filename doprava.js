@@ -101,6 +101,14 @@ async function updateAgents(counts) {
 /* ---------- HTTP ---------- */
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+// airkl.cz a www.airkl.cz = rozcestník (Doprava / Spedice / AI); dashboard běží na dashboard.airkl.cz
+app.use((req, res, next) => {
+  const h = String(req.headers.host || '').split(':')[0].toLowerCase();
+  if (h !== 'airkl.cz' && h !== 'www.airkl.cz') return next();
+  if (req.path === '/' || req.path === '/index.html') return res.sendFile(path.join(__dirname, 'rozcestnik', 'index.html'));
+  if (['/bg.jpg', '/logo.jpg', '/favicon.png'].includes(req.path)) return next();
+  res.redirect(302, 'https://dashboard.airkl.cz' + req.originalUrl);
+});
 
 // ---------- AI dashboard: vlastní heslo (AI_PASSWORD), nezávislé na hlavním přihlášení ----------
 const crypto = require('crypto');
