@@ -1,0 +1,38 @@
+/* SVĚTLÝ MOTIV – denní: modrá obloha, skleněné světlé dlaždice, sytější akcenty */
+html.light body{background:#dbe6fa;color:#0f1b3d}
+html.light body::before{filter:grayscale(.55) contrast(1.05) brightness(1.12) saturate(.9) blur(2px)!important;opacity:1}
+html.light .hl{opacity:.08;mix-blend-mode:multiply;filter:grayscale(1) contrast(2) brightness(1) blur(1.3px)}
+html.light body::after{background:radial-gradient(900px 520px at 12% -10%,rgba(94,138,255,.3),transparent 62%),radial-gradient(760px 520px at 92% 110%,rgba(242,165,22,.26),transparent 62%),linear-gradient(160deg,rgba(234,241,255,.6),rgba(200,216,246,.62))}
+html.light .grid-bg{background-image:linear-gradient(rgba(47,91,214,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(47,91,214,.13) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(15,27,61,.03) 0 1px,transparent 1px 3px)}
+html.light .veh{color:#1d388f;opacity:.09}
+html.light header .brand,html.light .brand{color:#12235a}
+html.light .brand small{color:#51597a}
+html.light .aitag{color:#1d388f;border-color:#2f5bd6;background:rgba(47,91,214,.12);box-shadow:0 0 12px rgba(47,91,214,.35),inset 0 0 8px rgba(47,91,214,.15);text-shadow:none}
+html.light h1,html.light .pickh h1{color:#0f1b3d;text-shadow:0 0 26px rgba(94,138,255,.5)}
+html.light p.lead,html.light .pickh p{color:#51597a}
+html.light footer{color:#0f1b3d;opacity:.5}
+html.light a.tile,html.light .tabs button.tile{color:#0f1b3d;background:linear-gradient(155deg,rgba(255,255,255,.86),rgba(226,236,255,.8));border-color:color-mix(in srgb,var(--c) 70%,transparent);box-shadow:0 10px 36px -14px var(--c),0 0 0 1px rgba(255,255,255,.6) inset}
+html.light a.tile:hover,html.light a.tile:focus-visible,html.light .tabs button.tile:hover,html.light .tabs button.tile:focus-visible{background:linear-gradient(155deg,#fff,rgba(214,228,255,.92));box-shadow:0 16px 46px -10px var(--c)}
+html.light a.tile:nth-of-type(1),html.light .tabs button.tile:nth-child(1){--c:#2f5bd6!important}
+html.light a.tile:nth-of-type(2),html.light .tabs button.tile:nth-child(2){--c:#0f9d6a!important}
+html.light a.tile:nth-of-type(3),html.light .tabs button.tile:nth-child(3){--c:#d98a00!important}
+html.light .tile .hud,html.light .hud{color:#51597a}
+html.light .tile h2,html.light .tile .tt{color:#0f1b3d;text-shadow:none}
+html.light .tile p,html.light .tile .td{color:#3d4a6e}
+html.light .tile .ic{background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--c) 22%,#fff),transparent 75%);box-shadow:0 0 14px -4px var(--c)}
+html.light .tile .ic svg,html.light .ic svg{filter:none}
+html.light .tile .go{color:var(--c)}
+html.light .tile::before,html.light .tile::after,html.light a.tile::before,html.light a.tile::after{box-shadow:none}
+html.light form{background:linear-gradient(155deg,rgba(255,255,255,.9),rgba(226,236,255,.86));border-color:rgba(47,91,214,.55);box-shadow:0 14px 44px -14px rgba(47,91,214,.55)}
+html.light form::before{background:#2f5bd6;box-shadow:none}
+html.light .b{color:#0f1b3d}html.light .b small,html.light label{color:#51597a}
+html.light input{background:#fff;color:#0f1b3d;border-color:rgba(47,91,214,.55)}
+html.light input:focus{box-shadow:0 0 10px rgba(47,91,214,.4)}
+html.light form button:not(.backl){background:#2f5bd6;border-color:#2f5bd6;color:#fff}
+html.light form button:not(.backl):hover{background:#1d46b8}
+html.light .backl{color:#2f5bd6}
+html.light .e{color:#c0392b}
+html.light .rklback{background:rgba(255,255,255,.7);color:#1d388f;border-color:rgba(47,91,214,.55);box-shadow:none}
+/* přepínač motivu – měsíc vpravo nahoře */
+.thbtn{position:fixed;right:14px;top:14px;z-index:300;width:36px;height:36px;margin:0;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid #f2a516;background:rgba(242,165,22,.16);color:#f2a516;box-shadow:0 0 14px rgba(242,165,22,.45);cursor:pointer}
+html.light .thbtn{border-color:#2f5bd6;background:rgba(255,255,255,.7);color:#2f5bd6;box-shadow:0 2px 10px rgba(47,91,214,.25)}
