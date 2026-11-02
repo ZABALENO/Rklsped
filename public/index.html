@@ -44,6 +44,9 @@
   #q:focus{outline:2px solid #ffd77a}
   .route .cd{font-size:.72em;font-weight:500;color:#5d6b80;background:#f1f4f8;border-radius:3px;padding:0 4px;vertical-align:1px}
   .chg{font-weight:600;font-size:12px;opacity:1;margin-top:1px}
+  .odhl{flex:none;margin-left:6px;height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:17px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.13);color:#fff;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+  .odhl:hover{background:rgba(255,255,255,.28)}
+  html.dark .odhl{border-color:rgba(242,165,22,.6);color:#f2a516;background:rgba(242,165,22,.1)}
   .clock{font-size:12.5px;opacity:.85;text-align:right;white-space:nowrap;flex:none}
 
   main{max-width:1320px;margin:0 auto;padding:12px 20px 30px}
@@ -565,6 +568,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
       <div class="srch"><button class="srchbtn" id="srchBtn" aria-pressed="false" title="Hledat v seznamu (jako Ctrl+F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Hledat</button><input id="q" type="search" placeholder="Hledat v seznamu…" aria-label="Hledat" autocomplete="off" hidden></div>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="chg"></div></div>
+  <a class="odhl" href="/logout" title="Odhlásit se">Odhlásit</a>
   </div>
 </header>
 
@@ -639,7 +643,6 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   <button class="gear" id="tv2Btn" aria-pressed="false" title="Slidy: velké písmo, několik přeprav na slide, automatické přepínání">TV 2 (slidy)</button>
   <button class="gear tvset" id="perBtn" title="Počet přeprav na jednom slidu (TV 2)">5 na slide</button>
   <button class="gear tvset" id="secBtn" title="Doba zobrazení jednoho slidu (TV 2)">20 s</button>
-  <a class="gear" href="/logout" title="Odhlásit" style="text-decoration:none">Odhlásit</a>
   </div>
   <div class="settings" id="settings">
     <div class="row">

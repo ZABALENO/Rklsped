@@ -25,6 +25,9 @@
   .brand img{width:34px;height:34px;border-radius:7px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
   .brand small{display:block;font-weight:400;font-size:12px;opacity:.8}
   .chg{font-weight:600;font-size:12px;margin-top:1px}
+  .odhl{flex:none;margin-left:6px;height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:17px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.13);color:#fff;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
+  .odhl:hover{background:rgba(255,255,255,.28)}
+  html.dark .odhl{border-color:rgba(242,165,22,.6);color:#f2a516;background:rgba(242,165,22,.1)}
   .clock{font-size:12.5px;opacity:.9;text-align:right;white-space:nowrap}
 
   main{max-width:1400px;margin:0 auto;padding:8px 20px 16px}
@@ -412,6 +415,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
       <button class="detbtn" id="detBtn" aria-pressed="false" title="Zobrazit / skrýt poznámky CODE u měst">Detaily</button>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="sUpd"></div></div>
+  <a class="odhl" href="/logout" title="Odhlásit se">Odhlásit</a>
   </div>
 </header>
 
@@ -467,7 +471,6 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   <button class="gear" id="tv2Btn" aria-pressed="false" title="Slidy: velké písmo, několik přeprav na slide, automatické přepínání">TV 2 (slidy)</button>
   <button class="gear tvset" id="perBtn" title="Počet přeprav na jednom slidu (TV 2)">4 na slide</button>
   <button class="gear tvset" id="secBtn" title="Doba zobrazení jednoho slidu (TV 2)">20 s</button>
-  <a class="gear" href="/logout">Odhlásit</a>
   <div class="settings" id="settings">
     <div class="row">
       <label for="url">Odkaz na tabulku</label>
