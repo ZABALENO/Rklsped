@@ -427,7 +427,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   </section>
 
   <section class="panel pg-table" id="spPanel" hidden>
-    <div class="sphead"><span class="ttl">RKL Spedice – přepravy v prodeji</span>
+    <div class="sphead"><span class="ttl">RKL Spedice – připnuté přepravy</span>
       <span class="k">Dnes prodáno<b class="num" id="spSold">–</b></span><span class="k">Dnes k prodeji<b class="num" id="spOpen">–</b></span>
       <span class="st" id="spSt"></span></div>
     <table class="sptable">
@@ -580,8 +580,8 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     const tag = diff === 0 ? '<span class="tg">DNES</span>' : diff === 1 ? '<span class="tg z">ZÍTRA</span>' : diff < 0 ? '<span class="tg z">MINULÉ</span>' : '';
     return `<span class="num">${d.getDate()}. ${d.getMonth() + 1}.</span>${tag}<span class="dn">${DOW[d.getDay()]} ${d.getFullYear()}</span>`;
   }
-  // ve „Střídat“ se z RKL Spedice ukazují jen připnuté (urgentní) přepravy
-  const spList = () => (SP && SP.offered ? (view === 'a' ? SP.offered.filter(r => r.pinned) : SP.offered) : []);
+  // z RKL Spedice se v pohledu „Spedice“ i „Střídat“ ukazují vždy jen připnuté (pin / urgentní) přepravy
+  const spList = () => (SP && SP.offered ? SP.offered.filter(r => r.pinned) : []);
   const spHasPins = () => !!(SP && SP.ok && SP.offered && SP.offered.some(r => r.pinned));
   function renderSp() {
     const body = $('spRows');
@@ -605,7 +605,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
         <td class="sp-note">${esc((SP.notes && SP.notes[r.key]) || '')}</td></tr>`;
     }).join('');
     const e = $('spEmpty'); e.hidden = spList().length > 0;
-    if (!spList().length) e.innerHTML = view === 'a' ? '<b>Žádná připnutá přeprava.</b>' : '<b>Nic k prodeji.</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(SP.until) + '.';
+    if (!spList().length) e.innerHTML = '<b>Žádná připnutá přeprava.</b>';
   }
   async function loadSp(force) {
     if (spBusy || (!force && Date.now() - spLoadedAt < 25000)) return;
