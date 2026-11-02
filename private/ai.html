@@ -876,8 +876,8 @@
 /* skiny: hvězdička v liště přepíná 0 (základ) → 1 Pulse → 2 Network → 3 Neon → 4 Hologram → 5 Terminál; volba se pamatuje v prohlížeči */
 (function () {
   var NAMES = ['Základ', '1 · Pulse', '2 · Network', '3 · Neon', '4 · Hologram', '5 · Terminál'];
-  var KEY = 'rkl_ai_skin', skin = 2;
-  // vždy se startuje se skinem Network (2); hvězdička přepíná jen do obnovení stránky
+  var KEY = 'rkl_ai_skin', skin = 0;
+  // vždy se startuje se skinem Základ (0); hvězdička přepíná jen do obnovení stránky
   var c = document.getElementById('net'), x = c.getContext('2d'), W, H, P = [], drops = [], raf = 0, reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   function size() { W = c.width = innerWidth; H = c.height = innerHeight; var n = Math.min(70, Math.round(W * H / 22000)); while (P.length < n) P.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35 }); P.length = n; drops = []; for (var i = 0; i < Math.ceil(W / 18); i++) drops.push(Math.random() * H / 18); }
   size(); addEventListener('resize', size);
