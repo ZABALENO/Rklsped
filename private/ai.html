@@ -123,6 +123,8 @@
   .rich .use{display:flex;gap:10px;align-items:center}
   .rich .use svg{width:92px;flex:none}
   .daynav{align-items:center;gap:10px}.daynav .dlbl{font:700 14px Inter,sans-serif;min-width:190px;text-align:center}.daynav button{font-size:18px;line-height:1;padding:3px 14px}.daynav button:disabled{opacity:.3;cursor:default}
+  .agord{margin-left:auto;display:inline-flex;align-items:baseline;gap:6px;color:#3ddc84;white-space:nowrap}.agord b{font:900 26px/1 Inter,sans-serif;text-shadow:0 0 12px rgba(61,220,132,.45)}.agord small{font:700 10px Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;opacity:.85}
+  [data-theme="day"] .agord{color:#0f7a3d}[data-theme="day"] .agord b{text-shadow:none}
   .tgl[hidden]{display:none}.tgl{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}.tgl button{background:transparent;color:var(--mut);border:1px solid rgba(94,138,255,.35);padding:5px 12px;font:600 12px Inter,sans-serif;cursor:pointer;border-radius:3px}.tgl button.on{background:rgba(94,138,255,.22);color:var(--tx,#fff);border-color:#5e8aff}
   .pdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}.pdt{font-weight:700;font-size:14px;margin-bottom:4px}.pdt span{color:var(--mut);font-weight:500;font-size:12px;margin-left:8px}
   .tblwrap{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th,.tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid rgba(94,138,255,.14);white-space:nowrap}.tbl th:first-child,.tbl td:first-child{text-align:left}.tbl small{color:var(--mut);font-weight:400}.tbl .z{color:var(--mut)}.tbl tr.today td{background:rgba(94,138,255,.08)}.tbl tr.we td{opacity:.6}.tbl b.ag{color:#3ddc84}.tbl b.mn{color:#f2a516}.tbl td.tot{font-weight:700}
@@ -485,7 +487,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord';
+  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord';
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -502,6 +504,7 @@
       wk = weekRange(weekOff);
       items.forEach(x => { const z = { pA: 0, pM: 0, tA: 0, tM: 0 }; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) for (const f in z) z[f] += d.rels[x.key][f] || 0; x.oA = z.pA; x.tA = z.tA; x.oM = z.pM; x.tM = z.tM; x.a = z.pA + z.tA; x.m = z.pM + z.tM; });
     }
+    agOrders = items.reduce((t, x) => t + (x.oA || 0), 0);
     if (kindMode !== 'all') {
       const ord = kindMode === 'ord';
       items.forEach(x => {
@@ -653,6 +656,8 @@
     if (barMode === 'day') dn.innerHTML = `<button type="button" data-d="1" ${dayOff >= 7 ? 'disabled' : ''} aria-label="Předchozí den">‹</button><span class="dlbl">${dayLbl(dayOff)}</span><button type="button" data-d="-1" ${dayOff <= 0 ? 'disabled' : ''} aria-label="Další den">›</button>`;
     const wt = $('weekTgl'); wt.hidden = barMode !== 'week';
     if (barMode === 'week') wt.innerHTML = WEEK_NAMES.map((n, i) => { const r = weekRange(i); return `<button type="button" data-w="${i}" class="${i === weekOff ? 'on' : ''}" title="${fmtD(r[0])} – ${fmtD(r[1])}">${n}</button>`; }).join('');
+    document.querySelectorAll('.agord').forEach(e => e.remove());
+    { const host = barMode === 'day' ? dn : barMode === 'week' ? wt : $('barTgl'); const sp = document.createElement('span'); sp.className = 'agord'; sp.title = 'Objednávky zadané agentem ve zvoleném období'; sp.innerHTML = '<b>' + nf.format(agOrders) + '</b><small>obj. agent</small>'; host.appendChild(sp); }
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
