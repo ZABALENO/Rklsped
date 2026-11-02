@@ -223,15 +223,15 @@
   }
 </style>
 
-<!--DARK--><style id="darkcss">
+<!--BACK--><script>(function(){var css='.rklback{flex:none;width:34px;height:34px;padding:0;margin-right:4px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(94,138,255,.55);background:rgba(94,138,255,.18);color:#fff;cursor:pointer;box-shadow:0 0 14px -2px rgba(94,138,255,.5);font:inherit}.rklback:hover{background:rgba(94,138,255,.35)}.rklback.fx{position:fixed;left:10px;top:10px;z-index:300;margin:0;background:rgba(4,10,34,.8)}.rklback svg{display:block}@media print{.rklback{display:none}}';function go(){var r=document.referrer,same=false;try{var u=new URL(r);same=u.origin===location.origin&&u.pathname.indexOf('/login')>=0}catch(e){}if(r&&history.length>1&&!same)history.back();else location.href='https://airkl.cz/';}function init(){if(document.getElementById('rklBack'))return;var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);var b=document.createElement('button');b.type='button';b.id='rklBack';b.className='rklback';b.title='Zpět na předchozí stránku';b.setAttribute('aria-label','Zpět');b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';b.onclick=go;var h=document.querySelector('header .bar')||document.querySelector('header');if(h)h.insertBefore(b,h.firstChild);else{b.className+=' fx';document.body.appendChild(b)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();</script><!--/BACK--><!--DARK--><style id="darkcss">
 /* TMAVÝ REŽIM – barvy a tapeta z rozcestníku (font, text a zalamování zůstávají) */
 html.dark{--bg:#04123f;--panel:rgba(9,15,40,.84);--ink:#e9edf7;--muted:#8793ad;--line:rgba(94,138,255,.26);--navy:#4d7bff;--navy-2:#6a91ff;--accent:#f2a516;--ok:#3ddc97;--ok-bg:rgba(61,220,151,.16);--today:rgba(242,165,22,.14);color-scheme:dark;background:#04123f}
-html.dark body{background:#04123f;color:#e9edf7}
-html.dark body::before{inset:-16px;background:url(/bg.jpg) center/cover no-repeat!important;filter:grayscale(1) contrast(1.35) brightness(.3) blur(1px)!important;z-index:-3}
-html.dark body::after{z-index:-2;background:
- linear-gradient(rgba(94,138,255,.12) 1px,transparent 1px) 0 0/56px 56px,
- linear-gradient(90deg,rgba(94,138,255,.12) 1px,transparent 1px) 0 0/56px 56px,
- radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.16),transparent 60%),linear-gradient(160deg,rgba(0,3,20,.9),rgba(4,14,56,.86))}
+html.dark body{background:transparent;color:#e9edf7}
+/* pozadí totožné s přihlášením na /ai: ztmavená černobílá fotka + prosvítající vrstva, modrý závoj a maskovaná mřížka */
+html.dark::before{content:"";position:fixed;inset:-16px;z-index:-4;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.5) blur(1px)}
+html.dark:root body::before{content:"";position:fixed;inset:-16px;z-index:-3;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat!important;filter:grayscale(1) contrast(3.2) brightness(.85) blur(1.3px)!important;mix-blend-mode:screen;opacity:.45}
+html.dark:root body::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,6,34,.78),rgba(8,24,86,.72))}
+html.dark::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(94,138,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.14) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);background-size:48px 48px,48px 48px,auto;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%)}
 /* hlavička */
 html.dark header{background:rgba(4,10,34,.82);border-bottom:1px solid rgba(94,138,255,.35);box-shadow:0 0 30px -6px rgba(94,138,255,.45)}
 html.dark .chip,html.dark .srchbtn,html.dark .detbtn,html.dark .seg{background:rgba(94,138,255,.14);border:1px solid rgba(94,138,255,.28)}
@@ -395,7 +395,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   setInterval(paint,60000);
   document.addEventListener('visibilitychange',paint);
 })();
-</script><!--/DARK--><!--BACK--><script>(function(){var css='.rklback{flex:none;width:34px;height:34px;padding:0;margin-right:4px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(94,138,255,.55);background:rgba(94,138,255,.18);color:#fff;cursor:pointer;box-shadow:0 0 14px -2px rgba(94,138,255,.5);font:inherit}.rklback:hover{background:rgba(94,138,255,.35)}.rklback.fx{position:fixed;left:10px;top:10px;z-index:300;margin:0;background:rgba(4,10,34,.8)}.rklback svg{display:block}@media print{.rklback{display:none}}';function go(){var r=document.referrer,same=false;try{var u=new URL(r);same=u.origin===location.origin&&u.pathname.indexOf('/login')>=0}catch(e){}if(r&&history.length>1&&!same)history.back();else location.href='https://airkl.cz/';}function init(){if(document.getElementById('rklBack'))return;var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);var b=document.createElement('button');b.type='button';b.id='rklBack';b.className='rklback';b.title='Zpět na předchozí stránku';b.setAttribute('aria-label','Zpět');b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';b.onclick=go;var h=document.querySelector('header .bar')||document.querySelector('header');if(h)h.insertBefore(b,h.firstChild);else{b.className+=' fx';document.body.appendChild(b)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();</script><!--/BACK--></head>
+</script><!--/DARK--></head>
 <body>
 <header>
   <div class="bar">

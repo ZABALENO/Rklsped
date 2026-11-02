@@ -1,11 +1,11 @@
 /* TMAVÝ REŽIM – barvy a tapeta z rozcestníku (font, text a zalamování zůstávají) */
 html.dark{--bg:#04123f;--panel:rgba(9,15,40,.84);--ink:#e9edf7;--muted:#8793ad;--line:rgba(94,138,255,.26);--navy:#4d7bff;--navy-2:#6a91ff;--accent:#f2a516;--ok:#3ddc97;--ok-bg:rgba(61,220,151,.16);--today:rgba(242,165,22,.14);color-scheme:dark;background:#04123f}
-html.dark body{background:#04123f;color:#e9edf7}
-html.dark body::before{inset:-16px;background:url(/bg.jpg) center/cover no-repeat!important;filter:grayscale(1) contrast(1.35) brightness(.3) blur(1px)!important;z-index:-3}
-html.dark body::after{z-index:-2;background:
- linear-gradient(rgba(94,138,255,.12) 1px,transparent 1px) 0 0/56px 56px,
- linear-gradient(90deg,rgba(94,138,255,.12) 1px,transparent 1px) 0 0/56px 56px,
- radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.16),transparent 60%),linear-gradient(160deg,rgba(0,3,20,.9),rgba(4,14,56,.86))}
+html.dark body{background:transparent;color:#e9edf7}
+/* pozadí totožné s přihlášením na /ai: ztmavená černobílá fotka + prosvítající vrstva, modrý závoj a maskovaná mřížka */
+html.dark::before{content:"";position:fixed;inset:-16px;z-index:-4;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.5) blur(1px)}
+html.dark:root body::before{content:"";position:fixed;inset:-16px;z-index:-3;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat!important;filter:grayscale(1) contrast(3.2) brightness(.85) blur(1.3px)!important;mix-blend-mode:screen;opacity:.45}
+html.dark:root body::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,6,34,.78),rgba(8,24,86,.72))}
+html.dark::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(94,138,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.14) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);background-size:48px 48px,48px 48px,auto;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%)}
 /* hlavička */
 html.dark header{background:rgba(4,10,34,.82);border-bottom:1px solid rgba(94,138,255,.35);box-shadow:0 0 30px -6px rgba(94,138,255,.45)}
 html.dark .chip,html.dark .srchbtn,html.dark .detbtn,html.dark .seg{background:rgba(94,138,255,.14);border:1px solid rgba(94,138,255,.28)}
