@@ -30,7 +30,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
 /* ================= instance dashboardu (hlavní + relace Vnitro 1) ================= */
 // Každá instance má vlastní úložiště (tabulku v databázi), vlastní zdrojovou tabulku a vlastní stav.
-function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName }) {
+function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName, alwaysFilter }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
 const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl', 'hist', 'carr', 'asg'];
@@ -137,7 +137,7 @@ async function refreshSheet(force) {
       // když existuje samostatný list s názvem relace (např. „Vnitro 2“), jsou v něm jen její řádky a filtr se nepoužije
       const own = sheetName && out.sheet && deacc(out.sheet).replace(/\s+/g, '') === deacc(sheetName).replace(/\s+/g, '');
       out.ownSheet = !!own;
-      if (rowFilter && !own) { const all = out.rows.length; out.rows = rowFilter(out.rows, out); out.hiddenByFilter = all - out.rows.length; }
+      if (rowFilter && (!own || alwaysFilter)) { const all = out.rows.length; out.rows = rowFilter(out.rows, out); out.hiddenByFilter = all - out.rows.length; }
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
       await require('./lib/change').trackChange(mem.cfg, put, out, url);
       await evaluateSales(out.rows);
@@ -166,7 +166,7 @@ function board(rate) {
   const until = addWorkdays(today, HORIZON_WORKDAYS);
   const pinT = k => (mem.pin[k] ? mem.pin[k].t : null);
   const offered = sheet.rows
-    .filter(r => !hasPZ(r.prepr) && (!['vnitro1', 'vnitro2'].includes(id) || !String(r.prepr || '').trim()) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
+    .filter(r => !hasPZ(r.prepr) && (!['vnitro1', 'vnitro2', 'stavba'].includes(id) || !String(r.prepr || '').trim()) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
     .map(({ key, order, date, route, goods, weight, code, codeU, cust, dateLoadTo, zipTo, incCzk, incEur }) => ({ key, order, date, route, goods, weight, cust, dateLoadTo, zipTo, incCzk, incEur, codeL: code, codeU, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
     .sort((a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0)
       || (a.date || '9999').localeCompare(b.date || '9999'));
@@ -270,7 +270,9 @@ const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json', rowFi
 const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const vnitro2Filter = byRelace(/vnitro\s*2/);
 const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sheetName: 'Vnitro 2', sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
-const tenants = { main, vnitro1: v1, vnitro2: v2 };
+const stavbaFilter = byRelace(/vnitro\s*3/);
+const stv = makeTenant({ id: 'stavba', table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
+const tenants = { main, vnitro1: v1, vnitro2: v2, stavba: stv };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
 const app = express();
@@ -283,6 +285,7 @@ const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
   if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
+  if (req.t.id === 'stavba') h = h.replace('<body>', '<body class="t-v1 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Stavba<small>Nenaložené objednávky – Vnitro 3</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Stavba</title>');
   if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf t-asg">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
@@ -321,7 +324,7 @@ async function logHist(req, act, to, label) {
   const ks = Object.keys(t.mem.hist).sort();
   for (const k of ks.slice(0, Math.max(0, ks.length - 1000))) await t.put('hist', k, null);
 }
-const needSF = (req, res) => { if (!['vnitro1', 'vnitro2'].includes(req.t.id)) { res.status(404).json({ error: 'Tato funkce je jen v relacích Vnitro.' }); return false; } return true; };
+const needSF = (req, res) => { if (!['vnitro1', 'vnitro2', 'stavba'].includes(req.t.id)) { res.status(404).json({ error: 'Tato funkce je jen v relacích Vnitro.' }); return false; } return true; };
 
 // ---- Vnitro 1: poddopravci a řidiči (import z xlsx) + přiřazení objednávek drag & drop ----
 const carriersFor = t => (t.sheet && t.sheet.carriers && t.sheet.carriers.length) ? t.sheet.carriers : ((t.mem.carr.list && t.mem.carr.list.carriers) || []);
