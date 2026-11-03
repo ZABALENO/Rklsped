@@ -326,7 +326,7 @@ const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vni
 const vnitro2Filter = byRelace(/vnitro\s*2/);
 const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sheetName: 'Vnitro 2', sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const stavbaFilter = byRelace(/vnitro\s*3/);
-const stv = makeTenant({ id: 'stavba', dbTab: 'Stavba-databáze', table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
+const stv = makeTenant({ id: 'stavba', table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const tenants = { main, vnitro1: v1, vnitro2: v2, stavba: stv };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
