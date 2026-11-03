@@ -209,7 +209,9 @@
   body.t-sf td.c-cust{width:15%;white-space:normal}
   input.mdate,input.mroute{border:1px solid #e3d48a;background:#fffdf0;border-radius:6px;padding:6px 8px;font:inherit;width:100%;box-sizing:border-box}
   .mnote{display:flex;align-items:center;gap:8px}.mnote .mtag{margin:0}
-  .c-cust{display:none}body.t-sf th.c-cust,body.t-sf td.c-cust{display:table-cell}
+  .c-unl,.c-co{display:none}body.t-st th.c-unl,body.t-st td.c-unl,body.t-st th.c-co,body.t-st td.c-co{display:table-cell}
+  body.t-st td.c-unl{white-space:nowrap;width:108px}body.t-st td.c-co{white-space:normal;width:130px;word-break:break-word}body.t-st .c-w{display:none!important}body.t-st td.c-goods{width:14%}body.t-st td.c-route{min-width:190px}body.t-st td.c-note{width:18%;min-width:150px}body.t-st td.c-cust{width:12%}body.t-st main{max-width:none}
+  .c-cust{display:none}body.t-sf th.c-cust,body.t-sf td.c-cust,body.t-sf td.c-cust{display:table-cell}
   .cust{font-weight:600;color:#1d388f;word-break:break-word}
   td.c-route{min-width:270px}
   td.c-date{white-space:nowrap;width:108px;padding-left:6px}
@@ -368,7 +370,7 @@
     td.c-chk .chk span{display:none}
     td.c-date{grid-column:2}
     td.c-w{grid-column:3;grid-row:1;text-align:right}
-    td.c-route,td.c-cust,td.c-goods,td.c-note{grid-column:2/4}
+    td.c-route,td.c-cust,td.c-goods,td.c-note,td.c-unl,td.c-co{grid-column:2/4}
     td.c-price{grid-column:3;grid-row:2;text-align:right;width:auto}
     td.c-note{margin-top:6px}
     .kpi .big{font-size:32px}
@@ -596,7 +598,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     <div class="v2hint" id="v2hint">☑ Zaškrtnutí = přeprava je vyřešena a zmizí ze seznamu.</div>
     <div class="mbar" id="mbar" hidden><input id="mIn" type="text" maxlength="500" placeholder="Ruční objednávka – nejdřív datum nakládky, pak trasa (např. 5.11. Ostrava – Praha) a Enter" autocomplete="off"><button id="mAdd" type="button">+ Přidat ručně</button></div>
     <table>
-      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th data-col="route">Trasa</th><th class="c-cust" data-col="cust">Objednatel</th><th class="c-goods" data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th class="c-cust"><input data-fc="cust" placeholder="filtr…" aria-label="Filtr objednatel"></th><th class="c-goods"><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
+      <thead><tr class="hrow"><th class="c-chk">Prodáno</th><th data-col="date">Datum nakládky</th><th class="c-unl" data-col="unl">Termín vykládky do</th><th class="c-co" data-col="co">Číslo obj. zák.</th><th data-col="route">Trasa</th><th class="c-cust" data-col="cust">Objednatel</th><th class="c-goods" data-col="goods">Popis zboží</th><th class="c-w" data-col="weight">Hmotnost</th><th class="c-price" data-col="price">Cena</th><th data-col="note">Poznámka</th></tr><tr class="frow"><th class="c-chk"></th><th><input data-fc="date" placeholder="filtr…" aria-label="Filtr datum"></th><th class="c-unl"><input data-fc="unl" placeholder="filtr…" aria-label="Filtr vykládka"></th><th class="c-co"><input data-fc="co" placeholder="filtr…" aria-label="Filtr číslo obj."></th><th><input data-fc="route" placeholder="filtr…" aria-label="Filtr trasa"></th><th class="c-cust"><input data-fc="cust" placeholder="filtr…" aria-label="Filtr objednatel"></th><th class="c-goods"><input data-fc="goods" placeholder="filtr…" aria-label="Filtr popis"></th><th class="c-w"><input data-fc="weight" placeholder="filtr…" aria-label="Filtr hmotnost"></th><th class="c-price"><input data-fc="price" placeholder="filtr…" aria-label="Filtr cena"></th><th><input data-fc="note" placeholder="filtr…" aria-label="Filtr poznámka"></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty"><b>Načítám…</b></div>
@@ -813,16 +815,18 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   }
   const carCol = i => { const hu = (i * 47 + 210) % 360; return `--ch:hsl(${hu} 60% 84%);--ct:hsl(${hu} 70% 95%);--cb:hsl(${hu} 55% 52%)`; };
   let carCollapsed = []; try { carCollapsed = JSON.parse(lsGet('rkl_v1_car', '[]')) || []; } catch {}
-  const SF = document.body.classList.contains('t-sf');   // řazení + filtry + sloupec Objednatel (Vnitro 1 i 2)
-  if (SF) document.querySelectorAll('thead tr').forEach(tr => { const c = tr.querySelector('.c-cust'), d = tr.children[1]; if (c && d) d.after(c); });
   const ST = document.body.classList.contains('t-st');   // relace Stavba: slovník „k řešení / vyřešeno“ místo prodeje
+  const SF = document.body.classList.contains('t-sf');   // řazení + filtry + sloupec Objednatel (Vnitro 1 i 2)
+  if (SF) document.querySelectorAll('thead tr').forEach(tr => { const c = tr.querySelector('.c-cust'), d = tr.children[1]; if (c && d) d.after(c); if (ST && d) { const co = tr.querySelector('.c-co'), un = tr.querySelector('.c-unl'); if (co) d.after(co); if (un) d.after(un); } });
+  if (ST) { const dh = document.querySelector('thead tr.hrow th[data-col="date"]'); if (dh) dh.textContent = 'Termín nakládky od'; const pb = $('priceBtn'); if (pb) { pb.className = 'srchbtn'; document.querySelector('.strip').appendChild(pb); } }
   const SOLD_W = V2 || ST ? 'Vyřešeno' : ASG ? 'Hotovo' : 'Prodáno';
   if (ST) { const q = (sel, t) => { const e = document.querySelector(sel); if (e) e.textContent = t; }; q('th.c-chk', 'Vyřešeno'); document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; q('#panelH2', 'Přepravy k řešení'); q('#weekH2', 'Vyřešeno – posledních 7 dní'); const c1 = document.querySelector('.chip.sold span'); if (c1) c1.textContent = 'Dnes vyřešeno'; const c2 = document.querySelector('#kOpen').previousElementSibling; if (c2) c2.textContent = 'Dnes k řešení'; const b = document.querySelector('.brand small'); if (b) b.textContent = 'Přepravy k řešení'; }
   if (ASG) { document.querySelector('th.c-chk').textContent = 'Hotovo'; document.getElementById('panelH2').textContent = 'Přepravy'; }
   if (V2) { document.querySelector('th.c-chk').textContent = 'Vyřešeno'; document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; document.getElementById('panelH2').textContent = 'Přepravy'; document.getElementById('weekH2').textContent = 'Vyřešeno – posledních 7 dní'; }
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
   /* řazení a filtry sloupců (jen Vnitro 2): aktuální stav se pamatuje v tomto prohlížeči, šablony jsou na serveru */
-  const COLS = ['date', 'route', 'cust', 'goods', 'weight', 'price', 'note'];
+  const COLS = ST ? ['date', 'unl', 'co', 'cust', 'route', 'goods', 'price', 'note'] : ['date', 'route', 'cust', 'goods', 'weight', 'price', 'note'];
+  const dmy = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
   let view = { sort: null, f: {} };
   const VKEY = V2 ? 'rkl_v2_view' : 'rkl_v1_view';
   try { const v = JSON.parse(lsGet(VKEY, 'null')); if (v && typeof v === 'object') view = { sort: v.sort || null, f: v.f || {} }; } catch {}
@@ -832,13 +836,15 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   const colText = (r, c) => {
     if (c === 'date') { const d = r.date ? new Date(r.date + 'T00:00:00') : null; return d ? [r.date, `${d.getDate()}. ${d.getMonth() + 1}.`, `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`, `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`, DOW[d.getDay()]].join(' ') : ''; }
     if (c === 'route') return [r.route, r.zipTo, r.order, r.codeL, r.codeU].join(' ');
+    if (c === 'unl') return r.unlTo ? [r.unlTo, dmy(r.unlTo), dmy(r.unlTo).replace(/ /g, '')].join(' ') : '';
+    if (c === 'co') return r.custOrd || '';
     if (c === 'cust') return r.cust || '';
     if (c === 'goods') return r.goods || '';
     if (c === 'weight') return r.weight == null ? '' : fmtW(r.weight) + ' ' + r.weight;
     if (c === 'price') return priceHtml(r).replace(/<[^>]*>/g, ' ');
     return noteVal(r.key) || '';
   };
-  const colKey = (r, c) => c === 'date' ? (r.date || '9999') : c === 'weight' ? (r.weight == null ? -1 : r.weight) : c === 'price' ? priceNum(r) : fold(colText(r, c));
+  const colKey = (r, c) => c === 'date' ? (r.date || '9999') : c === 'unl' ? (r.unlTo || '9999') : c === 'weight' ? (r.weight == null ? -1 : r.weight) : c === 'price' ? priceNum(r) : fold(colText(r, c));
   const fWords = c => fold(view.f[c] || '').trim().split(/\s+/).filter(Boolean);
   const passFilters = r => COLS.every(c => { const w = fWords(c); if (!w.length) return true; const t = fold(colText(r, c)); return w.every(x => t.includes(x)); });
   const manualPass = m => COLS.every(c => { const w = fWords(c); if (!w.length) return true; const t = fold(m.text); return w.every(x => t.includes(x)); });
@@ -857,7 +863,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     return `<tr data-key="${esc(r.key)}"${V2 || ASG ? ' draggable="true"' : ''}${extra && extra.col ? ` style="${extra.col}"` : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}${cmp ? ' asgd' : ''}${extra && extra.col ? ' cr' : ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 || ST ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
-        ${SF ? custTd : ''}
+        ${ST ? `<td class="c-unl">${r.unlTo ? esc(dmy(r.unlTo)) : '–'}</td><td class="c-co">${esc(r.custOrd) || '–'}</td>` : ''}${SF ? custTd : ''}
         <td class="c-route"${cmp ? ' colspan="5"' : ''}><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
         ${cmp ? '' : `${SF ? '' : custTd}
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
@@ -1234,7 +1240,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     });
     const pop = $('diskPop');
     const viewDesc = v => {
-      const n = { date: 'Datum', route: 'Trasa', cust: 'Objednatel', goods: 'Zboží', weight: 'Hmotnost', price: 'Cena', note: 'Poznámka' };
+      const n = { date: 'Nakládka od', unl: 'Vykládka do', co: 'Č. obj. zák.', route: 'Trasa', cust: 'Objednatel', goods: 'Zboží', weight: 'Hmotnost', price: 'Cena', note: 'Poznámka' };
       const p = []; if (v.sort) p.push('řazení: ' + n[v.sort.c] + (v.sort.d === 'desc' ? ' ▼' : ' ▲'));
       Object.keys(v.f || {}).filter(c => (v.f[c] || '').trim()).forEach(c => p.push(n[c] + ' ∋ „' + v.f[c].trim() + '“'));
       return p.join(', ') || 'bez řazení a filtrů';

@@ -225,7 +225,7 @@ function board(rate) {
   const pinT = k => (mem.pin[k] ? mem.pin[k].t : null);
   const offered = sheet.rows
     .filter(r => !hasPZ(r.prepr) && (!['vnitro1', 'vnitro2', 'stavba'].includes(id) || !String(r.prepr || '').trim()) && (!r.date || r.date <= until) && !(mem.sold[r.key] && mem.sold[r.key].sold))
-    .map(({ key, order, date, route, goods, weight, code, codeU, cust, dateLoadTo, zipTo, incCzk, incEur }) => ({ key, order, date, route, goods, weight, cust, dateLoadTo, zipTo, incCzk, incEur, codeL: code, codeU, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
+    .map(({ key, order, date, route, goods, weight, code, codeU, cust, dateLoadTo, zipTo, incCzk, incEur, unlTo, custOrd }) => ({ key, order, date, route, goods, weight, cust, dateLoadTo, zipTo, incCzk, incEur, unlTo, custOrd, codeL: code, codeU, marked: code.includes(OFFER_MARK), pinned: pinT(key) }))
     .sort((a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0)
       || (a.date || '9999').localeCompare(b.date || '9999'));
   const from = statsFrom();
