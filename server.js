@@ -30,7 +30,7 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
 /* ================= instance dashboardu (hlavní + relace Vnitro 1) ================= */
 // Každá instance má vlastní úložiště (tabulku v databázi), vlastní zdrojovou tabulku a vlastní stav.
-function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName, alwaysFilter }) {
+function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName, alwaysFilter, dbTab }) {
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
 const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl', 'hist', 'carr', 'asg'];
@@ -64,9 +64,52 @@ async function initStore() {
   }
 }
 
+// ---- obousměrná synchronizace pinů a poznámek s listem Google Tabulky (jen relace s dbTab) ----
+const gsync = dbTab ? require('./lib/gsync') : null;
+const gs = { on: false, ok: null, at: null, error: null };
+let gsTimer = null, gsLast = 0, gsBusy = false, gsApplying = false;
+const gsId = () => gsync.idFromUrl(sheetUrl());
+function gsRows() {
+  const lab = new Map(sheet.rows.map(r => [r.key, `${r.date || ''} ${r.route || ''}`.trim()]));
+  const out = [['Typ', 'Klíč (objednávka)', 'Trasa', 'Hodnota', 'Změněno']];
+  for (const [k, v] of Object.entries(mem.pin)) out.push(['PIN', k, lab.get(k) || '', 'ano', (v && v.t) || '']);
+  for (const [k, v] of Object.entries(mem.note)) if (v && v.text) out.push(['POZNÁMKA', k, lab.get(k) || '', v.text, v.u || '']);
+  return out;
+}
+async function gsPush() {
+  if (!gsync || !gsync.enabled() || !gsId()) return;
+  gsBusy = true;
+  try { await gsync.write(gsId(), dbTab, gsRows()); gsLast = Date.now(); gs.ok = true; gs.error = null; gs.at = new Date().toISOString(); }
+  catch (e) { gs.ok = false; gs.error = e.message; console.error('gsync push:', e.message); }
+  finally { gsBusy = false; }
+}
+function gsSchedule() { if (!gsync || !gsync.enabled()) return; clearTimeout(gsTimer); gsTimer = setTimeout(gsPush, 1500); gsLast = Date.now(); }
+async function gsPull() {
+  gs.on = !!(gsync && gsync.enabled() && gsId());
+  if (!gs.on || gsBusy || Date.now() - gsLast < 10000) return;
+  try {
+    const rows = await gsync.read(gsId(), dbTab);
+    if (Date.now() - gsLast < 10000 || gsBusy) return;
+    const data = rows.slice(1).filter(r => r && r[0] && r[1]);
+    gs.ok = true; gs.error = null; gs.at = new Date().toISOString();
+    if (!data.length && !(mem.cfg.gsynced) && (Object.keys(mem.pin).length || Object.keys(mem.note).length)) { await gsPush(); await put('cfg', 'gsynced', { u: gs.at }); return; }
+    if (!rows.length) { await gsPush(); return; }   // list bez hlavičky – založí se
+    const pins = new Map(), notes = new Map();
+    for (const r of data) { const t = String(r[0]).trim().toUpperCase(); if (t === 'PIN') pins.set(String(r[1]), r[4] || ''); else if (t.startsWith('POZN')) notes.set(String(r[1]), { text: String(r[3] || ''), u: r[4] || '' }); }
+    gsApplying = true;
+    for (const [k, t] of pins) if (!mem.pin[k]) await put('pin', k, { t: t || new Date().toISOString() });
+    for (const k of Object.keys(mem.pin)) if (!pins.has(k)) await put('pin', k, null);
+    for (const [k, n] of notes) { const cur = mem.note[k]; if (!cur || cur.text !== n.text) await put('note', k, n.text.trim() ? { text: n.text.slice(0, 500), u: n.u || new Date().toISOString() } : null); }
+    for (const k of Object.keys(mem.note)) if (!notes.has(k)) await put('note', k, null);
+    if (!mem.cfg.gsynced) await put('cfg', 'gsynced', { u: gs.at });
+  } catch (e) { gs.ok = false; gs.error = e.message; console.error('gsync pull:', e.message); }
+  finally { gsApplying = false; }
+}
+
 let fileTimer = null;
 async function put(ns, k, v) {
   if (v == null) delete mem[ns][k]; else mem[ns][k] = v;
+  if (gsync && !gsApplying && (ns === 'pin' || ns === 'note')) gsSchedule();
   if (pool) {
     try {
       if (v == null) await pool.query(`DELETE FROM ${table} WHERE ns=$1 AND k=$2`, [ns, k]);
@@ -238,7 +281,7 @@ function board(rate) {
     hiddenByFilter: sheet.hiddenByFilter || 0, ownSheet: !!sheet.ownSheet, relaceCol: !!(sheet.columns && sheet.columns.relace),
     configured: !!sheetUrl(),
     url: sheetUrl(),
-    fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
+    gsync: dbTab ? { enabled: !!(gsync && gsync.enabled()), sheet: dbTab, ...gs } : undefined, fetchedAt: sheet.fetchedAt, changedAt: mem.cfg.chg ? mem.cfg.chg.at : null, error: sheet.error, sheetName: sheet.sheet, totalRows: sheet.rows.length, missing,
     offered, until, statsFrom: from, soldToday,
     sold,
     sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
@@ -254,7 +297,7 @@ function board(rate) {
 const store = { mem, put };
 async function boardNow() { return board(await eurRate(store)); }
 const sheetKeys = () => sheet.rows.map(r => r.key).slice(0, 5000);
-return { id, mem, put, store, get sheet() { return sheet; }, sheetKeys, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
+return { id, mem, put, store, gsPull, gs, get sheet() { return sheet; }, sheetKeys, initStore, refreshSheet, evaluateSales, board, boardNow, cleanup, isDb: () => !!pool };
 }
 
 /* ================= HTTP ================= */
@@ -271,7 +314,7 @@ const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vni
 const vnitro2Filter = byRelace(/vnitro\s*2/);
 const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sheetName: 'Vnitro 2', sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const stavbaFilter = byRelace(/vnitro\s*3/);
-const stv = makeTenant({ id: 'stavba', table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
+const stv = makeTenant({ id: 'stavba', dbTab: 'Stavba-databáze', table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const tenants = { main, vnitro1: v1, vnitro2: v2, stavba: stv };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
@@ -484,12 +527,13 @@ app.post('/api/import', async (req, res) => {
 app.get('/healthz', (req, res) => res.send('ok'));
 
 if (require.main === module) {
-  Promise.all([main.initStore(), v1.initStore(), v2.initStore()]).then(async () => {
+  Promise.all([main.initStore(), v1.initStore(), v2.initStore(), stv.initStore()]).then(async () => {
     // jednorázové vynulování statistik (požadavek 12. 10. 2026)
     if (!main.mem.cfg.stats || !main.mem.cfg.stats.reset1) await main.put('cfg', 'stats', { from: new Date().toISOString(), reset1: true });
     main.cleanup(); v1.cleanup(); v2.cleanup();
     app.listen(PORT, () => console.log('RKL Spedice běží na portu ' + PORT));
-    for (const t of [main, v1, v2]) { t.refreshSheet(true); setInterval(() => t.refreshSheet(true), BG_REFRESH); }
+    for (const t of [main, v1, v2, stv]) { t.refreshSheet(true); setInterval(() => t.refreshSheet(true), BG_REFRESH); }
+    setTimeout(() => { stv.gsPull(); setInterval(() => stv.gsPull(), 30000); }, 15000);
   }).catch(e => { console.error('Start selhal:', e); process.exit(1); });
 }
 module.exports = { app, sellerOf, evaluateSales, mem };
