@@ -39,6 +39,12 @@ let pool = null;
 const FILE = path.join(process.env.DATA_DIR || path.join(__dirname, 'data'), fileName);
 
 async function initStore() {
+  if (dbTab) {   // bez databáze aplikace: začíná se prázdné a stav se načte z listu Google Tabulky
+    for (const n of NS) mem[n] = mem[n] || {};
+    console.log(`Úložiště ${id}: jen list „${dbTab}“ v Google Tabulce (Apps Script ${gsync && gsync.enabled() ? 'zapnutý' : 'NENÍ nastaven – STAVBA_DB_URL / STAVBA_DB_SECRET'})`);
+    await gsPull(true);
+    return;
+  }
   if (process.env.DATABASE_URL) {
     const { Pool } = require('pg');
     // Funguje s Neon (zdarma natrvalo), Render Postgres i lokálním Postgresem.
@@ -64,52 +70,58 @@ async function initStore() {
   }
 }
 
-// ---- obousměrná synchronizace pinů a poznámek s listem Google Tabulky (jen relace s dbTab) ----
+// ---- relace s dbTab (Stavba): piny, poznámky a „hotovo“ se ukládají jen do listu Google Tabulky (Apps Script), ne do databáze aplikace ----
 const gsync = dbTab ? require('./lib/gsync') : null;
 const gs = { on: false, ok: null, at: null, error: null };
 let gsTimer = null, gsLast = 0, gsBusy = false, gsApplying = false;
-const gsId = () => gsync.idFromUrl(sheetUrl());
 function gsRows() {
   const lab = new Map(sheet.rows.map(r => [r.key, `${r.date || ''} ${r.route || ''}`.trim()]));
   const out = [['Typ', 'Klíč (objednávka)', 'Trasa', 'Hodnota', 'Změněno']];
   for (const [k, v] of Object.entries(mem.pin)) out.push(['PIN', k, lab.get(k) || '', 'ano', (v && v.t) || '']);
   for (const [k, v] of Object.entries(mem.note)) if (v && v.text) out.push(['POZNÁMKA', k, lab.get(k) || '', v.text, v.u || '']);
+  for (const [k, v] of Object.entries(mem.sold)) if (v && v.sold) out.push(['HOTOVO', k, v.label || lab.get(k) || '', 'ano', v.at || v.u || '']);
   return out;
 }
 async function gsPush() {
-  if (!gsync || !gsync.enabled() || !gsId()) return;
+  if (!gsync || !gsync.enabled()) return;
   gsBusy = true;
-  try { await gsync.write(gsId(), dbTab, gsRows()); gsLast = Date.now(); gs.ok = true; gs.error = null; gs.at = new Date().toISOString(); }
-  catch (e) { gs.ok = false; gs.error = e.message; console.error('gsync push:', e.message); }
+  try { await gsync.write(gsRows()); gsLast = Date.now(); gs.ok = true; gs.error = null; gs.at = new Date().toISOString(); }
+  catch (e) { gs.ok = false; gs.error = e.message; console.error('Stavba-databáze zápis:', e.message); }
   finally { gsBusy = false; }
 }
 function gsSchedule() { if (!gsync || !gsync.enabled()) return; clearTimeout(gsTimer); gsTimer = setTimeout(gsPush, 1500); gsLast = Date.now(); }
-async function gsPull() {
-  gs.on = !!(gsync && gsync.enabled() && gsId());
-  if (!gs.on || gsBusy || Date.now() - gsLast < 10000) return;
+async function gsPull(force) {
+  gs.on = !!(gsync && gsync.enabled());
+  if (!gs.on || gsBusy || (!force && Date.now() - gsLast < 10000)) return;
   try {
-    const rows = await gsync.read(gsId(), dbTab);
-    if (Date.now() - gsLast < 10000 || gsBusy) return;
-    const data = rows.slice(1).filter(r => r && r[0] && r[1]);
+    const rows = await gsync.read();
+    if (!force && (Date.now() - gsLast < 10000 || gsBusy)) return;
     gs.ok = true; gs.error = null; gs.at = new Date().toISOString();
-    if (!data.length && !(mem.cfg.gsynced) && (Object.keys(mem.pin).length || Object.keys(mem.note).length)) { await gsPush(); await put('cfg', 'gsynced', { u: gs.at }); return; }
-    if (!rows.length) { await gsPush(); return; }   // list bez hlavičky – založí se
-    const pins = new Map(), notes = new Map();
-    for (const r of data) { const t = String(r[0]).trim().toUpperCase(); if (t === 'PIN') pins.set(String(r[1]), r[4] || ''); else if (t.startsWith('POZN')) notes.set(String(r[1]), { text: String(r[3] || ''), u: r[4] || '' }); }
+    if (!rows.length || String(rows[0][0]).trim() !== 'Typ') { await gsPush(); return; }   // list bez hlavičky se založí
+    const pins = new Map(), notes = new Map(), done = new Map();
+    for (const r of rows.slice(1)) {
+      if (!r || !r[0] || !r[1]) continue;
+      const t = String(r[0]).trim().toUpperCase(), k = String(r[1]);
+      if (t === 'PIN') pins.set(k, r[4] || '');
+      else if (t.startsWith('POZN')) notes.set(k, { text: String(r[3] || ''), u: r[4] || '' });
+      else if (t.startsWith('HOTOV')) done.set(k, { at: r[4] || '', label: String(r[2] || '') });
+    }
     gsApplying = true;
     for (const [k, t] of pins) if (!mem.pin[k]) await put('pin', k, { t: t || new Date().toISOString() });
     for (const k of Object.keys(mem.pin)) if (!pins.has(k)) await put('pin', k, null);
     for (const [k, n] of notes) { const cur = mem.note[k]; if (!cur || cur.text !== n.text) await put('note', k, n.text.trim() ? { text: n.text.slice(0, 500), u: n.u || new Date().toISOString() } : null); }
     for (const k of Object.keys(mem.note)) if (!notes.has(k)) await put('note', k, null);
-    if (!mem.cfg.gsynced) await put('cfg', 'gsynced', { u: gs.at });
-  } catch (e) { gs.ok = false; gs.error = e.message; console.error('gsync pull:', e.message); }
+    for (const [k, d] of done) if (!(mem.sold[k] && mem.sold[k].sold)) await put('sold', k, { sold: true, at: d.at || new Date().toISOString(), u: d.at || new Date().toISOString(), label: d.label.slice(0, 200) });
+    for (const k of Object.keys(mem.sold)) if (mem.sold[k] && mem.sold[k].sold && !done.has(k)) await put('sold', k, null);
+  } catch (e) { gs.ok = false; gs.error = e.message; console.error('Stavba-databáze čtení:', e.message); }
   finally { gsApplying = false; }
 }
 
 let fileTimer = null;
 async function put(ns, k, v) {
   if (v == null) delete mem[ns][k]; else mem[ns][k] = v;
-  if (gsync && !gsApplying && (ns === 'pin' || ns === 'note')) gsSchedule();
+  if (gsync && !gsApplying && (ns === 'pin' || ns === 'note' || ns === 'sold')) gsSchedule();
+  if (dbTab) return;
   if (pool) {
     try {
       if (v == null) await pool.query(`DELETE FROM ${table} WHERE ns=$1 AND k=$2`, [ns, k]);
