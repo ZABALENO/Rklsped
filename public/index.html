@@ -1397,9 +1397,10 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   }
 
   /* ---------- CODE u měst + TV 2 slidy ---------- */
-  let noCode = lsGet('rkl_nocode', '0') === '1';
+  let noCode = ST ? false : lsGet('rkl_nocode', '0') === '1';
   function applyCode() { document.documentElement.classList.toggle('nocode', noCode); $('codeBtn').setAttribute('aria-pressed', !noCode); }
-  $('codeBtn').onclick = () => { noCode = !noCode; lsSet('rkl_nocode', noCode ? '1' : '0'); applyCode(); };
+  if (ST) $('codeBtn').style.display = 'none';   // Stavba: CODE nakládky se zobrazuje vždy
+  $('codeBtn').onclick = () => { if (ST) return; noCode = !noCode; lsSet('rkl_nocode', noCode ? '1' : '0'); applyCode(); };
   applyCode();
   const rowEls = () => [...$('rows').children];
   RKL.onChange = () => RKL.page(rowEls());
