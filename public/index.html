@@ -382,7 +382,7 @@
   body.t-asg .strip .chip:not(.pgchip),body.t-asg #markBtn{display:none!important}
   body.t-v1 .weekcard, body.t-v1 section.two{display:none!important}
   /* relace Stavba: bez leaderboardu a jmen dispečerů (jiní lidé, předpony se doplní později) */
-  body.t-st section.two>.card:first-child{display:none!important}body.t-st section.two{grid-template-columns:1fr!important}body.t-st .who{display:none!important}
+  body.t-st section.two>.card:first-child{display:none!important}body.t-st section.two{grid-template-columns:1fr!important}body.t-st .who{display:none!important}body.t-st #markBtn,body.t-st #provChip{display:none!important}
 </style>
 
 <!--BACK--><script>(function(){var css='.rklback{flex:none;width:34px;height:34px;padding:0;margin-right:4px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(94,138,255,.55);background:rgba(94,138,255,.18);color:#fff;cursor:pointer;box-shadow:0 0 14px -2px rgba(94,138,255,.5);font:inherit}.rklback:hover{background:rgba(94,138,255,.35)}.rklback.fx{position:fixed;left:10px;top:10px;z-index:300;margin:0;background:rgba(4,10,34,.8)}.rklback svg{display:block}@media print{.rklback{display:none}}';function go(){var r=document.referrer,same=false;try{var u=new URL(r);same=u.origin===location.origin&&u.pathname.indexOf('/login')>=0}catch(e){}if(r&&history.length>1&&!same)history.back();else location.href='https://airkl.cz/';}function init(){if(document.getElementById('rklBack'))return;var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);var b=document.createElement('button');b.type='button';b.id='rklBack';b.className='rklback';b.title='Zpět na předchozí stránku';b.setAttribute('aria-label','Zpět');b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';b.onclick=go;var h=document.querySelector('header .bar')||document.querySelector('header');if(h)h.insertBefore(b,h.firstChild);else{b.className+=' fx';document.body.appendChild(b)}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();</script><!--/BACK--><!--DARK--><style id="darkcss">
@@ -815,7 +815,9 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   let carCollapsed = []; try { carCollapsed = JSON.parse(lsGet('rkl_v1_car', '[]')) || []; } catch {}
   const SF = document.body.classList.contains('t-sf');   // řazení + filtry + sloupec Objednatel (Vnitro 1 i 2)
   if (SF) document.querySelectorAll('thead tr').forEach(tr => { const c = tr.querySelector('.c-cust'), d = tr.children[1]; if (c && d) d.after(c); });
-  const SOLD_W = V2 ? 'Vyřešeno' : ASG ? 'Hotovo' : 'Prodáno';
+  const ST = document.body.classList.contains('t-st');   // relace Stavba: slovník „k řešení / vyřešeno“ místo prodeje
+  const SOLD_W = V2 || ST ? 'Vyřešeno' : ASG ? 'Hotovo' : 'Prodáno';
+  if (ST) { const q = (sel, t) => { const e = document.querySelector(sel); if (e) e.textContent = t; }; q('th.c-chk', 'Vyřešeno'); document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; q('#panelH2', 'Přepravy k řešení'); q('#weekH2', 'Vyřešeno – posledních 7 dní'); const c1 = document.querySelector('.chip.sold span'); if (c1) c1.textContent = 'Dnes vyřešeno'; const c2 = document.querySelector('#kOpen').previousElementSibling; if (c2) c2.textContent = 'Dnes k řešení'; const b = document.querySelector('.brand small'); if (b) b.textContent = 'Přepravy k řešení'; }
   if (ASG) { document.querySelector('th.c-chk').textContent = 'Hotovo'; document.getElementById('panelH2').textContent = 'Přepravy'; }
   if (V2) { document.querySelector('th.c-chk').textContent = 'Vyřešeno'; document.querySelector('th.c-chk').title = 'Přeprava vyřešena – po zaškrtnutí zmizí ze seznamu'; document.getElementById('panelH2').textContent = 'Přepravy'; document.getElementById('weekH2').textContent = 'Vyřešeno – posledních 7 dní'; }
   const FOLDERS = [['vyvoz', 'Vývoz'], ['dovoz', 'Dovoz']];
@@ -853,7 +855,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     const agrip = ASG ? `<span class="agrip" data-pk="${esc(r.key)}" title="Chyť řádek a přetáhni k dopravci / řidiči (nebo klikni a vyber)">⠿</span>` : '';
     const grip = agrip + (V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '');
     return `<tr data-key="${esc(r.key)}"${V2 || ASG ? ' draggable="true"' : ''}${extra && extra.col ? ` style="${extra.col}"` : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}${cmp ? ' asgd' : ''}${extra && extra.col ? ' cr' : ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
-        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
+        <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 || ST ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
         ${SF ? custTd : ''}
         <td class="c-route"${cmp ? ' colspan="5"' : ''}><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
@@ -980,7 +982,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     if (!B.configured) { empty.style.display = ''; empty.innerHTML = '<b>Zatím žádná data.</b><br>Odkaz na tabulku se nastavuje pod ozubeným kolečkem dole.'; }
     else if (!shown.length && !(V2 && (B.manual || []).length) && query.trim() && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Nic nenalezeno.</b><br>Hledání „' + esc(query.trim()) + '“ neodpovídá žádnému řádku v nabídce.'; }
     else if (!shown.length && markOnly && B.offered.length) { empty.style.display = ''; empty.innerHTML = '<b>Žádná přeprava označená k prodeji.</b><br>Žádný řádek v nabídce nemá ve sloupci CODE nakl. „@@@“.'; }
-    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>' + (V2 || ASG ? 'Nic k naložení.' : 'Nic k prodeji.') + '</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
+    else if (!shown.length) { empty.style.display = ''; empty.innerHTML = B.fetchedAt ? '<b>' + (ST ? 'Nic k řešení.' : V2 || ASG ? 'Nic k naložení.' : 'Nic k prodeji.') + '</b><br>V tabulce není žádná přeprava bez čísla „PZ/“ s nakládkou do ' + fmtDate(B.until) + '.' : '<b>Načítám tabulku…</b>'; }
     else empty.style.display = 'none';
 
     const open = B.offered.length;
@@ -1025,7 +1027,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     const counted = list.filter(([, v]) => !v.rkl);
     const daySum = counted.reduce((a, [k]) => a + (pv(k) != null && !pvSkip(k) ? pv(k) : 0), 0);
     $('soldN').textContent = counted.length;
-    $('soldTitle').textContent = day === today ? (V2 ? 'Dnes vyřešené přepravy' : 'Dnes prodané přepravy') : (V2 ? 'Vyřešené přepravy ' : 'Prodané přepravy ') + fmtDate(day).replace(/ \d{4}$/, '');
+    $('soldTitle').textContent = day === today ? (V2 || ST ? 'Dnes vyřešené přepravy' : 'Dnes prodané přepravy') : (V2 || ST ? 'Vyřešené přepravy ' : 'Prodané přepravy ') + fmtDate(day).replace(/ \d{4}$/, '');
     $('sdDate').value = day; $('sdDate').max = today;
     $('sdNext').disabled = day >= today; $('sdToday').disabled = day === today;
     $('sdSum').innerHTML = counted.length ? `provize dne <b>${nfKc.format(daySum)} Kč</b>` : '';
@@ -1422,7 +1424,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
       B = await api('/api/config', { url: $('url').value.trim() });
       lastSig = ''; render();
       setStatus(B.error ? 'Odkaz je uložený, ale tabulku se nepodařilo načíst: ' + B.error
-        : `Uloženo. Načteno ${B.totalRows} řádků z listu „${B.sheetName}“, k prodeji ${B.offered.length}.`, !!B.error);
+        : `Uloženo. Načteno ${B.totalRows} řádků z listu „${B.sheetName}“, ${ST ? 'k řešení' : 'k prodeji'} ${B.offered.length}.`, !!B.error);
     } catch (e) { setStatus(e.message, true); }
     $('save').disabled = false;
   };
