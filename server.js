@@ -328,8 +328,8 @@ const main = makeTenant({ id: 'main', table: 'kv', fileName: 'store.json', rowFi
 const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vnitro1.json', rowFilter: vnitro1Filter, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const vnitro2Filter = byRelace(/vnitro\s*2/);
 const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sheetName: 'Vnitro 2', sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
-// Stavba: jen objednávky s předponou ZV/26D, ZV/26G, ZV/26R, ZV/26T (číslo přepravy musí být prázdné – hlídá board())
-const stavbaFilter = rows => rows.filter(r => /^ZV\s*\/\s*26[DGRT]/i.test(String(r.order || '').trim()));
+// Stavba: jen objednávky s předponou ZV/26D, ZV/26G, ZV/26R, ZV/26T, ZV/263 (číslo přepravy musí být prázdné – hlídá board())
+const stavbaFilter = rows => rows.filter(r => /^ZV\s*\/\s*26[DGRT3]/i.test(String(r.order || '').trim()));
 const stv = makeTenant({ id: 'stavba', sellerMap: {},   // předpony dispečerů Stavby se doplní (např. { K: 'Jméno' })
    table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const tenants = { main, vnitro1: v1, vnitro2: v2, stavba: stv };
