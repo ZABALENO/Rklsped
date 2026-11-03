@@ -129,6 +129,11 @@
   tr.afold td{background:#e8eefb;border-bottom:1px solid #9db3e0;font-size:14px;padding:7px 12px}
   tr.afold.car td{background:var(--ch,#dbe5fa);border-top:3px solid var(--cb,#9db3e0);font-size:15px;cursor:pointer;user-select:none}
   tr.afold.drv td{padding-left:34px;background:var(--ct,#eef3fc)}
+  tr.asgd>td{padding-top:3px;padding-bottom:3px;font-size:13px;line-height:1.25;vertical-align:middle}
+  tr.asgd .route,tr.asgd .cust{white-space:nowrap}
+  tr.asgd td.c-cust{max-width:0;overflow:hidden;text-overflow:ellipsis}
+  tr.asgd .urg,tr.asgd .mk,tr.asgd .ord{display:none}
+  tr.asgd td.c-chk .chk{transform:scale(.85)}
   tr.cr>td{background:var(--ct)}tr.cr>td:first-child{box-shadow:inset 6px 0 0 var(--cb)}
   .ctog{display:inline-block;width:22px;font-size:13px}
   tr.afold.none td{background:#fde9c9;border-top:3px solid #e2b66b}
@@ -841,20 +846,20 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   };
   const pendingManual = {};     // rozepsané ruční objednávky (ještě neuložené)
   function rowHtml(r, today, extra) {
-    const n = noteVal(r.key);
+    const n = noteVal(r.key), cmp = !!(extra && extra.compact);
     const custTd = `<td class="c-cust"><span class="cust">${esc(r.cust) || '–'}</span></td>`;
     const agrip = ASG ? `<span class="agrip" data-pk="${esc(r.key)}" title="Chyť řádek a přetáhni k dopravci / řidiči (nebo klikni a vyber)">⠿</span>` : '';
     const grip = agrip + (V2 ? `<span class="grip" data-dk="${esc(r.key)}" title="Chyť řádek a přetáhni do složky Vývoz / Dovoz">⠿</span><span class="fbtns"><button data-f="vyvoz" data-fk="${esc(r.key)}">Vý</button><button data-f="dovoz" data-fk="${esc(r.key)}">Do</button><button data-f="none" data-fk="${esc(r.key)}">×</button></span>` : '');
-    return `<tr data-key="${esc(r.key)}"${V2 || ASG ? ' draggable="true"' : ''}${extra && extra.col ? ` style="${extra.col}"` : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}${extra && extra.col ? ' cr' : ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
+    return `<tr data-key="${esc(r.key)}"${V2 || ASG ? ' draggable="true"' : ''}${extra && extra.col ? ` style="${extra.col}"` : ''}${extra && extra.folder ? ` data-folder="${extra.folder}"` : ''} class="${r.pinned ? 'pinned' : ''} ${r.date === today ? 'is-today' : ''} ${extra && extra.cls || ''}${cmp ? ' asgd' : ''}${extra && extra.col ? ' cr' : ''} ${extra && extra.folder && extra.folder !== 'none' ? 'f-' + extra.folder : ''}">
         <td class="c-chk"><label class="chk"><input type="checkbox" class="sold-chk" aria-label="${SOLD_W}" title="${V2 ? 'Přeprava vyřešena – zmizí ze seznamu' : ''}"><span>${SOLD_W}</span></label><button class="pin" title="${r.pinned ? 'Odepnout' : 'Připnout nahoru jako urgentní'}" aria-label="${r.pinned ? 'Odepnout' : 'Připnout'}" aria-pressed="${!!r.pinned}">${PIN_SVG}</button>${grip}</td>
         <td class="c-date">${dateHtml(r.date, today, r.dateLoadTo)}</td>
         ${SF ? custTd : ''}
-        <td class="c-route"><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
-        ${SF ? '' : custTd}
+        <td class="c-route"${cmp ? ' colspan="5"' : ''}><span class="route">${routeHtml(r.route, r.zipTo, r.codeL, r.codeU)}</span>${r.pinned ? '<span class="urg">URGENT</span>' : ''}${r.marked ? '<span class="mk" title="Označeno k prodeji (@@@)">@@@</span>' : ''}${r.order ? `<span class="ord">${esc(r.order)}</span>` : ''}</td>
+        ${cmp ? '' : `${SF ? '' : custTd}
         <td class="c-goods"><span class="goods">${esc(r.goods) || '–'}</span></td>
         <td class="c-w num">${fmtW(r.weight)}</td>
         <td class="c-price num">${priceHtml(r)}</td>
-        <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>
+        <td class="c-note"><textarea class="note${n ? ' has' : ''}" rows="1" maxlength="500" placeholder="Poznámka…" aria-label="Poznámka">${esc(n)}</textarea></td>`}
       </tr>`;
   }
   // ruční objednávka: první hodnota = datum nakládky (i rozmezí), zbytek = trasa
@@ -899,7 +904,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
         const ds = c.drivers.filter(d => by.has(d.id)); if (!ds.length) return;
         const col = carCol(ci), cl = carCollapsed.includes(c.id), n = ds.reduce((a, d) => a + by.get(d.id).length, 0);
         out += `<tr class="afold car" data-ctog="${esc(c.id)}" style="${col}"><td colspan="8"><span class="ctog">${cl ? '▸' : '▾'}</span><b>${esc(c.name)}</b><span class="fcnt">${n} obj. · ${ds.length} ${ds.length === 1 ? 'řidič' : 'řidiči'}</span></td></tr>`;
-        if (!cl) ds.forEach(d => { out += `<tr class="afold drv" data-adrop="${esc(d.id)}" style="${col}"><td colspan="8">👤 <b>${esc(d.name)}</b>${d.spz ? ` · <b>${esc(d.spz)}</b>` : ''}<span class="tel">${esc(d.phone)}</span><span class="fcnt">${by.get(d.id).length}</span></td></tr>` + by.get(d.id).map(r => rowHtml(r, today, { folder: 'x', col })).join(''); });
+        if (!cl) ds.forEach(d => { out += `<tr class="afold drv" data-adrop="${esc(d.id)}" style="${col}"><td colspan="8">👤 <b>${esc(d.name)}</b>${d.spz ? ` · <b>${esc(d.spz)}</b>` : ''}<span class="tel">${esc(d.phone)}</span><span class="fcnt">${by.get(d.id).length}</span></td></tr>` + by.get(d.id).map(r => rowHtml(r, today, { folder: 'x', col, compact: true })).join(''); });
       });
       out += `<tr class="afold none" data-adrop="-"><td colspan="8"><b>Nenaloženo</b><span class="fcnt">${rest.length}</span><span class="fhint" style="margin-left:12px;opacity:.7;font-size:12px">sem přetáhni řádek, aby se vrátil z dopravce</span></td></tr>` + restShown.map(r => rowHtml(r, today)).join('');
       v2html = out;
