@@ -39,6 +39,7 @@
   .hr a{color:var(--cy);text-decoration:none;border:1px solid var(--line);padding:5px 12px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-block;margin-bottom:6px;letter-spacing:2px;text-transform:uppercase;background:rgba(94,138,255,.06)}
   .hr a:hover{background:rgba(94,138,255,.18)}
   .tbtn{width:34px;height:30px;padding:0;margin-right:6px;vertical-align:top;color:var(--cy);border:1px solid var(--line);background:rgba(94,138,255,.08);cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);display:inline-flex;align-items:center;justify-content:center}
+  #avgBtn::after{content:"Ø"}
   .tbtn.spin svg{animation:rsp .8s linear infinite}@keyframes rsp{to{transform:rotate(360deg)}}
   .tbtn:hover{background:rgba(94,138,255,.22)}.tbtn svg{width:18px;height:18px}
   [data-theme="day"] .tbtn{color:#1d388f;border-color:#1d388f;background:rgba(255,255,255,.6)}
@@ -378,7 +379,7 @@
   <header>
     <img src="/logo.jpg" alt="RKL">
     <div><h1>Agentizace RKL Opava<span class="by">Robin Balcar</span></h1><div class="sub">RKL Holding · Monitoring AI agentů</div></div>
-    <div class="hr"><button class="tbtn" id="skinBtn" type="button" title="Přepnout futuristický skin" aria-label="Přepnout skin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.2 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg></button> <button class="tbtn" id="themeBtn" type="button" aria-label="Přepnout světlý / tmavý režim"></button> <button class="tbtn" id="refBtn" type="button" aria-label="Obnovit data" title="Obnovit data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button> <a class="tbtn" id="mobBtn" href="/ai/mobil" aria-label="Mobilní pohled" title="Mobilní pohled – jen podíl dispečinků (obnova po 30 min)" style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px;letter-spacing:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg></a> <a class="tbtn" id="planBtn" href="/ai/plan" aria-label="Plán" title="Plán – souhrn agentizace" style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px;letter-spacing:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8l1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8.5h3M14 14.5h3"/></svg></a> <a href="/ai/logout">Odhlásit</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
+    <div class="hr"><button class="tbtn" id="avgBtn" type="button" title="Průměr pozic na den za posledních 5 pracovních dní" aria-label="Průměr na den"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button> <button class="tbtn" id="skinBtn" type="button" title="Přepnout futuristický skin" aria-label="Přepnout skin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.2 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg></button> <button class="tbtn" id="themeBtn" type="button" aria-label="Přepnout světlý / tmavý režim"></button> <button class="tbtn" id="refBtn" type="button" aria-label="Obnovit data" title="Obnovit data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button> <a class="tbtn" id="mobBtn" href="/ai/mobil" aria-label="Mobilní pohled" title="Mobilní pohled – jen podíl dispečinků (obnova po 30 min)" style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px;letter-spacing:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg></a> <a class="tbtn" id="planBtn" href="/ai/plan" aria-label="Plán" title="Plán – souhrn agentizace" style="display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px;letter-spacing:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8l1.5 1.5L12 7M8 14l1.5 1.5L12 13M14 8.5h3M14 14.5h3"/></svg></a> <a href="/ai/logout">Odhlásit</a><div class="live" id="live"><i></i><span id="liveTxt">načítám…</span></div><div id="upd"></div></div>
   </header>
 
   <div class="note" id="note" hidden></div>
@@ -864,6 +865,41 @@
   });
   setInterval(() => { if (!$('admin').hidden) loadAdmin(); }, 5 * 60 * 1000);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBig);
+
+  /* ---------- průměr na den za posledních 5 pracovních dní (ikona Ø) ---------- */
+  function avgOverviewHtml(S, relIdx, TD, ISOADD, FMT, NF, ESC, COL) {
+    const t = TD(), dates = S.days.map(d => d.date), first = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : t;
+    const wdMap = {}; S.days.forEach(d => { wdMap[d.date] = d.wd; });
+    const wds = []; let d = t;
+    for (let g = 0; g < 30 && wds.length < 5 && d >= first; g++, d = ISOADD(d, -1)) {
+      const dow = new Date(d + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wdMap[d] === false) continue; wds.push(d);
+    }
+    const from = wds.length ? wds[wds.length - 1] : t, n = wds.length || 1, sum = {};
+    S.days.forEach(day => { if (day.date >= from && day.date <= t) for (const k in day.rels) { const q = day.rels[k], z = sum[k] || (sum[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } });
+    const f1 = v => new Intl.NumberFormat('cs-CZ', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(v);
+    const rows = S.rels.map(r => { const z = sum[r.key] || { a: 0, m: 0 }; return { name: r.name, i: relIdx(r.key), a: z.a / n, m: z.m / n }; }).filter(x => x.a + x.m > 0).sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    const tot = rows.reduce((o, x) => ({ a: o.a + x.a, m: o.m + x.m }), { a: 0, m: 0 });
+    const cell = 'padding:6px 8px;text-align:right;white-space:nowrap';
+    return '<div style="font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:13px;margin-bottom:4px">Průměr pozic na den</div>'
+      + '<div style="font-size:12px;opacity:.75;margin-bottom:10px">' + FMT(from) + ' – ' + FMT(t) + ' · ' + n + ' pracovních dnů (dnešek jen do posledního zápisu)</div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="opacity:.7"><th style="padding:6px 8px;text-align:left">Relace</th><th style="' + cell + '">Agent</th><th style="' + cell + '">Ručně</th><th style="' + cell + '">Celkem</th></tr></thead><tbody>'
+      + rows.map(x => '<tr style="border-top:1px solid rgba(128,128,128,.25)"><td style="padding:6px 8px;font-weight:700;color:' + COL(x.i) + '">' + ESC(x.name) + '</td><td style="' + cell + '">' + f1(x.a) + '</td><td style="' + cell + ';color:#f2a516">' + f1(x.m) + '</td><td style="' + cell + ';font-weight:800">' + f1(x.a + x.m) + '</td></tr>').join('')
+      + '<tr style="border-top:2px solid rgba(128,128,128,.5);font-weight:800"><td style="padding:8px">Celkem</td><td style="' + cell + '">' + f1(tot.a) + '</td><td style="' + cell + ';color:#f2a516">' + f1(tot.m) + '</td><td style="' + cell + '">' + f1(tot.a + tot.m) + '</td></tr></tbody></table>';
+  }
+  function showAvg(html, panelStyle) {
+    let ov = document.getElementById('avgOv'); if (ov) ov.remove();
+    ov = document.createElement('div'); ov.id = 'avgOv';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(2,6,20,.72);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+    ov.innerHTML = '<div style="' + panelStyle + ';max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:18px;position:relative"><button type="button" id="avgX" aria-label="Zavřít" style="position:absolute;top:8px;right:10px;background:none;border:0;color:inherit;font-size:20px;cursor:pointer">✕</button>' + html + '</div>';
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.id === 'avgX') ov.remove(); });
+    document.body.appendChild(ov);
+  }
+
+  $('avgBtn').addEventListener('click', () => {
+    const S = R && R.split; if (!S || !S.rels.length) { alert('Zatím nejsou data.'); return; }
+    const day = document.documentElement.getAttribute('data-theme') === 'day';
+    showAvg(avgOverviewHtml(S, k => Math.max(0, R.relations.findIndex(x => x.key === k)), today, isoAdd, fmtD, nf, esc, color), 'background:' + (day ? '#fff' : 'rgba(9,15,40,.97)') + ';color:' + (day ? '#0f1b3d' : '#e9edf7') + ';border:1px solid ' + (day ? '#1d388f' : 'rgba(94,138,255,.5)') + ';border-radius:6px');
+  });
   $('refBtn').addEventListener('click', async () => {
     const b = $('refBtn'); if (b.classList.contains('spin')) return;
     b.classList.add('spin');
