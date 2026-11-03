@@ -30,7 +30,10 @@ const { SELLER_ORDER, sellerOf } = require('./lib/sellers');
 
 /* ================= instance dashboardu (hlavní + relace Vnitro 1) ================= */
 // Každá instance má vlastní úložiště (tabulku v databázi), vlastní zdrojovou tabulku a vlastní stav.
-function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName, alwaysFilter, dbTab }) {
+function makeTenant({ id, table, fileName, rowFilter, sharedUrl, sheetName, alwaysFilter, dbTab, sellerMap }) {
+// vlastní dispečeři relace (písmeno v čísle přepravy PZ/26X… -> jméno); bez sellerMap platí výchozí (Jirka, Gabka…)
+const sellerFor = sellerMap ? (prepr => { const m = String(prepr || '').match(/^\s*PZ\s*\/\s*\d{2}\s*([A-Z])/i); const n = m && sellerMap[m[1].toUpperCase()]; return n ? { letter: m[1].toUpperCase(), name: n } : null; }) : sellerOf;
+const sellerNames = sellerMap ? Object.values(sellerMap) : SELLER_ORDER;
 /* ================= úložiště ================= */
 // mem[ns][key] = value; ns: cfg | sold | note | sale | track | pin
 const NS = ['cfg', 'sold', 'note', 'sale', 'track', 'pin', 'folder', 'manual', 'tpl', 'hist', 'carr', 'asg'];
@@ -159,7 +162,7 @@ async function evaluateSales(rows) {
   for (const r of rows) {
     // řádek bez čísla přepravy si zapamatujeme – až u něj číslo PZ/ přibude, připíše se prodej
     if (!hasPZ(r.prepr)) { if (!mem.track[r.key]) await put('track', r.key, { t: now, label: labelOf(r) }); continue; }
-    const s = sellerOf(r.prepr);
+    const s = sellerFor(r.prepr);
     if (!s) continue;
     const cur = mem.sale[r.key];
     const known = mem.track[r.key] || (mem.sold[r.key] && mem.sold[r.key].sold);
@@ -299,7 +302,7 @@ function board(rate) {
     sales: sales.map(([k, v]) => [k, v.at, v.seller, v.prepr, v.label, v.carrier || '']),
     notes: Object.fromEntries(Object.entries(mem.note).map(([k, v]) => [k, v.text])),
     provize: prov, rate, carriers, provAll, provLimits: [NEG_LIMIT, POS_LIMIT],
-    sellers: SELLER_ORDER,
+    sellers: sellerNames,
     storage: pool ? 'db' : 'file',
     ...(v2 || {}),
     ...(id === 'vnitro1' ? { carr: carriersFor({ mem, sheet }), carrAt: (sheet.carriers && sheet.carriers.length) ? sheet.fetchedAt : ((mem.carr.list && mem.carr.list.at) || null), carrSrc: (sheet.carriers && sheet.carriers.length) ? 'sheet' : 'db', hist: Object.values(mem.hist).sort((a, b) => b.t.localeCompare(a.t)).slice(0, 200), asg: Object.fromEntries(Object.entries(mem.asg).map(([k, v]) => [k, v.d])) } : {}),
@@ -326,7 +329,8 @@ const v1 = makeTenant({ id: 'vnitro1', table: 'kv_vnitro1', fileName: 'store-vni
 const vnitro2Filter = byRelace(/vnitro\s*2/);
 const v2 = makeTenant({ id: 'vnitro2', table: 'kv_vnitro2', fileName: 'store-vnitro2.json', rowFilter: vnitro2Filter, sheetName: 'Vnitro 2', sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const stavbaFilter = byRelace(/vnitro\s*3/);
-const stv = makeTenant({ id: 'stavba', table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
+const stv = makeTenant({ id: 'stavba', sellerMap: {},   // předpony dispečerů Stavby se doplní (např. { K: 'Jméno' })
+   table: 'kv_stavba', fileName: 'store-stavba.json', rowFilter: stavbaFilter, sheetName: 'Stavba', alwaysFilter: true, sharedUrl: () => main.mem.cfg.sheet && main.mem.cfg.sheet.url });
 const tenants = { main, vnitro1: v1, vnitro2: v2, stavba: stv };
 const { mem, put, refreshSheet, evaluateSales } = main;
 
@@ -340,7 +344,7 @@ const INDEX = path.join(__dirname, 'public', 'index.html');
 app.get(['/', '/index.html'], (req, res, next) => {
   let h; try { h = fs.readFileSync(INDEX, 'utf8'); } catch { return next(); }
   if (req.t.id === 'vnitro2') h = h.replace('<body>', '<body class="t-v1 t-v2 t-sf">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 2<small>Přepravy – Vnitro 2</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 2</title>');
-  if (req.t.id === 'stavba') h = h.replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Stavba<small>Nenaložené objednávky – Vnitro 3</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Stavba</title>');
+  if (req.t.id === 'stavba') h = h.replace('<body>', '<body class="t-st">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Stavba<small>Nenaložené objednávky – Vnitro 3</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Stavba</title>');
   if (req.t.id === 'vnitro1') h = h.replace('<body>', '<body class="t-v1 t-sf t-asg">').replace('<div>RKL Spedice<small>Přepravy v prodeji</small></div>', '<div>RKL Spedice · Vnitro 1<small>Přepravy – ZV/</small></div>').replace('<title>RKL Spedice – přepravy v prodeji</title>', '<title>RKL Spedice – Vnitro 1</title>');
   res.set('Cache-Control', 'no-store').type('html').send(h);
 });
