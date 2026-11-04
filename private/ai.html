@@ -521,7 +521,7 @@
     if (!items.some(x => x.a + x.m)) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
     const sub2 = kindMode === 'ord', n = items.length, W = 600, RH = sub2 ? 46 : 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
     const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
-    let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W - 54, 'OBJ. / PŘEP.', 'text-anchor="end"') + hd(W, '% AGENT', 'text-anchor="end"');
+    let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W, '% AGENT', 'text-anchor="end" class="agn" fill="#3ddc84"');
     items.forEach((x, i) => {
       const y = T + i * RH, h = sub2 ? 17 : 18, k = bwid / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
       let xx = L, segs = '';
@@ -536,15 +536,14 @@
         sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="8" letter-spacing=".4">přepravy</text>`;
         if (A2) sub += `<rect x="${L}" y="${y2}" width="${Math.max(k * A2, 2)}" height="${h2}" fill="${col}" opacity=".85"><title>${esc(x.name)}: agent – přepravy ${nf.format(A2)}</title></rect>`;
         if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#f2a516" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
-        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" fill="#f2a516" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${tt ? pc2 + ' %' : ''}</text>`;
+        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" fill="#f2a516" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${tt ? pc2 + ' %' : ''}</text>`;
       }
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
         ${segs}${sub}
         <text x="${BX + 52}" y="${y + 15}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
         <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
         ${day ? '' : `<text x="${BX + 158}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
-        <text x="${W - 54}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${nf.format(o)} / ${nf.format(t)}</text>
-        <text x="${W}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${pct} %</text></g>`;
+        <text x="${W}" y="${y + 15}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${pct} %</text></g>`;
     });
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
     const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>${sub2 ? 'horní silný sloupec = objednávky, tenký sloupec pod ním = přepravy' : 'tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky'}</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek ' + dayLbl(dayOff).toLowerCase() + ' oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
