@@ -11,6 +11,17 @@ const { sellerOf } = require('./lib/sellers');
 const geo = require('./lib/geo');
 const { pragueToday, subWorkdays, addWorkdays, isWorkday } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
+// „RRRR-MM-DD“ + „HH:MM“ (pražský čas) -> ISO čas UTC
+function pragueIso(date, time) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date || ''); if (!m) return null;
+  const t = /(\d{1,2})[:.](\d{2})/.exec(String(time || '')), h = t ? +t[1] : 0, mi = t ? +t[2] : 0, want = Date.UTC(+m[1], +m[2] - 1, +m[3], h, mi);
+  let utc = want;
+  for (let k = 0; k < 2; k++) {
+    const p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Prague', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(utc)).reduce((o, x) => (o[x.type] = x.value, o), {});
+    utc += want - Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+  }
+  return new Date(utc).toISOString();
+}
 
 const PORT = process.env.PORT || 3000;
 const SHEET_TTL = 60 * 1000;
@@ -265,8 +276,13 @@ app.get('/api/agents', async (req, res) => {
       rels.push(Object.assign({ key: k, name: prettyName(k), since: SINCE[k] || '', today: td }, t));
     }
     const lastDate = dl.snaps.length ? dl.snaps[dl.snaps.length - 1].date : null;
+    // kdy se naposledy změnil jakýkoli počet pozic (agentních i ručních, objednávek i přeprav): čas posledního snímku, který se liší od předchozího
+    let changedAt = null; { const last = {};
+      for (const sn of dl.snaps) { let ch = false;
+        for (const n of Object.keys(sn.rels)) { const v = sn.rels[n], p = last[n]; if (p && F.some(f => (v[f] || 0) !== (p[f] || 0))) ch = true; last[n] = v; }
+        if (ch) changedAt = pragueIso(sn.date, sn.time); } }
     const outDays = Object.keys(incs).sort().reverse().slice(0, 60).map(d => ({ date: d, wd: isWorkday(new Date(d + 'T12:00:00Z')), rels: incs[d] }));
-    return { rels, days: outDays, lastDate, snapshot: true };
+    return { rels, days: outDays, lastDate, snapshot: true, changedAt };
   })();
   if (split) for (const sr of split.rels) { const r = relations.find(x => x.key === sr.key); if (r) { r.count = sr.pA + sr.tA; r.agent = sr.pA; r.manual = sr.pM; r.trips = sr.tA; r.tripsManual = sr.tM; r.date = split.lastDate; r.todayAgent = sr.today.pA + sr.today.tA; r.todayManual = sr.today.pM + sr.today.tM; } }
   const hd = Object.keys(store.mem.agent);
@@ -289,7 +305,7 @@ app.get('/api/agents', async (req, res) => {
   }
   const history = Object.keys(byDay).sort().reverse().slice(0, 45).map(d => ({ date: d, wd: isWorkday(new Date(d + 'T12:00:00Z')), counts: byDay[d], total: Object.values(byDay[d]).reduce((a, b) => a + b, 0) }));
   res.json({
-    changedAt: (store.mem.cfg.cnt || {}).at || null,
+    changedAt: (split && split.changedAt) || (store.mem.cfg.cnt || {}).at || null,
     trips: relations.reduce((a, r) => a + (r.trips || 0), 0),
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
     hasSheet: !!((sheet.counts && sheet.counts.length) || split), relations,
