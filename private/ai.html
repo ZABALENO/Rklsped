@@ -489,7 +489,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'all';
+  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord';
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -507,18 +507,18 @@
       items.forEach(x => { const z = { pA: 0, pM: 0, tA: 0, tM: 0 }; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) for (const f in z) z[f] += d.rels[x.key][f] || 0; x.oA = z.pA; x.tA = z.tA; x.oM = z.pM; x.tM = z.tM; x.a = z.pA + z.tA; x.m = z.pM + z.tM; });
     }
     agOrders = items.reduce((t, x) => t + (x.oA || 0) + (x.tA || 0), 0);
-    {
-      const ord = kindMode !== 'trp';
+    if (kindMode !== 'all') {
+      const ord = kindMode === 'ord';
       items.forEach(x => {
-        if (ord) { x.xA = kindMode === 'all' ? x.tA : 0; x.xM = kindMode === 'all' ? x.tM : 0; x.tA = 0; x.tM = 0; } else { x.oA = 0; x.oM = 0; }
+        if (ord) { x.xA = x.tA; x.xM = x.tM; x.tA = 0; x.tM = 0; } else { x.oA = 0; x.oM = 0; }
         x.a = x.oA + x.tA; x.m = x.oM + x.tM;
         const q = S.rels.find(r => r.key === x.key).today; x.ta = ord ? q.pA : q.tA; x.tm = ord ? q.pM : q.tM;
       });
-      for (let i = items.length - 1; i >= 0; i--) if (items[i].a + items[i].m + (kindMode === 'all' ? (items[i].xA || 0) + (items[i].xM || 0) : 0) <= 0) items.splice(i, 1);
+      for (let i = items.length - 1; i >= 0; i--) if (items[i].a + items[i].m <= 0) items.splice(i, 1);
     }
-    items.sort((p, q) => (q.a + q.m + (kindMode === 'all' ? (q.xA || 0) + (q.xM || 0) : 0)) - (p.a + p.m + (kindMode === 'all' ? (p.xA || 0) + (p.xM || 0) : 0)));
-    if (!items.some(x => x.a + x.m + (x.xA || 0) + (x.xM || 0))) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
-    const sub2 = kindMode === 'all', n = items.length, W = 600, RH = sub2 ? 46 : 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
+    items.sort((p, q) => (q.a + q.m) - (p.a + p.m));
+    if (!items.some(x => x.a + x.m)) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
+    const sub2 = kindMode === 'ord', n = items.length, W = 600, RH = sub2 ? 46 : 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
     const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
     let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W - 54, 'OBJ. / PŘEP.', 'text-anchor="end"') + hd(W, '% AGENT', 'text-anchor="end"');
     items.forEach((x, i) => {
