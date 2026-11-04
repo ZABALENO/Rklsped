@@ -668,11 +668,15 @@
     if (barMode === 'week') wt.innerHTML = WEEK_NAMES.map((n, i) => { const r = weekRange(i); return `<button type="button" data-w="${i}" class="${i === weekOff ? 'on' : ''}" title="${fmtD(r[0])} – ${fmtD(r[1])}">${n}</button>`; }).join('');
     document.querySelectorAll('.agord').forEach(e => e.remove());
     { const host = barMode === 'day' ? dn : barMode === 'week' ? wt : $('barTgl'); const sp = document.createElement('span'); sp.className = 'agord'; sp.title = 'Objednávky + přepravy zadané agentem ve zvoleném období'; sp.innerHTML = '<b>' + nf.format(agOrders) + '</b><small>obj. + přep. agent</small>'; host.appendChild(sp); }
+    const use5 = {}; { const S5 = R.split; if (S5 && S5.days) { const t0 = today(), wm = {}; S5.days.forEach(d => { wm[d.date] = d.wd; }); const first = S5.days.reduce((m, d) => (d.date < m ? d.date : m), t0), wds = []; let dd = isoAdd(t0, -1);
+      for (let g = 0; g < 30 && wds.length < 5 && dd >= first; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
+      if (wds.length) { const from = wds[wds.length - 1], to = wds[0]; S5.days.forEach(d => { if (d.date >= from && d.date <= to) for (const k in d.rels) { const q = d.rels[k], z = use5[k] || (use5[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } }); use5.$n = wds.length; } } }
+    const useTxt = k => { const z = use5[k]; return z && z.a + z.m > 0 ? '<span class="d" style="color:#3ddc84;font-weight:700;margin-top:-2px">využití agenta ' + Math.round(100 * z.a / (z.a + z.m)) + ' % <span style="font-weight:400;opacity:.85">objednávek · posl. ' + use5.$n + ' prac. dnů před dneškem</span></span>' : '<span class="d" style="margin-top:-2px">využití agenta: bez dat za posl. 5 prac. dnů</span>'; };
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
       <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
-      <span class="d">${[x.date ? 'k ' + fmtD(x.date) : 'bez dat', x.count && total ? Math.round(100 * x.count / total) + ' %' : '', x.trips ? nf.format(x.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ')}</span></div>`).join('');
+      <span class="d">${[x.date ? 'k ' + fmtD(x.date) : 'bez dat', x.count && total ? Math.round(100 * x.count / total) + ' %' : '', x.trips ? nf.format(x.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ')}</span>${useTxt(x.key)}</div>`).join('');
     renderUseAll();
     $('trendDay').innerHTML = trendDay(rels);
     document.querySelectorAll('#trKind button').forEach(b => b.classList.toggle('on', b.dataset.k === trMode));
