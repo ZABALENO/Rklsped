@@ -538,11 +538,11 @@
         sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="8" letter-spacing=".4">přepravy</text>`;
         if (A2) sub += `<rect x="${L}" y="${y2}" width="${Math.max(k * A2, 2)}" height="${h2}" fill="${col}" opacity=".85"><title>${esc(x.name)}: agent – přepravy ${nf.format(A2)}</title></rect>`;
         if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#8d98ad" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
-        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" class="mn" fill="#b4bed2" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" class="${tier(pc2)[0]}" fill="${tier(pc2)[1]}" font-family="Inter" font-size="10" font-weight="700">${tt ? pc2 + ' %' : ''}</text>`;
+        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="${tier(pc2)[0]}" fill="${tier(pc2)[1]}" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" class="mn" fill="#b4bed2" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" class="${tier(pc2)[0]}" fill="${tier(pc2)[1]}" font-family="Inter" font-size="10" font-weight="700">${tt ? pc2 + ' %' : ''}</text>`;
       }
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
         ${segs}${sub}
-        <text x="${BX + 52}" y="${y + 15}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
+        <text x="${BX + 52}" y="${y + 15}" text-anchor="end" class="${tier(pct)[0]}" fill="${tier(pct)[1]}" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
         <text x="${BX + 60}" y="${y + 15}" class="mn" fill="#b4bed2" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
         ${day ? '' : `<text x="${BX + 158}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
         <text x="${W}" y="${y + 15}" text-anchor="end" class="${tier(pct)[0]}" fill="${tier(pct)[1]}" font-family="Inter" font-size="12" font-weight="700">${pct} %</text></g>`;
