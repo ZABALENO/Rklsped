@@ -72,7 +72,7 @@
   .legend i{width:9px;height:9px;flex:none;box-shadow:0 0 8px currentColor}
   .legend b{margin-left:auto;font:600 12px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff}
 
-  .rank{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow:auto;padding-right:4px}
+  .rank{display:flex;flex-direction:column;gap:7px}
   .rank .r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
   .rank .n{font-weight:700;letter-spacing:.5px}
   .rank .c{font:600 14px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff}
@@ -669,11 +669,12 @@
     document.querySelectorAll('.agord').forEach(e => e.remove());
     { const host = barMode === 'day' ? dn : barMode === 'week' ? wt : $('barTgl'); const sp = document.createElement('span'); sp.className = 'agord'; sp.title = 'Objednávky + přepravy zadané agentem ve zvoleném období'; sp.innerHTML = '<b>' + nf.format(agOrders) + '</b><small>obj. + přep. agent</small>'; host.appendChild(sp); }
     const use5 = {}; { const S5 = R.split; if (S5 && S5.days) { const t0 = today(), wm = {}; S5.days.forEach(d => { wm[d.date] = d.wd; }); const first = S5.days.reduce((m, d) => (d.date < m ? d.date : m), t0), wds = []; let dd = isoAdd(t0, -1);
-      for (let g = 0; g < 30 && wds.length < 5 && dd >= first; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
+      for (let g = 0; g < 40 && wds.length < 5; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
       if (wds.length) { const from = wds[wds.length - 1], to = wds[0]; S5.days.forEach(d => { if (d.date >= from && d.date <= to) for (const k in d.rels) { const q = d.rels[k], z = use5[k] || (use5[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } }); use5.$n = wds.length; } } }
-    const useTxt = k => { const z = use5[k]; return z && z.a + z.m > 0 ? '<span class="d" style="color:#3ddc84;font-weight:700;margin-top:-2px">využití agenta ' + Math.round(100 * z.a / (z.a + z.m)) + ' % <span style="font-weight:400;opacity:.85">objednávek · posl. ' + use5.$n + ' prac. dnů před dneškem</span></span>' : '<span class="d" style="margin-top:-2px">využití agenta: bez dat za posl. 5 prac. dnů</span>'; };
+    const useTxt = k => { const z = use5[k]; return z && z.a + z.m > 0 ? '<span class="d" style="color:#3ddc84;font-weight:700;margin-top:-2px">využití agenta ' + Math.round(100 * z.a / (z.a + z.m)) + ' % <span style="font-weight:400;opacity:.85">objednávek · posledních 5 pracovních dnů před dneškem</span></span>' : '<span class="d" style="margin-top:-2px">využití agenta: bez dat za posl. 5 prac. dnů</span>'; };
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
-    $('rank').innerHTML = rels.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
+    const agKeys = new Set(((R.split && R.split.rels) || []).filter(q => (q.pA || 0) + (q.tA || 0) > 0).map(q => q.key));
+    $('rank').innerHTML = rels.filter(x => agKeys.has(x.key)).sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
       <span class="n" style="color:var(--tx)">${esc(x.name)}</span><span class="c">${x.count == null ? '–' : nf.format(x.count)}</span>
       <div class="bar"><i style="width:${100 * (x.count || 0) / maxc}%;background:${color(x.i)}"></i></div>
       ${useTxt(x.key)}</div>`).join('');
