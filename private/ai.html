@@ -126,7 +126,7 @@
   .rich .use svg{width:92px;flex:none}
   .daynav{align-items:center;gap:10px}.daynav .dlbl{font:700 14px Inter,sans-serif;min-width:190px;text-align:center}.daynav button{font-size:18px;line-height:1;padding:3px 14px}.daynav button:disabled{opacity:.3;cursor:default}
   .agord{margin-left:auto;display:inline-flex;align-items:baseline;gap:6px;color:#3ddc84;white-space:nowrap}.agord b{font:900 26px/1 Inter,sans-serif;text-shadow:0 0 12px rgba(61,220,132,.45)}.agord small{font:700 10px Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;opacity:.85}
-  [data-theme="day"] .agord{color:#0f7a3d}[data-theme="day"] .agord b{text-shadow:none}
+  [data-theme="day"] svg text.agn{fill:#0f7a3d}[data-theme="day"] .agord{color:#0f7a3d}[data-theme="day"] .agord b{text-shadow:none}
   .bars2{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}.bars2[hidden]{display:none}.bars2 .b2t{font:700 11px Inter,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
   .tgl[hidden]{display:none}.tgl{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}.tgl button{background:transparent;color:var(--mut);border:1px solid rgba(94,138,255,.35);padding:5px 12px;font:600 12px Inter,sans-serif;cursor:pointer;border-radius:3px}.tgl button.on{background:rgba(94,138,255,.22);color:var(--tx,#fff);border-color:#5e8aff}
   .pdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}.pdt{font-weight:700;font-size:14px;margin-bottom:4px}.pdt span{color:var(--mut);font-weight:500;font-size:12px;margin-left:8px}
@@ -536,11 +536,11 @@
         sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="8" letter-spacing=".4">přepravy</text>`;
         if (A2) sub += `<rect x="${L}" y="${y2}" width="${Math.max(k * A2, 2)}" height="${h2}" fill="${col}" opacity=".85"><title>${esc(x.name)}: agent – přepravy ${nf.format(A2)}</title></rect>`;
         if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#f2a516" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
-        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" fill="#f2a516" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${tt ? pc2 + ' %' : ''}</text>`;
+        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" fill="#f2a516" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${tt ? pc2 + ' %' : ''}</text>`;
       }
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
         ${segs}${sub}
-        <text x="${BX + 52}" y="${y + 15}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
+        <text x="${BX + 52}" y="${y + 15}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
         <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
         ${day ? '' : `<text x="${BX + 158}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
         <text x="${W - 54}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${nf.format(o)} / ${nf.format(t)}</text>
