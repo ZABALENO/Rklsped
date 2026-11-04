@@ -562,7 +562,8 @@
     if (!days.length) return '<div class="sub">Zatím bez dat.</div>';
     const cI = k => rels.find(r => r.key === k)?.i ?? 0;
     const card = (name, col, pts) => {   // pts: počty po dnech, níže se přepočtou na procenta
-      const ta = pts.reduce((a, q) => a + q.a, 0), tm = pts.reduce((a, q) => a + q.m, 0);
+      const ta = pts.reduce((a, q) => a + q.a, 0), tm = pts.reduce((a, q) => a + q.m, 0), tcol = col;
+      col = ta > tm ? '#2fbf71' : '#5e8aff';   // čára agenta: modře, při převaze agentních pozic zeleně
       // graf ukazuje procentuální poměr agent / ručně pro každý den (ne počty); počty zůstávají v popisku bodu
       pts = pts.map(q => { const t = q.a + q.m; return { date: q.date, ra: q.a, rm: q.m, a: t ? 100 * q.a / t : 0, m: t ? 100 * q.m / t : 0 }; });
       const W = 520, H = 190, L = 40, R_ = 12, T = 12, B = 28, ph = H - T - B, pw = W - L - R_, max = 100;
@@ -584,11 +585,11 @@
       };
       const ym = (a, i) => Y(pts[i][a]), aboveAgent = pts.length > 1 ? ym('a', mi) + ym('a', mi + 1) <= ym('m', mi) + ym('m', mi + 1) : true;
       const labels = lab('a', 'Agent', col, aboveAgent) + lab('m', 'Ručně', '#f2a516', !aboveAgent);
-      return `<div class="pdc"><div class="pdt" style="color:${col}">${esc(name)} <span>agent ${nf.format(ta)} · ručně ${nf.format(tm)} · podíl agenta ${share} %</span></div><svg viewBox="0 0 ${W} ${H}">${g}${area}<path data-ln="m" d="${line('m')}" fill="none" stroke="#f2a516" stroke-width="2"/><path data-ln="a" pathLength="1" d="${line('a')}" fill="none" stroke="${col}" stroke-width="2.4"/>${dots}${labels}${lbl}</svg></div>`;
+      return `<div class="pdc"><div class="pdt" style="color:${tcol}">${esc(name)} <span>agent ${nf.format(ta)} · ručně ${nf.format(tm)} · podíl agenta ${share} %</span></div><svg viewBox="0 0 ${W} ${H}">${g}${area}<path data-ln="m" d="${line('m')}" fill="none" stroke="#f2a516" stroke-width="2"/><path data-ln="a" pathLength="1" d="${line('a')}" fill="none" stroke="${col}" stroke-width="2.4"/>${dots}${labels}${lbl}</svg></div>`;
     };
     const mk = key => days.map(d => ({ date: d.date, ...val(d.rels[key]) }));
     const all = days.map(d => { let a = 0, m = 0; for (const v of Object.values(d.rels)) { const q = val(v); a += q.a; m += q.m; } return { date: d.date, a, m }; });
-    const legend = '<div class="sub" style="margin:0 0 10px"><b style="color:var(--tx)">━</b> agent (barva relace) &nbsp; <b style="color:#f2a516">┅</b> ručně (oranžově) &nbsp;· jen dny, kdy agent dané relace zapsal alespoň 1 položku (přírůstky mezi stavy tabulky)</div>';
+    const legend = '<div class="sub" style="margin:0 0 10px"><b style="color:var(--tx)">━</b> agent (modře, při převaze agentních pozic zeleně) &nbsp; <b style="color:#f2a516">┅</b> ručně (oranžově) &nbsp;· jen dny, kdy agent dané relace zapsal alespoň 1 položku (přírůstky mezi stavy tabulky)</div>';
     const allP = all.filter(q => q.a >= 1);
     let html = legend + '<div class="pdgrid">' + (allP.length ? card('Všechny relace dohromady', '#5e8aff', allP) : '');
     const list = [];
