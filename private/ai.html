@@ -53,7 +53,8 @@
   .sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
 
   .grid{display:grid;gap:14px}
-  .g1{grid-template-columns:minmax(200px,1fr) minmax(260px,1.25fr) minmax(320px,1.9fr) minmax(220px,1.1fr)}
+  .g1{grid-template-columns:minmax(260px,1.2fr) minmax(320px,1.9fr) minmax(220px,1.1fr)}
+  .kpi{display:none!important}
   .panel{position:relative;background:var(--panel);border:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);
     box-shadow:inset 0 0 40px rgba(94,138,255,.05)}
@@ -471,7 +472,7 @@
   };
 
   function donut(rels, total) {
-    const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r;
+    const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, tl = nf.format(total).length, fs = tl <= 3 ? 54 : tl <= 5 ? 42 : 34;
     let acc = 0, arcs = '';
     rels.forEach((x, i) => {
       if (!x.count) return;
@@ -480,11 +481,11 @@
       acc += len;
     });
     if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${w}"/>`;
-    return `<svg viewBox="0 0 ${S} ${S}" style="max-width:260px;margin:0 auto">
+    return `<svg viewBox="0 0 ${S} ${S}" style="max-width:340px;margin:0 auto">
       <circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(94,138,255,.25)" stroke-dasharray="2 6"/>
       ${arcs}
-      <text x="${c}" y="${c - 2}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="30">${nf.format(total)}</text>
-      <text x="${c}" y="${c + 20}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
+      <text x="${c}" y="${c + fs * 0.34}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="${fs}" style="filter:drop-shadow(0 0 8px rgba(94,138,255,.6))">${nf.format(total)}</text>
+      <text x="${c}" y="${c + fs * 0.34 + 18}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text></svg>`;
   }
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
