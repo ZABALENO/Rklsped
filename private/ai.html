@@ -126,13 +126,13 @@
   .rich .use svg{width:92px;flex:none}
   .daynav{align-items:center;gap:10px}.daynav .dlbl{font:700 14px Inter,sans-serif;min-width:190px;text-align:center}.daynav button{font-size:18px;line-height:1;padding:3px 14px}.daynav button:disabled{opacity:.3;cursor:default}
   .agord{margin-left:auto;display:inline-flex;align-items:baseline;gap:6px;color:#3ddc84;white-space:nowrap}.agord b{font:900 26px/1 Inter,sans-serif;text-shadow:0 0 12px rgba(61,220,132,.45)}.agord small{font:700 10px Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;opacity:.85}
-  [data-theme="day"] svg text.agn{fill:#0f7a3d}[data-theme="day"] svg text.agl{fill:#b45309}.use5 .u{font-weight:700}.use5.hi{color:#3ddc84}.use5.lo{color:#f2a516}[data-theme="day"] .rank .use5.hi{color:#0f7a3d}[data-theme="day"] .rank .use5.lo{color:#b45309}[data-theme="day"] .agord{color:#0f7a3d}[data-theme="day"] .agord b{text-shadow:none}
+  [data-theme="day"] svg text.agn{fill:#0f7a3d}[data-theme="day"] svg text.agl{fill:#b45309}[data-theme="day"] svg text.agr{fill:#d32f2f}[data-theme="day"] svg text.agz{fill:#8b0000}[data-theme="day"] svg text.mn{fill:#5b6478}.use5.rd{color:#ff6b6b}.use5.zr{color:#c62828}[data-theme="day"] .rank .use5.rd{color:#d32f2f}[data-theme="day"] .rank .use5.zr{color:#8b0000}.use5 .u{font-weight:700}.use5.hi{color:#3ddc84}.use5.lo{color:#f2a516}[data-theme="day"] .rank .use5.hi{color:#0f7a3d}[data-theme="day"] .rank .use5.lo{color:#b45309}[data-theme="day"] .agord{color:#0f7a3d}[data-theme="day"] .agord b{text-shadow:none}
   .bars2{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}.bars2[hidden]{display:none}.bars2 .b2t{font:700 11px Inter,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
   .tgl[hidden]{display:none}.tgl{display:flex;gap:6px;margin:2px 0 10px;flex-wrap:wrap}.tgl button{background:transparent;color:var(--mut);border:1px solid rgba(94,138,255,.35);padding:5px 12px;font:600 12px Inter,sans-serif;cursor:pointer;border-radius:3px}.tgl button.on{background:rgba(94,138,255,.22);color:var(--tx,#fff);border-color:#5e8aff}
   .pdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px}.pdt{font-weight:700;font-size:14px;margin-bottom:4px}.pdt span{color:var(--mut);font-weight:500;font-size:12px;margin-left:8px}
   .tblwrap{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th,.tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid rgba(94,138,255,.14);white-space:nowrap}.tbl th:first-child,.tbl td:first-child{text-align:left}.tbl small{color:var(--mut);font-weight:400}.tbl .z{color:var(--mut)}.tbl tr.today td{background:rgba(94,138,255,.08)}.tbl tr.we td{opacity:.6}.tbl b.ag{color:#3ddc84}.tbl b.mn{color:#f2a516}.tbl td.tot{font-weight:700}
   .barleg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:12px;color:var(--mut)}.barleg i{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;border:1px solid #f2a516}
-  .barleg .lb{background:var(--cy);border-color:var(--cy)}.barleg .lp{background:repeating-linear-gradient(45deg,rgba(242,165,22,.9) 0 2px,rgba(242,165,22,.15) 2px 5px)}
+  .barleg .lb{background:var(--cy);border-color:var(--cy)}.barleg .lp{border-color:#8d98ad;background:repeating-linear-gradient(45deg,rgba(141,152,173,.95) 0 2px,rgba(141,152,173,.18) 2px 5px)}
   [data-theme="day"] svg tspan.pnd{fill:#b45309}
   .useall{display:flex;gap:28px;align-items:center;flex-wrap:wrap}.useall svg{width:min(260px,100%);flex:none}.useall .lg{flex:1;min-width:240px;font-size:15px}
   .useall .lg div{display:flex;gap:8px;align-items:baseline;margin-bottom:6px}.useall .lg i{width:10px;height:10px;flex:none;box-shadow:0 0 6px currentColor}.useall .lg b{margin-left:auto;font-weight:700;color:var(--tx)}
@@ -496,6 +496,8 @@
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const weekRange = off => { const t = today(), dow = (new Date(t + 'T12:00:00Z').getUTCDay() + 6) % 7, mon = isoAdd(t, -dow - 7 * off); return [mon, isoAdd(mon, 6)]; };
   const WEEK_NAMES = ['Tento týden', 'Minulý týden', 'Předminulý týden', 'Před předminulým'];
+  // barva využití agenta: >50 % zelená, 25–50 % oranžová, <25 % červená, 0 % tmavě červená
+  const tier = p => p > 50 ? ['agn', '#3ddc84'] : p >= 25 ? ['agl', '#f2a516'] : p > 0 ? ['agr', '#ff6b6b'] : ['agz', '#c62828'];
   function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
@@ -528,24 +530,24 @@
       const seg = (v, fill, stroke, dash, tip) => { if (!v) return; const w = Math.max(k * v, 2); segs += `<rect x="${xx}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}" ${dash ? 'stroke-dasharray="3 2"' : ''}><title>${esc(x.name)}: ${tip} ${nf.format(v)}</title></rect>`; xx += k * v; };
       seg(x.oA, col, col, 0, 'agent – objednávky'); seg(x.tA, col, col, 0, 'agent – přepravy');
       const split1 = xx; if (x.tA) segs += `<rect x="${xx - k * x.tA}" y="${y}" width="${Math.max(k * x.tA, 2)}" height="${h}" fill="url(#pt)" pointer-events="none"/>`;
-      seg(x.oM, 'url(#pd)', '#f2a516', 1, 'ručně – objednávky'); seg(x.tM, 'rgba(242,165,22,.62)', '#f2a516', 1, 'ručně – přepravy');
+      seg(x.oM, 'url(#pd)', '#8d98ad', 1, 'ručně – objednávky'); seg(x.tM, 'rgba(150,160,180,.5)', '#8d98ad', 1, 'ručně – přepravy');
       const o = x.oA + x.oM, t = x.tA + x.tM;
       let sub = '';
       if (sub2) {
         const y2 = y + h + 4, h2 = 9, A2 = x.xA || 0, M2 = x.xM || 0, tt = A2 + M2, pc2 = tt ? Math.round(100 * A2 / tt) : 0, ty = y2 + 8;
         sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="8" letter-spacing=".4">přepravy</text>`;
         if (A2) sub += `<rect x="${L}" y="${y2}" width="${Math.max(k * A2, 2)}" height="${h2}" fill="${col}" opacity=".85"><title>${esc(x.name)}: agent – přepravy ${nf.format(A2)}</title></rect>`;
-        if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#f2a516" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
-        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" fill="#f2a516" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" class="${pc2 > 50 ? 'agn' : 'agl'}" fill="${pc2 > 50 ? '#3ddc84' : '#f2a516'}" font-family="Inter" font-size="10" font-weight="700">${tt ? pc2 + ' %' : ''}</text>`;
+        if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#8d98ad" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
+        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" class="mn" fill="#b4bed2" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" class="${tier(pc2)[0]}" fill="${tier(pc2)[1]}" font-family="Inter" font-size="10" font-weight="700">${tt ? pc2 + ' %' : ''}</text>`;
       }
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
         ${segs}${sub}
         <text x="${BX + 52}" y="${y + 15}" text-anchor="end" class="agn" fill="#3ddc84" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
-        <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
+        <text x="${BX + 60}" y="${y + 15}" class="mn" fill="#b4bed2" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
         ${day ? '' : `<text x="${BX + 158}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
-        <text x="${W}" y="${y + 15}" text-anchor="end" class="${pct > 50 ? 'agn' : 'agl'}" fill="${pct > 50 ? '#3ddc84' : '#f2a516'}" font-family="Inter" font-size="12" font-weight="700">${pct} %</text></g>`;
+        <text x="${W}" y="${y + 15}" text-anchor="end" class="${tier(pct)[0]}" fill="${tier(pct)[1]}" font-family="Inter" font-size="12" font-weight="700">${pct} %</text></g>`;
     });
-    const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
+    const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(150,160,180,.16)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#8d98ad" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
     const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>${sub2 ? 'horní silný sloupec = objednávky, tenký sloupec pod ním = přepravy' : 'tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky'}</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek ' + dayLbl(dayOff).toLowerCase() + ' oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
@@ -618,7 +620,7 @@
       const bars_ = pts.map((p, i) => {
         const x = L + i * bw + bw * .12, w = bw * .76, ha = ph * p.a / max, hm = ph * p.m / max, y0 = T + ph, lead = p.a > p.m ? 'agent' : (p.m > p.a ? 'ručně' : 'vyrovnáno');
         return `<g><rect x="${x}" y="${y0 - ha}" width="${w}" height="${ha}" fill="${col}" opacity="${p.wd ? 1 : .55}"><title>${fmtD(p.date)} – ${esc(r.name)}: agent ${nf.format(p.a)}, ručně ${nf.format(p.m)} (převládá: ${lead})</title></rect>
-          <rect x="${x}" y="${y0 - ha - hm}" width="${w}" height="${hm}" fill="url(#pd)" stroke="#f2a516" stroke-width=".8"><title>${fmtD(p.date)} – ${esc(r.name)}: ručně ${nf.format(p.m)}</title></rect>
+          <rect x="${x}" y="${y0 - ha - hm}" width="${w}" height="${hm}" fill="url(#pd)" stroke="#8d98ad" stroke-width=".8"><title>${fmtD(p.date)} – ${esc(r.name)}: ručně ${nf.format(p.m)}</title></rect>
           ${i % every === 0 || i === pts.length - 1 ? `<text x="${x + w / 2}" y="${H - 9}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9">${+p.date.slice(8)}. ${+p.date.slice(5, 7)}.</text>` : ''}</g>`;
       }).join('');
       const ta = pts.reduce((a, p) => a + p.a, 0), tm = pts.reduce((a, p) => a + p.m, 0);
@@ -671,7 +673,7 @@
     const use5 = {}; { const S5 = R.split; if (S5 && S5.days) { const t0 = today(), wm = {}; S5.days.forEach(d => { wm[d.date] = d.wd; }); const first = S5.days.reduce((m, d) => (d.date < m ? d.date : m), t0), wds = []; let dd = isoAdd(t0, -1);
       for (let g = 0; g < 40 && wds.length < 5; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
       if (wds.length) { const from = wds[wds.length - 1], to = wds[0]; S5.days.forEach(d => { if (d.date >= from && d.date <= to) for (const k in d.rels) { const q = d.rels[k], z = use5[k] || (use5[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } }); use5.$n = wds.length; } } }
-    const useTxt = k => { const z = use5[k]; return z && z.a + z.m > 0 ? '<span class="d use5 ' + (100 * z.a / (z.a + z.m) > 50 ? 'hi' : 'lo') + '" style="margin-top:-2px"><b>využití agenta ' + Math.round(100 * z.a / (z.a + z.m)) + ' %</b> <span style="font-weight:400;opacity:.9">objednávek · posledních 5 pracovních dnů před dneškem</span></span>' : '<span class="d" style="margin-top:-2px">využití agenta: bez dat za posl. 5 prac. dnů</span>'; };
+    const useTxt = k => { const z = use5[k]; return z && z.a + z.m > 0 ? '<span class="d use5 ' + (q => q > 50 ? 'hi' : q >= 25 ? 'lo' : q > 0 ? 'rd' : 'zr')(Math.round(100 * z.a / (z.a + z.m))) + '" style="margin-top:-2px"><b>využití agenta ' + Math.round(100 * z.a / (z.a + z.m)) + ' %</b> <span style="font-weight:400;opacity:.9">objednávek · posledních 5 pracovních dnů před dneškem</span></span>' : '<span class="d" style="margin-top:-2px">využití agenta: bez dat za posl. 5 prac. dnů</span>'; };
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     const agKeys = new Set(((R.split && R.split.rels) || []).filter(q => (q.pA || 0) + (q.tA || 0) > 0).map(q => q.key));
     $('rank').innerHTML = rels.filter(x => agKeys.has(x.key)).sort((a, b) => (b.count || 0) - (a.count || 0)).map(x => `<div class="r" style="color:${color(x.i)}">
