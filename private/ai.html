@@ -490,7 +490,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord';
+  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord', sortKey = 'tot';
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -519,11 +519,13 @@
       });
       for (let i = items.length - 1; i >= 0; i--) if (items[i].a + items[i].m + (kindMode === 'all' ? (items[i].xA || 0) + (items[i].xM || 0) : 0) <= 0) items.splice(i, 1);
     }
-    items.sort((p, q) => (q.a + q.m + (kindMode === 'all' ? (q.xA || 0) + (q.xM || 0) : 0)) - (p.a + p.m + (kindMode === 'all' ? (p.xA || 0) + (p.xM || 0) : 0)));
+    { const tot = x => x.a + x.m + (kindMode === 'all' ? (x.xA || 0) + (x.xM || 0) : 0), pc = x => x.a + x.m ? x.a / (x.a + x.m) : -1;
+      const val = { tot, a: x => x.a, m: x => x.m, pct: pc }[sortKey] || tot;
+      items.sort((p, q) => (val(q) - val(p)) || (tot(q) - tot(p))); }
     if (!items.some(x => x.a + x.m + (x.xA || 0) + (x.xM || 0))) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
     const sub2 = kindMode === 'all', n = items.length, W = 600, RH = sub2 ? 46 : 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
-    const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
-    let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + hd(W, '% AGENT', 'text-anchor="end"');
+    const bwid = BX - L - 6, hd = (x, t, extra, key, hx, hw) => { const on = key === sortKey; const tx = `<text x="${x}" y="14" fill="${on ? '#fff' : '#c3cfe8'}" font-family="Inter" font-size="8" letter-spacing=".5" ${on ? 'font-weight="800"' : ''} ${extra || ''}>${t}${on ? ' ▼' : ''}</text>`; return key ? `<g data-sort="${key}" style="cursor:pointer"><title>Seřadit podle: ${t.toLowerCase()} (od nejvyšší)</title><rect x="${hx}" y="1" width="${hw}" height="17" fill="rgba(255,255,255,.001)"/>${tx}</g>` : tx; };
+    let b = hd(L, 'SOUČET', '', 'tot', L - 2, 52) + hd(BX + 52, 'AGENT', 'text-anchor="end"', 'a', BX + 8, 48) + hd(BX + 60, 'RUČNĚ', '', 'm', BX + 56, 44) + hd(W, '% AGENT', 'text-anchor="end"', 'pct', W - 52, 52);
     items.forEach((x, i) => {
       const y = T + i * RH, h = sub2 ? 17 : 18, k = bwid / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
       let xx = L, segs = '';
@@ -923,6 +925,7 @@
   });
   document.querySelectorAll('#barTgl button').forEach(b => b.addEventListener('click', () => { barMode = b.dataset.m; render(); }));
   $('trKind').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { trMode = b.dataset.k; render(); } });
+  $('bars').addEventListener('click', e => { const g = e.target.closest('[data-sort]'); if (g) { const k = g.dataset.sort; sortKey = (sortKey === k && k !== 'tot') ? 'tot' : k; render(); } });
   $('kindTgl').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { kindMode = b.dataset.k; render(); } });
   $('dayNav').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if (b && !b.disabled) { dayOff = Math.max(0, Math.min(7, dayOff + +b.dataset.d)); render(); } });
   $('weekTgl').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { weekOff = +b.dataset.w; render(); } });
