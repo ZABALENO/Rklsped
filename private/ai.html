@@ -390,7 +390,7 @@
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
     <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
-    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div><div id="bars2" class="bars2" hidden></div></div>
+    <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Pořadí</h3><div class="rank" id="rank"></div></div>
   </div>
 
@@ -495,7 +495,7 @@
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const weekRange = off => { const t = today(), dow = (new Date(t + 'T12:00:00Z').getUTCDay() + 6) % 7, mon = isoAdd(t, -dow - 7 * off); return [mon, isoAdd(mon, 6)]; };
   const WEEK_NAMES = ['Tento týden', 'Minulý týden', 'Předminulý týden', 'Před předminulým'];
-  function bars(rels, compact) {
+  function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
     const items = S.rels.map(x => { const t = AM(x), td = AM(x.today); return { name: x.name, key: x.key, ...t, oA: x.pA, tA: x.tA, oM: x.pM, tM: x.tM, ta: td.a, tm: td.m, i: rels.find(r => r.key === x.key)?.i ?? 0 }; }).filter(x => x.a + x.m > 0);
@@ -510,7 +510,7 @@
     if (kindMode !== 'all') {
       const ord = kindMode === 'ord';
       items.forEach(x => {
-        if (ord) { x.tA = 0; x.tM = 0; } else { x.oA = 0; x.oM = 0; }
+        if (ord) { x.xA = x.tA; x.xM = x.tM; x.tA = 0; x.tM = 0; } else { x.oA = 0; x.oM = 0; }
         x.a = x.oA + x.tA; x.m = x.oM + x.tM;
         const q = S.rels.find(r => r.key === x.key).today; x.ta = ord ? q.pA : q.tA; x.tm = ord ? q.pM : q.tM;
       });
@@ -518,19 +518,27 @@
     }
     items.sort((p, q) => (q.a + q.m) - (p.a + p.m));
     if (!items.some(x => x.a + x.m)) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
-    const n = items.length, W = 600, RH = compact ? 24 : 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => x.a + x.m));
+    const sub2 = kindMode === 'ord', n = items.length, W = 600, RH = sub2 ? 46 : 34, T = 26, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
     const bwid = BX - L - 6, hd = (x, t, extra) => `<text x="${x}" y="14" fill="#c3cfe8" font-family="Inter" font-size="8" letter-spacing=".5" ${extra || ''}>${t}</text>`;
     let b = hd(BX + 52, 'AGENT', 'text-anchor="end"') + hd(BX + 60, 'RUČNĚ') + (day ? '' : hd(BX + 158, 'DNES A / R', 'text-anchor="end" fill="#3ddc84"')) + hd(W - 54, 'OBJ. / PŘEP.', 'text-anchor="end"') + hd(W, '% AGENT', 'text-anchor="end"');
     items.forEach((x, i) => {
-      const y = T + i * RH, h = compact ? 13 : 18, k = bwid / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
+      const y = T + i * RH, h = sub2 ? 17 : 18, k = bwid / max, col = color(x.i), pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0;
       let xx = L, segs = '';
       const seg = (v, fill, stroke, dash, tip) => { if (!v) return; const w = Math.max(k * v, 2); segs += `<rect x="${xx}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}" ${dash ? 'stroke-dasharray="3 2"' : ''}><title>${esc(x.name)}: ${tip} ${nf.format(v)}</title></rect>`; xx += k * v; };
       seg(x.oA, col, col, 0, 'agent – objednávky'); seg(x.tA, col, col, 0, 'agent – přepravy');
       const split1 = xx; if (x.tA) segs += `<rect x="${xx - k * x.tA}" y="${y}" width="${Math.max(k * x.tA, 2)}" height="${h}" fill="url(#pt)" pointer-events="none"/>`;
       seg(x.oM, 'url(#pd)', '#f2a516', 1, 'ručně – objednávky'); seg(x.tM, 'rgba(242,165,22,.62)', '#f2a516', 1, 'ručně – přepravy');
       const o = x.oA + x.oM, t = x.tA + x.tM;
+      let sub = '';
+      if (sub2) {
+        const y2 = y + h + 4, h2 = 9, A2 = x.xA || 0, M2 = x.xM || 0, tt = A2 + M2, pc2 = tt ? Math.round(100 * A2 / tt) : 0, ty = y2 + 8;
+        sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="8" letter-spacing=".4">přepravy</text>`;
+        if (A2) sub += `<rect x="${L}" y="${y2}" width="${Math.max(k * A2, 2)}" height="${h2}" fill="${col}" opacity=".85"><title>${esc(x.name)}: agent – přepravy ${nf.format(A2)}</title></rect>`;
+        if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#f2a516" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
+        sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="10" font-weight="700">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" fill="#f2a516" font-family="Inter" font-size="10" font-weight="700">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="10">${tt ? pc2 + ' %' : ''}</text>`;
+      }
       b += `<g><text x="${L - 8}" y="${y + 15}" text-anchor="end" fill="#e3ebff" font-family="-apple-system,BlinkMacSystemFont,&quot;SF Pro Text&quot;,Inter,sans-serif" font-weight="600" font-size="12">${esc(x.name)}</text>
-        ${segs}
+        ${segs}${sub}
         <text x="${BX + 52}" y="${y + 15}" text-anchor="end" fill="var(--tx,#fff)" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.a)}</text>
         <text x="${BX + 60}" y="${y + 15}" fill="#f2a516" font-family="Inter" font-size="12" font-weight="700">${nf.format(x.m)}</text>
         ${day ? '' : `<text x="${BX + 158}" y="${y + 15}" text-anchor="end" font-family="Inter" font-size="12" font-weight="700"><tspan fill="#3ddc84">${nf.format(x.ta)}</tspan><tspan fill="#c3cfe8"> / </tspan><tspan fill="#f2a516">${nf.format(x.tm)}</tspan></text>`}
@@ -538,8 +546,7 @@
         <text x="${W}" y="${y + 15}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="12">${pct} %</text></g>`;
     });
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(242,165,22,.18)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#f2a516" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
-    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek ' + dayLbl(dayOff).toLowerCase() + ' oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
-    if (compact) return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>`;
+    const leg = `<div class="barleg"><span><i class="lb"></i>zapsal agent</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>${sub2 ? 'horní silný sloupec = objednávky, tenký sloupec pod ním = přepravy' : 'tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky'}</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek ' + dayLbl(dayOff).toLowerCase() + ' oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026; „Dnes A / R“ = dnešní přírůstek'}</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
 
@@ -652,9 +659,6 @@
     $('kpiMeta').innerHTML = [withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '', R.trips ? 'z toho ' + nf.format(R.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ');
     $('pie').innerHTML = donut(rels, total);
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
-    { const b2 = $('bars2'), show = kindMode === 'ord';
-      b2.hidden = !show;
-      if (show) { const k0 = kindMode; kindMode = 'trp'; let h2 = ''; try { h2 = bars(rels, true); } finally { kindMode = k0; } b2.innerHTML = '<div class="b2t">Přepravy – agent vs. ručně</div>' + (h2.startsWith('<div class="sub"') ? '<div class="sub" style="padding:8px 0">V tomto období zatím žádné přepravy.</div>' : h2); } }
     $('bars').innerHTML = bars(rels);
     document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
     document.querySelectorAll('#kindTgl button').forEach(b => b.classList.toggle('on', b.dataset.k === kindMode));
