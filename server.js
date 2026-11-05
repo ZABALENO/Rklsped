@@ -197,7 +197,7 @@ async function refreshSheet(force) {
       out.ownSheet = !!own;
       if (rowFilter && (!own || alwaysFilter)) { const all = out.rows.length; out.rows = rowFilter(out.rows, out); out.hiddenByFilter = all - out.rows.length; }
       sheet = { ...out, fetchedAt: new Date().toISOString(), error: null, url };
-      await require('./lib/change').trackChange(mem.cfg, put, out, url);
+      await require('./lib/change').trackChange(mem.cfg, put, out, url, out.rows);
       await evaluateSales(out.rows);
     } catch (e) {
       sheet = { ...sheet, error: e.message, url, fetchedAt: sheet.url === url ? sheet.fetchedAt : null, rows: sheet.url === url ? sheet.rows : [] };
