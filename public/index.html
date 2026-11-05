@@ -687,7 +687,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmtW = w => w == null ? '–' : new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(w) + ' kg';
   const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}. ${y}`; };
-  const fmtChg = iso => { const d = new Date(iso), n = new Date(); const same = d.toDateString() === n.toDateString(); return (same ? 'dnes' : `${d.getDate()}. ${d.getMonth()+1}.`) + ' v ' + hhmm(d); };
+  const fmtChg = iso => { const d = new Date(iso); return `${d.getDate()}. ${d.getMonth()+1}. ${d.getFullYear()}` + ' v ' + hhmm(d); };
   const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const plural = n => n === 1 ? 'přeprava' : (n >= 2 && n <= 4 ? 'přepravy' : 'přeprav');
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } };
@@ -980,8 +980,8 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     else if (B.error) showBanner('Tabulku se nepodařilo načíst: ' + B.error + (B.fetchedAt ? ' Zobrazuji poslední načtená data.' : ''), true);
     else if (B.missing && B.missing.length) showBanner('V tabulce chybí sloupce: ' + B.missing.map(k => ({ date: 'Datum nakl.od', route: 'Trasa', goods: 'Popis zboží', weight: 'Hmotnost(kg)', prepr: 'Přeprava', carrier: 'Dopravce' }[k])).join(', '), true);
     else showBanner('');
-    $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (ASG ? (B.changedAt || B.fetchedAt ? 'načteno ' + fmtChg(B.changedAt || B.fetchedAt) : '') : (B.fetchedAt ? 'načteno ' + hhmm(new Date(B.fetchedAt)) : ''));
-    if (ASG) $('chg').textContent = B.configured ? '' : 'tabulka není nastavena'; else $('chg').textContent = B.changedAt ? 'data v tabulce změněna ' + fmtChg(B.changedAt) : (B.configured ? '' : 'tabulka není nastavena');
+    $('upd').textContent = (B.until ? 'nakládky do ' + fmtDate(B.until) + ' · ' : '') + (B.fetchedAt ? 'načteno ' + hhmm(new Date(B.fetchedAt)) : '');
+    $('chg').textContent = B.changedAt ? 'poslední změna v tabulce: ' + fmtChg(B.changedAt) : (B.configured ? '' : 'tabulka není nastavena');
 
     const shown = renderRows(today);
     const empty = $('empty');
