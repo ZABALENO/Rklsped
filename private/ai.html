@@ -496,9 +496,9 @@
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const weekRange = off => { const t = today(), dow = (new Date(t + 'T12:00:00Z').getUTCDay() + 6) % 7, mon = isoAdd(t, -dow - 7 * off); return [mon, isoAdd(mon, 6)]; };
   const WEEK_NAMES = ['Tento týden', 'Minulý týden', 'Předminulý týden', 'Před předminulým'];
-  // barva využití agenta: >50 % zelená, 25–50 % oranžová, <25 % červená, 0 % tmavě červená
-  const tierBar = p => p > 50 ? '#2fbf71' : p >= 25 ? '#f2a516' : p > 0 ? '#ff6b6b' : '#c62828';
-  const tier = p => p > 50 ? ['agn', '#3ddc84'] : p >= 25 ? ['agl', '#f2a516'] : p > 0 ? ['agr', '#ff6b6b'] : ['agz', '#c62828'];
+  // barva využití agenta: od 50 % zelená, 25–50 % oranžová, <25 % červená, 0 % tmavě červená
+  const tierBar = p => p >= 50 ? '#2fbf71' : p >= 25 ? '#f2a516' : p > 0 ? '#ff6b6b' : '#c62828';
+  const tier = p => p >= 50 ? ['agn', '#3ddc84'] : p >= 25 ? ['agl', '#f2a516'] : p > 0 ? ['agr', '#ff6b6b'] : ['agz', '#c62828'];
   function bars(rels) {
     const S = R.split; if (!S || !S.rels.length) return '<div class="sub" style="padding:20px 0">Čekám na data z listu „Počty pozic“.</div>';
     if (!S.rels.some(x => AM(x).a + AM(x).m)) return '<div class="sub" style="padding:20px 0">Čekám na první zápis do listu „Počty pozic“.</div>';
@@ -677,7 +677,7 @@
       for (let g = 0; g < 40 && wds.length < 5; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
       if (wds.length) { const from = wds[wds.length - 1], to = wds[0]; S5.days.forEach(d => { if (d.date >= from && d.date <= to) for (const k in d.rels) { const q = d.rels[k], z = use5[k] || (use5[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } }); use5.$n = wds.length; } } }
     const usePct = k => { const z = use5[k]; return z && z.a + z.m > 0 ? Math.round(100 * z.a / (z.a + z.m)) : null; };
-    const useCls = p => p == null ? '' : p > 50 ? 'hi' : p >= 25 ? 'lo' : p > 0 ? 'rd' : 'zr';
+    const useCls = p => p == null ? '' : p >= 50 ? 'hi' : p >= 25 ? 'lo' : p > 0 ? 'rd' : 'zr';
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     const agKeys = new Set(((R.split && R.split.rels) || []).filter(q => (q.pA || 0) + (q.tA || 0) > 0).map(q => q.key));
     $('rank').innerHTML = rels.filter(x => agKeys.has(x.key)).sort((a, b) => (usePct(b.key) ?? -1) - (usePct(a.key) ?? -1) || (b.count || 0) - (a.count || 0)).map(x => { const p = usePct(x.key); return `<div class="r" style="color:${color(x.i)}">
