@@ -847,7 +847,28 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   const colKey = (r, c) => c === 'date' ? (r.date || '9999') : c === 'unl' ? (r.unlTo || '9999') : c === 'weight' ? (r.weight == null ? -1 : r.weight) : c === 'price' ? priceNum(r) : fold(colText(r, c));
   const fWords = c => fold(view.f[c] || '').trim().split(/\s+/).filter(Boolean);
   const passFilters = r => COLS.every(c => { const w = fWords(c); if (!w.length) return true; const t = fold(colText(r, c)); return w.every(x => t.includes(x)); });
-  const manualPass = m => COLS.every(c => { const w = fWords(c); if (!w.length) return true; const t = fold(m.text); return w.every(x => t.includes(x)); });
+  // ruční řádek má jen datum nakládky + trasu: filtr sloupce Datum / Trasa hledá v dané části, ostatní sloupce (kde ruční řádek nemá hodnotu) ho při použití filtru skryjí
+  const manualPass = m => COLS.every(c => {
+    const w = fWords(c); if (!w.length) return true;
+    const sp = splitManual(m.text), t = fold(c === 'date' ? sp.d : c === 'route' ? sp.r : c === 'note' ? 'rucne' : '');
+    return w.every(x => t.includes(x));
+  });
+  // datum nakládky z ručního řádku (první hodnota; u rozmezí začátek) -> ISO, bez data na konec
+  const manualIso = m => {
+    const sp = splitManual(m.text), q = sp.d.match(/(\d{1,2})\.\s?(\d{1,2})\.?(?:\s?(\d{2,4}))?/); if (!q) return '9999-12-31';
+    const t = todayIso(); let y = q[3] ? (+q[3] < 100 ? 2000 + +q[3] : +q[3]) : +t.slice(0, 4);
+    const mk = yy => `${yy}-${String(+q[2]).padStart(2, '0')}-${String(+q[1]).padStart(2, '0')}`;
+    let iso = mk(y); if (!q[3] && iso < isoAddDays(t, -150)) iso = mk(y + 1);
+    return iso;
+  };
+  const isoAddDays = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const sortManual = ms => {
+    const s2 = view.sort, k = s2 && s2.d === 'desc' ? -1 : 1, cmp = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+    return ms.slice().sort((a, b) => {
+      if (s2 && s2.c === 'route') return cmp(fold(splitManual(a.text).r), fold(splitManual(b.text).r)) * k || cmp(manualIso(a), manualIso(b));
+      return cmp(manualIso(a), manualIso(b)) * (s2 && s2.c === 'date' ? k : 1) || cmp(fold(a.text), fold(b.text));
+    });
+  };
   const sortRows = rows => {
     if (!view.sort) return rows;
     const pin = (a, b) => (a.pinned && b.pinned ? a.pinned.localeCompare(b.pinned) : a.pinned ? -1 : b.pinned ? 1 : 0);
@@ -927,7 +948,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
       const inF = f => list.filter(r => F[r.key] === f);
       const rest = list.filter(r => !F[r.key] || !FOLDERS.some(x => x[0] === F[r.key]));
       const restShown = (showAll || vis.searching) ? rest : rest.slice(0, Math.max(MAX_ROWS, rest.filter(r => r.pinned).length));
-      const manHtml = f => M.filter(m => (m.folder || null) === f && manualPass(m)).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
+      const manHtml = f => sortManual(M.filter(m => (m.folder || null) === f && manualPass(m))).map(m => { const r = m.suggest && byKey.get(m.suggest.key); return manualHtml(m, f) + (r ? suggHtml(m, r, today, f) : ''); }).join('');
       const head = (f, name, n) => `<tr class="fold" data-drop="${f}"><td colspan="8">${`<button class="ftog" data-tog="${f}" aria-expanded="${!collapsed.includes(f)}" title="Sbalit / rozbalit">${collapsed.includes(f) ? '▸' : '▾'}</button>`}<b>${name}</b> <span class="fcnt">${n}</span><span class="fhint">${f === 'none' ? 'sem přetáhni řádek, aby se vrátil do hlavního seznamu' : 'přetáhni sem řádek (úchyt ⠿ vlevo)'}</span></td></tr>`;
       v2html = FOLDERS.map(([f, name]) => head(f, name, inF(f).length + M.filter(m => m.folder === f).length) + (collapsed.includes(f) ? '' : manHtml(f) + inF(f).map(r => rowHtml(r, today, { folder: f })).join(''))).join('')
         + head('none', 'Ostatní', rest.length + M.filter(m => !m.folder).length) + (collapsed.includes('none') ? '' : manHtml(null) + restShown.map(r => rowHtml(r, today, { folder: 'none' })).join(''));
