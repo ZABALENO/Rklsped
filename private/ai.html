@@ -295,6 +295,11 @@
   .pj-node.root>.pj-hd .nm{color:var(--pc);font-size:18px}.pj-node.root>.pj-hd .arr{color:var(--pc)}
   .pj-node.root .pj-node{border-left:3px solid var(--pc)}
   .pj-node.root .pj-node>.pj-hd .nm{font-size:15px}
+  .pj-use{font:600 13px Inter,sans-serif;white-space:nowrap}.pj-use b{font-size:17px;font-weight:900;margin-right:2px}
+  .pj-node.use{border-left:6px solid var(--pc);background:color-mix(in srgb,var(--pc) 8%,transparent)}
+  .pj-node.use>.pj-hd{background:color-mix(in srgb,var(--pc) 18%,transparent)}
+  .pj-node.use>.pj-hd .nm{color:var(--pc)}.pj-node.use>.pj-hd .arr{color:var(--pc)}
+  [data-theme="day"] .pj-node.use>.pj-hd .nm,[data-theme="day"] .pj-use{filter:brightness(.72)}
 </style>
 <style id="skins">
   /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
@@ -462,13 +467,13 @@
   </div>
 
 
-  <div class="sec" id="phSec" role="button" tabindex="0" aria-expanded="false" aria-controls="phones" style="cursor:pointer;user-select:none"><span id="phArr" aria-hidden="true">▸</span> Jak agenta využíváme</div>
-  <div class="phones" id="phones" hidden></div>
   <div class="sec">Aktuálně agentizujeme</div>
   <div class="panel pj" id="projPanel">
     <div class="pj-top"><input type="text" class="grow" id="pjNewTop" maxlength="80" placeholder="Nové odvětví (např. Zákaznický servis, Fakturace…)"><button type="button" id="pjAddTop">+ Přidat odvětví</button></div>
     <div id="pjTree"><div class="pj-empty">Načítám…</div></div><div class="pj-err" id="pjErr"></div>
   </div>
+  <div class="sec" id="phSec" role="button" tabindex="0" aria-expanded="false" aria-controls="phones" style="cursor:pointer;user-select:none"><span id="phArr" aria-hidden="true">▸</span> Jak agenta využíváme</div>
+  <div class="phones" id="phones" hidden></div>
   <button class="adminbtn" id="adminBtn" type="button" aria-expanded="false" aria-controls="admin">admin</button>
   <div id="admin" hidden>
     <div class="sec">Přehled problémů agentů</div>
@@ -738,6 +743,7 @@
       for (let g = 0; g < 40 && wds.length < 5; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
       if (wds.length) { const from = wds[wds.length - 1], to = wds[0]; S5.days.forEach(d => { if (d.date >= from && d.date <= to) for (const k in d.rels) { const q = d.rels[k], z = use5[k] || (use5[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } }); use5.$n = wds.length; } } }
     const usePct = k => { const z = use5[k]; return z && z.a + z.m > 0 ? Math.round(100 * z.a / (z.a + z.m)) : null; };
+    { const m = {}; for (const q of ((R.split && R.split.rels) || [])) m[q.name] = usePct(q.key); const prev = JSON.stringify(window.pjUse || {}); window.pjUse = m; if (prev !== JSON.stringify(m) && window.pjRefresh) window.pjRefresh(); }
     const useCls = p => p == null ? '' : p >= 50 ? 'hi' : p >= 25 ? 'lo' : p > 0 ? 'rd' : 'zr';
     const maxc = Math.max(1, ...rels.map(x => x.count || 0));
     const agKeys = new Set(((R.split && R.split.rels) || []).filter(q => (q.pA || 0) + (q.tA || 0) > 0).map(q => q.key));
@@ -1016,7 +1022,9 @@
     const secH = (n, title, kind, label) => `<div class="pj-sh"><h4>${title}</h4><button class="pj-sp" data-a="s-${kind}" title="${label}">＋ ${label}</button></div>`;
     function nodeHtml(n, sib, i, depth = 0) {
       const isOpen = !closed.has(n.id), st = stat(n), ch = kids(n.id), ed = editing.has(n.id), ic = (a, t, ttl) => ed ? `<button class="ic" data-a="${a}" title="${ttl}">${t}</button>` : '';
-      let h = `<div class="pj-node${depth === 0 ? " root" : ""}" data-id="${n.id}"${depth === 0 ? ` style="--pc:${PJPAL[i % PJPAL.length]}"` : ""}><div class="pj-hd" data-a="tog"><span class="arr">${isOpen ? '▾' : '▸'}</span><span class="nm">${esc(n.name)}</span>`;
+      const us = useFor(n.name), uc = us ? useCol(us.pct) : null;
+      let h = `<div class="pj-node${depth === 0 ? ' root' : ''}${uc ? ' use' : ''}" data-id="${n.id}"${uc ? ` style="--pc:${uc}"` : depth === 0 ? ` style="--pc:${PJPAL[i % PJPAL.length]}"` : ''}><div class="pj-hd" data-a="tog"><span class="arr">${isOpen ? '▾' : '▸'}</span><span class="nm">${esc(n.name)}</span>`;
+      if (us) h += us.pct == null ? '<span class="pj-use" style="opacity:.75">bez dat o využití agenta za posl. 5 prac. dní</span>' : `<span class="pj-use" style="color:${uc}"><b>${us.pct} %</b> využívá agenta ke psaní objednávek za posl. 5 prac. dní</span>`;
       if (st.t) h += `<span class="pj-chip ${st.d === st.t ? 'ok' : ''}" title="Hotové body checklistu včetně pododvětví">${st.d}/${st.t} hotovo</span>`;
       h += `<span class="pj-mw"><button class="pj-sp" data-a="addmenu" title="Přidat bod, zápis, dokument nebo pododvětví">＋ Přidat</button><button class="pj-dots" data-a="menu" title="Úpravy odvětví (přejmenovat, přesunout, smazat)">⋯</button>`;
       if (addFor === n.id) h += `<div class="pj-menu"><div class="pj-mt">Přidat do: ${esc(n.name)}</div><button data-a="s-item">☑ Bod do checklistu</button><button data-a="s-note">📝 Zápis ze schůzky</button><button data-a="s-file">📄 Dokument</button><button data-a="s-sub">▸ Pododvětví</button></div>`;
@@ -1034,6 +1042,15 @@
       return h + '</div>';
     }
     const PJPAL = ['#5e8aff', '#f2a516', '#2fbf71', '#ff6b6b', '#b28dff', '#2cc7d9', '#ff8fd0', '#c9d94a'];
+    const fold = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const esc2 = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const useFor = nm => {   // název odvětví obsahuje název relace (např. „Dispečink Západ 1“) -> její využití agenta
+      const u = window.pjUse || {}, f = fold(nm); let best = null;
+      for (const k of Object.keys(u)) { const kk = fold(k); if (new RegExp('(^|[^a-z0-9])' + esc2(kk) + '(?![0-9])').test(f) && (!best || kk.length > fold(best).length)) best = k; }
+      return best ? { name: best, pct: u[best] } : null;
+    };
+    const useCol = p => p == null ? null : p >= 50 ? '#2fbf71' : p >= 25 ? '#f2a516' : p > 0 ? '#ff6b6b' : '#c62828';
+    window.pjRefresh = () => { const el = document.activeElement; if (el && $('pjTree').contains(el) && /^(INPUT|TEXTAREA)$/.test(el.tagName)) return; if (nodes.length) render(); };
     let anchor = null, flash = null;
     function render() {
       const el0 = anchor && $('pjTree').querySelector(`.pj-node[data-id="${anchor}"]`), y0 = el0 ? el0.getBoundingClientRect().top : null;
