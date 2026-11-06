@@ -281,6 +281,15 @@
   .pj-fbtn{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:7px 12px;font:600 13px Inter,sans-serif;cursor:pointer}
   .pj button.gh{border-color:transparent;opacity:.8}
   .pj-hd .nm{flex:0 1 auto!important}
+  .pj-sh{display:flex;align-items:center;gap:10px;margin-bottom:6px}.pj-sh h4{margin:0!important;flex:1}
+  .pj-sec{padding:8px 0;border-top:1px solid rgba(120,160,255,.16)}.pj-sec:first-child{border-top:0}
+  .pj button.pj-sp{border-color:var(--cy);color:var(--cy);padding:4px 11px;font-size:12px}
+  .pj button.pj-sp:hover{background:var(--cy);color:#000}
+  [data-theme="day"] .pj button.pj-sp:hover{color:#fff}
+  .pj button.pj-dots{font-size:20px;line-height:1;padding:0 10px 4px;border-color:transparent}
+  .pj-mt{font:800 12px Inter,sans-serif;color:var(--mut);padding:4px 10px 6px;border-bottom:1px solid rgba(120,160,255,.25);margin-bottom:4px}
+  @keyframes pjf{from{background:rgba(47,191,113,.45)}to{background:transparent}}
+  .pj .flash{animation:pjf 1.8s ease-out}
 </style>
 <style id="skins">
   /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
@@ -991,43 +1000,47 @@
     const stat = n => { let d = n.items.filter(x => x.done).length, t = n.items.length; for (const c of kids(n.id)) { const s2 = stat(c); d += s2.d; t += s2.t; } return { d, t }; };
     const err = m => { $('pjErr').textContent = m || ''; if (m) setTimeout(() => { if ($('pjErr').textContent === m) $('pjErr').textContent = ''; }, 6000); };
     async function op(body) { try { const j = await api('/api/agents/proj/op', body); err(''); return j; } catch (e) { err(e.message); } }
-    function form(n) {
-      const k = adding[n.id]; if (!k) return '';
+    function form(n, k) {
+      if (adding[n.id] !== k) return '';
       const x = '<button data-a="cancel" class="gh">Zrušit</button>';
       if (k === 'item') return `<div class="pj-form"><div class="pj-add"><input type="text" class="grow" data-f="item" maxlength="300" placeholder="Nový bod checklistu…"><button data-a="addI">Přidat bod</button>${x}</div></div>`;
       if (k === 'sub') return `<div class="pj-form"><div class="pj-add"><input type="text" class="grow" data-f="sub" maxlength="80" placeholder="Název pododvětví…"><button data-a="addS">Přidat pododvětví</button>${x}</div></div>`;
       if (k === 'note') return `<div class="pj-form"><div class="pj-add" style="margin:0 0 8px"><input type="text" class="grow" data-f="ntitle" maxlength="120" placeholder="Nadpis (např. Schůzka 6. 11.)"><input type="date" data-f="ndate" value="${today()}"></div><textarea data-f="ntext" placeholder="Text zápisu…"></textarea><div class="pj-add"><button data-a="addN">Uložit zápis</button>${x}</div></div>`;
-      if (k === 'file') return `<div class="pj-form"><div class="pj-add"><label><input type="file" data-f="file" multiple hidden><span class="pj-fbtn">⬆ Vybrat dokument (max 4 MB)</span></label>${x}</div></div>`;
-      return '';
+      return `<div class="pj-form"><div class="pj-add"><label><input type="file" data-f="file" multiple hidden><span class="pj-fbtn">⬆ Vybrat dokument (max 4 MB)</span></label>${x}</div></div>`;
     }
-    function nodeHtml(n, sib, i) {
+    const secH = (n, title, kind, label) => `<div class="pj-sh"><h4>${title}</h4><button class="pj-sp" data-a="s-${kind}" title="${label}">＋ ${label}</button></div>`;
+    function nodeHtml(n, sib, i, depth = 0) {
       const isOpen = open.has(n.id), st = stat(n), ch = kids(n.id), ed = editing.has(n.id), ic = (a, t, ttl) => ed ? `<button class="ic" data-a="${a}" title="${ttl}">${t}</button>` : '';
       let h = `<div class="pj-node" data-id="${n.id}"><div class="pj-hd" data-a="tog"><span class="arr">${isOpen ? '▾' : '▸'}</span><span class="nm">${esc(n.name)}</span>`;
       if (st.t) h += `<span class="pj-chip ${st.d === st.t ? 'ok' : ''}" title="Hotové body checklistu včetně pododvětví">${st.d}/${st.t} hotovo</span>`;
-      h += `<span class="pj-mw"><button class="pj-plus" data-a="menu" title="Přidat / upravit">＋</button>`;
-      if (menuFor === n.id) h += `<div class="pj-menu"><button data-a="m-item">☑ Přidat bod do checklistu</button><button data-a="m-sub">▸ Přidat pododvětví</button><button data-a="m-note">📝 Přidat zápis ze schůzky</button><button data-a="m-file">📄 Nahrát dokument</button><hr><button data-a="m-edit">${ed ? '✓ Ukončit úpravy' : '✎ Upravit / mazat obsah'}</button><button data-a="m-ren">Přejmenovat odvětví</button>${i > 0 ? '<button data-a="up">↑ Posunout nahoru</button>' : ''}${i < sib - 1 ? '<button data-a="dn">↓ Posunout dolů</button>' : ''}<button data-a="del" class="dg">🗑 Smazat odvětví</button></div>`;
+      h += `<span class="pj-mw"><button class="pj-dots" data-a="menu" title="Úpravy odvětví (přejmenovat, přesunout, smazat)">⋯</button>`;
+      if (menuFor === n.id) h += `<div class="pj-menu"><div class="pj-mt">${esc(n.name)}</div><button data-a="m-edit">${ed ? '✓ Ukončit úpravy obsahu' : '✎ Upravit / mazat obsah'}</button><button data-a="m-ren">Přejmenovat odvětví</button>${i > 0 ? '<button data-a="up">↑ Posunout nahoru</button>' : ''}${i < sib - 1 ? '<button data-a="dn">↓ Posunout dolů</button>' : ''}<hr><button data-a="del" class="dg">🗑 Smazat odvětví</button></div>`;
       h += '</span></div>';
       if (isOpen) {
-        h += '<div class="pj-bd">' + form(n);
-        if (n.items.length) h += `<div class="pj-sec"><h4>Checklist</h4>${n.items.map(x => `<div class="pj-it ${x.done ? 'done' : ''}" data-i="${x.id}"><input type="checkbox" data-a="chk" ${x.done ? 'checked' : ''}><div class="t">${esc(x.text)}<br><small>${x.done && x.doneAt ? 'splněno ' + dmy(x.doneAt) + (x.doneBy ? ' · ' + esc(x.doneBy) : '') : (x.by ? esc(x.by) + ' · ' : '') + dmy(x.at)}</small></div>${ic('editI', '✎', 'Upravit')}${ic('delI', '✕', 'Smazat bod')}</div>`).join('')}</div>`;
-        if (n.notes.length) h += `<div class="pj-sec"><h4>Zápisy ze schůzek</h4>${n.notes.map(x => `<details class="nt" data-n="${x.id}" ${openN.has(x.id) ? 'open' : ''}><summary>${esc(x.title)} <span class="pj-meta">· ${dmy(x.date)}${x.by ? ' · ' + esc(x.by) : ''}</span></summary><div class="nbody">${esc(x.text) || '<i>(bez textu)</i>'}</div>${ed ? '<div style="padding-bottom:8px"><button class="ic" data-a="editN">✎ Upravit</button><button class="ic" data-a="delN">🗑 Smazat</button></div>' : ''}</details>`).join('')}</div>`;
-        if (n.files.length) h += `<div class="pj-sec"><h4>Dokumenty</h4>${n.files.map(f => `<div class="fl" data-f2="${f.id}"><span>📄</span><a href="/api/agents/proj/file/${f.id}" target="_blank" rel="noopener">${esc(f.name)}</a><span class="pj-meta">${kb(f.size)} · ${dmy(f.at)}${f.by ? ' · ' + esc(f.by) : ''}</span><button class="ic" data-a="dl" title="Stáhnout">⬇</button>${ic('delF', '✕', 'Smazat dokument')}</div>`).join('')}</div>`;
-        if (ch.length) h += `<div class="pj-sec"><h4>Pododvětví</h4>${ch.map((c, k) => nodeHtml(c, ch.length, k)).join('')}</div>`;
-        if (!n.items.length && !n.notes.length && !n.files.length && !ch.length && !adding[n.id]) h += '<div class="pj-empty">Zatím prázdné – použij tlačítko ＋ nahoře.</div>';
+        h += '<div class="pj-bd">';
+        h += `<div class="pj-sec">${secH(n, 'Checklist', 'item', 'bod')}${form(n, 'item')}${n.items.length ? n.items.map(x => `<div class="pj-it ${x.done ? 'done' : ''}" data-i="${x.id}"><input type="checkbox" data-a="chk" ${x.done ? 'checked' : ''}><div class="t">${esc(x.text)}<br><small>${x.done && x.doneAt ? 'splněno ' + dmy(x.doneAt) + (x.doneBy ? ' · ' + esc(x.doneBy) : '') : (x.by ? esc(x.by) + ' · ' : '') + dmy(x.at)}</small></div>${ic('editI', '✎', 'Upravit')}${ic('delI', '✕', 'Smazat bod')}</div>`).join('') : '<div class="pj-empty">Zatím žádné body.</div>'}</div>`;
+        h += `<div class="pj-sec">${secH(n, 'Zápisy ze schůzek', 'note', 'zápis')}${form(n, 'note')}${n.notes.length ? n.notes.map(x => `<details class="nt" data-n="${x.id}" ${openN.has(x.id) ? 'open' : ''}><summary>${esc(x.title)} <span class="pj-meta">· ${dmy(x.date)}${x.by ? ' · ' + esc(x.by) : ''}</span></summary><div class="nbody">${esc(x.text) || '<i>(bez textu)</i>'}</div>${ed ? '<div style="padding-bottom:8px"><button class="ic" data-a="editN">✎ Upravit</button><button class="ic" data-a="delN">🗑 Smazat</button></div>' : ''}</details>`).join('') : '<div class="pj-empty">Zatím žádné zápisy.</div>'}</div>`;
+        h += `<div class="pj-sec">${secH(n, 'Dokumenty', 'file', 'dokument')}${form(n, 'file')}${n.files.length ? n.files.map(f => `<div class="fl" data-f2="${f.id}"><span>📄</span><a href="/api/agents/proj/file/${f.id}" target="_blank" rel="noopener">${esc(f.name)}</a><span class="pj-meta">${kb(f.size)} · ${dmy(f.at)}${f.by ? ' · ' + esc(f.by) : ''}</span><button class="ic" data-a="dl" title="Stáhnout">⬇</button>${ic('delF', '✕', 'Smazat dokument')}</div>`).join('') : '<div class="pj-empty">Zatím žádné dokumenty.</div>'}</div>`;
+        h += `<div class="pj-sec">${secH(n, 'Pododvětví', 'sub', 'pododvětví')}${form(n, 'sub')}${ch.length ? ch.map((c, k) => nodeHtml(c, ch.length, k, depth + 1)).join('') : '<div class="pj-empty">Zatím žádná pododvětví.</div>'}</div>`;
         h += '</div>';
       }
       return h + '</div>';
     }
+    let anchor = null, flash = null;
     function render() {
+      const el0 = anchor && $('pjTree').querySelector(`.pj-node[data-id="${anchor}"]`), y0 = el0 ? el0.getBoundingClientRect().top : null;
       const top = kids(null);
       $('pjTree').innerHTML = top.length ? top.map((n, i) => nodeHtml(n, top.length, i)).join('') : '<div class="pj-empty">Zatím žádná odvětví – přidej první tlačítkem nahoře.</div>';
-      const f = $('pjTree').querySelector('.pj-form input[type=text]'); if (f && document.activeElement === document.body) f.focus();
+      if (anchor && y0 != null) { const el1 = $('pjTree').querySelector(`.pj-node[data-id="${anchor}"]`); if (el1) window.scrollBy(0, el1.getBoundingClientRect().top - y0); }
+      if (flash) { const fe = $('pjTree').querySelector(flash); if (fe) { fe.classList.add('flash'); fe.scrollIntoView({ block: 'nearest' }); } flash = null; }
+      const f = $('pjTree').querySelector('.pj-form input[type=text]'); if (f && (document.activeElement === document.body || adding._focus)) { f.focus({ preventScroll: true }); }
+      adding._focus = false;
     }
     async function load(force) {
       try { const j = await api('/api/agents/proj'); const sg = JSON.stringify(j.nodes); const el = document.activeElement; const typing = el && $('pjTree').contains(el) && /^(INPUT|TEXTAREA)$/.test(el.tagName) && el.type !== 'checkbox';
         if (sg !== sigP && (!typing || force)) { sigP = sg; nodes = j.nodes; render(); } else if (sg !== sigP) { nodes = j.nodes; } } catch (e) { /* ticho */ }
     }
-    const field = (box, f) => box.querySelector(`:scope > .pj-bd > .pj-form [data-f="${f}"]`);
+    const field = (box, f) => box.querySelector(`:scope > .pj-bd > .pj-sec > .pj-form [data-f="${f}"]`);
     $('pjAddTop').addEventListener('click', async () => { const i = $('pjNewTop'); if (!i.value.trim()) return; const j = await op({ op: 'addNode', parent: null, name: i.value }); if (j && j.id) { open.add(j.id); saveOpen(); i.value = ''; sigP = ''; await load(true); } });
     $('pjNewTop').addEventListener('keydown', e => { if (e.key === 'Enter') $('pjAddTop').click(); });
     $('pjTree').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input[type=text]')) { const b = e.target.closest('.pj-add').querySelector('button[data-a]'); if (b) b.click(); } if (e.key === 'Escape') { const box = e.target.closest('.pj-node'); if (box && adding[box.dataset.id]) { delete adding[box.dataset.id]; render(); } } });
@@ -1049,28 +1062,29 @@
       const box = b.closest('.pj-node'), nid = box.dataset.id, a = b.dataset.a, n = nodes.find(x => x.id === nid);
       if (a === 'tog') { if (e.target.closest('button')) return; menuFor = null; open.has(nid) ? open.delete(nid) : open.add(nid); saveOpen(); render(); return; }
       if (a === 'menu') { menuFor = menuFor === nid ? null : nid; render(); e.stopPropagation(); return; }
+      anchor = nid;
       const itemId = (b.closest('.pj-it') || { dataset: {} }).dataset.i, noteId = (b.closest('details[data-n]') || { dataset: {} }).dataset.n, fileId = (b.closest('.fl') || { dataset: {} }).dataset.f2;
-      const startAdd = k => { menuFor = null; open.add(nid); saveOpen(); adding[nid] = k; render(); const f = box.isConnected ? null : null; const nb = $('pjTree').querySelector(`.pj-node[data-id="${nid}"]`); const inp = nb && nb.querySelector(':scope > .pj-bd > .pj-form input[type=text]'); if (inp) inp.focus(); if (k === 'file' && nb) { const fi = nb.querySelector(':scope > .pj-bd > .pj-form input[type=file]'); if (fi) fi.click(); } };
+      const startAdd = k => { menuFor = null; open.add(nid); saveOpen(); adding[nid] = k; anchor = nid; adding._focus = true; render(); if (k === 'file') { const nb = $('pjTree').querySelector(`.pj-node[data-id="${nid}"]`), fi = nb && nb.querySelector(':scope > .pj-bd > .pj-sec > .pj-form input[type=file]'); if (fi) fi.click(); } };
       let r;
-      if (a === 'm-item') return startAdd('item');
-      if (a === 'm-sub') return startAdd('sub');
-      if (a === 'm-note') return startAdd('note');
-      if (a === 'm-file') return startAdd('file');
+      if (a === 's-item') return startAdd('item');
+      if (a === 's-sub') return startAdd('sub');
+      if (a === 's-note') return startAdd('note');
+      if (a === 's-file') return startAdd('file');
       if (a === 'm-edit') { editing.has(nid) ? editing.delete(nid) : editing.add(nid); open.add(nid); menuFor = null; saveOpen(); render(); return; }
       if (a === 'cancel') { delete adding[nid]; render(); return; }
       if (a === 'm-ren') { menuFor = null; const v = prompt('Nový název odvětví:', n.name); if (v && v.trim()) r = await op({ op: 'renameNode', node: nid, name: v }); else render(); }
       else if (a === 'up' || a === 'dn') { menuFor = null; r = await op({ op: 'moveNode', node: nid, dir: a === 'up' ? 'up' : 'down' }); }
       else if (a === 'del') { menuFor = null; if (confirm(`Smazat odvětví „${n.name}“ včetně pododvětví, checklistů, zápisů a dokumentů?`)) r = await op({ op: 'delNode', node: nid }); else render(); }
-      else if (a === 'addI') { const i = field(box, 'item'); if (i.value.trim()) { r = await op({ op: 'addItem', node: nid, text: i.value }); adding[nid] = 'item'; } }
+      else if (a === 'addI') { const i = field(box, 'item'); if (i.value.trim()) { r = await op({ op: 'addItem', node: nid, text: i.value }); adding[nid] = 'item'; adding._focus = true; flash = `.pj-node[data-id="${nid}"] > .pj-bd > .pj-sec .pj-it:last-of-type`; } }
       else if (a === 'editI') { const it = n.items.find(x => x.id === itemId), v = prompt('Upravit bod:', it.text); if (v && v.trim()) r = await op({ op: 'editItem', node: nid, item: itemId, text: v }); }
       else if (a === 'delI') { r = await op({ op: 'delItem', node: nid, item: itemId }); }
-      else if (a === 'addN') { const t = field(box, 'ntext').value, ti = field(box, 'ntitle').value; if (t.trim() || ti.trim()) { r = await op({ op: 'addNote', node: nid, title: ti, text: t, date: field(box, 'ndate').value }); delete adding[nid]; } }
+      else if (a === 'addN') { const t = field(box, 'ntext').value, ti = field(box, 'ntitle').value; if (t.trim() || ti.trim()) { r = await op({ op: 'addNote', node: nid, title: ti, text: t, date: field(box, 'ndate').value }); delete adding[nid]; flash = `.pj-node[data-id="${nid}"] > .pj-bd > .pj-sec details.nt:not(.addn)`; } }
       else if (a === 'editN') { const nt = n.notes.find(x => x.id === noteId), ti = prompt('Nadpis zápisu:', nt.title); if (ti === null) return; const tx = prompt('Text zápisu:', nt.text); if (tx === null) return; r = await op({ op: 'editNote', node: nid, note: noteId, title: ti, text: tx }); }
       else if (a === 'delN') { if (confirm('Smazat tento zápis?')) r = await op({ op: 'delNote', node: nid, note: noteId }); }
       else if (a === 'delF') { if (confirm('Smazat tento dokument?')) r = await op({ op: 'delFile', node: nid, file: fileId }); }
       else if (a === 'dl') { location.href = `/api/agents/proj/file/${fileId}?dl=1`; return; }
-      else if (a === 'addS') { const i = field(box, 'sub'); if (i.value.trim()) { r = await op({ op: 'addNode', parent: nid, name: i.value }); if (r && r.id) { open.add(r.id); saveOpen(); } delete adding[nid]; } }
-      if (r !== undefined) { sigP = ''; await load(true); const nb = adding[nid] === 'item' && $('pjTree').querySelector(`.pj-node[data-id="${nid}"] > .pj-bd > .pj-form input[type=text]`); if (nb) nb.focus(); }
+      else if (a === 'addS') { const i = field(box, 'sub'); if (i.value.trim()) { r = await op({ op: 'addNode', parent: nid, name: i.value }); if (r && r.id) { open.add(r.id); saveOpen(); flash = `.pj-node[data-id="${r.id}"]`; } delete adding[nid]; } }
+      if (r !== undefined) { sigP = ''; await load(true); }
     });
     load(); setInterval(load, 30000);
   })();
