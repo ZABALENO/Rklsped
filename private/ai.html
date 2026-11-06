@@ -1032,7 +1032,7 @@
       if (a === 'up' || a === 'dn') r = await op({ op: 'moveNode', node: nid, dir: a === 'up' ? 'up' : 'down' });
       else if (a === 'ren') { const v = prompt('Nový název odvětví:', n.name); if (v && v.trim()) r = await op({ op: 'renameNode', node: nid, name: v }); }
       else if (a === 'del') { if (confirm(`Smazat odvětví „${n.name}“ včetně pododvětví, checklistů, zápisů a dokumentů?`)) { r = await op({ op: 'delNode', node: nid }); } }
-      else if (a === 'addI') { const i = field(bodyBox, 'item'); if (i.value.trim()) r = await op({ op: 'addItem', node: nid, text: i.value }); }
+      else if (a === 'addI') { const i = b.closest('.pj-add').querySelector('[data-f="item"]'); if (i.value.trim()) r = await op({ op: 'addItem', node: nid, text: i.value }); }
       else if (a === 'editI') { const it = n.items.find(x => x.id === itemId), v = prompt('Upravit bod:', it.text); if (v && v.trim()) r = await op({ op: 'editItem', node: nid, item: itemId, text: v }); }
       else if (a === 'delI') { r = await op({ op: 'delItem', node: nid, item: itemId }); }
       else if (a === 'addN') { const t = field(bodyBox, 'ntext').value, ti = field(bodyBox, 'ntitle').value; if (t.trim() || ti.trim()) { r = await op({ op: 'addNote', node: nid, title: ti, text: t, date: field(bodyBox, 'ndate').value }); openN.delete('add' + nid); } }
@@ -1040,7 +1040,7 @@
       else if (a === 'delN') { if (confirm('Smazat tento zápis?')) r = await op({ op: 'delNote', node: nid, note: noteId }); }
       else if (a === 'delF') { if (confirm('Smazat tento dokument?')) r = await op({ op: 'delFile', node: nid, file: fileId }); }
       else if (a === 'dl') { location.href = `/api/agents/proj/file/${fileId}?dl=1`; return; }
-      else if (a === 'addS') { const i = field(bodyBox, 'sub'); if (i.value.trim()) { r = await op({ op: 'addNode', parent: nid, name: i.value }); if (r && r.id) { open.add(r.id); saveOpen(); } } }
+      else if (a === 'addS') { const i = b.closest('.pj-add').querySelector('[data-f="sub"]'); if (i.value.trim()) { r = await op({ op: 'addNode', parent: nid, name: i.value }); if (r && r.id) { open.add(r.id); saveOpen(); } } }
       if (r !== undefined) { sigP = ''; await load(true); }
     });
     load(); setInterval(load, 30000);
