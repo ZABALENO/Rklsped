@@ -290,6 +290,11 @@
   .pj-mt{font:800 12px Inter,sans-serif;color:var(--mut);padding:4px 10px 6px;border-bottom:1px solid rgba(120,160,255,.25);margin-bottom:4px}
   @keyframes pjf{from{background:rgba(47,191,113,.45)}to{background:transparent}}
   .pj .flash{animation:pjf 1.8s ease-out}
+  .pj-node.root{border-left:6px solid var(--pc);background:color-mix(in srgb,var(--pc) 7%,transparent)}
+  .pj-node.root>.pj-hd{background:color-mix(in srgb,var(--pc) 16%,transparent);border-radius:6px 6px 0 0}
+  .pj-node.root>.pj-hd .nm{color:var(--pc);font-size:18px}.pj-node.root>.pj-hd .arr{color:var(--pc)}
+  .pj-node.root .pj-node{border-left:3px solid var(--pc)}
+  .pj-node.root .pj-node>.pj-hd .nm{font-size:15px}
 </style>
 <style id="skins">
   /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
@@ -991,9 +996,9 @@
 
   // ---------- Aktuálně agentizujeme ----------
   (() => {
-    let nodes = [], sigP = '', menuFor = null;
-    const open = new Set(JSON.parse(localStorage.getItem('pjOpen') || '[]')), openN = new Set(), adding = {}, editing = new Set();
-    const saveOpen = () => { try { localStorage.setItem('pjOpen', JSON.stringify([...open])); } catch (e) {} };
+    let nodes = [], sigP = '', menuFor = null, addFor = null;
+    const closed = new Set(JSON.parse(localStorage.getItem('pjClosed') || '[]')), openN = new Set(), adding = {}, editing = new Set();
+    const saveOpen = () => { try { localStorage.setItem('pjClosed', JSON.stringify([...closed])); } catch (e) {} };
     const dmy = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : ''; };
     const kb = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' kB';
     const kids = pid => nodes.filter(n => (n.parent || null) === pid);
@@ -1010,22 +1015,25 @@
     }
     const secH = (n, title, kind, label) => `<div class="pj-sh"><h4>${title}</h4><button class="pj-sp" data-a="s-${kind}" title="${label}">＋ ${label}</button></div>`;
     function nodeHtml(n, sib, i, depth = 0) {
-      const isOpen = open.has(n.id), st = stat(n), ch = kids(n.id), ed = editing.has(n.id), ic = (a, t, ttl) => ed ? `<button class="ic" data-a="${a}" title="${ttl}">${t}</button>` : '';
-      let h = `<div class="pj-node" data-id="${n.id}"><div class="pj-hd" data-a="tog"><span class="arr">${isOpen ? '▾' : '▸'}</span><span class="nm">${esc(n.name)}</span>`;
+      const isOpen = !closed.has(n.id), st = stat(n), ch = kids(n.id), ed = editing.has(n.id), ic = (a, t, ttl) => ed ? `<button class="ic" data-a="${a}" title="${ttl}">${t}</button>` : '';
+      let h = `<div class="pj-node${depth === 0 ? " root" : ""}" data-id="${n.id}"${depth === 0 ? ` style="--pc:${PJPAL[i % PJPAL.length]}"` : ""}><div class="pj-hd" data-a="tog"><span class="arr">${isOpen ? '▾' : '▸'}</span><span class="nm">${esc(n.name)}</span>`;
       if (st.t) h += `<span class="pj-chip ${st.d === st.t ? 'ok' : ''}" title="Hotové body checklistu včetně pododvětví">${st.d}/${st.t} hotovo</span>`;
-      h += `<span class="pj-mw"><button class="pj-dots" data-a="menu" title="Úpravy odvětví (přejmenovat, přesunout, smazat)">⋯</button>`;
+      h += `<span class="pj-mw"><button class="pj-sp" data-a="addmenu" title="Přidat bod, zápis, dokument nebo pododvětví">＋ Přidat</button><button class="pj-dots" data-a="menu" title="Úpravy odvětví (přejmenovat, přesunout, smazat)">⋯</button>`;
+      if (addFor === n.id) h += `<div class="pj-menu"><div class="pj-mt">Přidat do: ${esc(n.name)}</div><button data-a="s-item">☑ Bod do checklistu</button><button data-a="s-note">📝 Zápis ze schůzky</button><button data-a="s-file">📄 Dokument</button><button data-a="s-sub">▸ Pododvětví</button></div>`;
       if (menuFor === n.id) h += `<div class="pj-menu"><div class="pj-mt">${esc(n.name)}</div><button data-a="m-edit">${ed ? '✓ Ukončit úpravy obsahu' : '✎ Upravit / mazat obsah'}</button><button data-a="m-ren">Přejmenovat odvětví</button>${i > 0 ? '<button data-a="up">↑ Posunout nahoru</button>' : ''}${i < sib - 1 ? '<button data-a="dn">↓ Posunout dolů</button>' : ''}<hr><button data-a="del" class="dg">🗑 Smazat odvětví</button></div>`;
       h += '</span></div>';
       if (isOpen) {
-        h += '<div class="pj-bd">';
-        h += `<div class="pj-sec">${secH(n, 'Checklist', 'item', 'bod')}${form(n, 'item')}${n.items.length ? n.items.map(x => `<div class="pj-it ${x.done ? 'done' : ''}" data-i="${x.id}"><input type="checkbox" data-a="chk" ${x.done ? 'checked' : ''}><div class="t">${esc(x.text)}<br><small>${x.done && x.doneAt ? 'splněno ' + dmy(x.doneAt) + (x.doneBy ? ' · ' + esc(x.doneBy) : '') : (x.by ? esc(x.by) + ' · ' : '') + dmy(x.at)}</small></div>${ic('editI', '✎', 'Upravit')}${ic('delI', '✕', 'Smazat bod')}</div>`).join('') : '<div class="pj-empty">Zatím žádné body.</div>'}</div>`;
-        h += `<div class="pj-sec">${secH(n, 'Zápisy ze schůzek', 'note', 'zápis')}${form(n, 'note')}${n.notes.length ? n.notes.map(x => `<details class="nt" data-n="${x.id}" ${openN.has(x.id) ? 'open' : ''}><summary>${esc(x.title)} <span class="pj-meta">· ${dmy(x.date)}${x.by ? ' · ' + esc(x.by) : ''}</span></summary><div class="nbody">${esc(x.text) || '<i>(bez textu)</i>'}</div>${ed ? '<div style="padding-bottom:8px"><button class="ic" data-a="editN">✎ Upravit</button><button class="ic" data-a="delN">🗑 Smazat</button></div>' : ''}</details>`).join('') : '<div class="pj-empty">Zatím žádné zápisy.</div>'}</div>`;
-        h += `<div class="pj-sec">${secH(n, 'Dokumenty', 'file', 'dokument')}${form(n, 'file')}${n.files.length ? n.files.map(f => `<div class="fl" data-f2="${f.id}"><span>📄</span><a href="/api/agents/proj/file/${f.id}" target="_blank" rel="noopener">${esc(f.name)}</a><span class="pj-meta">${kb(f.size)} · ${dmy(f.at)}${f.by ? ' · ' + esc(f.by) : ''}</span><button class="ic" data-a="dl" title="Stáhnout">⬇</button>${ic('delF', '✕', 'Smazat dokument')}</div>`).join('') : '<div class="pj-empty">Zatím žádné dokumenty.</div>'}</div>`;
-        h += `<div class="pj-sec">${secH(n, 'Pododvětví', 'sub', 'pododvětví')}${form(n, 'sub')}${ch.length ? ch.map((c, k) => nodeHtml(c, ch.length, k, depth + 1)).join('') : '<div class="pj-empty">Zatím žádná pododvětví.</div>'}</div>`;
+        h += '<div class="pj-bd">' + form(n, 'item') + form(n, 'note') + form(n, 'file') + form(n, 'sub');
+        if (n.items.length) h += `<div class="pj-sec"><div class="pj-sh"><h4>Checklist</h4></div>${n.items.map(x => `<div class="pj-it ${x.done ? 'done' : ''}" data-i="${x.id}"><input type="checkbox" data-a="chk" ${x.done ? 'checked' : ''}><div class="t">${esc(x.text)}<br><small>${x.done && x.doneAt ? 'splněno ' + dmy(x.doneAt) + (x.doneBy ? ' · ' + esc(x.doneBy) : '') : (x.by ? esc(x.by) + ' · ' : '') + dmy(x.at)}</small></div>${ic('editI', '✎', 'Upravit')}${ic('delI', '✕', 'Smazat bod')}</div>`).join('')}</div>`;
+        if (n.notes.length) h += `<div class="pj-sec"><div class="pj-sh"><h4>Zápisy ze schůzek</h4></div>${n.notes.map(x => `<details class="nt" data-n="${x.id}" ${openN.has(x.id) ? 'open' : ''}><summary>${esc(x.title)} <span class="pj-meta">· ${dmy(x.date)}${x.by ? ' · ' + esc(x.by) : ''}</span></summary><div class="nbody">${esc(x.text) || '<i>(bez textu)</i>'}</div>${ed ? '<div style="padding-bottom:8px"><button class="ic" data-a="editN">✎ Upravit</button><button class="ic" data-a="delN">🗑 Smazat</button></div>' : ''}</details>`).join('')}</div>`;
+        if (n.files.length) h += `<div class="pj-sec"><div class="pj-sh"><h4>Dokumenty</h4></div>${n.files.map(f => `<div class="fl" data-f2="${f.id}"><span>📄</span><a href="/api/agents/proj/file/${f.id}" target="_blank" rel="noopener">${esc(f.name)}</a><span class="pj-meta">${kb(f.size)} · ${dmy(f.at)}${f.by ? ' · ' + esc(f.by) : ''}</span><button class="ic" data-a="dl" title="Stáhnout">⬇</button>${ic('delF', '✕', 'Smazat dokument')}</div>`).join('')}</div>`;
+        if (ch.length) h += `<div class="pj-sec"><div class="pj-sh"><h4>Pododvětví</h4></div>${ch.map((c, k) => nodeHtml(c, ch.length, k, depth + 1)).join('')}</div>`;
+        if (!n.items.length && !n.notes.length && !n.files.length && !ch.length && !adding[n.id]) h += '<div class="pj-empty">Zatím prázdné – použij tlačítko „＋ Přidat“.</div>';
         h += '</div>';
       }
       return h + '</div>';
     }
+    const PJPAL = ['#5e8aff', '#f2a516', '#2fbf71', '#ff6b6b', '#b28dff', '#2cc7d9', '#ff8fd0', '#c9d94a'];
     let anchor = null, flash = null;
     function render() {
       const el0 = anchor && $('pjTree').querySelector(`.pj-node[data-id="${anchor}"]`), y0 = el0 ? el0.getBoundingClientRect().top : null;
@@ -1040,12 +1048,12 @@
       try { const j = await api('/api/agents/proj'); const sg = JSON.stringify(j.nodes); const el = document.activeElement; const typing = el && $('pjTree').contains(el) && /^(INPUT|TEXTAREA)$/.test(el.tagName) && el.type !== 'checkbox';
         if (sg !== sigP && (!typing || force)) { sigP = sg; nodes = j.nodes; render(); } else if (sg !== sigP) { nodes = j.nodes; } } catch (e) { /* ticho */ }
     }
-    const field = (box, f) => box.querySelector(`:scope > .pj-bd > .pj-sec > .pj-form [data-f="${f}"]`);
-    $('pjAddTop').addEventListener('click', async () => { const i = $('pjNewTop'); if (!i.value.trim()) return; const j = await op({ op: 'addNode', parent: null, name: i.value }); if (j && j.id) { open.add(j.id); saveOpen(); i.value = ''; sigP = ''; await load(true); } });
+    const field = (box, f) => box.querySelector(`:scope > .pj-bd > .pj-form [data-f="${f}"]`);
+    $('pjAddTop').addEventListener('click', async () => { const i = $('pjNewTop'); if (!i.value.trim()) return; const j = await op({ op: 'addNode', parent: null, name: i.value }); if (j && j.id) { closed.delete(j.id); saveOpen(); i.value = ''; sigP = ''; await load(true); } });
     $('pjNewTop').addEventListener('keydown', e => { if (e.key === 'Enter') $('pjAddTop').click(); });
     $('pjTree').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input[type=text]')) { const b = e.target.closest('.pj-add').querySelector('button[data-a]'); if (b) b.click(); } if (e.key === 'Escape') { const box = e.target.closest('.pj-node'); if (box && adding[box.dataset.id]) { delete adding[box.dataset.id]; render(); } } });
     $('pjTree').addEventListener('toggle', e => { const d = e.target.closest && e.target.closest('details[data-n]'); if (d) { d.open ? openN.add(d.dataset.n) : openN.delete(d.dataset.n); } }, true);
-    document.addEventListener('click', e => { if (menuFor && !e.target.closest('.pj-mw')) { menuFor = null; render(); } });
+    document.addEventListener('click', e => { if ((menuFor || addFor) && !e.target.closest('.pj-mw')) { menuFor = null; addFor = null; render(); } });
     $('pjTree').addEventListener('change', async e => {
       const t = e.target, box = t.closest('.pj-node'); if (!box) return;
       if (t.matches('input[data-a="chk"]')) { await op({ op: 'toggleItem', node: box.dataset.id, item: t.closest('.pj-it').dataset.i, done: t.checked }); sigP = ''; await load(true); }
@@ -1060,17 +1068,18 @@
     $('pjTree').addEventListener('click', async e => {
       const b = e.target.closest('[data-a]'); if (!b || b.matches('input')) return;
       const box = b.closest('.pj-node'), nid = box.dataset.id, a = b.dataset.a, n = nodes.find(x => x.id === nid);
-      if (a === 'tog') { if (e.target.closest('button')) return; menuFor = null; open.has(nid) ? open.delete(nid) : open.add(nid); saveOpen(); render(); return; }
-      if (a === 'menu') { menuFor = menuFor === nid ? null : nid; render(); e.stopPropagation(); return; }
+      if (a === 'tog') { if (e.target.closest('button')) return; menuFor = null; addFor = null; closed.has(nid) ? closed.delete(nid) : closed.add(nid); saveOpen(); render(); return; }
+      if (a === 'menu') { addFor = null; menuFor = menuFor === nid ? null : nid; render(); e.stopPropagation(); return; }
+      if (a === 'addmenu') { menuFor = null; addFor = addFor === nid ? null : nid; render(); e.stopPropagation(); return; }
       anchor = nid;
       const itemId = (b.closest('.pj-it') || { dataset: {} }).dataset.i, noteId = (b.closest('details[data-n]') || { dataset: {} }).dataset.n, fileId = (b.closest('.fl') || { dataset: {} }).dataset.f2;
-      const startAdd = k => { menuFor = null; open.add(nid); saveOpen(); adding[nid] = k; anchor = nid; adding._focus = true; render(); if (k === 'file') { const nb = $('pjTree').querySelector(`.pj-node[data-id="${nid}"]`), fi = nb && nb.querySelector(':scope > .pj-bd > .pj-sec > .pj-form input[type=file]'); if (fi) fi.click(); } };
+      const startAdd = k => { menuFor = null; addFor = null; closed.delete(nid); saveOpen(); adding[nid] = k; anchor = nid; adding._focus = true; render(); if (k === 'file') { const nb = $('pjTree').querySelector(`.pj-node[data-id="${nid}"]`), fi = nb && nb.querySelector(':scope > .pj-bd > .pj-form input[type=file]'); if (fi) fi.click(); } };
       let r;
       if (a === 's-item') return startAdd('item');
       if (a === 's-sub') return startAdd('sub');
       if (a === 's-note') return startAdd('note');
       if (a === 's-file') return startAdd('file');
-      if (a === 'm-edit') { editing.has(nid) ? editing.delete(nid) : editing.add(nid); open.add(nid); menuFor = null; saveOpen(); render(); return; }
+      if (a === 'm-edit') { editing.has(nid) ? editing.delete(nid) : editing.add(nid); closed.delete(nid); menuFor = null; saveOpen(); render(); return; }
       if (a === 'cancel') { delete adding[nid]; render(); return; }
       if (a === 'm-ren') { menuFor = null; const v = prompt('Nový název odvětví:', n.name); if (v && v.trim()) r = await op({ op: 'renameNode', node: nid, name: v }); else render(); }
       else if (a === 'up' || a === 'dn') { menuFor = null; r = await op({ op: 'moveNode', node: nid, dir: a === 'up' ? 'up' : 'down' }); }
@@ -1083,7 +1092,7 @@
       else if (a === 'delN') { if (confirm('Smazat tento zápis?')) r = await op({ op: 'delNote', node: nid, note: noteId }); }
       else if (a === 'delF') { if (confirm('Smazat tento dokument?')) r = await op({ op: 'delFile', node: nid, file: fileId }); }
       else if (a === 'dl') { location.href = `/api/agents/proj/file/${fileId}?dl=1`; return; }
-      else if (a === 'addS') { const i = field(box, 'sub'); if (i.value.trim()) { r = await op({ op: 'addNode', parent: nid, name: i.value }); if (r && r.id) { open.add(r.id); saveOpen(); flash = `.pj-node[data-id="${r.id}"]`; } delete adding[nid]; } }
+      else if (a === 'addS') { const i = field(box, 'sub'); if (i.value.trim()) { r = await op({ op: 'addNode', parent: nid, name: i.value }); if (r && r.id) { closed.delete(r.id); saveOpen(); flash = `.pj-node[data-id="${r.id}"]`; } delete adding[nid]; } }
       if (r !== undefined) { sigP = ''; await load(true); }
     });
     load(); setInterval(load, 30000);
