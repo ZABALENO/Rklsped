@@ -196,6 +196,7 @@ app.use('/api/agents', (req, res, next) => {
   if (req.path === '/' || req.path === '') aiTrack(req, res, 'ping');
   next();
 });
+require('./lib/projects').setup(app, { get mem() { return store.mem; }, put: (...a) => store.put(...a) }, req => { const u = store.mem.aiuser[vCookie(req)]; return (u && u.label) || ''; });
 app.get('/api/agents/users', (req, res) => {
   const now = Date.now(), me = vCookie(req);
   const users = Object.values(store.mem.aiuser).map(u => { const seen = Math.max(aiSeen.get(u.id) || 0, Date.parse(u.last) || 0); return { id: u.id, short: u.id.slice(0, 4).toUpperCase(), label: u.label || '', device: devLabel(u.ua), ip: u.ip, first: u.first, last: new Date(seen).toISOString(), n: u.n || 0, online: now - (aiSeen.get(u.id) || 0) < 3 * 60 * 1000, me: u.id === me }; })
@@ -413,7 +414,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
