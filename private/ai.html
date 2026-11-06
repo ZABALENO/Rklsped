@@ -295,11 +295,13 @@
   .pj-node.root>.pj-hd .nm{color:var(--pc);font-size:18px}.pj-node.root>.pj-hd .arr{color:var(--pc)}
   .pj-node.root .pj-node{border-left:3px solid var(--pc)}
   .pj-node.root .pj-node>.pj-hd .nm{font-size:15px}
-  .pj-use{font:600 13px Inter,sans-serif;white-space:nowrap}.pj-use b{font-size:17px;font-weight:900;margin-right:2px}
+  .pj-use{font:600 13px Inter,sans-serif;white-space:nowrap;display:inline-flex;align-items:center;gap:10px}
+  .pj-use b{font-size:24px;line-height:1;font-weight:900;padding:5px 14px;border-radius:999px;background:var(--pc);color:#06101f;box-shadow:0 0 0 2px color-mix(in srgb,var(--pc) 45%,transparent),0 0 16px color-mix(in srgb,var(--pc) 55%,transparent);letter-spacing:.3px}
   .pj-node.use{border-left:6px solid var(--pc);background:color-mix(in srgb,var(--pc) 8%,transparent)}
   .pj-node.use>.pj-hd{background:color-mix(in srgb,var(--pc) 18%,transparent)}
   .pj-node.use>.pj-hd .nm{color:var(--pc)}.pj-node.use>.pj-hd .arr{color:var(--pc)}
-  [data-theme="day"] .pj-node.use>.pj-hd .nm,[data-theme="day"] .pj-use{filter:brightness(.72)}
+  [data-theme="day"] .pj-node.use>.pj-hd .nm,[data-theme="day"] .pj-use span{filter:brightness(.72)}
+  [data-theme="day"] .pj-use b{color:#fff;filter:brightness(.8)}
 </style>
 <style id="skins">
   /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
@@ -1024,7 +1026,7 @@
       const isOpen = !closed.has(n.id), st = stat(n), ch = kids(n.id), ed = editing.has(n.id), ic = (a, t, ttl) => ed ? `<button class="ic" data-a="${a}" title="${ttl}">${t}</button>` : '';
       const us = useFor(n.name), uc = us ? useCol(us.pct) : null;
       let h = `<div class="pj-node${depth === 0 ? ' root' : ''}${uc ? ' use' : ''}" data-id="${n.id}"${uc ? ` style="--pc:${uc}"` : depth === 0 ? ` style="--pc:${PJPAL[i % PJPAL.length]}"` : ''}><div class="pj-hd" data-a="tog"><span class="arr">${isOpen ? '▾' : '▸'}</span><span class="nm">${esc(n.name)}</span>`;
-      if (us) h += us.pct == null ? '<span class="pj-use" style="opacity:.75">bez dat o využití agenta za posl. 5 prac. dní</span>' : `<span class="pj-use" style="color:${uc}"><b>${us.pct} %</b> využívá agenta ke psaní objednávek za posl. 5 prac. dní</span>`;
+      if (us) h += us.pct == null ? '<span class="pj-use" style="opacity:.75">bez dat o využití agenta za posl. 5 prac. dní</span>' : `<span class="pj-use" style="color:${uc}"><b>${us.pct}\u00a0%</b><span>využívá agenta ke psaní objednávek za posl. 5 prac. dní</span></span>`;
       if (st.t) h += `<span class="pj-chip ${st.d === st.t ? 'ok' : ''}" title="Hotové body checklistu včetně pododvětví">${st.d}/${st.t} hotovo</span>`;
       h += `<span class="pj-mw"><button class="pj-sp" data-a="addmenu" title="Přidat bod, zápis, dokument nebo pododvětví">＋ Přidat</button><button class="pj-dots" data-a="menu" title="Úpravy odvětví (přejmenovat, přesunout, smazat)">⋯</button>`;
       if (addFor === n.id) h += `<div class="pj-menu"><div class="pj-mt">Přidat do: ${esc(n.name)}</div><button data-a="s-item">☑ Bod do checklistu</button><button data-a="s-note">📝 Zápis ze schůzky</button><button data-a="s-file">📄 Dokument</button><button data-a="s-sub">▸ Pododvětví</button></div>`;
