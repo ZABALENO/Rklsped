@@ -302,6 +302,10 @@
   .pj-node.use>.pj-hd .nm{color:var(--pc)}.pj-node.use>.pj-hd .arr{color:var(--pc)}
   [data-theme="day"] .pj-node.use>.pj-hd .nm,[data-theme="day"] .pj-use span{filter:brightness(.72)}
   [data-theme="day"] .pj-use b{color:#fff;filter:brightness(.8)}
+  .pie-p{overflow:hidden}.pie-p>*:not(.bgg){position:relative;z-index:1}
+  .bgg{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.28}.bgg svg{width:100%;height:100%;display:block}
+  .bgg .ar{fill:url(#bgG)}.bgg .ln{fill:none;stroke:#7aa2ff;stroke-width:2;vector-effect:non-scaling-stroke}.bgg .s1{stop-color:#7aa2ff;stop-opacity:.55}.bgg .s2{stop-color:#7aa2ff;stop-opacity:0}
+  [data-theme="day"] .bgg{opacity:.22}[data-theme="day"] .bgg .ln{stroke:#1d388f}[data-theme="day"] .bgg .s1,[data-theme="day"] .bgg .s2{stop-color:#1d388f}
 </style>
 <style id="skins">
   /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
@@ -453,7 +457,7 @@
     <div class="panel kpi"><h3>Všechny pozice dohromady</h3>
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
-    <div class="panel"><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
+    <div class="panel pie-p"><div class="bgg" id="pieBg" aria-hidden="true"></div><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Objednávky + přepravy</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Využití agenta pro zápis objednávek do Lori v % za posledních 5 pracovních dní</h3><div class="rank" id="rank"></div></div>
   </div>
@@ -724,6 +728,17 @@
       ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#5e8aff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #5e8aff)"/>${dots}${lbl}</svg>`;
   }
 
+  // nenápadný růstový graf na pozadí karty „Podíl dispečinků“: kumulativně pozice zapsané agentem za celé období
+  function bgGrowth() {
+    const el = $('pieBg'); if (!el) return;
+    const S = R.split, ds = S && S.days ? S.days.slice().sort((a, b) => a.date < b.date ? -1 : 1) : [];
+    let c = 0; const pts = ds.map(d => { for (const k in d.rels) c += d.rels[k].pA || 0; return c; });
+    if (pts.length < 2 || !c) { el.innerHTML = ''; return; }
+    const W = 400, H = 300, top = 40, X = i => W * i / (pts.length - 1), Y = v => H - (H - top) * v / c;
+    const ln = pts.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="bgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="ar" d="${ln} L${W},${H} L0,${H} Z"/><path class="ln" d="${ln}"/></svg>`;
+  }
+
   function render() {
     const rels = R.relations.map((x, i) => ({ ...x, i }));
     const total = R.total;
@@ -731,6 +746,7 @@
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
     $('kpiMeta').innerHTML = [withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '', R.trips ? 'z toho ' + nf.format(R.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ');
     $('pie').innerHTML = donut(rels, total);
+    bgGrowth();
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
     document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
