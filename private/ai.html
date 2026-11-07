@@ -480,6 +480,13 @@
   </div>
   <div class="sec" id="phSec" role="button" tabindex="0" aria-expanded="false" aria-controls="phones" style="cursor:pointer;user-select:none"><span id="phArr" aria-hidden="true">▸</span> Jak agenta využíváme</div>
   <div class="phones" id="phones" hidden></div>
+  <div class="sec" id="wgSec" role="button" tabindex="0" aria-expanded="false" style="cursor:pointer;user-select:none"><span id="wgArr" aria-hidden="true">▸</span> Widget na iPhone</div>
+  <div class="panel" id="wgBox" hidden>
+    <p style="margin:0 0 10px;line-height:1.5">1) Nainstaluj zdarma aplikaci <b>Scriptable</b>. 2) Tlačítkem zkopíruj skript, ve Scriptable ho vlož do nového skriptu (+). 3) Na plochu přidej widget Scriptable a v jeho nastavení vyber skript. Varianta se volí v poli <b>Parameter</b>:</p>
+    <p style="margin:0 0 10px;line-height:1.7"><code>total</code> celkem pozic · <code>today</code> pozic dnes · <code>use</code> využití agenta dnes (%) · <code>use5</code> využití za 5 pracovních dní · <code>all</code> vše dohromady · název relace (např. <code>Západ 1</code>)</p>
+    <button type="button" id="wgCopy" style="padding:8px 14px;font-weight:700;cursor:pointer">Zkopírovat skript</button> <span id="wgMsg" class="sub"></span>
+    <p class="sub" style="margin:10px 0 0">Odkaz ve skriptu obsahuje tajný klíč – nesdílej ho. iPhone widget obnovuje sám zhruba po 15–60 minutách.</p>
+  </div>
   <button class="adminbtn" id="adminBtn" type="button" aria-expanded="false" aria-controls="admin">admin</button>
   <div id="admin" hidden>
     <div class="sec">Přehled problémů agentů</div>
@@ -743,6 +750,14 @@
     el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="bgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="ar" d="${ln} L${W},${H} L0,${H} Z"/><path class="ln" d="${ln}"/></svg>`;
   }
 
+  (function () {
+    const h = $('wgSec'), bx = $('wgBox'); if (!h) return;
+    const tg = () => { bx.hidden = !bx.hidden; $('wgArr').textContent = bx.hidden ? '▸' : '▾'; h.setAttribute('aria-expanded', String(!bx.hidden)); };
+    h.addEventListener('click', tg); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tg(); } });
+    $('wgCopy').addEventListener('click', async () => {
+      const m = $('wgMsg'); try { const t = await (await fetch('/api/agents/widget-script')).text(); try { await navigator.clipboard.writeText(t); m.textContent = 'Zkopírováno.'; } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); m.textContent = 'Zkopírováno.'; } } catch (e) { m.textContent = 'Nepodařilo se načíst skript.'; }
+    });
+  })();
   function render() {
     const rels = R.relations.map((x, i) => ({ ...x, i }));
     const total = R.total;

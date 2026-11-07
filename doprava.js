@@ -191,9 +191,10 @@ app.post('/ai/login', (req, res) => {
 });
 app.get('/ai/logout', (req, res) => { aiSeen.delete(vCookie(req)); res.clearCookie('rkl_ai', { path: '/' }); res.redirect('/ai'); });
 app.get('/ai', async (req, res) => { if (!aiOk(req)) return res.type('html').send(AI_LOGIN); await aiTrack(req, res, 'visit'); res.sendFile(path.join(__dirname, 'private', 'ai.html')); });
+require('./lib/widget').setup(app, { aiOk, aiTok, port: PORT });   // widget pro iPhone (vlastní ověření klíčem) – před obecnou kontrolou přihlášení
 app.use('/api/agents', (req, res, next) => {
   if (!aiOk(req)) return res.status(401).json({ error: 'Nepřihlášen' });
-  if (req.path === '/' || req.path === '') aiTrack(req, res, 'ping');
+  if (req.path === '/' || req.path === '') !req.headers['x-widget-self'] && aiTrack(req, res, 'ping');
   next();
 });
 require('./lib/projects').setup(app, { get mem() { return store.mem; }, put: (...a) => store.put(...a) }, req => { const u = store.mem.aiuser[vCookie(req)]; return (u && u.label) || ''; });
