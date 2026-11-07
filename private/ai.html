@@ -484,7 +484,7 @@
   <div class="panel" id="wgBox" hidden>
     <p style="margin:0 0 10px;line-height:1.5">1) Nainstaluj zdarma aplikaci <b>Scriptable</b>. 2) Tlačítkem zkopíruj skript, ve Scriptable ho vlož do nového skriptu (+). 3) Na plochu přidej widget Scriptable a v jeho nastavení vyber skript. Varianta se volí v poli <b>Parameter</b>:</p>
     <p style="margin:0 0 10px;line-height:1.7"><code>total</code> celkem pozic · <code>today</code> pozic dnes · <code>use</code> využití agenta dnes (%) · <code>use5</code> využití za 5 pracovních dní · <code>all</code> vše dohromady · <code>bars</code> přehled dneška po relacích (velký widget) · název relace (např. <code>Západ 1</code>). Jiný den: za variantu připiš svislítko a číslo, např. <code>bars|1</code> = včera, <code>all|2</code> = předevčírem, nebo datum <code>all|2026-11-05</code></p>
-    <button type="button" id="wgCopy" style="padding:8px 14px;font-weight:700;cursor:pointer">Zkopírovat skript</button> <span id="wgMsg" class="sub"></span>
+    <button type="button" id="wgCopy" style="padding:8px 14px;font-weight:700;cursor:pointer">Zkopírovat skript</button> <button type="button" id="wgCopyU" style="padding:8px 14px;font-weight:700;cursor:pointer;margin-left:8px">Zkopírovat odkaz pro Zkratky / Watch</button> <span id="wgMsg" class="sub"></span>
     <p class="sub" style="margin:10px 0 0">Odkaz ve skriptu obsahuje tajný klíč – nesdílej ho. iPhone widget obnovuje sám zhruba po 15–60 minutách.</p>
   </div>
   <button class="adminbtn" id="adminBtn" type="button" aria-expanded="false" aria-controls="admin">admin</button>
@@ -754,6 +754,9 @@
     const h = $('wgSec'), bx = $('wgBox'); if (!h) return;
     const tg = () => { bx.hidden = !bx.hidden; $('wgArr').textContent = bx.hidden ? '▸' : '▾'; h.setAttribute('aria-expanded', String(!bx.hidden)); };
     h.addEventListener('click', tg); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tg(); } });
+    $('wgCopyU').addEventListener('click', async () => {
+      const m = $('wgMsg'); try { const t = await (await fetch('/api/agents/widget-url')).text(); try { await navigator.clipboard.writeText(t); } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } m.textContent = 'Odkaz zkopírován (v=total; jiné: today, use, use5, all).'; } catch (e) { m.textContent = 'Nepodařilo se načíst odkaz.'; }
+    });
     $('wgCopy').addEventListener('click', async () => {
       const m = $('wgMsg'); try { const t = await (await fetch('/api/agents/widget-script')).text(); try { await navigator.clipboard.writeText(t); m.textContent = 'Zkopírováno.'; } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); m.textContent = 'Zkopírováno.'; } } catch (e) { m.textContent = 'Nepodařilo se načíst skript.'; }
     });
