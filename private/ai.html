@@ -732,8 +732,12 @@
   function bgGrowth() {
     const el = $('pieBg'); if (!el) return;
     const S = R.split, ds = S && S.days ? S.days.slice().sort((a, b) => a.date < b.date ? -1 : 1) : [];
-    let c = 0; const pts = ds.map(d => { for (const k in d.rels) c += d.rels[k].pA || 0; return c; });
+    // konec grafu = skutečný aktuální součet agentních pozic; zpětně se odečítají denní přírůstky, takže začátek zahrnuje i výchozí stav prvního snímku
+    const tot = ((S && S.rels) || []).reduce((a, q) => a + (q.pA || 0), 0);
+    const inc = ds.map(d => { let x = 0; for (const k in d.rels) x += d.rels[k].pA || 0; return x; });
+    let c = Math.max(0, tot - inc.reduce((a, q) => a + q, 0)); const pts = [c]; for (const x of inc) pts.push(c += x);
     if (pts.length < 2 || !c) { el.innerHTML = ''; return; }
+    el.title = ds.length ? 'Pozice zapsané agentem od ' + fmtD(ds[0].date) + ': ' + nf.format(tot) : '';
     const W = 400, H = 300, top = 40, X = i => W * i / (pts.length - 1), Y = v => H - (H - top) * v / c;
     const ln = pts.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
     el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="bgG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient></defs><path class="ar" d="${ln} L${W},${H} L0,${H} Z"/><path class="ln" d="${ln}"/></svg>`;
