@@ -263,6 +263,7 @@ function alerts(d){const a=[],now=Date.now();
  (d.recent||[]).forEach(r=>{if(/vyres|hotov/.test(norm(r.kst)))return;a.push({id:'pr|'+r.t+'|'+r.agent+'|'+r.typ,sev:r.sev||2,kind:'Problém',agent:r.agent,at:r.at,text:r.typ+(r.codelam?' – '+r.codelam:''),sub:r.zav||''})});
  (d.misunder||[]).filter(r=>now-r.t<3600e3).forEach(r=>a.push({id:'mi|'+r.t+'|'+r.agent,sev:2,kind:'Nedorozumění',agent:r.agent,at:r.at,text:r.zad,sub:r.typ||''}));
  return a.sort((x,y)=>(ack.has(x.id)-ack.has(y.id))||y.sev-x.sev)}
+function wsig(d,s){return s.sProblemem+'|'+(d.recent||[]).map(r=>r.t).join(',')}
 function al(x){const n=!ack.has(x.id);return `<div class="al s${x.sev}${n?' new':' ack'}" data-id="${esc(x.id)}"><div class="t"><span>${n?'<span class="n">NOVÉ</span>':''}${who(x.agent)}</span><i>${esc(x.at)}</i></div><div class="k2">${esc(x.kind)}${x.sub?' · '+esc(x.sub):''}</div><div class="x">${esc(x.text)}</div></div>`}
 function agent(a){if(!a.reported)return `<div class="ag none"><summary style="display:block;padding:8px 11px;cursor:default"><span class="nm">${esc(a.agent)}</span> <span class="st" style="float:right">nehlásil se</span></summary></div>`;
  const age=a.poslAgeMin==null?'':(a.poslAgeMin>=60?Math.floor(a.poslAgeMin/60)+' h '+a.poslAgeMin%60+' min':a.poslAgeMin+' min')+' zpět';
@@ -323,7 +324,8 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  else if(d.workTime&&d.dataAgeMin>5)h+=`<div class="banner bad blink" style="margin-bottom:8px">⚠ Data jsou stará ${d.dataAgeMin} min<small>Tabulku se nepodařilo načíst – stav nemusí odpovídat.</small></div>`;
  if(unacked)h+=`<div class="banner bad blink"><span style="font-size:24px">⚠</span><div>${unacked} ${unacked===1?'nové upozornění':unacked<5?'nová upozornění':'nových upozornění'}<small>Klepnutím na kartu upozornění potvrdíte</small></div></div>`;
  else if(s.red||s.zasah)h+=`<div class="banner bad"><span style="font-size:24px">●</span><div>Potvrzené problémy trvají<small>${s.zasah||0}× zásah člověka · ${s.red} agent(ů) červeně</small></div></div>`;
- else if(s.orange||s.sProblemem)h+=`<div class="banner warn"><span style="font-size:24px">●</span><div>Drobné problémy<small>${s.sProblemem} agent(ů) hlásí problém za poslední hodinu</small></div></div>`;
+ else if((s.orange||s.sProblemem)&&LS.get('dozorWarn','')===wsig(d,s)){}
+ else if(s.orange||s.sProblemem)h+=`<div class="banner warn" id="warnb" style="cursor:pointer"><span style="font-size:24px">●</span><div>Drobné problémy<small>${s.sProblemem} agent(ů) hlásí problém za poslední hodinu · klepnutím potvrdíte</small></div></div>`;
  else h+=`<div class="banner ok"><span style="font-size:24px">✔</span><div>Vše v pořádku<small>${s.bezi} běží · ${s.ceka} čeká</small></div></div>`;
  if(!d.workTime)h+=`<div class="meta" style="margin:6px 2px 0">Mimo pracovní dobu (po–pá 6–17) – nečinnost se nevyhodnocuje.</div>`;
  h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div><div class="k"><b>${s.bezHlaseni}</b><span>mlčí</span></div></div>`;
@@ -333,7 +335,7 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
  $('root').innerHTML=h;restoreFeed(fsnap);$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
  $('lv').classList.toggle('off',failed>=2);}
-$('root').addEventListener('click',e=>{const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
+$('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb&&last){LS.set('dozorWarn',wsig(last,last.summary||{}));render(last);return}const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
  const ch=e.target.closest('.chip');if(ch){if(ch.dataset.act==='roll'){roll=!roll;LS.set('dozorRoll',roll)}else if(ch.dataset.spd){speed=+ch.dataset.spd;LS.set('dozorSpd',speed)}else if(ch.dataset.per){period=+ch.dataset.per;LS.set('dozorPer',period)}else feedF=ch.dataset.f||'';if(last)render(last);return}const c=e.target.closest('.al');if(c){ack.add(c.dataset.id);LS.set('dozorAck',[...ack]);if(last)render(last);return}if(e.target.id==='ackall'){alerts(last).forEach(x=>ack.add(x.id));LS.set('dozorAck',[...ack]);render(last)}});
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.ag;if(!n)return;e.target.open?openAg.add(n):openAg.delete(n);LS.set('dozorOpen',[...openAg])},true);
 async function load(){left=REFRESH;loadPoz();try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
