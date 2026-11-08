@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Podíl dispečinků</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  :root{--bg:#000;--tx:#fff;--mut:#9aa6c8;--am:#f2a516}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--tx)}
+  body{font:600 14px/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;padding:8px 8px 14px;-webkit-text-size-adjust:100%}
+  h2{margin:14px 0 6px;font:800 11px/1 -apple-system,system-ui,sans-serif;letter-spacing:1.6px;text-transform:uppercase;color:var(--mut)}
+  h2:first-child{margin-top:2px}
+  .big{display:flex;align-items:baseline;gap:6px;margin:0 0 6px}.big b{font-size:40px;font-weight:800;line-height:1}.big span{font-size:12px;color:var(--mut)}
+  svg{display:block;width:100%;max-width:150px;margin:0 auto 6px}
+  .leg div,.row{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:6px;margin:4px 0}
+  .leg i{width:9px;height:9px;border-radius:2px}
+  .leg b,.row .v{font-weight:800;white-space:nowrap}
+  .row{grid-template-columns:30px 1fr auto}
+  .row .n{font-weight:800}
+  .bw{height:12px;display:flex;background:rgba(255,255,255,.14);border-radius:3px;overflow:hidden}.bw i{display:block;height:100%}
+  .bw .m{background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.3) 2px 5px)}
+  .v .m{color:var(--am)}
+  .empty{color:var(--mut);font-size:12px}
+  .upd{margin-top:14px;text-align:center;color:var(--mut);font-size:10px}
+  button{display:block;width:100%;margin-top:10px;background:#1b2447;color:#fff;border:0;border-radius:10px;padding:8px;font:700 13px system-ui}
+</style>
+</head>
+<body>
+<h2>Celkem</h2>
+<div id="pie"></div>
+<div class="leg" id="leg"></div>
+<h2 id="dh">Dnes</h2>
+<div class="big" id="dbig"></div>
+<div id="day"></div>
+<h2 id="wh">Týden</h2>
+<div class="big" id="wbig"></div>
+<div id="week"></div>
+<button id="ref" type="button">Obnovit</button>
+<div class="upd" id="upd">načítám…</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id), nf = new Intl.NumberFormat('cs-CZ');
+  const PAL = ['#5e8aff', '#f2a516', '#7dd3a0', '#c79bff', '#19e3ff', '#ff4fa8', '#b8ff5e', '#ff8a5e', '#9db6ff', '#ffd0f5', '#e6d3a1', '#39ff88'];
+  const col = i => PAL[i % PAL.length];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const short = n => { const m = String(n || '').trim().match(/^(\S+)\s*(\d+)?/); if (!m) return n; return m[1].normalize('NFD').replace(/[̀-ͯ]/g, '')[0].toUpperCase() + (m[2] || ''); };
+  const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
+  const mondayOf = iso => { const d = new Date(iso + 'T12:00:00Z'), w = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - w); return d.toISOString().slice(0, 10); };
+
+  function donut(rels, total) {
+    const S = 120, c = 60, r = 42, w = 16, C = 2 * Math.PI * r, n = rels.filter(x => x.count).length;
+    let acc = 0, arcs = '';
+    rels.forEach(x => { if (!x.count) return; const len = C * x.count / total, gap = n > 1 ? 2 : 0;
+      arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${col(x.i)}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})"/>`; acc += len; });
+    if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#333" stroke-width="${w}"/>`;
+    return `<svg viewBox="0 0 ${S} ${S}">${arcs}<text x="${c}" y="${c + 7}" text-anchor="middle" fill="#fff" font-family="system-ui" font-weight="800" font-size="22">${nf.format(total)}</text></svg>`;
+  }
+  function bars(el, big, S, rels, from, to) {
+    const sum = {};
+    S.days.filter(x => x.date >= from && x.date <= to).forEach(x => Object.entries(x.rels).forEach(([k, q]) => { const z = sum[k] || (sum[k] = { a: 0, m: 0 }); z.a += (q.pA || 0) + (q.tA || 0); z.m += (q.pM || 0) + (q.tM || 0); }));
+    const items = S.rels.map(r => { const z = sum[r.key]; return z && (z.a + z.m) > 0 ? { name: short(r.name), i: Math.max(0, rels.findIndex(x => x.key === r.key)), a: z.a, m: z.m } : null; }).filter(Boolean).sort((p, q) => (q.a - p.a) || (q.m - p.m));
+    const tot = items.reduce((o, x) => o + x.a, 0);
+    $(big).innerHTML = `<b>${nf.format(tot)}</b><span>agent</span>`;
+    if (!items.length) { $(el).innerHTML = '<div class="empty">Zatím nic nového.</div>'; return; }
+    const max = Math.max(...items.map(x => x.a + x.m));
+    $(el).innerHTML = items.map(x => `<div class="row"><span class="n" style="color:${col(x.i)}">${esc(x.name)}</span><div class="bw"><i style="width:${100 * x.a / max}%;background:${col(x.i)}"></i>${x.m ? `<i class="m" style="width:${100 * x.m / max}%"></i>` : ''}</div><span class="v">${x.a}<span class="m"> /${x.m}</span></span></div>`).join('');
+  }
+  async function load() {
+    try {
+      const K = new URLSearchParams(location.search).get('k') || '';
+      const r = await fetch('/api/agents/watch?k=' + encodeURIComponent(K)); if (r.status === 401) { $('upd').textContent = 'Neplatný odkaz.'; return; }
+      const j = await r.json(), rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
+      $('pie').innerHTML = donut(rels, total);
+      $('leg').innerHTML = rels.filter(x => x.count).sort((a, b) => b.count - a.count).map(x => `<div><i style="background:${col(x.i)}"></i><span>${esc(short(x.name))}</span><b>${nf.format(x.count)}</b></div>`).join('');
+      const S = j.split, t = todayIso(), [, m, d] = t.split('-'), mon = mondayOf(t);
+      $('dh').textContent = `Dnes ${+d}. ${+m}.`;
+      if (S) { bars('day', 'dbig', S, rels, t, t); bars('week', 'wbig', S, rels, mon, t); }
+      else { $('day').innerHTML = $('week').innerHTML = '<div class="empty">Bez dat.</div>'; }
+      $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' }) + ' · agent / ručně';
+    } catch (e) { $('upd').textContent = 'Nepodařilo se načíst.'; }
+  }
+  $('ref').addEventListener('click', load);
+  load(); setInterval(load, 10 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
