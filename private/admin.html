@@ -26,7 +26,7 @@ h1{margin:0;min-width:0;white-space:nowrap;overflow:hidden;font:800 14px var(--m
 @keyframes sweep{to{transform:translateX(100%)}}
 .banner.bad.blink{animation:neon 1s ease-in-out infinite}
 @keyframes neon{50%{box-shadow:0 0 6px rgba(255,59,92,.4),0 0 44px rgba(255,59,92,.95);filter:brightness(1.25)}}
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:9px 0}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:9px 0}
 .k{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 4px 7px;text-align:center;backdrop-filter:blur(8px)}
 .k::before{content:"";position:absolute;left:18%;right:18%;top:-1px;height:2px;background:linear-gradient(90deg,transparent,var(--acc),transparent)}
 .k b{display:block;font:800 24px/1.1 var(--mono);color:var(--acc);text-shadow:var(--glow) currentColor}.k span{font:600 9px var(--mono);color:var(--mut);text-transform:uppercase;letter-spacing:1.2px}
@@ -328,7 +328,7 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  else if(s.orange||s.sProblemem)h+=`<div class="banner warn" id="warnb" style="cursor:pointer"><span style="font-size:24px">●</span><div>Drobné problémy<small>${s.sProblemem} agent(ů) hlásí problém za poslední hodinu · klepnutím potvrdíte</small></div></div>`;
  else h+=`<div class="banner ok"><span style="font-size:24px">✔</span><div>Vše v pořádku<small>${s.bezi} běží (≤10 min) · ${s.necinny||0} bez aktivity >10 min · ${s.ceka} čeká</small></div></div>`;
  if(!d.workTime)h+=`<div class="meta" style="margin:6px 2px 0">Mimo pracovní dobu (po–pá 6–17) – nečinnost se nevyhodnocuje.</div>`;
- h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div><div class="k"><b>${s.bezHlaseni}</b><span>mlčí</span></div></div>`;
+ h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div></div>`;
  h+=`<h2>Upozornění<span class="sp"></span>${A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>');
  h+=feed(d,fsnap);
  h+=`<h2>Agenti</h2>`+(d.agents.map(agent).join('')||'<div class="empty">Tabulka neobsahuje agenty.</div>');
