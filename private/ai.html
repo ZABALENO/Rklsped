@@ -569,7 +569,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, kindMode = 'ord', sortKey = 'tot';
+  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, dayTouched = false, kindMode = 'ord', sortKey = 'tot';
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -763,6 +763,10 @@
   })();
   function render() {
     const rels = R.relations.map((x, i) => ({ ...x, i }));
+    if (!dayTouched && R.split && R.split.days) { // výchozí den: dnes, pokud agent dnes zapsal objednávku, jinak poslední takový den
+      const t0 = today(), okd = R.split.days.filter(d => d.date <= t0 && Object.values(d.rels || {}).some(q => (q.pA || 0) > 0)).map(d => d.date).sort(), au = okd.includes(t0) ? t0 : (okd.length ? okd[okd.length - 1] : t0);
+      dayOff = Math.min(7, Math.round((new Date(t0 + 'T12:00:00Z') - new Date(au + 'T12:00:00Z')) / 864e5));
+    }
     const total = R.total;
     countUp($('total'), total);
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
@@ -1036,7 +1040,7 @@
   $('trKind').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { trMode = b.dataset.k; render(); } });
   $('bars').addEventListener('click', e => { const g = e.target.closest('[data-sort]'); if (g) { const k = g.dataset.sort; sortKey = (sortKey === k && k !== 'tot') ? 'tot' : k; render(); } });
   $('kindTgl').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { kindMode = b.dataset.k; render(); } });
-  $('dayNav').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if (b && !b.disabled) { dayOff = Math.max(0, Math.min(7, dayOff + +b.dataset.d)); render(); } });
+  $('dayNav').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if (b && !b.disabled) { dayTouched = true; dayOff = Math.max(0, Math.min(7, dayOff + +b.dataset.d)); render(); } });
   $('weekTgl').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { weekOff = +b.dataset.w; render(); } });
   load(); setInterval(load, 60000);
 

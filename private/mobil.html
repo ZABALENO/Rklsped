@@ -174,6 +174,9 @@
     return `<svg viewBox="0 0 ${S} ${S}"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="var(--ring)" stroke-dasharray="2 6"/>${arcs}<circle class="ctr" cx="${c}" cy="${c}" r="60" fill="transparent"/><text x="${c}" y="${c + 2}" text-anchor="middle" fill="${fg}" font-family="Inter" font-weight="900" font-size="32">${nf.format(total)}</text><text class="mu" x="${c}" y="${c + 18}" text-anchor="middle" fill="${mu}" font-family="Inter" font-size="9" letter-spacing="3">POZIC</text><text class="mu" x="${c}" y="${c + 32}" text-anchor="middle" fill="${mu}" font-family="Inter" font-weight="700" font-size="7.5" letter-spacing="1.2">ZAPSÁNO AGENTEM</text></svg>`;
   }
   const todayIso = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Prague' });
+  // výchozí den: dnes, pokud agent dnes zapsal objednávku, jinak poslední den, kdy ji zapsal
+  const autoDay = S => { const t = todayIso(), ok = S ? S.days.filter(d => d.date <= t && Object.values(d.rels || {}).some(q => (q.pA || 0) > 0)).map(d => d.date).sort() : []; return ok.includes(t) ? t : (ok.length ? ok[ok.length - 1] : t); };
+  const DOWN = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   let kind = 'ord', last = null;
   const short = n => { const m = String(n || '').trim().match(/^(\S+)\s*(\d+)?/); if (!m) return n; const f = m[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '')[0].toUpperCase(); return f + (m[2] || ''); };
 
@@ -181,17 +184,17 @@
   const mondayOf = iso => { const d = new Date(iso + 'T12:00:00Z'), w = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - w); return d.toISOString().slice(0, 10); };
   function dayBars(j, rels) {
     last = [j, rels];
-    const S = j.split, t = todayIso(), [y, m, dd] = t.split('-');
-    const from = per === 'week' ? mondayOf(t) : t;
-    const dl = S ? S.days.filter(x => x.date >= from && x.date <= t) : [];
+    const S = j.split, t = todayIso(), ad = autoDay(S), isT = ad === t, [y, m, dd] = (per === 'week' ? t : ad).split('-');
+    const from = per === 'week' ? mondayOf(t) : ad;
+    const dl = S ? S.days.filter(x => x.date >= from && x.date <= (per === 'week' ? t : ad)) : [];
     const d = { rels: {} };
     dl.forEach(x => Object.entries(x.rels).forEach(([k, q]) => { const z = d.rels[k] || (d.rels[k] = { pA: 0, pM: 0, tA: 0, tM: 0 }); z.pA += q.pA || 0; z.pM += q.pM || 0; z.tA += q.tA || 0; z.tM += q.tM || 0; }));
     const agentSum = Object.values(d.rels).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0);
     const f = from.split('-');
-    $('dh').innerHTML = per === 'week' ? 'Tento týden · ' + (+f[2]) + '.–' + (+dd) + '. ' + (+m) + '.' : 'Dnes přibylo · ' + (+dd) + '. ' + (+m) + '.';
-    $('agbig').innerHTML = '<b title="Objednávky + přepravy zapsané agentem">' + nf.format(agentSum) + '</b><span>' + (per === 'week' ? 'týden agent' : 'dnes agent') + '</span>';
+    $('dh').innerHTML = per === 'week' ? 'Tento týden · ' + (+f[2]) + '.–' + (+dd) + '. ' + (+m) + '.' : (isT ? 'Dnes přibylo' : 'Přibylo ' + DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()]) + ' · ' + (+dd) + '. ' + (+m) + '.';
+    $('agbig').innerHTML = '<b title="Objednávky + přepravy zapsané agentem">' + nf.format(agentSum) + '</b><span>' + (per === 'week' ? 'týden agent' : isT ? 'dnes agent' : 'agent') + '</span>';
     const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
-    if (!items.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden zatím žádné nové ' : 'Dnes zatím žádné nové ') + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
+    if (!items.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden zatím žádné nové ' : isT ? 'Dnes zatím žádné nové ' : 'Žádné nové ') + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
     items.sort((a, b) => ((b.oA + b.tA) - (a.oA + a.tA)) || ((b.oM + b.tM) - (a.oM + a.tM)));
     const max = Math.max(...items.map(x => x.oA + x.tA + x.oM + x.tM));
     $('day').innerHTML = items.map(x => {
@@ -206,13 +209,13 @@
   let tvOn = false;
   function tvChart() {
     if (!tvOn || !cache) return;
-    const j = cache, S = j.split, t = todayIso(), rels = j.relations.map((x, i) => ({ ...x, i }));
+    const j = cache, S = j.split, t = autoDay(S), tIsToday = t === todayIso(), rels = j.relations.map((x, i) => ({ ...x, i }));
     const day = S ? S.days.find(x => x.date === t) : null;
     const rr = day ? day.rels : {};
     const total = Object.values(rr).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0);
-    $('tvBig').innerHTML = '<b>' + nf.format(total) + '</b><span>pozic dnes zadal agent</span>';
+    $('tvBig').innerHTML = '<b>' + nf.format(total) + '</b><span>' + (tIsToday ? 'pozic dnes zadal agent' : 'pozic zadal agent ' + (+t.split('-')[2]) + '. ' + (+t.split('-')[1]) + '.') + '</span>';
     const items = S ? S.rels.map(r => { const q = rr[r.key]; return q && q.pA > 0 ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, A: q.pA, M: q.pM || 0 } : null; }).filter(Boolean) : [];
-    if (!items.length) { $('tvBars').innerHTML = '<div class="empty">Dnes zatím agent nezapsal žádnou objednávku.</div>'; return; }
+    if (!items.length) { $('tvBars').innerHTML = '<div class="empty">Zatím agent nezapsal žádnou objednávku.</div>'; return; }
     items.sort((a, b) => (b.A - a.A) || (b.M - a.M));
     const max = Math.max(...items.map(x => x.A + x.M));
     $('tvBars').innerHTML = '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:2px">Dnes zadané objednávky</div>' + items.map(x => {
