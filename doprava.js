@@ -214,6 +214,7 @@ app.post('/api/agents/users/label', async (req, res) => {
 // skrytá stránka s přepisem souhrnu agentizace (odškrtávání + poznámky, sdílené mezi zařízeními)
 app.get('/ai/mobil', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'mobil.html')); });
 app.get('/ai/plan', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'plan.html')); });
+require('./lib/dozor').setup(app, { aiOk, store: () => store });   // admin Dozor agentů: /ai/admin
 app.get('/api/agents/plan', (req, res) => res.json({ items: store.mem.plan || {} }));
 app.post('/api/agents/plan', async (req, res) => {
   const id = String((req.body && req.body.id) || '').slice(0, 40);
@@ -415,7 +416,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));

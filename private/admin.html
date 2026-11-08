@@ -1,0 +1,53 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Dozor agentů</title><link rel="icon" type="image/png" href="/favicon.png">
+<style>
+:root{--bg:#05070f;--panel:rgba(8,14,34,.9);--line:rgba(120,160,255,.3);--tx:#f2f5ff;--mut:#9fb0d4;--g:#3ddc84;--o:#f2a516;--r:#ff5c4d}
+:root[data-theme=day]{--bg:#f3f5fb;--panel:#fff;--line:rgba(29,56,143,.25);--tx:#14182b;--mut:#51597a;--g:#12803f;--o:#b87400;--r:#c62828}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:500 15px/1.4 -apple-system,Inter,"Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:16px 14px 50px}header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}
+h1{margin:0;font-size:22px;letter-spacing:1.5px;text-transform:uppercase}h2{font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin:22px 0 8px}
+header .sp{flex:1}.btn{color:var(--tx);border:1px solid var(--line);background:transparent;padding:6px 12px;border-radius:4px;font:600 12px inherit;text-decoration:none;cursor:pointer}
+.meta{color:var(--mut);font-size:13px}.warn{border:1px solid var(--o);color:var(--o);padding:8px 12px;border-radius:4px;margin-bottom:10px;font-size:14px}.warn.r{border-color:var(--r);color:var(--r)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.s{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px}.s b{display:block;font-size:28px;line-height:1.1}.s span{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
+.s.g b{color:var(--g)}.s.o b{color:var(--o)}.s.r b{color:var(--r)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px}.c{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--g);border-radius:6px;padding:12px}
+.c.orange{border-left-color:var(--o)}.c.red{border-left-color:var(--r)}.c.none{border-left-color:var(--mut);opacity:.75}
+.c h3{margin:0 0 2px;font-size:17px;display:flex;justify-content:space-between;gap:8px}.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid currentColor;white-space:nowrap}
+.tag.g{color:var(--g)}.tag.o{color:var(--o)}.tag.r{color:var(--r)}.tag.n{color:var(--mut)}
+.c dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:14px}.c dt{color:var(--mut)}.c dd{margin:0;word-break:break-word}.why{margin-top:8px;font-size:13px;color:var(--r);font-weight:700}.c.orange .why{color:var(--o)}
+.rep{background:rgba(255,92,77,.18);border:1px solid var(--r);border-radius:3px;padding:0 5px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--panel);border:1px solid var(--line)}th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-size:12px;text-transform:uppercase}
+.two{display:grid;grid-template-columns:2fr 1fr;gap:14px}@media(max-width:800px){.two{grid-template-columns:1fr}}.sv3{color:var(--r);font-weight:700}.sv2{color:var(--o);font-weight:700}.sv1{color:var(--g)}
+.bar{height:8px;background:var(--o);border-radius:4px;margin-top:3px}</style></head>
+<body><div class="wrap"><header><h1>Dozor agentů</h1><span class="meta" id="meta">načítám…</span><span class="sp"></span><button class="btn" id="th">◐</button><button class="btn" id="rf">↻ Obnovit</button><a class="btn" href="/ai">← /ai</a></header>
+<div id="root"></div></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id), esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+try{const t=localStorage.getItem('rklAiTheme');if((t||'').split('|')[0]==='day')document.documentElement.dataset.theme='day'}catch(e){}
+$('th').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='day'?'night':'day'};
+const KIND={bezi:['běží','g'],ceka:['čeká','o'],stoji:['stojí','r'],nejasne:['stav nejasný','o'],none:['nehlásil se','n']};
+function card(a){const k=KIND[a.kind]||KIND.nejasne,tc=a.level==='red'?'r':a.level==='orange'?'o':a.level==='none'?'n':'g';
+ const age=a.poslAgeMin==null?'':' ('+(a.poslAgeMin>=60?Math.floor(a.poslAgeMin/60)+' h '+a.poslAgeMin%60+' min':a.poslAgeMin+' min')+' zpět)';
+ if(!a.reported)return `<div class="c none"><h3>${esc(a.agent)}<span class="tag n">nehlásil se</span></h3><div class="meta">Prázdný řádek – agent se zatím nehlásil.</div></div>`;
+ const types=Object.entries(a.byType).map(([t,n])=>n>1?`<span class="rep">${esc(t)} ${n}×</span>`:esc(t)+' 1×').join(', ');
+ return `<div class="c ${a.level}"><h3>${esc(a.agent)}<span class="tag ${k[1]}">${esc(a.stav||k[0])}</span></h3>
+ <dl><dt>Činnost</dt><dd>${esc(a.cinnost)||'—'}</dd><dt>Poslední aktivita</dt><dd>${esc(a.posl)||'—'}${age}</dd>
+ <dt>Problémy / hod.</dt><dd><b>${a.problemsHour}</b>${a.problemsHour?' – '+types:''}</dd><dt>Poslední problém</dt><dd>${esc(a.poslProb)||'—'}</dd>
+ <dt>Účet / PC</dt><dd>${esc(a.ucet)||'—'} / ${esc(a.pc)||'—'}</dd></dl>${a.why.length?`<div class="why">${esc(a.why.join(' · '))}</div>`:''}</div>`}
+function render(d){const s=d.summary;let h='';
+ if(!d.readAt)h+=`<div class="warn r">Zatím nepřišla žádná data z tabulky Dozor agentů – naplánovaný agent je ještě neposlal.</div>`;
+ else if(d.workTime&&d.dataAgeMin>20)h+=`<div class="warn r">Data jsou stará ${d.dataAgeMin} min – naplánovaná aktualizace asi neběží; stav níže nemusí odpovídat realitě.</div>`;
+ if(d.unclearLog)h+=`<div class="warn">${d.unclearLog} záznam(ů) v Logu má nečitelný čas – nejsou započteny.</div>`;
+ if(!d.workTime)h+=`<div class="warn">Mimo pracovní dobu (po–pá 6:00–17:00, Praha) – nečinnost se nevyhodnocuje.</div>`;
+ h+=`<div class="sum"><div class="s g"><b>${s.bezi}</b><span>běží</span></div><div class="s o"><b>${s.ceka}</b><span>čeká</span></div><div class="s r"><b>${s.stoji}</b><span>stojí / chyba</span></div>
+ <div class="s r"><b>${s.nectinne}</b><span>nečinných (&gt;30 min)</span></div><div class="s o"><b>${s.sProblemem}</b><span>s problémem za hod.</span></div><div class="s"><b>${s.bezHlaseni}</b><span>nehlásilo se</span></div></div>`;
+ if(s.nejasne)h+=`<div class="meta" style="margin-top:6px">U ${s.nejasne} agent(ů) je hodnota stavu nejasná – není započtena mezi běží/čeká/stojí.</div>`;
+ h+=`<h2>Agenti – od nejproblematičtějších</h2><div class="cards">${d.agents.map(card).join('')||'<div class="meta">Tabulka neobsahuje žádné agenty.</div>'}</div>`;
+ h+=`<div class="two"><div><h2>Poslední problémy (60 min)</h2>`+(d.recent.length?`<table><thead><tr><th>Čas</th><th>Agent</th><th>Typ</th><th>Závažnost</th><th>Co dělal</th></tr></thead><tbody>${d.recent.map(r=>`<tr><td>${esc(r.at)}</td><td>${esc(r.agent)}</td><td>${esc(r.typ)}</td><td class="sv${r.sev}">${esc(r.zav)||'—'}</td><td>${esc(r.codelam||r.udalost)}</td></tr>`).join('')}</tbody></table>`:'<div class="meta">Za poslední hodinu žádný problém v Logu.</div>')+`</div>
+ <div><h2>Nejčastější typy</h2>`+(d.types.length?`<table><tbody>${d.types.map(t=>`<tr><td>${esc(t.typ)}<div class="bar" style="width:${Math.round(100*t.n/d.types[0].n)}%"></div></td><td><b>${t.n}</b></td></tr>`).join('')}</tbody></table>`:'<div class="meta">—</div>')+`</div></div>`;
+ $('root').innerHTML=h;
+ $('meta').textContent='Praha '+d.now+(d.readAt?' · tabulka načtena před '+(d.dataAgeMin)+' min':'');}
+async function load(){try{const r=await fetch('/api/agents/dozor');if(r.status===401){location.reload();return}render(await r.json())}catch(e){$('meta').textContent='Chyba načtení'}}
+$('rf').onclick=load;load();setInterval(load,60000);
+})();
+</script></body></html>
