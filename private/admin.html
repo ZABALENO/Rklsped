@@ -200,26 +200,26 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 .top2 .t2 span{font:600 9.5px var(--mono);letter-spacing:1.2px;text-transform:uppercase;color:var(--mut)}
 .top2 .t2.ag b{color:var(--g)}
 .top2:empty{display:none}
-/* trvalý panel /mobil vedle dozoru */
-#mobwrap{margin:0 0 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column;height:320px}
-#mobwrap[hidden]{display:none}
-#mobwrap .mh{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font:700 10.5px var(--mono);letter-spacing:1.4px;text-transform:uppercase;color:var(--acc)}
-#mobwrap .mh span{flex:1}#mobwrap .mh a,#mobwrap .mh button{color:var(--acc);background:none;border:1px solid var(--line);border-radius:6px;padding:1px 8px;cursor:pointer;text-decoration:none;font:700 11px var(--mono)}
-#mobwrap iframe{flex:1;width:100%;border:0;background:#02040c}
-#mob.on{border-color:var(--acc);box-shadow:var(--glow) rgba(34,225,255,.45)}
-@media (min-width:1000px){
- .wrap.mob{max-width:1500px;display:grid;grid-template-columns:minmax(340px,560px) minmax(420px,1fr);column-gap:16px;align-items:start}
- .wrap.mob>header,.wrap.mob>.meta,.wrap.mob>.top2{grid-column:1/-1}
- .wrap.mob>.top2{max-width:560px}
- .wrap.mob>#root{grid-column:1}
- .wrap.mob>#mobwrap{grid-column:2;grid-row:4/span 20;position:sticky;top:56px;height:calc(100vh - 72px);margin:0}
-}
+/* denní přehled agent vs. ručně (jen relace, kde dnes agent něco zapsal) */
+#dayw:empty{display:none}
+.dw{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.dw .dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.dw .dt{font:700 11px var(--mono);letter-spacing:1.4px;text-transform:uppercase;color:var(--mut)}
+.dw .big{font:800 30px/1 var(--mono);color:var(--g);text-shadow:var(--glow) currentColor}.dw .big small{font:700 10px var(--mono);letter-spacing:1.2px;text-transform:uppercase;margin-left:6px;text-shadow:none}
+.dw .hd,.dw .dr{display:grid;grid-template-columns:78px 1fr 34px 34px 46px;gap:6px;align-items:center}
+.dw .hd{font:700 9px var(--mono);letter-spacing:1px;text-transform:uppercase;color:var(--mut);margin:6px 0 3px}.dw .hd span{white-space:nowrap}.dw .hd span:nth-child(n+3){text-align:right}
+.dw .dr{padding:3px 0;font:800 13px var(--mono)}
+.dw .bw{height:13px;background:repeating-linear-gradient(135deg,rgba(150,165,200,.55) 0 2px,transparent 2px 5px);border:1px dashed rgba(150,165,200,.55);border-radius:2px;overflow:hidden}
+.dw .bw i{display:block;height:100%}
+.dw .n{text-align:right}.dw .n.m{color:var(--tx);opacity:.85;font-weight:700}
+.dw .g{color:var(--g)}.dw .o{color:var(--o)}.dw .r{color:var(--r)}
+.dw .emp{color:var(--mut);font:500 12px var(--mono);padding:6px 0}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="mob" title="Mobilní přehled /mobil – trvale vedle dozoru">📱</button><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div class="meta" id="meta">načítám…</div>
 <div id="top2" class="top2"></div>
-<aside id="mobwrap" hidden><div class="mh"><span>Podíl dispečinků · /mobil</span><a href="/ai/mobil" target="_blank" rel="noopener" title="Otevřít v novém okně">↗</a><button id="mobx" title="Zavřít panel">✕</button></div><iframe id="mobf" title="Mobilní přehled" loading="lazy"></iframe></aside>
+<div id="dayw"></div>
 <div id="root"></div></div>
 <script>
 (function(){
@@ -265,13 +265,21 @@ function agent(a){if(!a.reported)return `<div class="ag none"><summary style="di
  <dl><dt>Poslední aktivita</dt><dd>${esc(a.posl)||'—'}</dd><dt>Problémy / hod.</dt><dd><b>${a.problemsHour}</b></dd><dt>Poslední problém</dt><dd>${esc(a.poslProb)||'—'}</dd><dt>Účet / PC</dt><dd>${esc(a.ucet)||'—'} / ${esc(a.pc)||'—'}</dd></dl></details>`}
 function list(t,l,open){return `<details class="sec"${open?' open':''}><summary>${t} (${(l||[]).length})</summary>${(l||[]).length?l.map(r=>`<div class="row"><b>${who(r.agent)}</b> <span class="m">${esc(r.at)}${r.typ?' · '+esc(r.typ):''}</span><div class="q">${esc(r.zad)}</div></div>`).join(''):'<div class="empty">Nic.</div>'}</details>`}
 function hist(l){const n=(l||[]).length;return `<details class="sec" data-ag="__hist"${openAg.has('__hist')?' open':''}><summary>Historie upozornění – 24 h (${n})</summary>${n?l.map(r=>{const ok=/vyres|hotov/.test(norm(r.kst));return `<div class="hi s${r.sev||2}"><b>${who(r.agent)}</b> <span class="m">${esc(r.at)} · ${esc(r.udalost||'problém')}${ok?' · <span class="ok">✔ vyřešeno</span>':''}</span><div class="x">${esc(r.typ||r.codelam)}${r.zasah&&!/^ne$/.test(norm(r.zasah))?' – zásah: '+esc(r.zasah):''}</div></div>`}).join(''):'<div class="empty">Za posledních 24 h nic.</div>'}</details>`}
-// stálý panel /mobil vedle dozoru (zůstává zapnutý i po obnovení stránky)
-let mobOn=LS.get('dozorMob',false),poz=null;
-function setMob(on){mobOn=on;LS.set('dozorMob',on);$('mobwrap').hidden=!on;$('mob').classList.toggle('on',on);document.querySelector('.wrap').classList.toggle('mob',on);if(on&&!$('mobf').src)$('mobf').src='/ai/mobil'}
-$('mob').onclick=()=>setMob(!mobOn);$('mobx').onclick=()=>setMob(false);setMob(mobOn);
+let poz=null;
 const nfz=new Intl.NumberFormat('cs-CZ');
-function top2(){const el=$('top2');if(!poz){el.innerHTML='';return}el.innerHTML=`<div class="t2"><b>${nfz.format(poz.total)}</b><span>pozic celkem</span></div><div class="t2 ag"><b>${nfz.format(poz.today)}</b><span>dnes zapsal agent</span></div>`}
-async function loadPoz(){try{const r=await fetch('/api/agents',{cache:'no-store'});if(!r.ok)return;const j=await r.json();const t=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Prague'});const days=(j.split&&j.split.days)||[];let a=0;days.filter(x=>x.date===t).forEach(x=>Object.values(x.rels||{}).forEach(q=>{a+=(q.pA||0)+(q.tA||0)}));poz={total:j.total||0,today:a};top2()}catch(e){}}
+function top2(){const el=$('top2');if(!poz){el.innerHTML='';return}el.innerHTML=`<div class="t2"><b>${nfz.format(poz.total)}</b><span>pozic celkem</span></div><div class="t2 ag"><b>${nfz.format(poz.today)}</b><span>dnes zapsal agent</span></div>`;dayView()}
+const DOW=['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
+function dayView(){const el=$('dayw');if(!poz||!poz.rows){el.innerHTML='';return}
+ const rows=poz.rows,tot=poz.today,max=Math.max(1,...rows.map(r=>r.A+r.M)),d=new Date(poz.iso+'T12:00:00Z'),dl=DOW[d.getUTCDay()]+' '+d.getUTCDate()+'. '+(d.getUTCMonth()+1)+'. '+d.getUTCFullYear();
+ const cls=p=>p>=50?'g':p>=25?'o':'r',col={g:'var(--g)',o:'var(--o)',r:'var(--r)'};
+ el.innerHTML=`<div class="dw"><div class="dh"><span class="dt">Dnes · ${esc(dl)}</span><span class="big">${nfz.format(tot)}<small class="g">obj. + přep. agent</small></span></div>`+
+ (rows.length?`<div class="hd"><span>Součet ▾</span><span></span><span>Agent</span><span>Ručně</span><span>% agent</span></div>`+rows.map(r=>{const t=r.A+r.M,p=t?Math.round(100*r.A/t):0,c=cls(p);return `<div class="dr"><span>${who(r.name)}</span><span class="bw" style="width:${Math.max(6,Math.round(100*t/max))}%"><i style="width:${t?100*r.A/t:0}%;background:${col[c]}"></i></span><span class="n ${c}">${r.A}</span><span class="n m">${r.M}</span><span class="n ${c}">${p} %</span></div>`}).join(''):'<div class="emp">Dnes zatím agent nezapsal žádnou pozici.</div>')+`</div>`}
+async function loadPoz(){try{const r=await fetch('/api/agents',{cache:'no-store'});if(!r.ok)return;const j=await r.json();const t=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Prague'});const S=j.split,rels={};let a=0;
+ if(S){(S.days||[]).filter(x=>x.date===t).forEach(x=>Object.entries(x.rels||{}).forEach(([k,q])=>{const z=rels[k]||(rels[k]={A:0,M:0});z.A+=(q.pA||0)+(q.tA||0);z.M+=(q.pM||0)+(q.tM||0)}))}
+ const nm={};((S&&S.rels)||[]).forEach(x=>nm[x.key]=x.name);
+ const rows=Object.entries(rels).filter(([,z])=>z.A>0).map(([k,z])=>({name:nm[k]||k,A:z.A,M:z.M})).sort((x,y)=>(y.A+y.M)-(x.A+x.M)||y.A-x.A);
+ rows.forEach(x=>a+=x.A);
+ poz={total:j.total||0,today:a,rows:S?rows:null,iso:t};top2()}catch(e){}}
 let feedF='',prevReq=null,roll=LS.get('dozorRoll',true),speed=LS.get('dozorSpd',30),period=LS.get('dozorPer',240),pauseUntil=0,newCount=0;
 function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'právě teď':m<60?'před '+m+' min':'před '+Math.floor(m/60)+' h '+m%60+' min'}
 const rk=r=>r.t+'|'+r.agent+'|'+r.zad;
