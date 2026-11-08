@@ -185,10 +185,41 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 .fr{border-left-color:var(--wc,var(--g))}
 .chip[data-f]:not([data-f=""]){color:var(--wc);border-color:var(--wc)}
 .chip.on[data-f]:not([data-f=""]){background:var(--wc);color:#05070f}
+
+.feedbox{position:relative}
+.feedbar.ctl{margin-bottom:5px}.chip-sp{flex:1}
+.chip[data-act=roll].on{background:var(--g);border-color:var(--g)}
+.newb{animation:neon 1s ease-in-out infinite;color:#fff!important;background:var(--r)!important;border-color:var(--r)!important}
+.newb[hidden]{display:none}
+
+@media (max-width:430px){h1{font-size:12px;letter-spacing:1.5px}.ib{width:30px;height:30px}select.ib{padding:0 3px}}
+/* horní čísla (pozice) */
+.top2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 9px}
+.top2 .t2{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.top2 .t2 b{display:block;font:800 30px/1.05 var(--mono);color:var(--acc);text-shadow:var(--glow) currentColor}
+.top2 .t2 span{font:600 9.5px var(--mono);letter-spacing:1.2px;text-transform:uppercase;color:var(--mut)}
+.top2 .t2.ag b{color:var(--g)}
+.top2:empty{display:none}
+/* trvalý panel /mobil vedle dozoru */
+#mobwrap{margin:0 0 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);display:flex;flex-direction:column;height:320px}
+#mobwrap[hidden]{display:none}
+#mobwrap .mh{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font:700 10.5px var(--mono);letter-spacing:1.4px;text-transform:uppercase;color:var(--acc)}
+#mobwrap .mh span{flex:1}#mobwrap .mh a,#mobwrap .mh button{color:var(--acc);background:none;border:1px solid var(--line);border-radius:6px;padding:1px 8px;cursor:pointer;text-decoration:none;font:700 11px var(--mono)}
+#mobwrap iframe{flex:1;width:100%;border:0;background:#02040c}
+#mob.on{border-color:var(--acc);box-shadow:var(--glow) rgba(34,225,255,.45)}
+@media (min-width:1000px){
+ .wrap.mob{max-width:1500px;display:grid;grid-template-columns:minmax(340px,560px) minmax(420px,1fr);column-gap:16px;align-items:start}
+ .wrap.mob>header,.wrap.mob>.meta,.wrap.mob>.top2{grid-column:1/-1}
+ .wrap.mob>.top2{max-width:560px}
+ .wrap.mob>#root{grid-column:1}
+ .wrap.mob>#mobwrap{grid-column:2;grid-row:4/span 20;position:sticky;top:56px;height:calc(100vh - 72px);margin:0}
+}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="mob" title="Mobilní přehled /mobil – trvale vedle dozoru">📱</button><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div class="meta" id="meta">načítám…</div>
+<div id="top2" class="top2"></div>
+<aside id="mobwrap" hidden><div class="mh"><span>Podíl dispečinků · /mobil</span><a href="/ai/mobil" target="_blank" rel="noopener" title="Otevřít v novém okně">↗</a><button id="mobx" title="Zavřít panel">✕</button></div><iframe id="mobf" title="Mobilní přehled" loading="lazy"></iframe></aside>
 <div id="root"></div></div>
 <script>
 (function(){
@@ -234,16 +265,37 @@ function agent(a){if(!a.reported)return `<div class="ag none"><summary style="di
  <dl><dt>Poslední aktivita</dt><dd>${esc(a.posl)||'—'}</dd><dt>Problémy / hod.</dt><dd><b>${a.problemsHour}</b></dd><dt>Poslední problém</dt><dd>${esc(a.poslProb)||'—'}</dd><dt>Účet / PC</dt><dd>${esc(a.ucet)||'—'} / ${esc(a.pc)||'—'}</dd></dl></details>`}
 function list(t,l,open){return `<details class="sec"${open?' open':''}><summary>${t} (${(l||[]).length})</summary>${(l||[]).length?l.map(r=>`<div class="row"><b>${who(r.agent)}</b> <span class="m">${esc(r.at)}${r.typ?' · '+esc(r.typ):''}</span><div class="q">${esc(r.zad)}</div></div>`).join(''):'<div class="empty">Nic.</div>'}</details>`}
 function hist(l){const n=(l||[]).length;return `<details class="sec" data-ag="__hist"${openAg.has('__hist')?' open':''}><summary>Historie upozornění – 24 h (${n})</summary>${n?l.map(r=>{const ok=/vyres|hotov/.test(norm(r.kst));return `<div class="hi s${r.sev||2}"><b>${who(r.agent)}</b> <span class="m">${esc(r.at)} · ${esc(r.udalost||'problém')}${ok?' · <span class="ok">✔ vyřešeno</span>':''}</span><div class="x">${esc(r.typ||r.codelam)}${r.zasah&&!/^ne$/.test(norm(r.zasah))?' – zásah: '+esc(r.zasah):''}</div></div>`}).join(''):'<div class="empty">Za posledních 24 h nic.</div>'}</details>`}
-let feedF='',prevReq=null;
+// stálý panel /mobil vedle dozoru (zůstává zapnutý i po obnovení stránky)
+let mobOn=LS.get('dozorMob',false),poz=null;
+function setMob(on){mobOn=on;LS.set('dozorMob',on);$('mobwrap').hidden=!on;$('mob').classList.toggle('on',on);document.querySelector('.wrap').classList.toggle('mob',on);if(on&&!$('mobf').src)$('mobf').src='/ai/mobil'}
+$('mob').onclick=()=>setMob(!mobOn);$('mobx').onclick=()=>setMob(false);setMob(mobOn);
+const nfz=new Intl.NumberFormat('cs-CZ');
+function top2(){const el=$('top2');if(!poz){el.innerHTML='';return}el.innerHTML=`<div class="t2"><b>${nfz.format(poz.total)}</b><span>pozic celkem</span></div><div class="t2 ag"><b>${nfz.format(poz.today)}</b><span>dnes zapsal agent</span></div>`}
+async function loadPoz(){try{const r=await fetch('/api/agents',{cache:'no-store'});if(!r.ok)return;const j=await r.json();const t=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Prague'});const days=(j.split&&j.split.days)||[];let a=0;days.filter(x=>x.date===t).forEach(x=>Object.values(x.rels||{}).forEach(q=>{a+=(q.pA||0)+(q.tA||0)}));poz={total:j.total||0,today:a};top2()}catch(e){}}
+let feedF='',prevReq=null,roll=LS.get('dozorRoll',true),speed=LS.get('dozorSpd',30),period=LS.get('dozorPer',240),pauseUntil=0,newCount=0;
 function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'právě teď':m<60?'před '+m+' min':'před '+Math.floor(m/60)+' h '+m%60+' min'}
-function feed(d){const all=(d.requests||[]),names=[...new Set(all.map(r=>r.agent))];if(feedF&&!names.includes(feedF))feedF='';
+const rk=r=>r.t+'|'+r.agent+'|'+r.zad;
+function snapFeed(){const fb=$('feedbox');if(!fb)return null;const f=[...fb.children].find(c=>c.dataset&&c.dataset.k);return{sc:fb.scrollTop,key:f?f.dataset.k:null,off:f?f.offsetTop:0}}
+function restoreFeed(s){const fb=$('feedbox');if(!fb||!s)return;if(s.sc<30){fb.scrollTop=0;return}const f=s.key&&[...fb.children].find(c=>c.dataset&&c.dataset.k===s.key);fb.scrollTop=f?s.sc+(f.offsetTop-s.off):s.sc}
+function feed(d,snap){const lim=Date.now()-period*60000,all=(d.requests||[]).filter(r=>r.t>=lim),names=[...new Set(all.map(r=>r.agent))];if(feedF&&!names.includes(feedF))feedF='';
  const l=all.filter(r=>!feedF||r.agent===feedF),seen=prevReq;
- const ids=all.map(r=>r.t+'|'+r.agent+'|'+r.zad);
+ let fresh=0;const rows=l.map(r=>{const k=rk(r),f=seen&&!seen.has(k);if(f)fresh++;return `<div class="fr${f?' fresh':''}" data-k="${esc(k)}" style="--wc:${wcol(r.agent)}"><div class="h"><b>${who(r.agent)}</b><span>${esc(r.at)} · ${ago(r.t)}</span></div><div class="q">${esc(r.zad)}</div>${r.codelam?`<div class="u">${esc(r.codelam)}</div>`:''}</div>`}).join('');
+ prevReq=new Set(all.map(rk));
+ if(fresh&&snap&&snap.sc>30)newCount+=fresh;else if(!snap||snap.sc<=30)newCount=0;
  const chips=`<div class="feedbar"><span class="chip${feedF?'':' on'}" data-f="">Vše (${all.length})</span>${names.map(n=>`<span class="chip${feedF===n?' on':''}" data-f="${esc(n)}" style="--wc:${wcol(n)}">${esc(n)}</span>`).join('')}</div>`;
- const rows=l.map(r=>{const fresh=seen&&!seen.has(r.t+'|'+r.agent+'|'+r.zad);return `<div class="fr${fresh?' fresh':''}" style="--wc:${wcol(r.agent)}"><div class="h"><b>${who(r.agent)}</b><span>${esc(r.at)} · ${ago(r.t)}</span></div><div class="q">${esc(r.zad)}</div>${r.codelam?`<div class="u">${esc(r.codelam)}</div>`:''}</div>`}).join('');
- prevReq=new Set(ids);
- return `<h2><span class="lv2"></span>Co uživatelé zadávají<span class="sp"></span></h2>${all.length?chips+`<div class="feedbox" id="feedbox">${rows}</div>`:'<div class="empty">Zatím žádná zadání v Logu.</div>'}`}
-function render(d){const fbOld=$('feedbox'),fsc=fbOld?fbOld.scrollTop:0;const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
+ const ctl=`<div class="feedbar ctl"><span class="chip${roll?' on':''}" data-act="roll">${roll?'⏸ rolování':'▶ rolování'}</span>${[[14,'pomalu'],[30,'středně'],[60,'rychle']].map(([v,t])=>`<span class="chip${speed===v?' on':''}" data-spd="${v}">${t}</span>`).join('')}<span class="chip-sp"></span>${[[60,'1 h'],[240,'4 h'],[1440,'24 h']].map(([v,t])=>`<span class="chip${period===v?' on':''}" data-per="${v}">${t}</span>`).join('')}</div>`;
+ return `<h2><span class="lv2"></span>Co uživatelé zadávají<span class="sp"></span><button class="link newb" id="newb" data-act="top"${newCount?'':' hidden'}>↑ ${newCount} nové</button></h2>${ctl}${all.length?chips+`<div class="feedbox" id="feedbox">${rows}</div>`:'<div class="empty">V tomto období žádná zadání.</div>'}`}
+// automatické rolování: plynule posouvá okno od nejnovějších k starším, na konci se po chvíli vrátí nahoru; pozastaví se při najetí myší / dotyku
+let endAt=0,lastTs=0,acc=0;
+function tick(ts){const fb=$('feedbox');
+ if(fb&&roll&&Date.now()>pauseUntil&&!fb.matches(':hover')&&fb.scrollHeight>fb.clientHeight+4){
+  const dt=Math.min(.1,(ts-(lastTs||ts))/1000);acc+=speed*dt;const px=Math.floor(acc);if(px>=1){acc-=px;fb.scrollTop+=px}
+  if(fb.scrollTop+fb.clientHeight>=fb.scrollHeight-1){if(!endAt)endAt=ts;if(ts-endAt>2200){fb.scrollTop=0;endAt=0}}else endAt=0}
+ if(fb&&fb.scrollTop<30&&newCount){newCount=0;const nb=$('newb');if(nb)nb.hidden=true}
+ lastTs=ts;requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+['wheel','touchstart','pointerdown'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('#feedbox'))pauseUntil=Date.now()+8000},{passive:true,capture:true}));
+function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
  const fresh=A.filter(x=>!ack.has(x.id));unacked=fresh.length;
  if(prevIds&&fresh.some(x=>!prevIds.has(x.id)))beep();prevIds=new Set(ids);
  ack=new Set([...ack].filter(i=>prevIds.has(i)));LS.set('dozorAck',[...ack]);
@@ -258,14 +310,15 @@ function render(d){const fbOld=$('feedbox'),fsc=fbOld?fbOld.scrollTop:0;const s=
  if(!d.workTime)h+=`<div class="meta" style="margin:6px 2px 0">Mimo pracovní dobu (po–pá 6–17) – nečinnost se nevyhodnocuje.</div>`;
  h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div><div class="k"><b>${s.bezHlaseni}</b><span>mlčí</span></div></div>`;
  h+=`<h2>Upozornění<span class="sp"></span>${A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>');
- h+=feed(d);
+ h+=feed(d,fsnap);
  h+=`<h2>Agenti</h2>`+(d.agents.map(agent).join('')||'<div class="empty">Tabulka neobsahuje agenty.</div>');
  h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
- $('root').innerHTML=h;{const fb=$('feedbox');if(fb)fb.scrollTop=fsc}$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
+ $('root').innerHTML=h;restoreFeed(fsnap);$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
  $('lv').classList.toggle('off',failed>=2);}
-$('root').addEventListener('click',e=>{const ch=e.target.closest('.chip');if(ch){feedF=ch.dataset.f||'';if(last)render(last);return}const c=e.target.closest('.al');if(c){ack.add(c.dataset.id);LS.set('dozorAck',[...ack]);if(last)render(last);return}if(e.target.id==='ackall'){alerts(last).forEach(x=>ack.add(x.id));LS.set('dozorAck',[...ack]);render(last)}});
+$('root').addEventListener('click',e=>{const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
+ const ch=e.target.closest('.chip');if(ch){if(ch.dataset.act==='roll'){roll=!roll;LS.set('dozorRoll',roll)}else if(ch.dataset.spd){speed=+ch.dataset.spd;LS.set('dozorSpd',speed)}else if(ch.dataset.per){period=+ch.dataset.per;LS.set('dozorPer',period)}else feedF=ch.dataset.f||'';if(last)render(last);return}const c=e.target.closest('.al');if(c){ack.add(c.dataset.id);LS.set('dozorAck',[...ack]);if(last)render(last);return}if(e.target.id==='ackall'){alerts(last).forEach(x=>ack.add(x.id));LS.set('dozorAck',[...ack]);render(last)}});
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.ag;if(!n)return;e.target.open?openAg.add(n):openAg.delete(n);LS.set('dozorOpen',[...openAg])},true);
-async function load(){left=REFRESH;try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
+async function load(){left=REFRESH;loadPoz();try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
 $('rf').onclick=load;load();
 setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s'},1000);
 setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové – Dozor':(unacked?'('+unacked+') Dozor agentů':'Dozor agentů')},900);
