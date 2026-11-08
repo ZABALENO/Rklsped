@@ -276,20 +276,22 @@ const nfz=new Intl.NumberFormat('cs-CZ');
 let selDay=null;   // null = vždy aktuální (dnešní) den; po přepnutí šipkami konkrétní datum
 const DOW=['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
 const todayP=()=>new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Prague'});
+function autoDay(){const t=todayP(),S=poz&&poz.S;if(!S)return t;const o={};(S.days||[]).forEach(x=>{let n=0;Object.values(x.rels||{}).forEach(q=>n+=(q.pA||0));o[x.date]=n});if(o[t]>0)return t;const ds=Object.keys(o).filter(d=>d<t&&o[d]>0).sort();return ds.length?ds[ds.length-1]:t}
+const curDay=()=>selDay||autoDay();
 function dayList(){const t=todayP(),ds=new Set(((poz&&poz.S&&poz.S.days)||[]).map(x=>x.date));ds.add(t);return [...ds].sort()}
 function top2(){const el=$('top2');if(!poz){el.innerHTML='';return}
- const t=todayP(),cur=selDay||t,ds=dayList(),ix=ds.indexOf(cur),d=new Date(cur+'T12:00:00Z'),isT=cur===t;
+ const t=todayP(),au=autoDay(),cur=curDay(),ds=dayList(),ix=ds.indexOf(cur),d=new Date(cur+'T12:00:00Z'),isT=cur===t;
  el.innerHTML=`<div class="t2"><b>${nfz.format(poz.total)}</b><span>pozic celkem</span></div>
- <div class="t2 nav"><button class="nb" data-nav="-1" ${ix<=0?'disabled':''} title="Předchozí den">‹</button><div class="nd" ${isT?'':'data-nav="0" title="Zpět na dnešek"'}><b>${isT?'Dnes':esc(DOW[d.getUTCDay()])}</b><span>${d.getUTCDate()}. ${d.getUTCMonth()+1}. ${d.getUTCFullYear()}</span></div><button class="nb" data-nav="1" ${ix>=ds.length-1?'disabled':''} title="Další den">›</button></div>`;dayView()}
+ <div class="t2 nav"><button class="nb" data-nav="-1" ${ix<=0?'disabled':''} title="Předchozí den">‹</button><div class="nd" ${cur===au?'':'data-nav="0" title="Zpět na výchozí den"'}><b>${isT?'Dnes':esc(DOW[d.getUTCDay()])}</b><span>${d.getUTCDate()}. ${d.getUTCMonth()+1}. ${d.getUTCFullYear()}</span></div><button class="nb" data-nav="1" ${ix>=ds.length-1?'disabled':''} title="Další den">›</button></div>`;dayView()}
 function dayRows(date){const S=poz&&poz.S;if(!S)return null;const rels={};(S.days||[]).filter(x=>x.date===date).forEach(x=>Object.entries(x.rels||{}).forEach(([k,q])=>{const z=rels[k]||(rels[k]={A:0,M:0,T:0});z.A+=(q.pA||0);z.M+=(q.pM||0);z.T+=(q.tA||0)}));
  const nm={};(S.rels||[]).forEach(x=>nm[x.key]=x.name);
  return Object.entries(rels).filter(([,z])=>z.A+z.T>0).map(([k,z])=>({name:nm[k]||k,A:z.A,M:z.M,T:z.T})).sort((x,y)=>(y.A+y.M)-(x.A+x.M)||y.A-x.A)}
-function dayView(){const el=$('dayw'),rows=dayRows(selDay||todayP());if(!rows){el.innerHTML='';return}
- const cur=selDay||todayP(),isT=cur===todayP(),tot=rows.reduce((a,r)=>a+r.A+r.T,0),max=Math.max(1,...rows.map(r=>r.A+r.M)),d=new Date(cur+'T12:00:00Z'),dn=DOW[d.getUTCDay()],dl=(isT?'Dnes · '+dn:dn[0].toUpperCase()+dn.slice(1))+' · '+d.getUTCDate()+'. '+(d.getUTCMonth()+1)+'. '+d.getUTCFullYear();
+function dayView(){const el=$('dayw'),rows=dayRows(curDay());if(!rows){el.innerHTML='';return}
+ const cur=curDay(),isT=cur===todayP(),tot=rows.reduce((a,r)=>a+r.A+r.T,0),max=Math.max(1,...rows.map(r=>r.A+r.M)),d=new Date(cur+'T12:00:00Z'),dn=DOW[d.getUTCDay()],dl=(isT?'Dnes · '+dn:dn[0].toUpperCase()+dn.slice(1))+' · '+d.getUTCDate()+'. '+(d.getUTCMonth()+1)+'. '+d.getUTCFullYear();
  const cls=p=>p>=50?'g':p>=25?'o':'r',col={g:'var(--g)',o:'var(--o)',r:'var(--r)'};
  el.innerHTML=`<div class="dw"><div class="dh"><span class="dt">${esc(dl)}</span><span class="big">${nfz.format(tot)}<small class="g">obj. + přep. agent</small></span></div>`+
  (rows.length?`<div class="hd"><span>Součet ▾</span><span></span><span>Agent</span><span>Ručně</span><span>% agent</span></div>`+rows.map(r=>{const t=r.A+r.M,p=t?Math.round(100*r.A/t):0,c=cls(p);return `<div class="dr"><span>${who(r.name)}</span><span class="bw" style="width:${Math.max(6,Math.round(100*t/max))}%"><i style="width:${t?100*r.A/t:0}%;background:${col[c]}"></i></span><span class="n ${c}">${r.A}</span><span class="n m">${r.M}</span><span class="n ${c}">${p} %</span></div>`}).join(''):`<div class="emp">${isT?'Dnes zatím':'Tento den'} agent nezapsal žádnou pozici.</div>`)+`</div>`}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(!b||b.disabled||!poz)return;const t=todayP(),ds=dayList(),cur=selDay||t,ix=ds.indexOf(cur),v=+b.dataset.nav;let n=v===0?t:ds[Math.max(0,Math.min(ds.length-1,ix+v))];selDay=n===t?null:n;top2()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(!b||b.disabled||!poz)return;const au=autoDay(),ds=dayList(),cur=curDay(),ix=ds.indexOf(cur),v=+b.dataset.nav;let n=v===0?au:ds[Math.max(0,Math.min(ds.length-1,ix+v))];selDay=n===au?null:n;top2()});
 async function loadPoz(){try{const r=await fetch('/api/agents',{cache:'no-store'});if(!r.ok)return;const j=await r.json();poz={total:j.total||0,S:j.split||null};top2()}catch(e){}}
 let feedF='',prevReq=null,roll=LS.get('dozorRoll',true),speed=LS.get('dozorSpd',30),period=LS.get('dozorPer',240),pauseUntil=0,newCount=0;
 function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'právě teď':m<60?'před '+m+' min':'před '+Math.floor(m/60)+' h '+m%60+' min'}
