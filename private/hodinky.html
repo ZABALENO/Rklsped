@@ -71,7 +71,7 @@
   }
   async function load() {
     try {
-      const K = new URLSearchParams(location.search).get('k') || '';
+      const K = new URLSearchParams(location.search).get('k') || (location.pathname.match(/^\/h\/([^/]+)/) || [])[1] || '';
       const r = await fetch('/api/agents/watch?k=' + encodeURIComponent(K)); if (r.status === 401) { $('upd').textContent = 'Neplatný odkaz.'; return; }
       const j = await r.json(), rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
       $('pie').innerHTML = donut(rels, total);
