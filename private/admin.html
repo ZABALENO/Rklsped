@@ -253,7 +253,7 @@ function fx(){cancelAnimationFrame(raf);raf=0;cx.clearRect(0,0,W,H);const sk=doc
 setSkin(document.documentElement.dataset.skin);
 $('skin').onchange=e=>setSkin(e.target.value);
 const REFRESH=10;let left=REFRESH,last=null,failed=0,prevIds=null,openAg=new Set(LS.get('dozorOpen',[])),ack=new Set(LS.get('dozorAck',[])),sound=LS.get('dozorSound',false),unacked=0,flip=false;
-const KIND={bezi:'běží',ceka:'čeká',stoji:'stojí',nejasne:'stav nejasný',none:'nehlásil se'};
+const KIND={bezi:'běží',necinny:'bez aktivity >10 min',ceka:'čeká',stoji:'stojí',nejasne:'stav nejasný',none:'nehlásil se'};
 function snd(){$('snd').textContent=sound?'🔔':'🔕';$('snd').classList.toggle('on',sound)}snd();
 let actx=null;function beep(){if(!sound)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();[0,.22,.44].forEach(d=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(actx.destination);o.start(actx.currentTime+d);o.stop(actx.currentTime+d+.14)})}catch(e){}}
 $('snd').onclick=()=>{sound=!sound;LS.set('dozorSound',sound);snd();if(sound)beep()};
@@ -326,7 +326,7 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  else if(s.red||s.zasah)h+=`<div class="banner bad"><span style="font-size:24px">●</span><div>Potvrzené problémy trvají<small>${s.zasah||0}× zásah člověka · ${s.red} agent(ů) červeně</small></div></div>`;
  else if((s.orange||s.sProblemem)&&LS.get('dozorWarn','')===wsig(d,s)){}
  else if(s.orange||s.sProblemem)h+=`<div class="banner warn" id="warnb" style="cursor:pointer"><span style="font-size:24px">●</span><div>Drobné problémy<small>${s.sProblemem} agent(ů) hlásí problém za poslední hodinu · klepnutím potvrdíte</small></div></div>`;
- else h+=`<div class="banner ok"><span style="font-size:24px">✔</span><div>Vše v pořádku<small>${s.bezi} běží · ${s.ceka} čeká</small></div></div>`;
+ else h+=`<div class="banner ok"><span style="font-size:24px">✔</span><div>Vše v pořádku<small>${s.bezi} běží (≤10 min) · ${s.necinny||0} bez aktivity >10 min · ${s.ceka} čeká</small></div></div>`;
  if(!d.workTime)h+=`<div class="meta" style="margin:6px 2px 0">Mimo pracovní dobu (po–pá 6–17) – nečinnost se nevyhodnocuje.</div>`;
  h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div><div class="k"><b>${s.bezHlaseni}</b><span>mlčí</span></div></div>`;
  h+=`<h2>Upozornění<span class="sp"></span>${A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>');
