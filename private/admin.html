@@ -164,6 +164,21 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 :root[data-skin=matrix] :is(.al.new,.banner.bad.blink){animation:neon 1s ease-in-out infinite}
 :root[data-skin=matrix] h1{background:none;color:var(--acc);-webkit-text-fill-color:currentColor;text-shadow:0 0 12px var(--acc)}
 .banner.bad,.banner.warn{position:sticky;top:50px;z-index:6}
+
+/* živý přenos zadání */
+.feedbar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 7px}
+.chip{font:700 10px var(--mono);letter-spacing:.6px;text-transform:uppercase;color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 9px;cursor:pointer}
+.chip.on{color:var(--bg);background:var(--acc);border-color:var(--acc)}
+.feedbox{max-height:340px;overflow:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:var(--acc) transparent}
+.feedbox::-webkit-scrollbar{width:6px}.feedbox::-webkit-scrollbar-thumb{background:var(--acc);border-radius:3px}.feedbox::-webkit-scrollbar-track{background:transparent}
+.fr{position:relative;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--g);border-radius:9px;padding:8px 11px;margin-bottom:6px}
+.fr.mis{border-left-color:var(--o)}
+.fr .h{display:flex;justify-content:space-between;gap:8px;font:700 11px var(--mono);color:var(--mut)}.fr .h b{color:var(--tx)}
+.fr .q{margin-top:3px;font-size:14px;font-weight:600;white-space:pre-wrap;word-break:break-word}
+.fr .u{margin-top:3px;font-size:11px;color:var(--mut);word-break:break-word}.fr .u::before{content:"agent: ";opacity:.7}
+.fr.fresh{animation:fresh 2.6s ease-out 1}
+@keyframes fresh{0%{background:rgba(52,255,160,.45)}100%{background:var(--panel)}}
+.lv2{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g);animation:ping 2s infinite;margin-right:4px}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
 <header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
@@ -208,7 +223,16 @@ function agent(a){if(!a.reported)return `<div class="ag none"><summary style="di
  <dl><dt>Poslední aktivita</dt><dd>${esc(a.posl)||'—'}</dd><dt>Problémy / hod.</dt><dd><b>${a.problemsHour}</b></dd><dt>Poslední problém</dt><dd>${esc(a.poslProb)||'—'}</dd><dt>Účet / PC</dt><dd>${esc(a.ucet)||'—'} / ${esc(a.pc)||'—'}</dd></dl></details>`}
 function list(t,l,open){return `<details class="sec"${open?' open':''}><summary>${t} (${(l||[]).length})</summary>${(l||[]).length?l.map(r=>`<div class="row"><b>${esc(r.agent)}</b> <span class="m">${esc(r.at)}${r.typ?' · '+esc(r.typ):''}</span><div class="q">${esc(r.zad)}</div></div>`).join(''):'<div class="empty">Nic.</div>'}</details>`}
 function hist(l){const n=(l||[]).length;return `<details class="sec" data-ag="__hist"${openAg.has('__hist')?' open':''}><summary>Historie upozornění – 24 h (${n})</summary>${n?l.map(r=>{const ok=/vyres|hotov/.test(norm(r.kst));return `<div class="hi s${r.sev||2}"><b>${esc(r.agent)}</b> <span class="m">${esc(r.at)} · ${esc(r.udalost||'problém')}${ok?' · <span class="ok">✔ vyřešeno</span>':''}</span><div class="x">${esc(r.typ||r.codelam)}${r.zasah&&!/^ne$/.test(norm(r.zasah))?' – zásah: '+esc(r.zasah):''}</div></div>`}).join(''):'<div class="empty">Za posledních 24 h nic.</div>'}</details>`}
-function render(d){const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
+let feedF='',prevReq=null;
+function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'právě teď':m<60?'před '+m+' min':'před '+Math.floor(m/60)+' h '+m%60+' min'}
+function feed(d){const all=(d.requests||[]),names=[...new Set(all.map(r=>r.agent))];if(feedF&&!names.includes(feedF))feedF='';
+ const l=all.filter(r=>!feedF||r.agent===feedF),seen=prevReq;
+ const ids=all.map(r=>r.t+'|'+r.agent+'|'+r.zad);
+ const chips=`<div class="feedbar"><span class="chip${feedF?'':' on'}" data-f="">Vše (${all.length})</span>${names.map(n=>`<span class="chip${feedF===n?' on':''}" data-f="${esc(n)}">${esc(n)}</span>`).join('')}</div>`;
+ const rows=l.map(r=>{const fresh=seen&&!seen.has(r.t+'|'+r.agent+'|'+r.zad);return `<div class="fr${fresh?' fresh':''}"><div class="h"><b>${esc(r.agent)}</b><span>${esc(r.at)} · ${ago(r.t)}</span></div><div class="q">${esc(r.zad)}</div>${r.codelam?`<div class="u">${esc(r.codelam)}</div>`:''}</div>`}).join('');
+ prevReq=new Set(ids);
+ return `<h2><span class="lv2"></span>Co uživatelé zadávají<span class="sp"></span></h2>${all.length?chips+`<div class="feedbox" id="feedbox">${rows}</div>`:'<div class="empty">Zatím žádná zadání v Logu.</div>'}`}
+function render(d){const fbOld=$('feedbox'),fsc=fbOld?fbOld.scrollTop:0;const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
  const fresh=A.filter(x=>!ack.has(x.id));unacked=fresh.length;
  if(prevIds&&fresh.some(x=>!prevIds.has(x.id)))beep();prevIds=new Set(ids);
  ack=new Set([...ack].filter(i=>prevIds.has(i)));LS.set('dozorAck',[...ack]);
@@ -223,11 +247,12 @@ function render(d){const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
  if(!d.workTime)h+=`<div class="meta" style="margin:6px 2px 0">Mimo pracovní dobu (po–pá 6–17) – nečinnost se nevyhodnocuje.</div>`;
  h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div><div class="k"><b>${s.bezHlaseni}</b><span>mlčí</span></div></div>`;
  h+=`<h2>Upozornění<span class="sp"></span>${A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>');
+ h+=feed(d);
  h+=`<h2>Agenti</h2>`+(d.agents.map(agent).join('')||'<div class="empty">Tabulka neobsahuje agenty.</div>');
- h+=hist(d.history)+list('Nedorozumění',d.misunder,false)+list('Zadání uživatelů',d.requests,false);
- $('root').innerHTML=h;$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
+ h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
+ $('root').innerHTML=h;{const fb=$('feedbox');if(fb)fb.scrollTop=fsc}$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
  $('lv').classList.toggle('off',failed>=2);}
-$('root').addEventListener('click',e=>{const c=e.target.closest('.al');if(c){ack.add(c.dataset.id);LS.set('dozorAck',[...ack]);if(last)render(last);return}if(e.target.id==='ackall'){alerts(last).forEach(x=>ack.add(x.id));LS.set('dozorAck',[...ack]);render(last)}});
+$('root').addEventListener('click',e=>{const ch=e.target.closest('.chip');if(ch){feedF=ch.dataset.f||'';if(last)render(last);return}const c=e.target.closest('.al');if(c){ack.add(c.dataset.id);LS.set('dozorAck',[...ack]);if(last)render(last);return}if(e.target.id==='ackall'){alerts(last).forEach(x=>ack.add(x.id));LS.set('dozorAck',[...ack]);render(last)}});
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.ag;if(!n)return;e.target.open?openAg.add(n):openAg.delete(n);LS.set('dozorOpen',[...openAg])},true);
 async function load(){left=REFRESH;try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
 $('rf').onclick=load;load();
