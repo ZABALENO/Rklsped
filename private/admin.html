@@ -1,8 +1,9 @@
-<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Dozor agentů</title><link rel="icon" type="image/png" href="/favicon.png">
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Dozor agentů</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;600&family=Audiowide&family=Rajdhani:wght@500;600;700&family=Michroma&family=Share+Tech+Mono&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{var __s=localStorage.getItem('dozorSkin')||(document.cookie.match(/(?:^|; )dozorSkin=([^;]+)/)||[])[1]||'zaklad';document.documentElement.dataset.skin=__s}catch(e){document.documentElement.dataset.skin='zaklad'}</script>
 <style>
 :root{--bg:#02040b;--panel:rgba(12,20,44,.62);--panel2:rgba(20,32,66,.7);--line:rgba(70,190,255,.22);--tx:#e9f4ff;--mut:#7f96c2;--g:#2dffb0;--o:#ffb02e;--r:#ff3b5c;--acc:#22e1ff;--mag:#b24bff;--ui:Inter,-apple-system,"Segoe UI",system-ui,sans-serif;--rad:8px;--mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,"Roboto Mono",monospace;--glow:0 0 14px}
 :root[data-skin=day]{--bg:#e9f0fb;--panel:rgba(255,255,255,.78);--panel2:rgba(255,255,255,.9);--line:rgba(20,80,180,.22);--tx:#0b1630;--mut:#4f5f86;--g:#08915a;--o:#b36b00;--r:#d3173f;--acc:#0a6fd6;--mag:#7a2bd0;--glow:0 0 0}
-*{box-sizing:border-box}html,body{margin:0}
+*{box-sizing:border-box}html,body{margin:0}html{background:var(--bg)}
 body{color:var(--tx);font:500 13px/1.4 var(--ui);min-height:100vh;
  background:radial-gradient(600px 380px at 105% -5%,rgba(178,75,255,.22),transparent 70%),radial-gradient(520px 420px at -10% 8%,rgba(34,225,255,.16),transparent 70%),var(--bg);background-attachment:fixed}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(70,190,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(70,190,255,.055) 1px,transparent 1px);background-size:26px 26px;mask-image:linear-gradient(#000 30%,transparent 95%)}
@@ -120,9 +121,52 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 :root[data-skin=dracula] .al .k2::before{content:"@";opacity:.7}
 :root[data-skin=dracula] .ag .nm{color:var(--mag)}
 :root[data-skin=dracula] .ag.red{box-shadow:none}
+
+/* ===== SKINY VE STYLU DASHBOARDU /ai ===== */
+.bgimg,.floor,#net{display:none}
+#net{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.6}
+.bgimg{position:fixed;inset:0;z-index:-1;pointer-events:none}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]){--clip:none}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=matrix]) body{background:transparent}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network]) .bgimg{display:block;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.5)}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network]) .bgimg.l3{filter:none;background:radial-gradient(900px 600px at 20% 0%,rgba(94,138,255,.55),transparent 65%),radial-gradient(800px 600px at 100% 100%,rgba(29,56,143,.75),transparent 60%),linear-gradient(180deg,rgba(0,4,24,.9),rgba(0,0,12,.78))}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) :is(.al,.ag,.k,.banner,.row,.hi,.ib,.link){clip-path:var(--clip)}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) h1{background:linear-gradient(90deg,#fff,var(--acc) 60%,var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;letter-spacing:3px}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) .live{box-shadow:0 0 10px var(--g)}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) .banner::before{box-shadow:none}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) .k b{color:var(--acc)}:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) .k.r b{color:var(--r)}:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) .k.o b{color:var(--o)}:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network],[data-skin=synth],[data-skin=hologram],[data-skin=matrix]) .k.g b{color:var(--g)}
+@keyframes flashbg{50%{box-shadow:inset 0 0 0 2px var(--r),inset 0 0 40px rgba(255,70,70,.9);filter:brightness(1.4)}}
+:root:is([data-skin=zaklad],[data-skin=pulse],[data-skin=network]) :is(.al.new,.banner.bad.blink,.al .n){animation:flashbg .9s ease-in-out infinite}
+:root[data-skin=zaklad],:root[data-skin=pulse],:root[data-skin=network]{--bg:#000;--panel:rgba(2,5,16,.84);--line:rgba(120,160,255,.6);--acc:#7aa2ff;--mag:#f2a516;--g:#7dd3a0;--o:#f2a516;--r:#ff6b5e;--tx:#fff;--mut:#c3cfe8;--ui:Inter,-apple-system,"Segoe UI",system-ui,sans-serif;--mono:var(--ui);--clip:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+:root[data-skin=zaklad] body::after,:root[data-skin=pulse] body::after,:root[data-skin=network] body::after{opacity:.07;background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
+:root[data-skin=pulse]{--ui:"Chakra Petch",sans-serif;--mono:"Chakra Petch",sans-serif}
+:root[data-skin=pulse] h2::before{content:"◢";color:var(--acc);text-shadow:0 0 8px var(--acc)}
+:root[data-skin=network]{--ui:"Exo 2",sans-serif;--mono:"Orbitron",sans-serif;--line:rgba(122,162,255,.6);--clip:polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px),0 14px)}
+:root[data-skin=network] h2::before{content:"⬢";color:var(--acc);text-shadow:0 0 8px var(--acc)}
+:root[data-skin=network] #net{display:block}
+:root[data-skin=network] .k b{font-size:20px}:root[data-skin=network] .ag .nm,:root[data-skin=network] .al .t{font-size:12px}
+:root[data-skin=synth]{--bg:#06001a;--panel:rgba(8,0,28,.82);--line:rgba(0,240,255,.7);--acc:#00f0ff;--mag:#ff2bd6;--g:#39ffb0;--o:#ffd23a;--r:#ff3b6b;--tx:#fff;--mut:#b9c0ff;--ui:"Rajdhani",sans-serif;--mono:"Audiowide",sans-serif}
+:root[data-skin=synth] body{background:radial-gradient(900px 600px at 15% 0%,rgba(255,43,214,.45),transparent 65%),radial-gradient(900px 600px at 100% 100%,rgba(0,240,255,.4),transparent 60%),linear-gradient(180deg,#14003a,#06001a);background-attachment:fixed;font-size:14.5px;font-weight:600}
+:root[data-skin=synth] :is(.al,.ag,.k,.banner,.row,.hi){border-radius:14px;border:2px solid var(--acc);box-shadow:inset 0 0 22px rgba(0,240,255,.1),0 0 16px rgba(0,240,255,.35)}
+:root[data-skin=synth] .al.s3,:root[data-skin=synth] .ag.red{border-color:var(--r);box-shadow:inset 0 0 22px rgba(255,59,107,.15),0 0 16px rgba(255,59,107,.5)}
+:root[data-skin=synth] h2{color:var(--mag);text-shadow:0 0 12px var(--mag)}:root[data-skin=synth] h2::before{content:"▶";color:var(--acc)}
+:root[data-skin=synth] .floor{display:block;position:fixed;left:-50%;right:-50%;bottom:0;height:42vh;z-index:0;pointer-events:none;transform:perspective(420px) rotateX(62deg);transform-origin:50% 100%;background-image:linear-gradient(rgba(255,43,214,.55) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.5) 1px,transparent 1px);background-size:60px 60px;animation:floor 2.4s linear infinite;-webkit-mask-image:linear-gradient(0deg,#000,transparent 85%);mask-image:linear-gradient(0deg,#000,transparent 85%);opacity:.5}
+@keyframes floor{to{background-position:0 60px,0 0}}
+:root[data-skin=synth] .banner.bad{background:linear-gradient(100deg,#ff2b6b,#b0125a);border-color:#fff}
+:root[data-skin=hologram]{--bg:#0a0f2c;--panel:rgba(120,170,255,.09);--line:rgba(170,220,255,.5);--acc:#9ae6ff;--mag:#c79bff;--g:#8dffd0;--o:#ffe08a;--r:#ff7a8a;--tx:#f0f6ff;--mut:#b4c6ee;--ui:"Exo 2",sans-serif;--mono:"Michroma",sans-serif}
+:root[data-skin=hologram] body{background:radial-gradient(700px 500px at 10% 0%,rgba(199,155,255,.35),transparent 65%),radial-gradient(700px 500px at 100% 90%,rgba(154,230,255,.3),transparent 60%),linear-gradient(160deg,#0a0f2c,#150a35);background-attachment:fixed;font-weight:300;font-size:14px}
+:root[data-skin=hologram] :is(.al,.ag,.k,.banner,.row,.hi){border-radius:20px;border:1px solid rgba(190,230,255,.5);backdrop-filter:blur(16px) saturate(1.5)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 8px 30px rgba(20,10,80,.35)}
+:root[data-skin=hologram] :is(.al.new,.banner.bad.blink){animation:neon 1s ease-in-out infinite}
+:root[data-skin=hologram] .k b{font-size:20px}:root[data-skin=hologram] h2{letter-spacing:2px}
+:root[data-skin=matrix]{--bg:#000;--panel:rgba(0,10,4,.86);--line:rgba(57,255,136,.6);--acc:#39ff88;--mag:#d6ff3a;--g:#39ff88;--o:#d6ff3a;--r:#ff4a4a;--tx:#d8ffe6;--mut:#8fe8b0;--ui:"Share Tech Mono",monospace;--mono:"Share Tech Mono",monospace}
+:root[data-skin=matrix] #net{display:block;opacity:.55}
+:root[data-skin=matrix] :is(.al,.ag,.k,.banner,.row,.hi){border:1px solid var(--line);box-shadow:0 0 12px rgba(57,255,136,.18),inset 0 0 26px rgba(57,255,136,.05)}
+:root[data-skin=matrix] :is(.al.new,.banner.bad.blink){animation:neon 1s ease-in-out infinite}
+:root[data-skin=matrix] h1{background:none;color:var(--acc);-webkit-text-fill-color:currentColor;text-shadow:0 0 12px var(--acc)}
+.banner.bad,.banner.warn{position:sticky;top:50px;z-index:6}
 </style></head>
-<body><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin"><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
+<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div class="meta" id="meta">načítám…</div>
 <div id="root"></div></div>
 <script>
@@ -130,9 +174,21 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const SKINS=['neon','terminal','amber','dracula','day'];
-function setSkin(s){if(!SKINS.includes(s))s='neon';document.documentElement.dataset.skin=s;$('skin').value=s;try{localStorage.setItem('dozorSkin',s)}catch(e){}}
-(function(){let s=null;try{s=localStorage.getItem('dozorSkin');if(!s&&(localStorage.getItem('rklAiTheme')||'').split('|')[0]==='day')s='day'}catch(e){}setSkin(s||'neon')})();
+const SKINS=['zaklad','pulse','network','synth','hologram','matrix','neon','terminal','amber','dracula','day'];
+// pamatování skinu: localStorage + cookie (záloha, když prohlížeč úložiště blokuje); načtení probíhá už v <head>, takže nic nebliká
+function saveSkin(s){try{localStorage.setItem('dozorSkin',s)}catch(e){}try{document.cookie='dozorSkin='+s+';path=/;max-age=31536000;SameSite=Lax'}catch(e){}}
+function setSkin(s){if(!SKINS.includes(s))s='zaklad';document.documentElement.dataset.skin=s;$('skin').value=s;saveSkin(s);fx()}
+// animované pozadí: Network (částice) a Matrix (padající znaky); respektuje „omezit pohyb“
+const cv=$('net'),cx=cv.getContext('2d');let raf=0,W=0,H=0,P=[],drops=[],rt=0;const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;const n=Math.min(70,Math.round(W*H/22000));P=[];for(let i=0;i<n;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35});drops=[];for(let i=0;i<Math.ceil(W/16);i++)drops.push(Math.random()*H/16)}
+addEventListener('resize',size);
+function frame(){const sk=document.documentElement.dataset.skin;
+ if(sk==='network'){cx.clearRect(0,0,W,H);for(let i=0;i<P.length;i++){const p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;for(let j=i+1;j<P.length;j++){const q=P[j],dx=p.x-q.x,dy=p.y-q.y,d=dx*dx+dy*dy;if(d<22000){cx.strokeStyle='rgba(122,162,255,'+(.35*(1-d/22000)).toFixed(3)+')';cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(q.x,q.y);cx.stroke()}}cx.fillStyle='rgba(122,162,255,.85)';cx.beginPath();cx.arc(p.x,p.y,1.6,0,6.283);cx.fill()}}
+ else if(sk==='matrix'){if(++rt%2){raf=requestAnimationFrame(frame);return}cx.fillStyle='rgba(0,10,4,.14)';cx.fillRect(0,0,W,H);cx.font='14px monospace';for(let i=0;i<drops.length;i++){cx.fillStyle=Math.random()>.96?'#eaffef':'#39ff88';cx.fillText(String.fromCharCode(0x30A0+Math.random()*90),i*16,drops[i]*16);if(drops[i]*16>H&&Math.random()>.975)drops[i]=0;drops[i]++}}
+ else{raf=0;return}
+ raf=document.hidden?setTimeout(()=>{raf=requestAnimationFrame(frame)},1000):requestAnimationFrame(frame)}
+function fx(){cancelAnimationFrame(raf);raf=0;cx.clearRect(0,0,W,H);const sk=document.documentElement.dataset.skin;if(!calm&&(sk==='network'||sk==='matrix')){size();frame()}}
+setSkin(document.documentElement.dataset.skin);
 $('skin').onchange=e=>setSkin(e.target.value);
 const REFRESH=10;let left=REFRESH,last=null,failed=0,prevIds=null,openAg=new Set(LS.get('dozorOpen',[])),ack=new Set(LS.get('dozorAck',[])),sound=LS.get('dozorSound',false),unacked=0,flip=false;
 const KIND={bezi:'běží',ceka:'čeká',stoji:'stojí',nejasne:'stav nejasný',none:'nehlásil se'};
