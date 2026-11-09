@@ -219,9 +219,10 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 .dw .n{text-align:right}.dw .n.m{color:var(--tx);opacity:.85;font-weight:700}
 .dw .g{color:var(--g)}.dw .o{color:var(--o)}.dw .r{color:var(--r)}
 .dw .emp{color:var(--mut);font:500 12px var(--mono);padding:6px 0}
+.cd{font:700 11px var(--mono);color:var(--mut);letter-spacing:.5px;margin-left:8px;text-transform:none;text-shadow:none;white-space:nowrap}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<header><h1><span class="live" id="lv"></span>Dozor agentů<span id="cd" class="cd"></span></h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div class="meta" id="meta">načítám…</div>
 <div id="top2" class="top2"></div>
 <div id="dayw"></div>
@@ -342,7 +343,7 @@ $('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.ag;if(!n)return;e.target.open?openAg.add(n):openAg.delete(n);LS.set('dozorOpen',[...openAg])},true);
 async function load(){left=REFRESH;loadPoz();try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
 $('rf').onclick=load;load();
-setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s'},1000);
+setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s';$('cd').textContent=failed>=2?'offline':left>0?left+' s':'…'},1000);
 setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové – Dozor':(unacked?'('+unacked+') Dozor agentů':'Dozor agentů')},900);
 })();
 </script></body></html>
