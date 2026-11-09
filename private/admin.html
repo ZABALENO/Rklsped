@@ -330,7 +330,7 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  else if(!d.readAt)h+=`<div class="banner warn">Zatím žádná data z tabulky</div>`;
  else if(d.workTime&&d.dataAgeMin>5)h+=`<div class="banner bad blink" style="margin-bottom:8px">⚠ Data jsou stará ${d.dataAgeMin} min<small>Tabulku se nepodařilo načíst – stav nemusí odpovídat.</small></div>`;
  if(unacked)h+=`<div class="banner bad blink"><span style="font-size:24px">⚠</span><div>${unacked} ${unacked===1?'nové upozornění':unacked<5?'nová upozornění':'nových upozornění'}<small>Klepnutím na kartu upozornění potvrdíte</small></div></div>`;
- else if(s.red||s.zasah)h+=`<div class="banner bad"><span style="font-size:24px">●</span><div>Potvrzené problémy trvají<small>${s.zasah||0}× zásah člověka · ${s.red} agent(ů) červeně</small></div></div>`;
+ else if(s.red||s.zasah){}   // potvrzená upozornění zůstávají jen v seznamu, bez trvalého pruhu
  else if((s.orange||s.sProblemem)&&LS.get('dozorWarn','')===wsig(d,s)){}
  else if(s.orange||s.sProblemem)h+=`<div class="banner warn" id="warnb" style="cursor:pointer"><span style="font-size:24px">●</span><div>Drobné problémy<small>${s.sProblemem} agent(ů) hlásí problém za poslední hodinu · klepnutím potvrdíte</small></div></div>`;
  else h+=`<div class="banner ok"><span style="font-size:24px">✔</span><div>Vše v pořádku<small>${s.bezi} běží (≤10 min) · ${s.necinny||0} bez aktivity >10 min · ${s.ceka} čeká</small></div></div>`;
