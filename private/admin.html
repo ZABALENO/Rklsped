@@ -333,7 +333,7 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div></div>`;
  h+=`<h2>Upozornění<span class="sp"></span>${A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>');
  h+=feed(d,fsnap);
- h+=`<h2>Agenti</h2>`+(d.agents.map(agent).join('')||'<div class="empty">Tabulka neobsahuje agenty.</div>');
+ h+=`<h2>Agenti</h2>`+(d.agents.filter(x=>x.level!=='none').map(agent).join('')||'<div class="empty">Zatím se nikdo nehlásil.</div>');
  h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
  $('root').innerHTML=h;restoreFeed(fsnap);$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
  $('lv').classList.toggle('off',failed>=2);}
