@@ -219,10 +219,14 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 .dw .n{text-align:right}.dw .n.m{color:var(--tx);opacity:.85;font-weight:700}
 .dw .g{color:var(--g)}.dw .o{color:var(--o)}.dw .r{color:var(--r)}
 .dw .emp{color:var(--mut);font:500 12px var(--mono);padding:6px 0}
-.cd{font:700 11px var(--mono);color:var(--mut);letter-spacing:.5px;margin-left:8px;text-transform:none;text-shadow:none;white-space:nowrap}
+.top2 .t2:first-child{position:relative;overflow:hidden}
+.top2 .t2:first-child::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;border-radius:inherit;background:linear-gradient(110deg,transparent 0%,rgba(34,225,255,.55) 25%,rgba(192,107,255,.6) 45%,rgba(43,255,176,.55) 65%,rgba(255,176,32,.45) 80%,transparent 100%);background-size:260% 100%}
+.top2 .t2.fl::after{animation:refl 1.5s ease-out}
+@keyframes refl{0%{opacity:.95;background-position:120% 0}70%{opacity:.8}100%{opacity:0;background-position:-20% 0}}
+.top2 .t2.fl b{animation:reflb 1.5s ease-out}@keyframes reflb{0%,100%{filter:none}30%{filter:brightness(1.7) saturate(1.5)}}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů<span id="cd" class="cd"></span></h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div class="meta" id="meta">načítám…</div>
 <div id="top2" class="top2"></div>
 <div id="dayw"></div>
@@ -293,7 +297,7 @@ function dayView(){const el=$('dayw'),rows=dayRows(curDay());if(!rows){el.innerH
  el.innerHTML=`<div class="dw"><div class="dh"><span class="dt">${esc(dl)}</span><span class="big">${nfz.format(tot)}<small class="g">obj. + přep. agent</small></span></div>`+
  (rows.length?`<div class="hd"><span>Součet ▾</span><span></span><span>Agent</span><span>Ručně</span><span>% agent</span></div>`+rows.map(r=>{const t=r.A+r.M,p=t?Math.round(100*r.A/t):0,c=cls(p);return `<div class="dr"><span>${who(r.name)}</span><span class="bw" style="width:${Math.max(6,Math.round(100*t/max))}%"><i style="width:${t?100*r.A/t:0}%;background:${col[c]}"></i></span><span class="n ${c}">${r.A}</span><span class="n m">${r.M}</span><span class="n ${c}">${p} %</span></div>`}).join(''):`<div class="emp">${isT?'Dnes zatím':'Tento den'} agent nezapsal žádnou pozici.</div>`)+`</div>`}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(!b||b.disabled||!poz)return;const au=autoDay(),ds=dayList(),cur=curDay(),ix=ds.indexOf(cur),v=+b.dataset.nav;let n=v===0?au:ds[Math.max(0,Math.min(ds.length-1,ix+v))];selDay=n===au?null:n;top2()});
-async function loadPoz(){try{const r=await fetch('/api/agents',{cache:'no-store'});if(!r.ok)return;const j=await r.json();poz={total:j.total||0,S:j.split||null};top2()}catch(e){}}
+async function loadPoz(){try{const r=await fetch('/api/agents',{cache:'no-store'});if(!r.ok)return;const j=await r.json();poz={total:j.total||0,S:j.split||null};top2();const f=document.querySelector('#top2 .t2');if(f){f.classList.remove('fl');void f.offsetWidth;f.classList.add('fl')}}catch(e){}}
 let feedF='',prevReq=null,roll=LS.get('dozorRoll',true),speed=LS.get('dozorSpd',30),period=LS.get('dozorPer',240),pauseUntil=0,newCount=0;
 function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000));return m<1?'právě teď':m<60?'před '+m+' min':'před '+Math.floor(m/60)+' h '+m%60+' min'}
 const rk=r=>r.t+'|'+r.agent+'|'+r.zad;
@@ -343,7 +347,7 @@ $('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.ag;if(!n)return;e.target.open?openAg.add(n):openAg.delete(n);LS.set('dozorOpen',[...openAg])},true);
 async function load(){left=REFRESH;loadPoz();try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
 $('rf').onclick=load;load();
-setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s';$('cd').textContent=failed>=2?'offline':left>0?left+' s':'…'},1000);
+setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s';},1000);
 setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové – Dozor':(unacked?'('+unacked+') Dozor agentů':'Dozor agentů')},900);
 })();
 </script></body></html>
