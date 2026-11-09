@@ -193,7 +193,7 @@
     const f = from.split('-');
     $('dh').innerHTML = per === 'week' ? 'Tento týden · ' + (+f[2]) + '.–' + (+dd) + '. ' + (+m) + '.' : (isT ? 'Dnes přibylo' : 'Přibylo ' + DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()]) + ' · ' + (+dd) + '. ' + (+m) + '.';
     $('agbig').innerHTML = '<b title="Objednávky + přepravy zapsané agentem">' + nf.format(agentSum) + '</b><span>' + (per === 'week' ? 'týden agent' : isT ? 'dnes agent' : 'agent') + '</span>';
-    const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
+    const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA) > 0 && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
     if (!items.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden zatím žádné nové ' : isT ? 'Dnes zatím žádné nové ' : 'Žádné nové ') + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
     items.sort((a, b) => ((b.oA + b.tA) - (a.oA + a.tA)) || ((b.oM + b.tM) - (a.oM + a.tM)));
     const max = Math.max(...items.map(x => x.oA + x.tA + x.oM + x.tM));
