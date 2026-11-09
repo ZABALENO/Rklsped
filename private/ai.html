@@ -590,7 +590,6 @@
       items.forEach(x => { const z = { pA: 0, pM: 0, tA: 0, tM: 0 }; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) for (const f in z) z[f] += d.rels[x.key][f] || 0; x.oA = z.pA; x.tA = z.tA; x.oM = z.pM; x.tM = z.tM; x.a = z.pA + z.tA; x.m = z.pM + z.tM; });
     }
     agOrders = items.reduce((t, x) => t + (x.oA || 0) + (x.tA || 0), 0);
-    for (let i = items.length - 1; i >= 0; i--) if (!((items[i].oA || 0) + (items[i].tA || 0))) items.splice(i, 1);   // relace bez zápisu agenta se neukazují
     {
       const ord = kindMode !== 'trp';
       items.forEach(x => {
