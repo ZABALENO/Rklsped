@@ -368,7 +368,7 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
    ${tags?'<div>'+tags+'</div>':''}${bar}${ln('CO UŽIVATEL CHCE',e.wants)}${ln('CO ZAČÍNÁ DĚLAT',e.doing)}${ln('KROKY (PLÁN)',e.steps)}${ln('OČEKÁVANÝ VÝSLEDEK',e.expected)}${ln('PRŮBĚH',e.progress)}${ln('VÝSLEDEK',e.result)}${ln('ZÁVĚREČNÁ KONTROLA',e.check)}${ln('PROBLÉM',e.problem)}${ln('ŘEŠENÍ',e.solution)}<div class="m" style="margin-top:4px">list „${esc(e.sheet)}“ · řádek ${e.row}${e.status?' · stav v tabulce: '+esc(e.status):''}</div>${w?'<div>'+w+'</div>':''}</details>`};
  const cnt={},recent=[],older=[];f.forEach(e=>{cnt[e.agent]=(cnt[e.agent]||0)+1;(cnt[e.agent]<=3?recent:older).push(e)});
  const names=[...new Set(recent.map(e=>e.agent))];
- h+=names.length?names.map(n=>`<h2 style="margin-top:12px">${esc(n)} – poslední zprávy</h2>`+recent.filter(e=>e.agent===n).map(card).join('')).join(''):'<div class="empty">Žádná zadání pro tento filtr.</div>';
+ h+=recent.length?'<h2 style="margin-top:12px">Poslední zprávy (3 od každého agenta) – od nejnovějších</h2>'+recent.map(card).join(''):'<div class="empty">Žádná zadání pro tento filtr.</div>';
  const hk='lwHist';h+=`<details class="sec" data-lwo="${hk}"${lwOpen.has(hk)?' open':''} style="margin-top:14px"><summary>Historie – starší zprávy (${older.length})</summary>${older.length?older.map(card).join(''):'<div class="empty">Zatím nic staršího.</div>'}</details>`;
  h+='<h2 style="margin-top:16px">Přehled a filtry</h2>'+ctl;
  return h}
