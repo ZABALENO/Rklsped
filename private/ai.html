@@ -761,7 +761,7 @@
     const st = Object.entries(K.by || {}).sort((a, b) => b[1] - a[1]), cc = n => /ruč|ruc/i.test(n) ? '#f2a516' : /^ok|v pořádku|schvál/i.test(n) ? '#2fbf71' : '#7aa2ff';
     const last = K.days.slice(-7).reverse().map(d => `<span class="kd"><b>${d.inc > 0 ? '+' + nf.format(d.inc) : '0'}</b><small>${esc(fmtD(d.date))}</small></span>`).join('');
     el.innerHTML = `<div class="kont"><div class="kbig"><div class="big" style="font-size:54px">${nf.format(K.n)}</div><div class="lbl">zkontrolovaných objednávek</div><div class="meta">dnes přibylo <b>${K.today > 0 ? '+' + nf.format(K.today) : '0'}</b></div></div>
-      <div class="kst">${st.map(([n, c]) => `<span class="kchip" style="--c:${cc(n)}"><b>${nf.format(c)}</b> ${esc(/ruč|ruc/i.test(n) ? 'agentem nalezena chyba' : /^ok$/i.test(n.trim()) ? 'vyhodnoceno OK' : n)}</span>`).join('')}</div>
+      <div class="kst">${st.map(([n, c]) => `<span class="kchip" style="--c:${cc(n)}"><b>${nf.format(c)}</b> ${esc(/ruč|ruc/i.test(n) ? 'agentem nalezena chyba' : /^ok$/i.test(n.trim()) ? 'agentem vyhodnoceno OK' : n)}</span>`).join('')}</div>
       <div class="kdays">${last}</div></div>
       <div class="sub" style="margin-top:8px">${K.error ? 'Chyba načtení tabulky: ' + esc(K.error) + '. ' : ''}Poslední změna v tabulce: ${K.at ? esc(new Date(K.at).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' })) : '–'} · přírůstky se počítají od ${K.first ? esc(fmtD(K.first)) : '–'}</div>`;
   }
