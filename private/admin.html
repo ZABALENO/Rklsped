@@ -348,13 +348,14 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
  if(L.error)h+=`<div class="meta" style="margin:0 2px 8px">${esc(L.error)}</div>`;
  if(!L.at)return h+'<div class="empty">Čekám na první načtení tabulky…</div>';
  const all=L.feed||[],ST={ok:'✔ Hotovo – provedeno OK',no:'✖ Problém – neprovedeno',user:'… Čeká na uživatele',run:'⏳ Zahájeno – probíhá',wait:'… výsledek zatím nezapsán'};
+ let ctl='';
  const grp=e=>e.done==='ok'?'ok':(e.done==='no'||e.done==='user')?'bad':'run';
  const f=all.filter(e=>(!lwF.a||e.agent===lwF.a)&&(!lwF.s||grp(e)===lwF.s));
  const cn=k=>all.filter(e=>grp(e)===k).length,chip=(k,v,t,on)=>`<span class="lwc${on?' on':''}" data-lwf="${k}=${esc(v)}" style="cursor:pointer;margin:2px 4px 2px 0">${t}</span>`;
- h+=`<div class="meta" style="margin:0 2px 6px">Zadání ${all.length} · 🟢 hotovo ${cn('ok')} · 🔴 problém / čeká na uživatele ${cn('bad')} · 🟡 probíhá ${cn('run')}</div>`;
- h+='<div style="margin:0 0 6px">'+chip('s','ok','🟢 hotovo',lwF.s==='ok')+chip('s','bad','🔴 problém',lwF.s==='bad')+chip('s','run','🟡 probíhá',lwF.s==='run')+(L.agents||[]).map(g=>chip('a',g.agent,esc(g.agent),lwF.a===g.agent)).join('')+'</div>';
+ ctl+=`<div class="meta" style="margin:0 2px 6px">Zadání ${all.length} · 🟢 hotovo ${cn('ok')} · 🔴 problém / čeká na uživatele ${cn('bad')} · 🟡 probíhá ${cn('run')}</div>`;
+ ctl+='<div style="margin:0 0 6px">'+chip('s','ok','🟢 hotovo',lwF.s==='ok')+chip('s','bad','🔴 problém',lwF.s==='bad')+chip('s','run','🟡 probíhá',lwF.s==='run')+(L.agents||[]).map(g=>chip('a',g.agent,esc(g.agent),lwF.a===g.agent)).join('')+'</div>';
  // přehled agentů
- h+=(L.agents||[]).length?`<details class="sec" open><summary>Agenti (${L.agents.length})</summary>`+(L.agents||[]).map(g=>{const sr=g.total?Math.round(100*g.ok/g.total):0;return `<div class="row"><b>${esc(g.agent)}</b> <span class="m">list „${esc(g.sheet)}“ · zadání ${g.total} · 🟢 ${g.ok} · 🔴 ${g.bad} · 🟡 ${g.run} · úspěšnost ${sr} %${g.avgMin!=null?' · průměrně '+mins(g.avgMin):''}${g.problems?' · problémů '+g.problems+' (vyřešeno '+g.solved+')':''}${g.warn?' · ⚠ záznamů s nedostatky '+g.warn:''}${g.last?' · poslední zadání '+esc(new Date(g.last).toLocaleString('cs-CZ',{timeZone:'UTC',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></div>`}).join('')+'</details>':'';
+ ctl+=(L.agents||[]).length?`<details class="sec" open><summary>Agenti (${L.agents.length})</summary>`+(L.agents||[]).map(g=>{const sr=g.total?Math.round(100*g.ok/g.total):0;return `<div class="row"><b>${esc(g.agent)}</b> <span class="m">list „${esc(g.sheet)}“ · zadání ${g.total} · 🟢 ${g.ok} · 🔴 ${g.bad} · 🟡 ${g.run} · úspěšnost ${sr} %${g.avgMin!=null?' · průměrně '+mins(g.avgMin):''}${g.problems?' · problémů '+g.problems+' (vyřešeno '+g.solved+')':''}${g.warn?' · ⚠ záznamů s nedostatky '+g.warn:''}${g.last?' · poslední zadání '+esc(new Date(g.last).toLocaleString('cs-CZ',{timeZone:'UTC',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})):''}</span></div>`}).join('')+'</details>':'';
  const ln=(t,v)=>v&&String(v).trim()?`<div class="r"><b>${t}</b> ${esc(v)}</div>`:'';
  const VERD={ok:'✔ Úspěšně dokončeno – bez zásahu a rozhodnutí uživatele',no:'✖ Skončilo chybou – nutný zásah nebo rozhodnutí uživatele',user:'✖ Čeká na zásah nebo rozhodnutí uživatele',run:'⏳ Stále pracuje – zásah uživatele není potřeba',wait:'⏳ Stále pracuje – výsledek zatím nezapsán'};
  const reply=e=>{const r=(e.result||'').trim()||(e.check||'').trim();if(r)return r;const pr=String(e.progress||'').trim().split(/\n/).filter(x=>x.trim());if(e.problem&&String(e.problem).trim())return 'Problém: '+e.problem+(e.solution&&String(e.solution).trim()?' → Řešení: '+e.solution:'');return pr.length?'Průběh: '+pr[pr.length-1]:'zatím bez odpovědi agenta'};
@@ -369,6 +370,7 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
  const names=[...new Set(recent.map(e=>e.agent))];
  h+=names.length?names.map(n=>`<h2 style="margin-top:12px">${esc(n)} – poslední zprávy</h2>`+recent.filter(e=>e.agent===n).map(card).join('')).join(''):'<div class="empty">Žádná zadání pro tento filtr.</div>';
  const hk='lwHist';h+=`<details class="sec" data-lwo="${hk}"${lwOpen.has(hk)?' open':''} style="margin-top:14px"><summary>Historie – starší zprávy (${older.length})</summary>${older.length?older.map(card).join(''):'<div class="empty">Zatím nic staršího.</div>'}</details>`;
+ h+='<h2 style="margin-top:16px">Přehled a filtry</h2>'+ctl;
  return h}
 function render(d){const L=d.logwatch;$('root').innerHTML=lwFlat(L);$('meta').textContent=L&&L.at?'Praha · načteno '+new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+' · obnova každých 10 s':'načítám…';$('lv').classList.toggle('off',failed>=2)}
 $('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb&&last){LS.set('dozorWarn',wsig(last,last.summary||{}));render(last);return}const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
