@@ -367,8 +367,6 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
  const grp=e=>e.done==='ok'?'ok':(e.done==='no'||e.done==='user')?'bad':'run';
  const f=all.filter(e=>(!lwF.a||e.agent===lwF.a)&&(!lwF.s||grp(e)===lwF.s));
  const cn=k=>all.filter(e=>grp(e)===k).length,chip=(k,v,t,on)=>`<span class="lwc${on?' on':''}" data-lwf="${k}=${esc(v)}" style="cursor:pointer;margin:2px 4px 2px 0">${t}</span>`;
- ctl+=`<div class="meta" style="margin:0 2px 6px">Zadání ${all.length} · 🟢 hotovo ${cn('ok')} · 🔴 problém / čeká na uživatele ${cn('bad')} · 🟡 probíhá ${cn('run')}</div>`;
- ctl+='<div style="margin:0 0 6px">'+chip('s','ok','🟢 hotovo',lwF.s==='ok')+chip('s','bad','🔴 problém',lwF.s==='bad')+chip('s','run','🟡 probíhá',lwF.s==='run')+[...new Set((L.agents||[]).map(g=>g.agent))].map(a=>chip('a',a,esc(a),lwF.a===a)).join('')+'</div>';
  // přehled agentů
  const ln=(t,v)=>v&&String(v).trim()?`<div class="r"><b>${t}</b> ${esc(v)}</div>`:'';
  const VERD={ok:'✔ Úspěšně dokončeno – bez zásahu a rozhodnutí uživatele',no:'✖ Skončilo chybou – nutný zásah nebo rozhodnutí uživatele',user:'✖ Čeká na zásah nebo rozhodnutí uživatele',run:'⏳ Stále pracuje – zásah uživatele není potřeba',wait:'⏳ Stále pracuje – výsledek zatím nezapsán'};
@@ -385,7 +383,7 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
  h+=recent.length?'<h2 style="margin-top:12px">Poslední zprávy (3 od každého agenta) – od nejnovějších</h2>'+recent.map(card).join(''):'<div class="empty">Žádná zadání pro tento filtr.</div>';
  const hk='lwHist';h+=`<details class="sec" data-lwo="${hk}"${lwOpen.has(hk)?' open':''} style="margin-top:14px"><summary>Historie – starší zprávy (${older.length})</summary>${older.length?older.map(card).join(''):'<div class="empty">Zatím nic staršího.</div>'}</details>`;
  ctl+=(L.agents||[]).length?`<details class="sec" open><summary>Agenti (${L.agents.length}) – klepnutím na agenta zobrazíš celou jeho historii</summary>`+(L.agents||[]).map(g=>{const sr=g.total?Math.round(100*g.ok/g.total):0,ak='ag:'+g.sheet,hist=all.filter(e=>e.sheet===g.sheet);return `<details class="row" data-lwo="${esc(ak)}"${lwOpen.has(ak)?' open':''}><summary style="cursor:pointer"><b>${esc(g.agent)}</b> <span class="m">nedorozumění ${g.statTotal?g.corrPct+' % ('+g.corr+' z '+g.statTotal+' zadání)':'– (měří se od 11. 11.)'}</span></summary><div style="margin-top:6px">${hist.length?hist.map(e=>card(e,'ag:')).join(''):'<div class="empty">Žádné záznamy.</div>'}</div></details>`}).join('')+'</details>':'';
- h+='<h2 style="margin-top:16px">Přehled a filtry</h2>'+ctl;
+ h+='<div style="margin-top:16px"></div>'+ctl;
  lwSeen=new Set([...(lwSeen||[]),...all.map(e=>e.agent+'#'+e.row)]);
  return h}
 
