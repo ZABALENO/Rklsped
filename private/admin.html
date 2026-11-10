@@ -339,32 +339,10 @@ function lwView(L){if(!L)return '';const S=L.summary||{};let h=`<h2>Logy agentů
 function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';let h='';
  if(L.error)h+=`<div class="meta" style="margin:0 2px 8px">${esc(L.error)}</div>`;
  if(!L.at)return h+'<div class="empty">Čekám na první načtení tabulky…</div>';
- const f=L.feed||[];
- h+=f.length?f.map(e=>{const v=e.done==='ok'?'✔ provedeno OK':e.done==='no'?'✖ neprovedeno / problém':'… výsledek zatím nezapsán';
-  return `<div class="le"><div class="m"><b>${esc(e.agent)}</b> · ${esc(e.when)}</div><div class="qt">${esc(e.request||'(bez doslovného zadání)')}</div><div class="r"><b>${v}</b>${e.result?' – '+esc(e.result):''}${e.problem?`<br>Problém: ${esc(e.problem)}${e.solution?' · Řešení: '+esc(e.solution):''}`:''}</div></div>`}).join(''):'<div class="empty">Žádná zadání v listech „Log…“.</div>';
+ const f=L.feed||[],ST={ok:'✔ Hotovo – provedeno OK',no:'✖ Problém – neprovedeno',user:'… Čeká na uživatele',run:'⏳ Zahájeno – probíhá',wait:'… výsledek zatím nezapsán'};
+ const ln=(t,v)=>v&&String(v).trim()?`<div class="r"><b>${t}</b> ${esc(v)}</div>`:'';
+ h+=f.length?f.map(e=>`<div class="le"><div class="m"><b>${esc(e.agent)}</b> · ${esc(e.when)}</div><div class="qt">${esc(e.request||'(bez doslovného zadání)')}</div><div class="r"><b>${ST[e.done]||ST.wait}</b></div>${ln('CO UŽIVATEL CHCE',e.wants)}${ln('PRŮBĚH',e.progress)}${ln('VÝSLEDEK',e.result)}${ln('ZÁVĚREČNÁ KONTROLA',e.check)}${ln('PROBLÉM',e.problem)}${ln('ŘEŠENÍ',e.solution)}</div>`).join(''):'<div class="empty">Žádná zadání v listech „Log…“.</div>';
  return h}
-function renderOld(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
- const fresh=A.filter(x=>!ack.has(x.id));unacked=fresh.length;
- if(prevIds&&fresh.some(x=>!prevIds.has(x.id)))beep();prevIds=new Set(ids);
- ack=new Set([...ack].filter(i=>prevIds.has(i)));LS.set('dozorAck',[...ack]);
- let h='';
- if(failed>=2)h+=`<div class="banner bad blink" style="margin-bottom:8px">⚠ Spojení ztraceno<small>Zobrazená data jsou stará – obnovuji…</small></div>`;
- else if(!d.readAt)h+=`<div class="banner warn">Zatím žádná data z tabulky</div>`;
- else if(d.workTime&&d.dataAgeMin>5)h+=`<div class="banner bad blink" style="margin-bottom:8px">⚠ Data jsou stará ${d.dataAgeMin} min<small>Tabulku se nepodařilo načíst – stav nemusí odpovídat.</small></div>`;
- if(unacked)h+=`<div class="banner bad blink"><span style="font-size:24px">⚠</span><div>${unacked} ${unacked===1?'nové upozornění':unacked<5?'nová upozornění':'nových upozornění'}<small>Klepnutím na kartu upozornění potvrdíte</small></div></div>`;
- else if(s.red||s.zasah){}   // potvrzená upozornění zůstávají jen v seznamu, bez trvalého pruhu
- else if((s.orange||s.sProblemem)&&LS.get('dozorWarn','')===wsig(d,s)){}
- else if(s.orange||s.sProblemem)h+=`<div class="banner warn" id="warnb" style="cursor:pointer"><span style="font-size:24px">●</span><div>Drobné problémy<small>${s.sProblemem} agent(ů) hlásí problém za poslední hodinu · klepnutím potvrdíte</small></div></div>`;
- else h+=`<div class="banner ok"><span style="font-size:24px">✔</span><div>Vše v pořádku<small>${s.bezi} běží (≤10 min) · ${s.necinny||0} bez aktivity >10 min · ${s.ceka} čeká</small></div></div>`;
- if(!d.workTime)h+=`<div class="meta" style="margin:6px 2px 0">Mimo pracovní dobu (po–pá 6–17) – nečinnost se nevyhodnocuje.</div>`;
- h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div></div>`;
- const aOff=LS.get('dozorAlOff',false);
- h+=`<h2 id="altog" style="cursor:pointer" title="Zbalit / rozbalit"><span>${aOff?'▸':'▾'}</span>Upozornění${A.length?` (${A.length})`:''}<span class="sp"></span>${!aOff&&A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(aOff?'':(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>'));
- h+=lwView(d.logwatch);h+=feed(d,fsnap);
- h+=`<h2>Agenti</h2>`+(d.agents.filter(x=>x.level!=='none').map(agent).join('')||'<div class="empty">Zatím se nikdo nehlásil.</div>');
- h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
- $('root').innerHTML=h;restoreFeed(fsnap);$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
- $('lv').classList.toggle('off',failed>=2);}
 function render(d){const L=d.logwatch;$('root').innerHTML=lwFlat(L);$('meta').textContent=L&&L.at?'Praha · načteno '+new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+' · obnova každých 10 s':'načítám…';$('lv').classList.toggle('off',failed>=2)}
 $('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb&&last){LS.set('dozorWarn',wsig(last,last.summary||{}));render(last);return}const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
  if(e.target.closest('#altog')&&!e.target.closest('#ackall')){LS.set('dozorAlOff',!LS.get('dozorAlOff',false));if(last)render(last);return}
