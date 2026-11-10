@@ -616,7 +616,7 @@
       if (barMode === 'day') { const dd = isoAdd(today(), -dayOff), d = (K.days || []).find(q => q.date === dd); z = d ? { ok: d.ok, man: d.man, oth: d.oth } : { ok: 0, man: 0, oth: 0 }; }
       else if (barMode === 'week') { const w = weekRange(weekOff); z = { ok: 0, man: 0, oth: 0 }; (K.days || []).forEach(d => { if (d.date >= w[0] && d.date <= w[1]) { z.ok += d.ok; z.man += d.man; z.oth += d.oth; } }); }
       else z = { ...K.tot };
-      z.tot = z.ok + z.man + z.oth; return z; })();
+      z.tot = z.ok + z.man; return z; })();
     const sub2 = kindMode === 'all', n = items.length + (kx ? 1 : 0), W = 600, RH = sub2 ? 52 : 38, T = 30, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, kx ? kx.tot : 0, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
     const bwid = BX - L - 6, hd = (x, t, extra, key, hx, hw) => { const on = key === sortKey; const tx = `<text x="${x}" y="17" fill="${on ? '#fff' : '#c3cfe8'}" font-family="Inter" font-size="10" letter-spacing=".6" ${on ? 'font-weight="800"' : ''} ${extra || ''}>${t}${on ? ' ▼' : ''}</text>`; return key ? `<g data-sort="${key}" style="cursor:pointer"><title>Seřadit podle: ${t.toLowerCase()} (od nejvyšší)</title><rect x="${hx}" y="1" width="${hw}" height="17" fill="rgba(255,255,255,.001)"/>${tx}</g>` : tx; };
     let b = hd(L, 'SOUČET', '', 'tot', L - 2, 52) + hd(BX + 52, 'AGENT', 'text-anchor="end"', 'a', BX + 8, 48) + hd(BX + 60, 'RUČNĚ', '', 'm', BX + 56, 44) + hd(W, '% AGENT', 'text-anchor="end"', 'pct', W - 52, 52);
@@ -644,7 +644,7 @@
     });
     if (kx) {
       const y = T + items.length * RH, h = sub2 ? 17 : 18, k = (BX - L - 6) / max, pc = kx.ok + kx.man ? Math.round(100 * kx.ok / (kx.ok + kx.man)) : 0; let xx = L, sg = '';
-      [[kx.ok, '#2fbf71', 'OK'], [kx.man, '#f2a516', 'ruční kontrola'], [kx.oth, '#7aa2ff', 'ostatní stavy']].forEach(([v, c, t]) => { if (!v) return; const w = Math.max(k * v, 2); sg += `<rect x="${xx}" y="${y}" width="${w}" height="${h}" fill="${c}"><title>Zpracování dat: ${t} ${nf.format(v)}</title></rect>`; xx += w; });
+      [[kx.ok, '#2fbf71', 'OK'], [kx.man, '#f2a516', 'ruční kontrola']].forEach(([v, c, t]) => { if (!v) return; const w = Math.max(k * v, 2); sg += `<rect x="${xx}" y="${y}" width="${w}" height="${h}" fill="${c}"><title>Zpracování dat: ${t} ${nf.format(v)}</title></rect>`; xx += w; });
       if (!kx.tot) sg = `<rect x="${L}" y="${y}" width="2" height="${h}" fill="#8d98ad"/>`;
       b += `<g><line x1="0" x2="${W}" y1="${y - 5}" y2="${y - 5}" stroke="#8d98ad" stroke-opacity=".3"/><text x="${L - 8}" y="${y + 8}" text-anchor="end" fill="#e3ebff" font-family="Inter" font-weight="600" font-size="11.5">Zpracování</text><text x="${L - 8}" y="${y + 21}" text-anchor="end" fill="#e3ebff" font-family="Inter" font-weight="600" font-size="11.5">dat</text>${sg}
         <text x="${BX + 52}" y="${y + 16}" text-anchor="end" fill="#3ddc84" font-family="Inter" font-size="16" font-weight="800">${nf.format(kx.ok)}</text><text x="${BX + 60}" y="${y + 16}" fill="#f2a516" font-family="Inter" font-size="16" font-weight="800">${nf.format(kx.man)}</text>
