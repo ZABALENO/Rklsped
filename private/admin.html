@@ -233,6 +233,7 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 .le.c-ok{background:rgba(47,191,113,.13);border-left:5px solid #2fbf71}.le.c-run{background:rgba(242,203,22,.13);border-left:5px solid #f2cb16}.le.c-bad{background:rgba(255,80,80,.16);border-left:5px solid #ff5050}
 .lwc{font:700 10px var(--mono);letter-spacing:.6px;color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 9px}.lwc.on{color:var(--bg);background:var(--acc);border-color:var(--acc)}
 .lwcard>summary{cursor:pointer;list-style:none}.lwcard>summary::-webkit-details-marker{display:none}.q1{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:3px 0}.q1:before{content:'„'}.q1:after{content:'“'}.a2{font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}.vd{font:700 11px var(--mono);margin-top:3px}
+@keyframes lwflash{0%,35%{background:rgba(61,220,132,.75);box-shadow:0 0 22px 4px rgba(61,220,132,.8)}100%{box-shadow:0 0 0 0 transparent}}.lwnew{animation:lwflash 3.5s ease-out}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
 <header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
@@ -340,7 +341,7 @@ function lwView(L){if(!L)return '';const S=L.summary||{};let h=`<h2>Logy agentů
  h+=`<div class="meta" style="margin:0 2px 6px">načteno ${esc(new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'}))} · záznamů ${S.entries} · s chybou/nedorozuměním ${S.red+S.orange} · nedokončených ${S.open}</div>`;
  h+=(L.sheets||[]).map(sh=>{const c=sh.cnt,lv=c.red?'🔴':c.orange?'🟠':'🟢',k=sh.sheet;return `<details class="lw" data-lw="${esc(k)}"${lwClosed.has(k)?'':' open'}><summary>${lv} ${esc(sh.agent)}<span class="ct">list „${esc(sh.sheet)}“ · ${c.total} zadání · ${c.red+c.orange} k pozornosti${c.open?' · '+c.open+' nedokončeno':''}</span></summary>${sh.entries.length?sh.entries.map(lwEntry).join(''):'<div class="empty">Zatím žádné záznamy.</div>'}</details>`}).join('')||'<div class="empty">Žádný list začínající „Log“.</div>';
  return h}
-let lwF={a:'',s:''};const lwOpen=new Set(LS.get('dozorLwOpen',[]));
+let lwF={a:'',s:''},lwSeen=null;const lwOpen=new Set(LS.get('dozorLwOpen',[]));
 $('root').addEventListener('toggle',e=>{const k=e.target.dataset&&e.target.dataset.lwo;if(!k)return;e.target.open?lwOpen.add(k):lwOpen.delete(k);LS.set('dozorLwOpen',[...lwOpen].slice(-200))},true);
 document.addEventListener('click',e=>{const c=e.target.closest('[data-lwf]');if(!c)return;const [k,v]=c.dataset.lwf.split('=');lwF[k]=lwF[k]===v?'':v;if(last)render(last)});
 function mins(m){m=Math.max(0,Math.round(m));return m<60?m+' min':Math.floor(m/60)+' h '+(m%60)+' min'}
@@ -364,13 +365,14 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
   let tm='';if(e.ts&&e.lastTs>e.ts&&g==='ok')tm=`trvalo ${mins((e.lastTs-e.ts)/60000)}`;else if(g==='run'&&e.lastTs&&L.nowN)tm=`poslední krok před ${mins((L.nowN-e.lastTs)/60000)}${(L.nowN-e.lastTs)/60000>60?' ⚠':''}`;
   const tags=(e.ids||[]).map(x=>`<span class="fl2">${esc(x)}</span>`).join('');
   const w=(e.warns||[]).map(x=>`<span class="fl2 red">⚠ ${esc(x)}</span>`).join('');
-  return `<details class="le lwcard ${cls}" data-lwo="${esc(k)}"${lwOpen.has(k)?' open':''}><summary><div class="m"><b>${esc(e.agent)}</b> · ${esc(e.when)}${tm?' · '+tm:''}</div><div class="q1">${esc(e.request||'(bez doslovného zadání)')}</div><div class="a2">${esc(reply(e))}</div><div class="vd">${VERD[e.done]||VERD.wait}</div></summary>
+  return `<details class="le lwcard ${cls}${lwSeen&&!lwSeen.has(k)?' lwnew':''}" data-lwo="${esc(k)}"${lwOpen.has(k)?' open':''}><summary><div class="m"><b>${esc(e.agent)}</b> · ${esc(e.when)}${tm?' · '+tm:''}</div><div class="q1">${esc(e.request||'(bez doslovného zadání)')}</div><div class="a2">${esc(reply(e))}</div><div class="vd">${VERD[e.done]||VERD.wait}</div></summary>
    ${tags?'<div>'+tags+'</div>':''}${bar}${ln('CO UŽIVATEL CHCE',e.wants)}${ln('CO ZAČÍNÁ DĚLAT',e.doing)}${ln('KROKY (PLÁN)',e.steps)}${ln('OČEKÁVANÝ VÝSLEDEK',e.expected)}${ln('PRŮBĚH',e.progress)}${ln('VÝSLEDEK',e.result)}${ln('ZÁVĚREČNÁ KONTROLA',e.check)}${ln('PROBLÉM',e.problem)}${ln('ŘEŠENÍ',e.solution)}<div class="m" style="margin-top:4px">list „${esc(e.sheet)}“ · řádek ${e.row}${e.status?' · stav v tabulce: '+esc(e.status):''}</div>${w?'<div>'+w+'</div>':''}</details>`};
  const cnt={},recent=[],older=[];f.forEach(e=>{cnt[e.agent]=(cnt[e.agent]||0)+1;(cnt[e.agent]<=3?recent:older).push(e)});
  const names=[...new Set(recent.map(e=>e.agent))];
  h+=recent.length?'<h2 style="margin-top:12px">Poslední zprávy (3 od každého agenta) – od nejnovějších</h2>'+recent.map(card).join(''):'<div class="empty">Žádná zadání pro tento filtr.</div>';
  const hk='lwHist';h+=`<details class="sec" data-lwo="${hk}"${lwOpen.has(hk)?' open':''} style="margin-top:14px"><summary>Historie – starší zprávy (${older.length})</summary>${older.length?older.map(card).join(''):'<div class="empty">Zatím nic staršího.</div>'}</details>`;
  h+='<h2 style="margin-top:16px">Přehled a filtry</h2>'+ctl;
+ lwSeen=new Set([...(lwSeen||[]),...all.map(e=>e.agent+'#'+e.row)]);
  return h}
 function render(d){const L=d.logwatch;$('root').innerHTML=lwFlat(L);$('meta').textContent=L&&L.at?'Praha · načteno '+new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+' · obnova každých 10 s':'načítám…';$('lv').classList.toggle('off',failed>=2)}
 $('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb&&last){LS.set('dozorWarn',wsig(last,last.summary||{}));render(last);return}const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
