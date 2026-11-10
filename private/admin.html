@@ -224,6 +224,11 @@ select.ib option{background:#0b1226;color:#e9f4ff}
 .top2 .t2.fl::after{animation:refl 1.5s ease-out}
 @keyframes refl{0%{opacity:.95;background-position:120% 0}70%{opacity:.8}100%{opacity:0;background-position:-20% 0}}
 .top2 .t2.fl b{animation:reflb 1.5s ease-out}@keyframes reflb{0%,100%{filter:none}30%{filter:brightness(1.7) saturate(1.5)}}
+
+.lw{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin:6px 0;backdrop-filter:blur(8px)}.lw>summary{padding:8px 11px;cursor:pointer;font:800 13px var(--mono)}.lw .ct{color:var(--mut);font:500 11px var(--mono);margin-left:8px}
+.le{border-top:1px solid var(--line);padding:8px 11px;font-size:12px}.le.red{border-left:4px solid #ff6b6b}.le.orange{border-left:4px solid #f2a516}.le.ok{border-left:4px solid #2fbf71}
+.le .qt{font-size:13.5px;font-weight:600;white-space:pre-wrap;word-break:break-word;margin:3px 0}.le .qt:before{content:'„'}.le .qt:after{content:'“'}.le .m{color:var(--mut);font:500 10.5px var(--mono)}.le .r{white-space:pre-wrap;word-break:break-word;margin-top:3px}.le .r b{font:700 10.5px var(--mono);color:var(--mut)}
+.fl2{display:inline-block;font:700 10.5px var(--mono);border-radius:4px;padding:1px 6px;margin:2px 4px 0 0;background:#f2a51633;color:#f2a516}.fl2.red{background:#ff6b6b33;color:#ff6b6b}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
 <header><h1><span class="live" id="lv"></span>Dozor agentů</h1><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
@@ -321,6 +326,14 @@ function tick(ts){const fb=$('feedbox');
  lastTs=ts;requestAnimationFrame(tick)}
 requestAnimationFrame(tick);
 ['wheel','touchstart','pointerdown'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('#feedbox'))pauseUntil=Date.now()+8000},{passive:true,capture:true}));
+function lwEntry(e){const f=(e.flags||[]).map(x=>`<span class="fl2 ${x.lv==='red'?'red':''}">${esc(x.t)}</span>`).join('');
+ return `<div class="le ${e.level}"><div class="m">${esc(e.when)}${e.status?' · stav: '+esc(e.status):''} · řádek ${e.row}</div><div class="qt">${esc(e.request||'(bez doslovného zadání)')}</div>${f?'<div>'+f+'</div>':''}${e.result?`<div class="r"><b>VÝSLEDEK</b> ${esc(e.result)}</div>`:''}${e.check?`<div class="r"><b>KONTROLA</b> ${esc(e.check)}</div>`:''}${e.problem?`<div class="r"><b>PROBLÉM</b> ${esc(e.problem)}</div>`:''}${e.solution?`<div class="r"><b>ŘEŠENÍ</b> ${esc(e.solution)}</div>`:''}</div>`}
+function lwView(L){if(!L)return '';const S=L.summary||{};let h=`<h2>Logy agentů – listy „Log…“ (${S.sheets||0})</h2>`;
+ if(L.error)h+=`<div class="banner warn" style="margin-bottom:6px">${esc(L.error)}</div>`;
+ if(!L.at)return h+'<div class="empty">Čekám na první načtení tabulky…</div>';
+ h+=`<div class="meta" style="margin:0 2px 6px">načteno ${esc(new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'}))} · záznamů ${S.entries} · s chybou/nedorozuměním ${S.red+S.orange} · nedokončených ${S.open}</div>`;
+ h+=(L.sheets||[]).map(sh=>{const c=sh.cnt,lv=c.red?'🔴':c.orange?'🟠':'🟢',k='lw:'+sh.sheet;return `<details class="lw" data-ag="${esc(k)}"${openAg.has(k)?' open':''}><summary>${lv} ${esc(sh.agent)}<span class="ct">list „${esc(sh.sheet)}“ · ${c.total} zadání · ${c.red+c.orange} k pozornosti${c.open?' · '+c.open+' nedokončeno':''}</span></summary>${sh.entries.length?sh.entries.map(lwEntry).join(''):'<div class="empty">Zatím žádné záznamy.</div>'}</details>`}).join('')||'<div class="empty">Žádný list začínající „Log“.</div>';
+ return h}
 function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.map(x=>x.id);
  const fresh=A.filter(x=>!ack.has(x.id));unacked=fresh.length;
  if(prevIds&&fresh.some(x=>!prevIds.has(x.id)))beep();prevIds=new Set(ids);
@@ -338,7 +351,7 @@ function render(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A.ma
  h+=`<div class="kpi"><div class="k r"><b>${s.zasah||0}</b><span>zásah</span></div><div class="k g"><b>${s.bezi}</b><span>běží</span></div><div class="k o"><b>${s.sProblemem}</b><span>problém/h</span></div></div>`;
  const aOff=LS.get('dozorAlOff',false);
  h+=`<h2 id="altog" style="cursor:pointer" title="Zbalit / rozbalit"><span>${aOff?'▸':'▾'}</span>Upozornění${A.length?` (${A.length})`:''}<span class="sp"></span>${!aOff&&A.some(x=>!ack.has(x.id))?'<button class="link" id="ackall">Potvrdit vše</button>':''}</h2>`+(aOff?'':(A.length?A.map(al).join(''):'<div class="empty">Žádná aktivní upozornění.</div>'));
- h+=feed(d,fsnap);
+ h+=lwView(d.logwatch);h+=feed(d,fsnap);
  h+=`<h2>Agenti</h2>`+(d.agents.filter(x=>x.level!=='none').map(agent).join('')||'<div class="empty">Zatím se nikdo nehlásil.</div>');
  h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
  $('root').innerHTML=h;restoreFeed(fsnap);$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
