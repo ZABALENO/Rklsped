@@ -313,6 +313,7 @@ app.get('/api/agents', async (req, res) => {
     configured: !!(store.mem.cfg.sheet && store.mem.cfg.sheet.url), fetchedAt: sheet.fetchedAt, error: sheet.error,
     hasSheet: !!((sheet.counts && sheet.counts.length) || split), relations,
     total: relations.reduce((a, r) => a + (r.count || 0), 0),
+    kontrola: require('./lib/kontrola').view(store.mem.cfg.kont),
     split, history, texts: Object.assign(Object.fromEntries(Object.entries(store.mem.atext).map(([k, v]) => [k, v.t || ''])), sheetTexts),
     workdaysSince: (() => {                       // pracovní dny od nejstaršího data v historii do dneška (včetně obou)
       const f = '2026-10-12';                         // pevný začátek měření ušetřeného času
@@ -423,4 +424,5 @@ createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isn
   if (!store.mem.cfg.adj || (store.mem.cfg.adj.v || 1) < 6) await store.put('cfg', 'adj', { v: 6, always: true, date: pragueToday(), key: 'zapad 1', count: 134, trips: 21 }); // jednorázově: +108 (90 + 18) pozic a +21 přeprav k Západu 1 (k hodnotě přeprav z tabulky) (jen 24. 10. 2026)
   refreshSheet(true);
   setInterval(() => refreshSheet(true), BG_REFRESH);
+  { const K = require('./lib/kontrola'); setTimeout(() => K.refresh(store), 4000); setInterval(() => K.refresh(store), BG_REFRESH); }
 }).catch(e => { console.error('Start selhal:', e); process.exit(1); });

@@ -306,6 +306,10 @@
   .bgg{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.28}.bgg svg{width:100%;height:100%;display:block}
   .bgg .ar{fill:url(#bgG)}.bgg .ln{fill:none;stroke:#7aa2ff;stroke-width:2;vector-effect:non-scaling-stroke}.bgg .s1{stop-color:#7aa2ff;stop-opacity:.55}.bgg .s2{stop-color:#7aa2ff;stop-opacity:0}
   [data-theme="day"] .bgg{opacity:.22}[data-theme="day"] .bgg .ln{stroke:#1d388f}[data-theme="day"] .bgg .s1,[data-theme="day"] .bgg .s2{stop-color:#1d388f}
+  .kont{display:flex;flex-wrap:wrap;gap:18px 34px;align-items:center}.kbig .lbl{opacity:.85}.kbig .meta b{font-size:16px}
+  .kst{display:flex;flex-wrap:wrap;gap:10px}.kchip{padding:8px 14px;border-radius:999px;border:2px solid var(--c);color:var(--c);font:700 14px Inter,sans-serif;background:color-mix(in srgb,var(--c) 12%,transparent)}.kchip b{font-size:20px;font-weight:900;margin-right:4px}
+  .kdays{display:flex;gap:8px;flex-wrap:wrap}.kd{display:flex;flex-direction:column;align-items:center;min-width:54px;padding:6px 8px;border-radius:8px;background:rgba(122,162,255,.1)}.kd b{font-size:17px}.kd small{opacity:.7;font-size:11px}
+  [data-theme="day"] .kchip{filter:brightness(.8)}
 </style>
 <style id="skins">
   /* ===== 5 FUTURISTICKÝCH SKINŮ – každý má vlastní písmo, ikony, tvary panelů a tlačítek, efekty =====
@@ -460,6 +464,11 @@
     <div class="panel pie-p"><div class="bgg" id="pieBg" aria-hidden="true"></div><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Objednávky + přepravy</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Využití agenta pro zápis objednávek do Lori v % za posledních 5 pracovních dní</h3><div class="rank" id="rank"></div></div>
+  </div>
+
+  <div class="sec">Kontrola zásilek</div>
+  <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+    <div class="panel"><h3>Zkontrolované objednávky (tabulka Kontrola zásilek RKL)</h3><div id="kont"><div class="sub">Načítám…</div></div></div>
   </div>
 
   <div class="sec">Trend zadávání po dnech</div>
@@ -735,6 +744,17 @@
       ${grid}<path d="${line} L${X(pts.length - 1)},${T + ph} L${X(0)},${T + ph} Z" fill="url(#ta)"/><path d="${line}" fill="none" stroke="#5e8aff" stroke-width="2.5" style="filter:drop-shadow(0 0 6px #5e8aff)"/>${dots}${lbl}</svg>`;
   }
 
+  function renderKont() {
+    const el = $('kont'); if (!el) return; const K = R.kontrola;
+    if (!K) { el.innerHTML = '<div class="sub">Zatím bez dat z tabulky Kontrola zásilek RKL.</div>'; return; }
+    const st = Object.entries(K.by || {}).sort((a, b) => b[1] - a[1]), cc = n => /ruč|ruc/i.test(n) ? '#f2a516' : /^ok|v pořádku|schvál/i.test(n) ? '#2fbf71' : '#7aa2ff';
+    const last = K.days.slice(-7).reverse().map(d => `<span class="kd"><b>${d.inc > 0 ? '+' + nf.format(d.inc) : '0'}</b><small>${esc(fmtD(d.date))}</small></span>`).join('');
+    el.innerHTML = `<div class="kont"><div class="kbig"><div class="big" style="font-size:54px">${nf.format(K.n)}</div><div class="lbl">zkontrolovaných objednávek</div><div class="meta">dnes přibylo <b>${K.today > 0 ? '+' + nf.format(K.today) : '0'}</b></div></div>
+      <div class="kst">${st.map(([n, c]) => `<span class="kchip" style="--c:${cc(n)}"><b>${nf.format(c)}</b> ${esc(n)}</span>`).join('')}</div>
+      <div class="kdays">${last}</div></div>
+      <div class="sub" style="margin-top:8px">${K.error ? 'Chyba načtení tabulky: ' + esc(K.error) + '. ' : ''}Poslední změna v tabulce: ${K.at ? esc(new Date(K.at).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' })) : '–'} · přírůstky se počítají od ${K.first ? esc(fmtD(K.first)) : '–'}</div>`;
+  }
+
   // nenápadný růstový graf na pozadí karty „Podíl dispečinků“: kumulativně pozice zapsané agentem za celé období
   function bgGrowth() {
     const el = $('pieBg'); if (!el) return;
@@ -773,6 +793,7 @@
     $('kpiMeta').innerHTML = [withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '', R.trips ? 'z toho ' + nf.format(R.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ');
     $('pie').innerHTML = donut(rels, total);
     bgGrowth();
+    renderKont();
     $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
     document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
@@ -931,7 +952,7 @@
   async function load() {
     try {
       const j = await api('/api/agents');
-      const s = JSON.stringify([j.relations, j.history, j.split, j.hasSheet, j.error, j.configured, j.changedAt, j.sheetKeys, (j.sheetKeys || []).map(k => j.texts[k])]) + Object.keys(j.texts).length;
+      const s = JSON.stringify([j.relations, j.history, j.split, j.hasSheet, j.error, j.configured, j.changedAt, j.kontrola, j.sheetKeys, (j.sheetKeys || []).map(k => j.texts[k])]) + Object.keys(j.texts).length;
       R = j; status();
       if (s !== sig || !$('phones').children.length) { sig = s; render(); }
       else render.call(null);
