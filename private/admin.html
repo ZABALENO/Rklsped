@@ -364,13 +364,13 @@ function renderOld(d){const fsnap=snapFeed();const s=d.summary,A=alerts(d),ids=A
  h+=hist(d.history)+list('Nedorozumění',d.misunder,false);
  $('root').innerHTML=h;restoreFeed(fsnap);$('meta').textContent='Praha '+d.now+(d.readAt?' · data před '+(d.dataAgeMin||0)+' min':'');
  $('lv').classList.toggle('off',failed>=2);}
-function render(d){const L=d.logwatch;$('root').innerHTML=lwFlat(L);$('top2').innerHTML='';$('dayw').innerHTML='';$('meta').textContent=L&&L.at?'Praha · načteno '+new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+' · obnova každých 10 s':'načítám…';$('lv').classList.toggle('off',failed>=2)}
+function render(d){const L=d.logwatch;$('root').innerHTML=lwFlat(L);$('meta').textContent=L&&L.at?'Praha · načteno '+new Date(L.at).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+' · obnova každých 10 s':'načítám…';$('lv').classList.toggle('off',failed>=2)}
 $('root').addEventListener('click',e=>{const wb=e.target.closest('#warnb');if(wb&&last){LS.set('dozorWarn',wsig(last,last.summary||{}));render(last);return}const nb=e.target.closest('#newb');if(nb){const fb=$('feedbox');if(fb)fb.scrollTop=0;newCount=0;pauseUntil=Date.now()+8000;if(last)render(last);return}
  if(e.target.closest('#altog')&&!e.target.closest('#ackall')){LS.set('dozorAlOff',!LS.get('dozorAlOff',false));if(last)render(last);return}
  const ch=e.target.closest('.chip');if(ch){if(ch.dataset.act==='roll'){roll=!roll;LS.set('dozorRoll',roll)}else if(ch.dataset.spd){speed=+ch.dataset.spd;LS.set('dozorSpd',speed)}else if(ch.dataset.per){period=+ch.dataset.per;LS.set('dozorPer',period)}else feedF=ch.dataset.f||'';if(last)render(last);return}const c=e.target.closest('.al');if(c){ack.add(c.dataset.id);LS.set('dozorAck',[...ack]);if(last)render(last);return}if(e.target.id==='ackall'){alerts(last).forEach(x=>ack.add(x.id));LS.set('dozorAck',[...ack]);render(last)}});
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.lw;if(!n)return;e.target.open?lwClosed.delete(n):lwClosed.add(n);LS.set('dozorLwClosed',[...lwClosed])},true);
 $('root').addEventListener('toggle',e=>{const n=e.target.dataset&&e.target.dataset.ag;if(!n)return;e.target.open?openAg.add(n):openAg.delete(n);LS.set('dozorOpen',[...openAg])},true);
-async function load(){left=REFRESH;try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
+async function load(){left=REFRESH;loadPoz();try{const r=await fetch('/api/agents/dozor',{cache:'no-store'});if(r.status===401){location.reload();return}last=await r.json();failed=0;render(last)}catch(e){failed++;if(last)render(last);else $('meta').textContent='Chyba načtení'}}
 $('rf').onclick=load;load();
 setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s';},1000);
 setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové – Dozor':(unacked?'('+unacked+') Dozor agentů':'Dozor agentů')},900);
