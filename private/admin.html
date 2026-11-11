@@ -250,6 +250,7 @@ header{padding:4px 2px 6px;gap:6px}.ib{width:28px;height:28px;font-size:13px}sel
 .wrap{padding-top:6px}
 .top2{gap:6px;margin:0 0 6px}.top2 .t2{padding:5px 10px;border-radius:9px}.top2 .t2 b{font-size:24px}.top2 .t2 span{font-size:9px;letter-spacing:1px}
 .top2 .t2.nav{padding:4px 6px}.top2 .nd b{font-size:17px}.top2 .nd span{font-size:10px}.top2 .nb{width:32px;height:34px;font-size:20px}
+.le.lwcard.ac{border-left:5px solid var(--wc);background:rgba(255,255,255,.04);background:color-mix(in srgb,var(--wc) 15%,transparent)}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
 <header><h1><span class="live" id="lv"></span>Dozor agentů</h1><div class="meta" id="meta" style="margin:0;white-space:nowrap">načítám…</div><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
@@ -380,7 +381,7 @@ function lwFlat(L){if(!L)return '<div class="empty">Čekám na data…</div>';le
   let tm='';if(e.ts&&e.lastTs>e.ts&&g==='ok')tm=`trvalo ${mins((e.lastTs-e.ts)/60000)}`;else if(g==='run'&&e.lastTs&&L.nowN)tm=`poslední krok před ${mins((L.nowN-e.lastTs)/60000)}${(L.nowN-e.lastTs)/60000>60?' ⚠':''}`;
   const tags=(e.ids||[]).map(x=>`<span class="fl2">${esc(x)}</span>`).join('');
   const w=(e.warns||[]).map(x=>`<span class="fl2 red">⚠ ${esc(x)}</span>`).join('');
-  return `<details class="le lwcard ${cls}${lwSeen&&!lwSeen.has(k)?' lwnew':''}" data-lwo="${esc(ko)}"${lwOpen.has(ko)?' open':''}><summary><div class="m"><b>${esc(e.agent)}</b> · ${esc(e.when)}${tm?' · '+tm:''}</div><div class="q1">${esc(e.request||'(bez doslovného zadání)')}</div><div class="a2">${esc(reply(e))}</div><div class="vd">${VERD[e.done]||VERD.wait}</div></summary>
+  return `<details class="le lwcard ac${lwSeen&&!lwSeen.has(k)?' lwnew':''}" data-lwo="${esc(ko)}" style="--wc:${wcol(RN(e.agent))}"${lwOpen.has(ko)?' open':''}><summary><div class="m"><b>${esc(e.agent)}</b> · ${esc(e.when)}${tm?' · '+tm:''}</div><div class="q1">${esc(e.request||'(bez doslovného zadání)')}</div><div class="a2">${esc(reply(e))}</div><div class="vd">${VERD[e.done]||VERD.wait}</div></summary>
    ${tags?'<div>'+tags+'</div>':''}${bar}${ln('CO UŽIVATEL CHCE',e.wants)}${ln('CO ZAČÍNÁ DĚLAT',e.doing)}${ln('KROKY (PLÁN)',e.steps)}${ln('OČEKÁVANÝ VÝSLEDEK',e.expected)}${ln('PRŮBĚH',e.progress)}${ln('VÝSLEDEK',e.result)}${ln('ZÁVĚREČNÁ KONTROLA',e.check)}${ln('PROBLÉM',e.problem)}${ln('ŘEŠENÍ',e.solution)}<div class="m" style="margin-top:4px">list „${esc(e.sheet)}“ · řádek ${e.row}${e.status?' · stav v tabulce: '+esc(e.status):''}</div>${w?'<div>'+w+'</div>':''}</details>`};
  const cnt={},recent=[],older=[];f.forEach(e=>{cnt[e.agent]=(cnt[e.agent]||0)+1;(cnt[e.agent]<=3?recent:older).push(e)});
  const names=[...new Set(recent.map(e=>e.agent))];
