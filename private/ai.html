@@ -461,7 +461,7 @@
     <div class="panel kpi"><h3>Všechny pozice dohromady</h3>
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
-    <div class="panel pie-p"><div class="bgg" id="pieBg" aria-hidden="true"></div><h3>Podíl dispečinků</h3><div id="pie"></div><div class="legend" id="legend"></div></div>
+    <div class="panel pie-p"><div class="bgg" id="pieBg" aria-hidden="true"></div><h3>Podíl dispečinků</h3><div id="pieNav" class="daynav" style="display:flex;justify-content:center;align-items:center;gap:10px;margin:2px 0 6px"></div><div id="pie"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Objednávky + přepravy</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Využití agenta pro zápis objednávek do Lori v % za posledních 5 pracovních dní</h3><div class="rank" id="rank"></div></div>
   </div>
@@ -792,6 +792,33 @@
       const m = $('wgMsg'); try { const t = await (await fetch('/api/agents/widget-script')).text(); try { await navigator.clipboard.writeText(t); m.textContent = 'Zkopírováno.'; } catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); m.textContent = 'Zkopírováno.'; } } catch (e) { m.textContent = 'Nepodařilo se načíst skript.'; }
     });
   })();
+
+  // koláč za zvolený den: všechny relace; agent = objednávky + přepravy, ručně = jen objednávky (světlejší výseč)
+  let pieOff = 0;
+  function pieData() {
+    const S = R.split, rels = R.relations.map((x, i) => ({ ...x, i })); if (!S || !S.rels) return null;
+    const dd = isoAdd(today(), -pieOff), dr = (S.days.find(d => d.date === dd) || { rels: {} }).rels, out = [];
+    for (const x of S.rels) { const q = dr[x.key] || { pA: 0, pM: 0, tA: 0, tM: 0 }, r = rels.find(y => y.key === x.key); out.push({ key: x.key, name: x.name, i: r ? r.i : 0, a: (q.pA || 0) + (q.tA || 0), m: q.pM || 0 }); }
+    return { items: out, date: dd };
+  }
+  function donut2(items) {
+    const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, total = items.reduce((t, x) => t + x.a + x.m, 0), tl = nf.format(total).length, fs = tl <= 3 ? 54 : tl <= 5 ? 42 : 34;
+    const segs = []; items.forEach(x => { if (x.a) segs.push({ v: x.a, col: color(x.i), op: 1, t: x.name + ' – agent: ' + x.a }); if (x.m) segs.push({ v: x.m, col: color(x.i), op: .4, t: x.name + ' – ručně: ' + x.m }); });
+    let acc = 0, arcs = ''; const gap = segs.length > 1 ? 2.5 : 0;
+    segs.forEach(g => { const len = C * g.v / total; arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${g.col}" stroke-opacity="${g.op}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})" style="filter:drop-shadow(0 0 6px ${g.col})"><title>${esc(g.t)} (${Math.round(100 * g.v / total)} %)</title></circle>`; acc += len; });
+    if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${w}"/>`;
+    return `<svg viewBox="0 0 ${S} ${S}" style="max-width:340px;margin:0 auto"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(94,138,255,.25)" stroke-dasharray="2 6"/>${arcs}
+      <text x="${c}" y="${c + fs * 0.34}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="${fs}" style="filter:drop-shadow(0 0 8px rgba(94,138,255,.6))">${nf.format(total)}</text>
+      <text x="${c}" y="${c + fs * 0.34 + 18}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9" letter-spacing="3">OBJ. + PŘEP.</text></svg>`;
+  }
+  function renderPie() {
+    const P = pieData(), nav = $('pieNav'), lg = $('legend');
+    if (!P) { $('pie').innerHTML = donut(R.relations.map((x, i) => ({ ...x, i })), R.total); return; }
+    nav.innerHTML = `<button type="button" data-pd="1" ${pieOff >= 30 ? 'disabled' : ''} aria-label="Předchozí den">‹</button><span class="dlbl">${dayLbl(pieOff)}</span><button type="button" data-pd="-1" ${pieOff <= 0 ? 'disabled' : ''} aria-label="Další den">›</button>`;
+    $('pie').innerHTML = donut2(P.items);
+    lg.innerHTML = P.items.map(x => `<div style="color:${color(x.i)};${x.a + x.m ? '' : 'opacity:.45'}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b title="agent (objednávky + přepravy) · ručně (objednávky)">${nf.format(x.a)} <span style="opacity:.7;font-weight:600">· ručně ${nf.format(x.m)}</span></b></div>`).join('');
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-pd]'); if (!b || b.disabled) return; pieOff = Math.max(0, Math.min(30, pieOff + (+b.dataset.pd))); renderPie(); });
   function render() {
     const rels = R.relations.map((x, i) => ({ ...x, i }));
     if (!dayTouched && R.split && R.split.days) { // výchozí den: dnes, pokud agent dnes zapsal objednávku, jinak poslední takový den
@@ -802,10 +829,10 @@
     countUp($('total'), total);
     const withDate = rels.filter(x => x.date).map(x => x.date).sort();
     $('kpiMeta').innerHTML = [withDate.length ? 'stav k ' + fmtD(withDate[withDate.length - 1]) : '', R.trips ? 'z toho ' + nf.format(R.trips) + ' přeprav' : ''].filter(Boolean).map(nw).join(' · ');
-    $('pie').innerHTML = donut(rels, total);
+    renderPie();
     bgGrowth();
     renderKont();
-    $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
+    if (!(R.split && R.split.rels)) $('legend').innerHTML = rels.filter(x => x.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b>${nf.format(x.count)}</b></div>`).join('') || '<div class="sub">zatím bez dat</div>';
     $('bars').innerHTML = bars(rels);
     document.querySelectorAll('#barTgl button').forEach(b => b.classList.toggle('on', b.dataset.m === barMode));
     document.querySelectorAll('#kindTgl button').forEach(b => b.classList.toggle('on', b.dataset.k === kindMode));
