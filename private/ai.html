@@ -68,6 +68,13 @@
 
   .saved{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);width:100%}.saved .sl{font:700 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;letter-spacing:1.5px;text-align:center;line-height:1.5;color:var(--mg);text-transform:uppercase}.saved .sv{font:900 clamp(22px,2.4vw,34px)/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:#fff;margin-top:6px;text-shadow:0 0 14px rgba(242,165,22,.6);white-space:nowrap}.saved .sm{font:500 11px -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;color:var(--mut);margin-top:6px}
   svg{display:block;width:100%;height:auto;overflow:visible}
+  .legend.plg{display:grid;grid-template-columns:1fr auto auto auto;gap:0 14px;margin-top:10px;font-size:13px;align-items:center}
+  .plg>*{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .plg .h{font:700 10px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut,#8da2c8);text-align:right}.plg .h.l{text-align:left}
+  .plg .nm{display:flex;align-items:center;gap:8px;color:var(--tx)}.plg .nm i{width:10px;height:10px;border-radius:3px;flex:none}
+  .plg .v{text-align:right;font:700 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--tx)}.plg .v.m{opacity:.65;font-weight:600}.plg .v.t{font-weight:900}
+  .plg .z{opacity:.4}.plg .f{border-bottom:0;border-top:2px solid rgba(255,255,255,.22);font-weight:900}
+  [data-theme="day"] .plg .v,[data-theme="day"] .plg .nm{color:#0f1b3d}
   .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;margin-top:8px;font-size:13px}
   .legend div{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
   .legend i{width:9px;height:9px;flex:none;box-shadow:0 0 8px currentColor}
@@ -815,7 +822,11 @@
     if (!P) { $('pie').innerHTML = donut(R.relations.map((x, i) => ({ ...x, i })), R.total); return; }
     nav.innerHTML = `<span class="dlbl">${dayLbl(dayOff)}</span>`;
     $('pie').innerHTML = donut2(P.items);
-    lg.innerHTML = P.items.map(x => `<div style="color:${color(x.i)};${x.a + x.m ? '' : 'opacity:.45'}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b title="agent (objednávky + přepravy) · ručně (objednávky)">${nf.format(x.a)} <span style="opacity:.7;font-weight:600">· ručně ${nf.format(x.m)}</span></b></div>`).join('');
+    const it = P.items.slice().sort((x, y) => (y.a + y.m) - (x.a + x.m)), sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
+    lg.className = 'legend plg';
+    lg.innerHTML = '<span class="h l">Relace</span><span class="h">Agent</span><span class="h">Ručně</span><span class="h">Celkem</span>' +
+      it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${color(x.i)}"></i>${esc(x.name)}</span><span class="v${z}">${nf.format(x.a)}</span><span class="v m${z}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
+      `<span class="nm f">Součet</span><span class="v f">${nf.format(sa)}</span><span class="v m f">${nf.format(sm)}</span><span class="v t f">${nf.format(sa + sm)}</span>`;
   }
   function render() {
     const rels = R.relations.map((x, i) => ({ ...x, i }));
