@@ -804,10 +804,17 @@
   const PIE_N = ['#4f8cff', '#ff9f1c', '#2ecc71', '#ff5d73', '#b36bff', '#19c8d9', '#ff6fb5', '#c9e03a', '#ff7a3d', '#8c9bff', '#e0b04a', '#3ddc97'], PIE_D = ['#1d4fd6', '#e08600', '#1f9d55', '#d62839', '#7b3fc4', '#0aa5b8', '#d6409f', '#8a9a00', '#f26b21', '#4457c9', '#a8761a', '#128a5a'];
   const pcol = i => (document.documentElement.dataset.theme === 'day' ? PIE_D : PIE_N)[i % PIE_N.length];
   function pieData() {
-    const S = R.split, rels = R.relations.map((x, i) => ({ ...x, i })); if (!S || !S.rels) return null;
-    const dd = isoAdd(today(), -dayOff), dr = (S.days.find(d => d.date === dd) || { rels: {} }).rels, out = [];
-    for (const x of S.rels) { const q = dr[x.key] || { pA: 0, pM: 0, tA: 0, tM: 0 }, r = rels.find(y => y.key === x.key); out.push({ key: x.key, name: x.name, i: out.length, a: (q.pA || 0) + (q.tA || 0), m: q.pM || 0 }); }
-    return { items: out, date: dd };
+    const S = R.split; if (!S || !S.rels) return null;
+    const out = [], dd = isoAdd(today(), -dayOff), wk = weekRange(weekOff);
+    S.rels.forEach(x => {
+      let a, m;
+      if (barMode === 'all') { a = (x.pA || 0) + (x.tA || 0); m = x.pM || 0; }
+      else if (barMode === 'week') { a = 0; m = 0; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) { const q = d.rels[x.key]; a += (q.pA || 0) + (q.tA || 0); m += q.pM || 0; } }
+      else { const q = ((S.days.find(d => d.date === dd) || { rels: {} }).rels)[x.key] || {}; a = (q.pA || 0) + (q.tA || 0); m = q.pM || 0; }
+      out.push({ key: x.key, name: x.name, i: out.length, a, m });
+    });
+    const label = barMode === 'all' ? 'Celkem od nasazení' : barMode === 'week' ? WEEK_NAMES[weekOff] + ' · ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) : dayLbl(dayOff);
+    return { items: out, label };
   }
   function donut2(items) {
     const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, total = items.reduce((t, x) => t + x.a + x.m, 0), tl = nf.format(total).length, fs = tl <= 3 ? 54 : tl <= 5 ? 42 : 34;
@@ -822,7 +829,7 @@
   function renderPie() {
     const P = pieData(), nav = $('pieNav'), lg = $('legend');
     if (!P) { $('pie').innerHTML = donut(R.relations.map((x, i) => ({ ...x, i })), R.total); return; }
-    nav.innerHTML = `<span class="dlbl">${dayLbl(dayOff)}</span>`;
+    nav.innerHTML = `<span class="dlbl">${esc(P.label)}</span>`;
     $('pie').innerHTML = donut2(P.items);
     const it = P.items, sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
     lg.className = 'legend plg';
