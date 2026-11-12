@@ -794,10 +794,9 @@
   })();
 
   // koláč za zvolený den: všechny relace; agent = objednávky + přepravy, ručně = jen objednávky (světlejší výseč)
-  let pieOff = 0;
   function pieData() {
     const S = R.split, rels = R.relations.map((x, i) => ({ ...x, i })); if (!S || !S.rels) return null;
-    const dd = isoAdd(today(), -pieOff), dr = (S.days.find(d => d.date === dd) || { rels: {} }).rels, out = [];
+    const dd = isoAdd(today(), -dayOff), dr = (S.days.find(d => d.date === dd) || { rels: {} }).rels, out = [];
     for (const x of S.rels) { const q = dr[x.key] || { pA: 0, pM: 0, tA: 0, tM: 0 }, r = rels.find(y => y.key === x.key); out.push({ key: x.key, name: x.name, i: r ? r.i : 0, a: (q.pA || 0) + (q.tA || 0), m: q.pM || 0 }); }
     return { items: out, date: dd };
   }
@@ -814,11 +813,10 @@
   function renderPie() {
     const P = pieData(), nav = $('pieNav'), lg = $('legend');
     if (!P) { $('pie').innerHTML = donut(R.relations.map((x, i) => ({ ...x, i })), R.total); return; }
-    nav.innerHTML = `<button type="button" data-pd="1" ${pieOff >= 30 ? 'disabled' : ''} aria-label="Předchozí den">‹</button><span class="dlbl">${dayLbl(pieOff)}</span><button type="button" data-pd="-1" ${pieOff <= 0 ? 'disabled' : ''} aria-label="Další den">›</button>`;
+    nav.innerHTML = `<span class="dlbl">${dayLbl(dayOff)}</span>`;
     $('pie').innerHTML = donut2(P.items);
     lg.innerHTML = P.items.map(x => `<div style="color:${color(x.i)};${x.a + x.m ? '' : 'opacity:.45'}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(x.name)}</span><b title="agent (objednávky + přepravy) · ručně (objednávky)">${nf.format(x.a)} <span style="opacity:.7;font-weight:600">· ručně ${nf.format(x.m)}</span></b></div>`).join('');
   }
-  document.addEventListener('click', e => { const b = e.target.closest('[data-pd]'); if (!b || b.disabled) return; pieOff = Math.max(0, Math.min(30, pieOff + (+b.dataset.pd))); renderPie(); });
   function render() {
     const rels = R.relations.map((x, i) => ({ ...x, i }));
     if (!dayTouched && R.split && R.split.days) { // výchozí den: dnes, pokud agent dnes zapsal objednávku, jinak poslední takový den
