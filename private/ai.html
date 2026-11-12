@@ -72,7 +72,7 @@
   .plg>*{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .plg .h{font:700 10px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut,#8da2c8);text-align:right}.plg .h.l{text-align:left}
   .plg .nm{display:flex;align-items:center;gap:8px;color:var(--tx)}.plg .nm i{width:10px;height:10px;border-radius:3px;flex:none}
-  .plg .v{text-align:right;font:700 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--tx)}.plg .v.m{opacity:.65;font-weight:600}.plg .v.t{font-weight:900}
+  .plg .v{text-align:right;font:700 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--tx)}.plg .v.m{font-weight:700}.plg .v.t{font-weight:900}
   .plg .z{opacity:.4}.plg .f{border-bottom:0;border-top:2px solid rgba(255,255,255,.22);font-weight:900}
   [data-theme="day"] .plg .v,[data-theme="day"] .plg .nm{color:#0f1b3d}
   .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;margin-top:8px;font-size:13px}
@@ -801,17 +801,19 @@
   })();
 
   // koláč za zvolený den: všechny relace; agent = objednávky + přepravy, ručně = jen objednávky (světlejší výseč)
+  const PIE_N = ['#4f8cff', '#ff9f1c', '#2ecc71', '#ff5d73', '#b36bff', '#19c8d9', '#ff6fb5', '#c9e03a', '#ff7a3d', '#8c9bff', '#e0b04a', '#3ddc97'], PIE_D = ['#1d4fd6', '#e08600', '#1f9d55', '#d62839', '#7b3fc4', '#0aa5b8', '#d6409f', '#8a9a00', '#f26b21', '#4457c9', '#a8761a', '#128a5a'];
+  const pcol = i => (document.documentElement.dataset.theme === 'day' ? PIE_D : PIE_N)[i % PIE_N.length];
   function pieData() {
     const S = R.split, rels = R.relations.map((x, i) => ({ ...x, i })); if (!S || !S.rels) return null;
     const dd = isoAdd(today(), -dayOff), dr = (S.days.find(d => d.date === dd) || { rels: {} }).rels, out = [];
-    for (const x of S.rels) { const q = dr[x.key] || { pA: 0, pM: 0, tA: 0, tM: 0 }, r = rels.find(y => y.key === x.key); out.push({ key: x.key, name: x.name, i: r ? r.i : 0, a: (q.pA || 0) + (q.tA || 0), m: q.pM || 0 }); }
+    for (const x of S.rels) { const q = dr[x.key] || { pA: 0, pM: 0, tA: 0, tM: 0 }, r = rels.find(y => y.key === x.key); out.push({ key: x.key, name: x.name, i: out.length, a: (q.pA || 0) + (q.tA || 0), m: q.pM || 0 }); }
     return { items: out, date: dd };
   }
   function donut2(items) {
     const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, total = items.reduce((t, x) => t + x.a + x.m, 0), tl = nf.format(total).length, fs = tl <= 3 ? 54 : tl <= 5 ? 42 : 34;
-    const segs = []; items.forEach(x => { if (x.a) segs.push({ v: x.a, col: color(x.i), op: 1, t: x.name + ' – agent: ' + x.a }); if (x.m) segs.push({ v: x.m, col: color(x.i), op: .4, t: x.name + ' – ručně: ' + x.m }); });
+    const segs = []; items.forEach(x => { if (x.a) segs.push({ v: x.a, col: pcol(x.i), op: 1, t: x.name + ' – agent: ' + x.a }); if (x.m) segs.push({ v: x.m, col: pcol(x.i), op: .32, t: x.name + ' – ručně: ' + x.m }); });
     let acc = 0, arcs = ''; const gap = segs.length > 1 ? 2.5 : 0;
-    segs.forEach(g => { const len = C * g.v / total; arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${g.col}" stroke-opacity="${g.op}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})" style="filter:drop-shadow(0 0 6px ${g.col})"><title>${esc(g.t)} (${Math.round(100 * g.v / total)} %)</title></circle>`; acc += len; });
+    segs.forEach(g => { const len = C * g.v / total; arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${g.col}" stroke-opacity="${g.op}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})" style="${g.op === 1 ? 'filter:drop-shadow(0 0 6px ' + g.col + ')' : ''}"><title>${esc(g.t)} (${Math.round(100 * g.v / total)} %)</title></circle>`; acc += len; });
     if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${w}"/>`;
     return `<svg viewBox="0 0 ${S} ${S}" style="max-width:340px;margin:0 auto"><circle cx="${c}" cy="${c}" r="${r + w / 2 + 8}" fill="none" stroke="rgba(94,138,255,.25)" stroke-dasharray="2 6"/>${arcs}
       <text x="${c}" y="${c + fs * 0.34}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="${fs}" style="filter:drop-shadow(0 0 8px rgba(94,138,255,.6))">${nf.format(total)}</text>
@@ -825,7 +827,7 @@
     const it = P.items.slice().sort((x, y) => (y.a + y.m) - (x.a + x.m)), sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
     lg.className = 'legend plg';
     lg.innerHTML = '<span class="h l">Relace</span><span class="h">Agent</span><span class="h">Ručně</span><span class="h">Celkem</span>' +
-      it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${color(x.i)}"></i>${esc(x.name)}</span><span class="v${z}">${nf.format(x.a)}</span><span class="v m${z}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
+      it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${pcol(x.i)}"></i>${esc(x.name)}</span><span class="v${z}" style="color:${pcol(x.i)}">${nf.format(x.a)}</span><span class="v m${z}" style="color:${pcol(x.i)};opacity:${x.a + x.m ? .55 : .3}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
       `<span class="nm f">Součet</span><span class="v f">${nf.format(sa)}</span><span class="v m f">${nf.format(sm)}</span><span class="v t f">${nf.format(sa + sm)}</span>`;
   }
   function render() {
