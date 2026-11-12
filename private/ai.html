@@ -628,12 +628,12 @@
     const bwid = BX - L - 6, hd = (x, t, extra, key, hx, hw) => { const on = key === sortKey; const tx = `<text x="${x}" y="17" fill="${on ? '#fff' : '#c3cfe8'}" font-family="Inter" font-size="10" letter-spacing=".6" ${on ? 'font-weight="800"' : ''} ${extra || ''}>${t}${on ? ' ▼' : ''}</text>`; return key ? `<g data-sort="${key}" style="cursor:pointer"><title>Seřadit podle: ${t.toLowerCase()} (od nejvyšší)</title><rect x="${hx}" y="1" width="${hw}" height="17" fill="rgba(255,255,255,.001)"/>${tx}</g>` : tx; };
     let b = hd(L, 'SOUČET', '', 'tot', L - 2, 52) + hd(BX + 52, 'AGENT', 'text-anchor="end"', 'a', BX + 8, 48) + hd(BX + 60, 'RUČNĚ', '', 'm', BX + 56, 44) + hd(W, '% AGENT', 'text-anchor="end"', 'pct', W - 52, 52);
     items.forEach((x, i) => {
-      const y = T + i * RH, h = sub2 ? 17 : 18, k = bwid / max, pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0, col = tierBar(pct);
+      const y = T + i * RH, h = sub2 ? 17 : 18, k = bwid / max, pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0, col = kcol(x.key);
       let xx = L, segs = '';
       const seg = (v, fill, stroke, dash, tip) => { if (!v) return; const w = Math.max(k * v, 2); segs += `<rect x="${xx}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}" ${dash ? 'stroke-dasharray="3 2"' : ''}><title>${esc(x.name)}: ${tip} ${nf.format(v)}</title></rect>`; xx += k * v; };
       seg(x.oA, col, col, 0, 'agent – objednávky'); seg(x.tA, col, col, 0, 'agent – přepravy');
       const split1 = xx; if (x.tA) segs += `<rect x="${xx - k * x.tA}" y="${y}" width="${Math.max(k * x.tA, 2)}" height="${h}" fill="url(#pt)" pointer-events="none"/>`;
-      seg(x.oM, 'url(#pd)', '#8d98ad', 1, 'ručně – objednávky'); seg(x.tM, 'rgba(150,160,180,.5)', '#8d98ad', 1, 'ručně – přepravy');
+      seg(x.oM, fade(col, .32), col, 1, 'ručně – objednávky'); seg(x.tM, fade(col, .32), col, 1, 'ručně – přepravy');
       const o = x.oA + x.oM, t = x.tA + x.tM;
       let sub = '';
       if (sub2) {
@@ -656,7 +656,7 @@
         <text x="${BX + 52}" y="${y + 16}" text-anchor="end" fill="#9fbcff" font-family="Inter" font-size="16" font-weight="800">${nf.format(kx.tot)}</text><text x="${BX + 60}" y="${y + 16}" fill="#7aa2ff" font-family="Inter" font-size="13" font-weight="600">zkontrolovaných objednávek</text></g>`;
     }
     const defs = `<defs><pattern id="pd" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(150,160,180,.16)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#8d98ad" stroke-width="2.2"/></pattern><pattern id="pt" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="rgba(255,255,255,.38)"/><circle cx="2.5" cy="2.5" r="1" fill="rgba(0,0,0,.35)"/></pattern></defs>`;
-    const leg = `<div class="barleg">${kx ? '<span><i class="lb" style="background:#7aa2ff;border-color:transparent"></i>zpracování dat – kontrola podkladu k fakturaci: délka = všechny zkontrolované objednávky, OK i ruční kontrola dohromady (tabulka Kontrola zásilek RKL)</span>' : ''}<span><i class="lb" style="background:linear-gradient(90deg,#2fbf71 33%,#f2a516 33% 66%,#ff6b6b 66%);border-color:transparent"></i>zapsal agent (barva podle % využití)</span><span><i class="lp"></i>zapsáno ručně (jiná předpona než agent)</span><span>${sub2 ? 'horní silný sloupec = objednávky, tenký sloupec pod ním = přepravy' : 'tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky'}</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek ' + dayLbl(dayOff).toLowerCase() + ' oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026'}</span></div>`;
+    const leg = `<div class="barleg">${kx ? '<span><i class="lb" style="background:#7aa2ff;border-color:transparent"></i>zpracování dat – kontrola podkladu k fakturaci: délka = všechny zkontrolované objednávky, OK i ruční kontrola dohromady (tabulka Kontrola zásilek RKL)</span>' : ''}<span><i class="lb" style="background:linear-gradient(90deg,#4f8cff 50%,#ff9f1c 50%);border-color:transparent"></i>sytě = zapsal agent (každá relace má svou stálou barvu)</span><span><i class="lb" style="background:linear-gradient(90deg,rgba(79,140,255,.32) 50%,rgba(255,159,28,.32) 50%);border-color:transparent"></i>vybledle ve stejné barvě = zapsáno ručně</span><span>${sub2 ? 'horní silný sloupec = objednávky, tenký sloupec pod ním = přepravy' : 'tečkovaná / plnější část sloupce = přepravy, zbytek = objednávky'}</span><span>${barMode === 'week' ? 'přírůstek za týden ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) + ' (součet přírůstků mezi zápisy v listu)' : day ? 'přírůstek ' + dayLbl(dayOff).toLowerCase() + ' oproti předchozímu zápisu v listu' : 'aktuální stav v tabulce od 12. 10. 2026'}</span></div>`;
     return `<svg viewBox="0 0 ${W} ${H}">${defs}${b}</svg>${leg}`;
   }
 
@@ -802,7 +802,10 @@
 
   // koláč za zvolený den: všechny relace; agent = objednávky + přepravy, ručně = jen objednávky (světlejší výseč)
   const PIE_N = ['#4f8cff', '#ff9f1c', '#2ecc71', '#ff5d73', '#b36bff', '#19c8d9', '#ff6fb5', '#c9e03a', '#ff7a3d', '#8c9bff', '#e0b04a', '#3ddc97'], PIE_D = ['#1d4fd6', '#e08600', '#1f9d55', '#d62839', '#7b3fc4', '#0aa5b8', '#d6409f', '#8a9a00', '#f26b21', '#4457c9', '#a8761a', '#128a5a'];
-  const pcol = i => (document.documentElement.dataset.theme === 'day' ? PIE_D : PIE_N)[i % PIE_N.length];
+  const REL_ORDER = ['zapad 1', 'zapad 2', 'zapad 3', 'zapad 4', 'vnitro 1', 'vnitro 2', 'vnitro 3', 'vnitro 4', 'jih', 'vychod'];   // pevné přiřazení barvy relaci (nezávisí na pořadí v tabulce)
+  const relIdx = key => { const i = REL_ORDER.indexOf(String(key || '').toLowerCase()); if (i >= 0) return i; let h = 0; for (const ch of String(key)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return REL_ORDER.length + h % (PIE_N.length - REL_ORDER.length); };
+  const kcol = key => (document.documentElement.dataset.theme === 'day' ? PIE_D : PIE_N)[relIdx(key) % PIE_N.length];
+  const fade = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   function pieData() {
     const S = R.split; if (!S || !S.rels) return null;
     const out = [], dd = isoAdd(today(), -dayOff), wk = weekRange(weekOff);
@@ -818,7 +821,7 @@
   }
   function donut2(items) {
     const S = 220, c = S / 2, r = 78, w = 26, C = 2 * Math.PI * r, total = items.reduce((t, x) => t + x.a + x.m, 0), tl = nf.format(total).length, fs = tl <= 3 ? 54 : tl <= 5 ? 42 : 34;
-    const segs = []; items.forEach(x => { if (x.a) segs.push({ v: x.a, col: pcol(x.i), op: 1, t: x.name + ' – agent: ' + x.a }); if (x.m) segs.push({ v: x.m, col: pcol(x.i), op: .32, t: x.name + ' – ručně: ' + x.m }); });
+    const segs = []; items.forEach(x => { if (x.a) segs.push({ v: x.a, col: kcol(x.key), op: 1, t: x.name + ' – agent: ' + x.a }); if (x.m) segs.push({ v: x.m, col: kcol(x.key), op: .32, t: x.name + ' – ručně: ' + x.m }); });
     let acc = 0, arcs = ''; const gap = segs.length > 1 ? 2.5 : 0;
     segs.forEach(g => { const len = C * g.v / total; arcs += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${g.col}" stroke-opacity="${g.op}" stroke-width="${w}" stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${c} ${c})" style="${g.op === 1 ? 'filter:drop-shadow(0 0 6px ' + g.col + ')' : ''}"><title>${esc(g.t)} (${Math.round(100 * g.v / total)} %)</title></circle>`; acc += len; });
     if (!total) arcs = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${w}"/>`;
@@ -834,7 +837,7 @@
     const it = P.items, sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
     lg.className = 'legend plg';
     lg.innerHTML = '<span class="h l">Relace</span><span class="h">Agent</span><span class="h">Ručně</span><span class="h">Celkem</span>' +
-      it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${pcol(x.i)}"></i>${esc(x.name)}</span><span class="v${z}" style="color:${pcol(x.i)}">${nf.format(x.a)}</span><span class="v m${z}" style="color:${pcol(x.i)};opacity:${x.a + x.m ? .55 : .3}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
+      it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${kcol(x.key)}"></i>${esc(x.name)}</span><span class="v${z}" style="color:${kcol(x.key)}">${nf.format(x.a)}</span><span class="v m${z}" style="color:${kcol(x.key)};opacity:${x.a + x.m ? .55 : .3}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
       `<span class="nm f">Součet</span><span class="v f">${nf.format(sa)}</span><span class="v m f">${nf.format(sm)}</span><span class="v t f">${nf.format(sa + sm)}</span>`;
   }
   function render() {
