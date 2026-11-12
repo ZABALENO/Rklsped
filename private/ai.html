@@ -814,8 +814,9 @@
       if (barMode === 'all') { a = (x.pA || 0) + (x.tA || 0); m = x.pM || 0; }
       else if (barMode === 'week') { a = 0; m = 0; for (const d of S.days) if (d.date >= wk[0] && d.date <= wk[1] && d.rels[x.key]) { const q = d.rels[x.key]; a += (q.pA || 0) + (q.tA || 0); m += q.pM || 0; } }
       else { const q = ((S.days.find(d => d.date === dd) || { rels: {} }).rels)[x.key] || {}; a = (q.pA || 0) + (q.tA || 0); m = q.pM || 0; }
-      out.push({ key: x.key, name: x.name, i: out.length, a, m });
+      out.push({ key: x.key, name: x.name, i: out.length, a, m, cum: (x.pA || 0) + (x.tA || 0) + (x.pM || 0) });
     });
+    out.sort((p, q) => (q.cum - p.cum) || (p.i - q.i));   // pevné pořadí: podle celkového množství (agent objednávky + přepravy + ručně objednávky), stejné pro každý den
     const label = barMode === 'all' ? 'Celkem od nasazení' : barMode === 'week' ? WEEK_NAMES[weekOff] + ' · ' + fmtD(wk[0]) + ' – ' + fmtD(wk[1]) : dayLbl(dayOff);
     return { items: out, label };
   }
