@@ -266,7 +266,7 @@ const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.par
 const WCOL={zapad1:'#4da3ff',zapad2:'#2dd4e6',zapad3:'#7b8cff',zapad4:'#60a5fa',vnitro1:'#c77dff',vnitro2:'#ff7ad9',vnitro3:'#f0abfc',vnitro4:'#a78bfa',jih:'#ffd54a',vychod:'#ff9f6e',stavba:'#d4a373',stavbab:'#8bd450'};
 const akeyc=s=>norm(s).replace(/\s+/g,'');
 function wcol(n){const k=akeyc(n);if(WCOL[k])return WCOL[k];let x=0;for(const c of k)x=(x*31+c.charCodeAt(0))>>>0;return 'hsl('+(x%360)+' 85% 68%)'}
-const RNM={jarvis:'Vnitro2','vnitro1':'Vnitro1','vnitro2':'Vnitro2','vilik':'Stavba','stavbab':'StavbaB','stavba3b':'StavbaB','zapad1':'Zapad1'},RN=n=>RNM[String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[\s+\-–:]+/g,'')]||n;
+const RNM={jarvis:'Vnitro1','vnitro1':'Vnitro1','vnitro2':'Vnitro2','vilik':'Stavba','stavbab':'StavbaB','stavba3b':'StavbaB','zapad1':'Zapad1'},RN=n=>RNM[String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[\s+\-–:]+/g,'')]||n;
 const who=n=>`<span class="who" style="--wc:${wcol(n)}">${esc(RN(n))}</span>`;
 const SKINS=['zaklad','pulse','network','synth','hologram','matrix','neon','terminal','amber','dracula','day'];
 // pamatování skinu: localStorage + cookie (záloha, když prohlížeč úložiště blokuje); načtení probíhá už v <head>, takže nic nebliká
@@ -317,7 +317,7 @@ function top2(){const el=$('top2');if(!poz){el.innerHTML='';return}
  <div class="t2 nav"><button class="nb" data-nav="-1" ${ix<=0?'disabled':''} title="Předchozí den">‹</button><div class="nd" ${cur===au?'':'data-nav="0" title="Zpět na výchozí den"'}><b>${isT?'Dnes':esc(DOW[d.getUTCDay()])}</b><span>${d.getUTCDate()}. ${d.getUTCMonth()+1}. ${d.getUTCFullYear()}</span></div><button class="nb" data-nav="1" ${ix>=ds.length-1?'disabled':''} title="Další den">›</button></div>`;dayView()}
 function dayRows(date){const S=poz&&poz.S;if(!S)return null;const rels={};(S.days||[]).filter(x=>x.date===date).forEach(x=>Object.entries(x.rels||{}).forEach(([k,q])=>{const z=rels[k]||(rels[k]={A:0,M:0,T:0});z.A+=(q.pA||0);z.M+=(q.pM||0);z.T+=(q.tA||0)}));
  const nm={};(S.rels||[]).forEach(x=>nm[x.key]=x.name);
- return Object.entries(rels).filter(([,z])=>z.A+z.T>0).map(([k,z])=>({name:nm[k]||k,A:z.A,M:z.M,T:z.T})).sort((x,y)=>(y.A+y.M)-(x.A+x.M)||y.A-x.A)}
+ return Object.entries(rels).filter(([,z])=>z.A+z.T>0).map(([k,z])=>({name:nm[k]||k,A:z.A,M:z.M,T:z.T})).reduce((o,r)=>{const q=o.find(y=>nrm(RN(y.name))===nrm(RN(r.name)));if(q){q.A+=r.A;q.M+=r.M;q.T+=r.T}else o.push(r);return o},[]).sort((x,y)=>(y.A+y.M)-(x.A+x.M)||y.A-x.A)}
 const nrm=n=>String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[\s+\-–:]+/g,'');
 function pt(i){return new Date(i).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague',hour:'numeric',minute:'2-digit'})}
 function cmdTimes(date){const m={};((last&&last.logwatch&&last.logwatch.feed)||[]).forEach(e=>{if(!e.ts)return;const d=new Date(e.ts);if(d.toISOString().slice(0,10)!==date)return;const k=nrm(RN(e.agent)),z=m[k]||(m[k]={a:e.ts,b:e.ts});if(e.ts<z.a)z.a=e.ts;if(e.ts>z.b)z.b=e.ts});const f=t=>{const d=new Date(t);return d.getUTCHours()+':'+String(d.getUTCMinutes()).padStart(2,'0')};Object.values(m).forEach(z=>{z.fa=f(z.a);z.fb=f(z.b)});return m}
