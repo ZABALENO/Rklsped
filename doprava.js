@@ -94,6 +94,7 @@ const nk = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const PRETTY = { zapad: 'Západ', vychod: 'Východ', vnitro: 'Vnitro', jih: 'Jih' };
 const prettyName = raw => String(raw || '').trim().split(/\s+/).map(w => PRETTY[nk(w)] || (w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
 const tripBase = n => { const m = nk(n).match(/^(.*?)\s+prepravy$/); return m ? m[1] : null; };   // sloupec „Západ 1 Přepravy“ = počet přeprav relace Západ 1
+const HIDDEN = new Set(['zapad 5']);   // relace skryté všude v dashboardech
 const AGENT_ORDER = ['zapad 1', 'zapad 2', 'zapad 3', 'zapad 4', 'vnitro 1', 'vnitro 2', 'vnitro 3', 'vnitro 4', 'jih', 'vychod'];
 async function updateAgents(counts) {
   if (!counts) return;
@@ -237,14 +238,14 @@ app.get('/api/agents', async (req, res) => {
   const histKeys = new Set();
   for (const v of Object.values(store.mem.agent)) for (const k of Object.keys(v.c || {})) if (!isTripKey(k)) histKeys.add(k);
   const txtKeys = (sheet.texts || []).map(t => nk(t.name));
-  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys, ...(sheet.daily ? sheet.daily.relations.map(nk) : [])].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)];
+  const keys = [...AGENT_ORDER, ...[...cur.keys(), ...histKeys, ...txtKeys, ...(sheet.daily ? sheet.daily.relations.map(nk) : [])].filter((k, i, a) => !AGENT_ORDER.includes(k) && a.indexOf(k) === i)].filter(k => !HIDDEN.has(k));
   const relations = keys.map(k => ({ key: k, name: (cur.get(k) && cur.get(k).name) || prettyName(k), count: cur.has(k) ? cur.get(k).count : null, date: cur.has(k) ? cur.get(k).date : null }));
   // „Zbývá“: dnešní řádky relace (sloupec Tuz.Z / Relace), jejichž číslo objednávky nebo přepravy má za lomítkem a rokem písmeno (např. ZZ/26N13892); řádek se počítá jednou
   const pend = {};
   for (const r of sheet.rows) if (r.date === pragueToday() && r.relace && /\/\d{2}[A-Za-z]/.test((r.order || '') + ' ' + (r.prepr || ''))) pend[nk(r.relace)] = (pend[nk(r.relace)] || 0) + 1;
   for (const r of relations) r.pending = pend[r.key] || 0;
   const sheetTexts = {};
-  for (const t of sheet.texts || []) if (t.text) sheetTexts[nk(t.name)] = t.text;
+  for (const t of sheet.texts || []) if (t.text && !HIDDEN.has(nk(t.name))) sheetTexts[nk(t.name)] = t.text;
   const adj = store.mem.cfg.adj, today = pragueToday();
   const adjOn = adj && (adj.always || adj.date === today) ? adj : null;           // ruční přičtení: trvale (always), nebo jen pro daný den
   for (const r of relations) if (sheetTrips[r.key] != null) r.trips = sheetTrips[r.key];
@@ -259,7 +260,7 @@ app.get('/api/agents', async (req, res) => {
     const dnames = {}; for (const n of dl.relations) dnames[nk(n)] = n;
     const F = ['pA', 'pM', 'tA', 'tM'], z = () => ({ pA: 0, pM: 0, tA: 0, tM: 0 });
     const incs = {}, rels = [];
-    for (const k of Object.keys(dnames)) {
+    for (const k of Object.keys(dnames).filter(k => !HIDDEN.has(k))) {
       let prev = null, pend = z(), cur = z(), td = z(), lastDate = null;
       for (const sn of dl.snaps) {
         const v = sn.rels[dnames[k]]; if (!v) continue;
@@ -300,7 +301,7 @@ app.get('/api/agents', async (req, res) => {
   const lvl = {}, byDay = {};
   for (const d of hd.slice().sort()) {
     const c = (store.mem.agent[d] || {}).c || {};
-    for (const k of Object.keys(c)) if (!isTripKey(k)) lvl[k] = c[k];
+    for (const k of Object.keys(c)) if (!isTripKey(k) && !HIDDEN.has(k)) lvl[k] = c[k];
     const o = Object.assign({}, lvl);
     // výchozí hodnota (základ) se přičítá k úrovni každého dne, takže se v denních přírůstcích vyruší
     if (adjOn && (adjOn.always || d === today)) o[adjOn.key] = (o[adjOn.key] || 0) + (adjOn.count || 0);
