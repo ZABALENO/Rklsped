@@ -824,7 +824,7 @@
     if (!P) { $('pie').innerHTML = donut(R.relations.map((x, i) => ({ ...x, i })), R.total); return; }
     nav.innerHTML = `<span class="dlbl">${dayLbl(dayOff)}</span>`;
     $('pie').innerHTML = donut2(P.items);
-    const it = P.items.slice().sort((x, y) => (y.a + y.m) - (x.a + x.m)), sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
+    const it = P.items, sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
     lg.className = 'legend plg';
     lg.innerHTML = '<span class="h l">Relace</span><span class="h">Agent</span><span class="h">Ručně</span><span class="h">Celkem</span>' +
       it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${pcol(x.i)}"></i>${esc(x.name)}</span><span class="v${z}" style="color:${pcol(x.i)}">${nf.format(x.a)}</span><span class="v m${z}" style="color:${pcol(x.i)};opacity:${x.a + x.m ? .55 : .3}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
