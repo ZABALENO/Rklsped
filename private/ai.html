@@ -831,7 +831,7 @@
       <text x="${c}" y="${c + fs * 0.34}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="${fs}" style="filter:drop-shadow(0 0 8px rgba(94,138,255,.6))">${nf.format(total)}</text>
       <text x="${c}" y="${c + fs * 0.34 + 18}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9" letter-spacing="3">OBJ. + PŘEP.</text></svg>`;
   }
-  let pieSort = { k: 'fix', dir: -1 };
+  let pieSort = { k: 'tot', dir: -1 };
   document.addEventListener('click', e => { const h = e.target.closest('[data-ps]'); if (!h) return; const k = h.dataset.ps; if (pieSort.k === k) pieSort.dir = -pieSort.dir; else pieSort = { k, dir: k === 'name' ? 1 : -1 }; renderPie(); });
   function renderPie() {
     const P = pieData(), nav = $('pieNav'), lg = $('legend');
