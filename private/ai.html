@@ -70,6 +70,7 @@
   svg{display:block;width:100%;height:auto;overflow:visible}
   .legend.plg{display:grid;grid-template-columns:1fr auto auto auto;gap:0 14px;margin-top:10px;font-size:13px;align-items:center}
   .plg>*{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .plg .srt{cursor:pointer;user-select:none}.plg .srt:hover{color:#fff}
   .plg .h{font:700 10px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut,#8da2c8);text-align:right}.plg .h.l{text-align:left}
   .plg .nm{display:flex;align-items:center;gap:8px;color:var(--tx)}.plg .nm i{width:10px;height:10px;border-radius:3px;flex:none}
   .plg .v{text-align:right;font:700 13px Inter,sans-serif;font-variant-numeric:tabular-nums;color:var(--tx)}.plg .v.m{font-weight:700}.plg .v.t{font-weight:900}
@@ -585,7 +586,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, dayTouched = false, kindMode = 'ord', sortKey = 'tot';
+  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, dayTouched = false, kindMode = 'ord', sortKey = 'tot', sortDir = -1;
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -617,7 +618,7 @@
     }
     { const tot = x => x.a + x.m + (kindMode === 'all' ? (x.xA || 0) + (x.xM || 0) : 0), pc = x => x.a + x.m ? x.a / (x.a + x.m) : -1;
       const val = { tot, a: x => x.a, m: x => x.m, pct: pc }[sortKey] || tot;
-      items.sort((p, q) => (val(q) - val(p)) || (tot(q) - tot(p))); }
+      items.sort((p, q) => sortDir * (val(p) - val(q)) || (tot(q) - tot(p))); }
     if (!items.some(x => x.a + x.m + (x.xA || 0) + (x.xM || 0))) return '<div class="sub" style="padding:20px 0">V tomto období zatím žádné ' + (kindMode === 'ord' ? 'objednávky' : kindMode === 'trp' ? 'přepravy' : 'přírůstky') + '.' + (barMode === 'day' ? '' : '') + '</div>';
     const kx = (() => { const K = R.kontrola; if (!K || kindMode === 'trp') return null; let z;
       if (barMode === 'day') { const dd = isoAdd(today(), -dayOff), d = (K.days || []).find(q => q.date === dd); z = d ? { ok: d.ok, man: d.man, oth: d.oth } : { ok: 0, man: 0, oth: 0 }; }
@@ -625,7 +626,7 @@
       else z = { ...K.tot };
       z.tot = z.ok + z.man; return z; })();
     const sub2 = kindMode === 'all', n = items.length + (kx ? 1 : 0), W = 600, RH = sub2 ? 52 : 38, T = 30, L = 76, BX = 270, H = T + n * RH + 6, max = Math.max(1, kx ? kx.tot : 0, ...items.map(x => Math.max(x.a + x.m, (x.xA || 0) + (x.xM || 0))));
-    const bwid = BX - L - 6, hd = (x, t, extra, key, hx, hw) => { const on = key === sortKey; const tx = `<text x="${x}" y="17" fill="${on ? '#fff' : '#c3cfe8'}" font-family="Inter" font-size="10" letter-spacing=".6" ${on ? 'font-weight="800"' : ''} ${extra || ''}>${t}${on ? ' ▼' : ''}</text>`; return key ? `<g data-sort="${key}" style="cursor:pointer"><title>Seřadit podle: ${t.toLowerCase()} (od nejvyšší)</title><rect x="${hx}" y="1" width="${hw}" height="17" fill="rgba(255,255,255,.001)"/>${tx}</g>` : tx; };
+    const bwid = BX - L - 6, hd = (x, t, extra, key, hx, hw) => { const on = key === sortKey; const tx = `<text x="${x}" y="17" fill="${on ? '#fff' : '#c3cfe8'}" font-family="Inter" font-size="10" letter-spacing=".6" ${on ? 'font-weight="800"' : ''} ${extra || ''}>${t}${on ? (sortDir < 0 ? ' ▼' : ' ▲') : ''}</text>`; return key ? `<g data-sort="${key}" style="cursor:pointer"><title>Seřadit podle: ${t.toLowerCase()} (další klik obrátí směr)</title><rect x="${hx}" y="1" width="${hw}" height="17" fill="rgba(255,255,255,.001)"/>${tx}</g>` : tx; };
     let b = hd(L, 'SOUČET', '', 'tot', L - 2, 52) + hd(BX + 52, 'AGENT', 'text-anchor="end"', 'a', BX + 8, 48) + hd(BX + 60, 'RUČNĚ', '', 'm', BX + 56, 44) + hd(W, '% AGENT', 'text-anchor="end"', 'pct', W - 52, 52);
     items.forEach((x, i) => {
       const y = T + i * RH, h = sub2 ? 17 : 18, k = bwid / max, pct = x.a + x.m ? Math.round(100 * x.a / (x.a + x.m)) : 0, col = kcol(x.key);
@@ -830,14 +831,16 @@
       <text x="${c}" y="${c + fs * 0.34}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="${fs}" style="filter:drop-shadow(0 0 8px rgba(94,138,255,.6))">${nf.format(total)}</text>
       <text x="${c}" y="${c + fs * 0.34 + 18}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9" letter-spacing="3">OBJ. + PŘEP.</text></svg>`;
   }
+  let pieSort = { k: 'fix', dir: -1 };
+  document.addEventListener('click', e => { const h = e.target.closest('[data-ps]'); if (!h) return; const k = h.dataset.ps; if (pieSort.k === k) pieSort.dir = -pieSort.dir; else pieSort = { k, dir: k === 'name' ? 1 : -1 }; renderPie(); });
   function renderPie() {
     const P = pieData(), nav = $('pieNav'), lg = $('legend');
     if (!P) { $('pie').innerHTML = donut(R.relations.map((x, i) => ({ ...x, i })), R.total); return; }
     nav.innerHTML = `<span class="dlbl">${esc(P.label)}</span>`;
     $('pie').innerHTML = donut2(P.items);
-    const it = P.items, sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
+    const ps = pieSort, val = { name: x => x.name, a: x => x.a, m: x => x.m, tot: x => x.a + x.m }[ps.k], it = ps.k === 'fix' ? P.items : P.items.slice().sort((x, y) => ps.dir * (ps.k === 'name' ? val(x).localeCompare(val(y), 'cs') : val(x) - val(y)) || (y.cum - x.cum)), sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
     lg.className = 'legend plg';
-    lg.innerHTML = '<span class="h l">Relace</span><span class="h">Agent</span><span class="h">Ručně</span><span class="h">Celkem</span>' +
+    lg.innerHTML = [['name', 'Relace', 'l'], ['a', 'Agent', ''], ['m', 'Ručně', ''], ['tot', 'Celkem', '']].map(h => `<span class="h ${h[2]} srt" data-ps="${h[0]}" title="Seřadit (další klik obrátí směr)">${h[1]}${ps.k === h[0] ? (ps.dir < 0 ? ' ▼' : ' ▲') : ''}</span>`).join('') +
       it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${kcol(x.key)}"></i>${esc(x.name)}</span><span class="v${z}" style="color:${kcol(x.key)}">${nf.format(x.a)}</span><span class="v m${z}" style="color:${kcol(x.key)};opacity:${x.a + x.m ? .55 : .3}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
       `<span class="nm f">Součet</span><span class="v f">${nf.format(sa)}</span><span class="v m f">${nf.format(sm)}</span><span class="v t f">${nf.format(sa + sm)}</span>`;
   }
@@ -1119,7 +1122,7 @@
   });
   document.querySelectorAll('#barTgl button').forEach(b => b.addEventListener('click', () => { barMode = b.dataset.m; render(); }));
   $('trKind').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { trMode = b.dataset.k; render(); } });
-  $('bars').addEventListener('click', e => { const g = e.target.closest('[data-sort]'); if (g) { const k = g.dataset.sort; sortKey = (sortKey === k && k !== 'tot') ? 'tot' : k; render(); } });
+  $('bars').addEventListener('click', e => { const g = e.target.closest('[data-sort]'); if (g) { const k = g.dataset.sort; if (sortKey === k) sortDir = -sortDir; else { sortKey = k; sortDir = -1; } render(); } });
   $('kindTgl').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { kindMode = b.dataset.k; render(); } });
   $('dayNav').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if (b && !b.disabled) { dayTouched = true; dayOff = Math.max(0, Math.min(7, dayOff + +b.dataset.d)); render(); } });
   $('weekTgl').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { weekOff = +b.dataset.w; render(); } });
@@ -1287,6 +1290,22 @@
  set(o);
  s.addEventListener('click',function(){set(p.hidden)});
  s.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();set(p.hidden)}});
+})();
+</script>
+<script>
+(function () {
+  const st = {}, key = t => (t.closest('[id]') ? t.closest('[id]').id : '') + '|' + [...t.querySelectorAll('thead th')].map(h => h.firstChild ? h.firstChild.textContent : '').join('/');
+  const val = c => { const t = (c.textContent || '').replace(/\s/g, ' ').trim(), d = t.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})?/); if (d) return (+(d[3] || 0)) * 1e4 + (+d[2]) * 100 + (+d[1]); const n = parseFloat(t.replace(/\s/g, '').replace(',', '.')); return isNaN(n) ? (/^[–-]$/.test(t) ? -1 : t.toLowerCase()) : n; };
+  function sortTable(t, i, dir) {
+    const tb = t.tBodies[0]; if (!tb) return; const rows = [...tb.rows], foot = rows.filter(r => /^celkem$/i.test((r.cells[0] && r.cells[0].textContent || '').trim())), body = rows.filter(r => !foot.includes(r));
+    body.sort((a, b) => { const x = val(a.cells[i]), y = val(b.cells[i]); return dir * (typeof x === 'string' || typeof y === 'string' ? String(x).localeCompare(String(y), 'cs') : x - y); });
+    body.concat(foot).forEach(r => tb.appendChild(r)); t.dataset.sorted = '1';
+    t.querySelectorAll('thead th').forEach((h, j) => { const m = h.querySelector('.sm') || (() => { const s = document.createElement('span'); s.className = 'sm'; h.insertBefore(s, h.firstChild.nextSibling || null); return s; })(); m.textContent = j === i ? (dir < 0 ? ' ▼' : ' ▲') : ''; });
+  }
+  document.addEventListener('click', e => { const h = e.target.closest('table thead th'); if (!h) return; const t = h.closest('table'); if (t.closest('.plg')) return; const i = [...h.parentNode.children].indexOf(h), k = key(t), o = st[k]; const dir = o && o.i === i ? -o.dir : (i === 0 && !/Relace/.test(h.textContent) ? -1 : -1); st[k] = { i, dir }; sortTable(t, i, dir); });
+  const apply = () => document.querySelectorAll('table').forEach(t => { if (t.dataset.sorted || !t.tHead) return; const o = st[key(t)]; if (o) sortTable(t, o.i, o.dir); });
+  new MutationObserver(() => requestAnimationFrame(apply)).observe(document.body, { childList: true, subtree: true });
+  const css = document.createElement('style'); css.textContent = 'table thead th{cursor:pointer;user-select:none}table thead th:hover{filter:brightness(1.25)}'; document.head.appendChild(css);
 })();
 </script>
 <script src="/iptv.js" defer></script>
