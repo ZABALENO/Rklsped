@@ -114,6 +114,7 @@
   let n = 0, tm = null;
   document.addEventListener('click', e => {
     if (!isTrigger(e)) return;
+    if (window.RKLTV_SINGLE) { toggle(); return; }   // aplikace řidičů: stačí 1× kliknout na logo
     n++; clearTimeout(tm);
     tm = setTimeout(() => { const c = n; n = 0; if (c >= 3) toggle(); else if (c === 1 && box) setHidden(!vHidden); }, 450);
   });
