@@ -112,7 +112,8 @@ async function updateAgents(counts) {
 
 /* ---------- HTTP ---------- */
 const app = express();
-app.use(express.json({ limit: '1mb' }));
+const jsonSmall = express.json({ limit: '1mb' });
+app.use((req, res, next) => req.path === '/api/ridic/doklad' ? next() : jsonSmall(req, res, next));   // doklady (PDF) mají vlastní větší limit v lib/ridic.js
 // airkl.cz a www.airkl.cz = rozcestník (Doprava / Spedice / AI); dashboard běží na dashboard.airkl.cz
 app.use((req, res, next) => {
   const h = String(req.headers.host || '').split(':')[0].toLowerCase();
