@@ -88,7 +88,7 @@ function append_(b) {
 
   var n = Math.max(1, Math.min(MAX_JIZD, Math.floor(Number(b.jizd) || 1)));
   var tuny = Object.prototype.toString.call(b.tuny) === '[object Array]' ? b.tuny : [b.tuny];
-  var spz = String(driver.spz || '').trim() || String(b.spz || '').trim();
+  var spz = String(b.spz || '').trim() || String(driver.spz || '').trim();   // zvolená SPZ má přednost před tabulkou
 
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
