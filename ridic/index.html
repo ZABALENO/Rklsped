@@ -81,9 +81,9 @@
   .done-ic{width:56px;height:56px;margin:2px 0 14px;display:block;color:var(--ok);filter:drop-shadow(0 0 12px rgba(61,220,151,.6))}
   .brand small{white-space:nowrap}
   @media (max-width:400px){header{gap:8px;padding-left:12px;padding-right:12px}.brand{font-size:12px;letter-spacing:1.5px;gap:8px}.brand small{font-size:9px;letter-spacing:1px}#logout{padding:8px 9px;letter-spacing:1px}}
-  .spzbar{display:flex;align-items:center;gap:10px;padding:10px 16px 0;max-width:560px;margin:0 auto;width:100%}
+  .spzbar{display:flex;align-items:center;gap:10px;margin:10px 0 0}
   .spzbar label{flex:none;margin:0;font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:2px;text-transform:uppercase;color:var(--c)}
-  .spzbar select{flex:1;min-height:44px;padding-top:8px;padding-bottom:8px;font-size:16px}
+  .spzbar select{flex:1;min-height:46px;padding-top:8px;padding-bottom:8px;font-size:16px}
   .tabs{display:flex;gap:8px;padding:10px 16px 0;max-width:560px;margin:0 auto;width:100%}
   .tabs button{flex:1;min-height:44px;background:transparent;color:#cfe0ff;border:1px solid rgba(94,138,255,.45);font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;padding:8px 6px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
   .tabs button.on{background:#1d388f;color:#fff;border-color:var(--c);box-shadow:0 0 18px rgba(94,138,255,.4)}
@@ -188,13 +188,6 @@
   <button id="logout" class="hidden" type="button">Odhlásit</button>
 </header>
 
-<div id="spzBar" class="spzbar hidden">
-  <label for="spz">SPZ</label>
-  <select id="spz" aria-label="SPZ vozidla">
-    <option value="">Vyberte SPZ…</option>
-    <option>3TB 0282</option><option>2TC 3005</option><option>1TH 3501</option><option>5M8 7601</option>
-  </select>
-</div>
 <nav id="tabs" class="tabs hidden" aria-label="Menu řidiče">
   <button type="button" id="tabNew">Nová přeprava</button>
   <button type="button" id="tabHist">Historie mých jízd</button>
@@ -216,7 +209,17 @@
 
   <!-- FORMULÁŘ -->
   <section id="formView" class="hidden" style="display:flex;flex-direction:column;gap:16px">
-    <div class="panel who" id="who"></div>
+    <div class="panel who" id="who">
+      <b id="whoName"></b>
+      <div id="spzRow" class="spzbar hidden">
+        <label for="spz">SPZ</label>
+        <select id="spz" aria-label="SPZ vozidla">
+          <option value="">Vyberte SPZ…</option>
+          <option>3TB 0282</option><option>2TC 3005</option><option>1TH 3501</option><option>5M8 7601</option>
+        </select>
+      </div>
+      <div class="tags" id="whoTags"></div>
+    </div>
 
     <form id="recForm" class="panel" novalidate>
       <h1>Nová přeprava</h1>
@@ -315,7 +318,6 @@
     views.forEach(v => $(v).classList.toggle('hidden', v !== name));
     $('logout').classList.toggle('hidden', name === 'loginView');
     $('tabs').classList.toggle('hidden', name === 'loginView');
-    syncSpzBar({ id: name });
     const h = name === 'histView' || name === 'editView';
     $('tabHist').classList.toggle('on', h); $('tabNew').classList.toggle('on', !h);
   };
@@ -366,8 +368,12 @@
   $('zakaznik').addEventListener('change', matchCustomer);
   $('zakaznik').addEventListener('blur', matchCustomer);
   let driver = null, needSpz = false;
-  function syncSpzBar(sec) { $('spzBar').classList.toggle('hidden', !(needSpz && sec && (sec.id === 'formView' || sec.id === 'doneView'))); }
-  $('spz').addEventListener('change', () => { try { localStorage.setItem('rkl_ridic_spz', $('spz').value); } catch (e) {} $('spz').classList.remove('bad'); });
+  function renderTags() {                       // štítky pod jménem: dopravce, SPZ (zvolená / z tabulky), typ vozidla
+    if (!driver) return;
+    const spz = needSpz ? $('spz').value : String(driver.spz || '').trim();
+    $('whoTags').innerHTML = [driver.dopravce, spz, 'Sklápěč'].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
+  }
+  $('spz').addEventListener('change', () => { try { localStorage.setItem('rkl_ridic_spz', $('spz').value); } catch (e) {} $('spz').classList.remove('bad'); renderTags(); });
   async function loadCustomers() {      // seznam z tabulky (list „Zákazníci“); při chybě zůstane vestavěný
     try {
       const r = await api('/api/ridic/zakaznici');
@@ -378,15 +384,14 @@
     driver = d; loadCustomers();
     const own = String(d.dopravce || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === 'rkl opava';
     needSpz = own || !String(d.spz || '').trim();           // řidiči RKL Opava (a řidiči bez SPZ v tabulce) si SPZ volí
-    $('spzBar').dataset.need = needSpz ? '1' : '';
+    $('spzRow').classList.toggle('hidden', !needSpz);
     if (needSpz) {
       let saved = ''; try { saved = localStorage.getItem('rkl_ridic_spz') || ''; } catch (e) {}
       const pre = [saved, String(d.spz || '').trim()].find(x => x && Array.from($('spz').options).some(o => o.value === x || o.text === x));
       $('spz').value = pre || '';
     }
-    syncSpzBar(document.querySelector('main > section:not(.hidden)'));
-    const tags = [d.dopravce, d.spz, 'Sklápěč'].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
-    $('who').innerHTML = '<b>' + esc(d.jmeno + ' ' + d.prijmeni) + '</b>' + (tags ? '<div class="tags">' + tags + '</div>' : '');
+    $('whoName').textContent = d.jmeno + ' ' + d.prijmeni;
+    renderTags();
   }
 
   function resetForm() {
