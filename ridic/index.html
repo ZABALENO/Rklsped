@@ -374,6 +374,12 @@
   html.light .pr-card{background:#fbfcff;border-color:rgba(47,86,196,.4)}
   html.light .pr-who,html.light .pr-t{color:#111c3d}
   html.light .pr-chk,html.light .pr-ref{color:#1a2a5c;border-color:rgba(47,86,196,.5)}
+  .sg{display:flex;flex-direction:column;border:1px solid rgba(160,190,250,.55);background:rgba(6,12,30,.97);margin-top:-1px;max-height:300px;overflow-y:auto}
+  .sg.hidden{display:none}
+  .sgi{min-height:50px;padding:0 14px;text-align:left;background:transparent;color:#e8eeff;border:0;border-bottom:1px solid rgba(160,190,250,.2);font:600 18px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
+  .sgi:last-child{border-bottom:0}.sgi:active{background:#1d388f}
+  html.light .sg{background:#fff;border-color:rgba(47,86,196,.55)}
+  html.light .sgi{color:#111c3d;border-bottom-color:rgba(47,86,196,.2)}
 </style>
 <script>
 (function(){
@@ -475,7 +481,7 @@
       <input id="mistoVykladky" type="text" maxlength="100" placeholder="např. Ostrava" autocomplete="off" required>
 
       <label for="zakaznik">Zákazník</label>
-      <input id="zakaznik" type="text" maxlength="120" list="zakList" placeholder="Začněte psát název…" autocomplete="off" autocapitalize="words" required>
+      <input id="zakaznik" type="text" maxlength="120" placeholder="Začněte psát název…" autocomplete="off" autocapitalize="words" required>
       <datalist id="zakList"><option value="MJM"><option value="Agroland"><option value="Petrokámen"><option value="RenoFarmy"><option value="Ridera"><option value="RKL Opava"><option value="Romaton"><option value="Silnice Morava"><option value="Spacemetal"><option value="Tompres"><option value="Vaněk Jiří"><option value="Wienerberger"><option value="Piešťanský"><option value="Zogal"></datalist>
 
       <label for="druh">Druh nákladu</label>
@@ -537,7 +543,7 @@
       <label for="eMistoV">Místo vykládky</label>
       <input id="eMistoV" type="text" maxlength="100" autocomplete="off">
       <label for="eZak">Zákazník</label>
-      <input id="eZak" type="text" maxlength="120" list="zakList" autocomplete="off">
+      <input id="eZak" type="text" maxlength="120" autocomplete="off">
       <label for="eDruh">Druh nákladu</label>
       <input id="eDruh" type="text" maxlength="80" autocomplete="off">
       <label>Tuny za jednotlivé jízdy <span class="opt">(nepovinné)</span></label>
@@ -631,6 +637,28 @@
   }
   $('zakaznik').addEventListener('change', matchCustomer);
   $('zakaznik').addEventListener('blur', matchCustomer);
+  // našeptávání zákazníků: seznam pod polem, výběr jedním klepnutím
+  function suggest(el) {
+    const box = document.createElement('div'); box.className = 'sg hidden'; box.setAttribute('role', 'listbox');
+    el.insertAdjacentElement('afterend', box);
+    const names = () => Array.from(document.querySelectorAll('#zakList option')).map(o => o.value);
+    function render() {
+      const t = nz(el.value), all = names();
+      let list = t ? all.filter(n => nz(n).startsWith(t)).concat(all.filter(n => !nz(n).startsWith(t) && nz(n).includes(t))) : all;
+      if (list.length === 1 && nz(list[0]) === t) list = [];
+      if (!list.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      box.innerHTML = list.slice(0, 8).map(n => '<button type="button" class="sgi" role="option">' + esc(n) + '</button>').join('');
+      box.classList.remove('hidden');
+    }
+    box.addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('.sgi'); if (!b) return;
+      e.preventDefault(); el.value = b.textContent; el.classList.remove('bad');
+      box.classList.add('hidden'); el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    el.addEventListener('input', render); el.addEventListener('focus', render);
+    el.addEventListener('blur', () => setTimeout(() => box.classList.add('hidden'), 150));
+  }
+  suggest($('zakaznik')); suggest($('eZak'));
   let driver = null, needSpz = false;
   function renderTags() {                       // štítky pod jménem: dopravce, SPZ (zvolená / z tabulky), typ vozidla
     if (!driver) return;
