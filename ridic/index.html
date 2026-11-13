@@ -48,6 +48,9 @@
   label{display:block;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 6px;color:#aeb9d4}
   .row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px}
   .row>div{min-width:0}
+  .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .row2>div{min-width:0}
+  .row2 label{margin-top:14px}
   .row label{margin-top:0}
   input{width:100%;min-width:0;min-height:52px;padding:13px 12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font:500 17px "IBM Plex Sans",system-ui,sans-serif;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
   input::placeholder{color:#5b6786}
@@ -187,14 +190,22 @@
       </div>
 
       <p class="grp sp">Přeprava</p>
-      <label for="trasa" style="margin-top:0">Trasa</label>
-      <input id="trasa" type="text" maxlength="200" placeholder="např. Opava – Praha" autocomplete="off" required>
+      <label for="trasa" style="margin-top:0">Místo odjezdu – příjezdu</label>
+      <input id="trasa" type="text" maxlength="200" placeholder="např. Bohučovice – Ostrava" autocomplete="off" required>
 
-      <label for="objednatel">Objednatel</label>
-      <input id="objednatel" type="text" maxlength="120" autocomplete="off" required>
+      <label for="zakaznik">Zákazník</label>
+      <input id="zakaznik" type="text" maxlength="120" autocomplete="off" required>
 
-      <label for="vaha">Váha</label>
-      <div class="unit"><input id="vaha" type="text" inputmode="decimal" placeholder="0" autocomplete="off" required><span>kg</span></div>
+      <label for="druh">Druh nákladu</label>
+      <input id="druh" type="text" maxlength="80" placeholder="např. zemina, cihly, 0/32 A" autocomplete="off" required>
+
+      <div class="row2">
+        <div><label for="jizd">Počet jízd</label><input id="jizd" type="text" inputmode="numeric" autocomplete="off" required></div>
+        <div><label for="tuny">Tuny</label><div class="unit"><input id="tuny" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" required><span>t</span></div></div>
+      </div>
+
+      <label for="km">Plné kilometry celkem</label>
+      <div class="unit"><input id="km" type="text" inputmode="numeric" placeholder="0" autocomplete="off" required><span>km</span></div>
 
       <button class="btn" id="sendBtn" type="submit">Odeslat</button>
       <div id="recMsg" class="msg hidden"></div>
@@ -243,7 +254,8 @@
   }
 
   function resetForm() {
-    ['trasa', 'objednatel', 'vaha', 'casNakladky', 'casVykladky'].forEach(id => $(id).value = '');
+    ['trasa', 'zakaznik', 'druh', 'tuny', 'km', 'casNakladky', 'casVykladky'].forEach(id => $(id).value = '');
+    $('jizd').value = '1';
     const t = todayISO();
     $('datumNakladky').value = t; $('datumVykladky').value = t;
     document.querySelectorAll('input.bad').forEach(i => i.classList.remove('bad'));
@@ -280,7 +292,8 @@
     $('pin').value = ''; clearMsg($('loginMsg')); show('loginView');
   });
 
-  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'objednatel', 'vaha'];
+  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'zakaznik', 'druh', 'jizd', 'tuny', 'km'];
+  const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
 
   $('recForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -290,8 +303,9 @@
     const v = {};
     FIELDS.forEach(k => v[k] = $(k).value.trim());
     const bad = FIELDS.filter(k => !v[k]);
-    const w = Number(v.vaha.replace(/\s/g, '').replace(',', '.'));
-    if (v.vaha && !(w > 0)) bad.push('vaha');
+    if (v.tuny && !(toNum(v.tuny) > 0 && toNum(v.tuny) <= 100)) bad.push('tuny');
+    if (v.jizd && !(Number.isInteger(toNum(v.jizd)) && toNum(v.jizd) >= 1 && toNum(v.jizd) <= 99)) bad.push('jizd');
+    if (v.km && !(toNum(v.km) >= 0 && toNum(v.km) <= 5000)) bad.push('km');
     if (bad.length) {
       bad.forEach(k => $(k).classList.add('bad'));
       return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err');

@@ -4,7 +4,7 @@
  * a nasaďte jako Webová aplikace (Spustit jako: já, Přístup: kdokoli).
  *
  * Listy: "Řidiči" (Jméno, Příjmení, Dopravce, SPZ, Typ vozidla, PIN, Aktivní)
- *        "Záznamy" (zapisuje se sem)
+ *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář)
  */
 
 var SHEET_DRIVERS = 'Řidiči';
@@ -102,13 +102,18 @@ function append_(b) {
       serialDate_(b.datumVykladky),
       serialTime_(b.casVykladky),
       String(b.trasa),
-      String(b.objednatel),
-      Number(b.vaha)
+      String(b.zakaznik),
+      String(b.druh),
+      Number(b.jizd),
+      Number(b.tuny),
+      Number(b.km)
     ]];
-    var rng = sh.getRange(row, 1, 1, 12);
+    // sloupec P (Cena) vyplňuje kancelář, skript do něj nezapisuje
+    var rng = sh.getRange(row, 1, 1, 15);
     rng.setNumberFormats([[
       'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
-      'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '#,##0.##'
+      'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
+      '0', '#,##0.00', '#,##0'
     ]]);
     rng.setValues(values);
     return { ok: true, row: row };
