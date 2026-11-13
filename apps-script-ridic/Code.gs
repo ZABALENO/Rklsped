@@ -4,7 +4,7 @@
  * a nasaďte jako Webová aplikace (Spustit jako: já, Přístup: kdokoli).
  *
  * Listy: "Řidiči" (Jméno, Příjmení, Dopravce, SPZ, Typ vozidla, PIN, Aktivní)
- *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář, Q = ID záznamu pro úpravy řidičem, R = Poznámka)
+ *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář, Q = ID záznamu (skrytý), R = Poznámka, S–AA = Tuny 2–10, AB–AJ = Cena 2–10 (ceny vyplňuje kancelář))
  */
 
 var SHEET_DRIVERS = 'Řidiči';
@@ -79,18 +79,14 @@ function serialTime_(hhmm) { // "HH:MM" -> zlomek dne
   return (+p[0] * 60 + +p[1]) / 1440;
 }
 
+var MAX_JIZD = 10;      // tuny/ceny jednotlivých jízd: Tuny 2–10 = sloupce S–AA, Cena 2–10 = sloupce AB–AJ
+var COL_TUNY2 = 19;     // sloupec S
+
 function append_(b) {
-  var list = drivers_();
-  var driver = null;
-  for (var i = 0; i < list.length; i++) {
-    if (list[i].aktivni && norm_(list[i].jmeno) === norm_(b.jmeno) && norm_(list[i].prijmeni) === norm_(b.prijmeni)) {
-      driver = list[i];
-      break;
-    }
-  }
+  var driver = findDriver_(b);
   if (!driver) return { ok: false, error: 'driver_inactive' };
 
-  var n = Math.max(1, Math.min(30, Math.floor(Number(b.jizd) || 1)));
+  var n = Math.max(1, Math.min(MAX_JIZD, Math.floor(Number(b.jizd) || 1)));
   var tuny = Object.prototype.toString.call(b.tuny) === '[object Array]' ? b.tuny : [b.tuny];
   var spz = String(driver.spz || '').trim() || String(b.spz || '').trim();
 
@@ -99,43 +95,42 @@ function append_(b) {
   try {
     var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
     var row = sh.getLastRow() + 1;
-    var now = new Date();
-    var values = [], formats = [], ids = [], notes = [];
-    var note = String(b.poznamka || '').slice(0, 300);
-    for (var k = 0; k < n; k++) {      // jedna jízda = jeden řádek
-      var t = tuny[k];
-      values.push([
-        now,
-        driver.jmeno + ' ' + driver.prijmeni,
-        driver.dopravce,
-        spz,
-        'Sklápěč',            // typ vozidla je vždy sklápěč
-        serialDate_(b.datumNakladky),
-        serialTime_(b.casNakladky),
-        serialDate_(b.datumVykladky),
-        serialTime_(b.casVykladky),
-        String(b.trasa),
-        String(b.zakaznik),
-        String(b.druh),
-        1,
-        (t === null || t === undefined || t === '') ? '' : Number(t),
-        Number(b.km)
-      ]);
-      ids.push([Utilities.getUuid()]);
-      notes.push([note]);
-      formats.push([
-        'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
-        'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
-        '0', '#,##0.00', '#,##0'
-      ]);
+    function tn(k) { var t = tuny[k]; return (t === null || t === undefined || t === '') ? '' : Number(t); }
+    // jedna přeprava = jeden řádek; sloupec N = tuny 1. jízdy, další jízdy v S...
+    var rng = sh.getRange(row, 1, 1, 15);
+    rng.setNumberFormats([[
+      'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
+      'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
+      '0', '#,##0.00', '#,##0'
+    ]]);
+    rng.setValues([[
+      new Date(),
+      driver.jmeno + ' ' + driver.prijmeni,
+      driver.dopravce,
+      spz,
+      'Sklápěč',            // typ vozidla je vždy sklápěč
+      serialDate_(b.datumNakladky),
+      serialTime_(b.casNakladky),
+      serialDate_(b.datumVykladky),
+      serialTime_(b.casVykladky),
+      String(b.trasa),
+      String(b.zakaznik),
+      String(b.druh),
+      n,
+      tn(0),
+      Number(b.km)
+    ]]);
+    // sloupec P (Cena 1) vyplňuje kancelář, skript do něj nezapisuje
+    sh.getRange(row, 17).setNumberFormat('@').setValue(Utilities.getUuid());                       // Q = ID záznamu
+    sh.getRange(row, 18).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));    // R = Poznámka
+    if (n > 1) {
+      var extra = [];
+      for (var k = 1; k < n; k++) extra.push(tn(k));
+      var er = sh.getRange(row, COL_TUNY2, 1, n - 1);
+      er.setNumberFormat('#,##0.00');
+      er.setValues([extra]);
     }
-    // sloupec P (Cena) vyplňuje kancelář, skript do něj nezapisuje
-    var rng = sh.getRange(row, 1, n, 15);
-    rng.setNumberFormats(formats);
-    rng.setValues(values);
-    sh.getRange(row, 17, n, 1).setNumberFormat('@').setValues(ids);   // Q = ID záznamu
-    sh.getRange(row, 18, n, 1).setNumberFormat('@').setValues(notes); // R = Poznámka
-    return { ok: true, row: row, rows: n };
+    return { ok: true, row: row, jizd: n };
   } finally {
     lock.releaseLock();
   }
@@ -176,16 +171,19 @@ function list_(b) {
   var last = sh.getLastRow();
   if (last < 2) return { ok: true, rows: [] };
   var start = Math.max(2, last - SCAN_ROWS + 1);
-  var data = sh.getRange(start, 1, last - start + 1, 18).getDisplayValues();
+  var data = sh.getRange(start, 1, last - start + 1, COL_TUNY2 + MAX_JIZD - 2).getDisplayValues();
   var rows = [];
   for (var i = data.length - 1; i >= 0 && rows.length < 100; i--) {
     var r = data[i];
     if (!r[16] || norm_(r[1]) !== full) continue;
+    var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(r[12], 10) || 1));
+    var tuny = [num_(r[13])];
+    for (var k = 1; k < jz; k++) tuny.push(num_(r[COL_TUNY2 - 1 + k - 1]));
     rows.push({
       id: r[16], spz: r[3],
       datumNakladky: isoDate_(r[5]), casNakladky: hhmm_(r[6]),
       datumVykladky: isoDate_(r[7]), casVykladky: hhmm_(r[8]),
-      trasa: r[9], zakaznik: r[10], druh: r[11], tuny: num_(r[13]), km: num_(r[14]), poznamka: r[17]
+      trasa: r[9], zakaznik: r[10], druh: r[11], jizd: jz, tuny: tuny, km: num_(r[14]), poznamka: r[17]
     });
   }
   return { ok: true, rows: rows };
@@ -203,23 +201,30 @@ function update_(b) {
   try {
     var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
     var last = sh.getLastRow();
-    var start = Math.max(2, last - SCAN_ROWS + 1);
     if (last < 2) return { ok: false, error: 'not_found' };
+    var start = Math.max(2, last - SCAN_ROWS + 1);
     var data = sh.getRange(start, 1, last - start + 1, 18).getDisplayValues();
-    var row = 0;
+    var row = 0, jz = 1;
     for (var i = data.length - 1; i >= 0; i--) {
-      if (data[i][16] === id) { if (norm_(data[i][1]) === full) row = start + i; break; }
+      if (data[i][16] === id) {
+        if (norm_(data[i][1]) === full) { row = start + i; jz = Math.max(1, Math.min(MAX_JIZD, parseInt(data[i][12], 10) || 1)); }
+        break;
+      }
     }
     if (!row) return { ok: false, error: 'not_found' };
+    var tuny = Object.prototype.toString.call(b.tuny) === '[object Array]' ? b.tuny : [b.tuny];
+    function tn(k) { var t = tuny[k]; return (t === null || t === undefined || t === '') ? '' : Number(t); }
     sh.getRange(row, 6, 1, 7).setValues([[
       serialDate_(b.datumNakladky), serialTime_(b.casNakladky),
       serialDate_(b.datumVykladky), serialTime_(b.casVykladky),
       String(b.trasa), String(b.zakaznik), String(b.druh)
     ]]);
-    sh.getRange(row, 14, 1, 2).setValues([[
-      (b.tuny === null || b.tuny === undefined || b.tuny === '') ? '' : Number(b.tuny),
-      Number(b.km)
-    ]]);
+    sh.getRange(row, 14, 1, 2).setValues([[tn(0), Number(b.km)]]);
+    if (jz > 1) {
+      var extra = [];
+      for (var k = 1; k < jz; k++) extra.push(tn(k));
+      sh.getRange(row, COL_TUNY2, 1, jz - 1).setValues([extra]);
+    }
     sh.getRange(row, 18).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));   // R = Poznámka
     return { ok: true, row: row };
   } finally {

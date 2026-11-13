@@ -285,8 +285,8 @@
       <input id="eZak" type="text" maxlength="120" list="zakList" autocomplete="off">
       <label for="eDruh">Druh nákladu</label>
       <input id="eDruh" type="text" maxlength="80" autocomplete="off">
-      <label for="eTuny">Tuny <span class="opt">(nepovinné)</span></label>
-      <div class="unit"><input id="eTuny" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>
+      <label>Tuny za jednotlivé jízdy <span class="opt">(nepovinné)</span></label>
+      <div id="eTunyBox" class="tunyrow"></div>
       <label for="eKm">Plné kilometry</label>
       <div class="unit"><input id="eKm" type="text" inputmode="numeric" placeholder="0" autocomplete="off"><span>km</span></div>
       <label for="ePozn">Poznámka <span class="opt">(nepovinné)</span></label>
@@ -337,7 +337,7 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
   const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
-  const MAXJ = 30;
+  const MAXJ = 10;
   function buildTuny() {
     const n = Math.min(MAXJ, Math.max(1, Math.floor(toNum($('jizd').value) || 1)));
     const box = $('tunyBox'), old = Array.from(box.querySelectorAll('input')).map(i => i.value);
@@ -474,7 +474,7 @@
       list.innerHTML = histRows.map((x, i) =>
         '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + ' ' + esc(x.casNakladky) + ' → ' + (x.datumVykladky !== x.datumNakladky ? esc(fmtD(x.datumVykladky)) + ' ' : '') + esc(x.casVykladky) + '</div>' +
         '<div class="rt">' + esc(x.trasa) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
-        '<div class="tg">' + (x.tuny ? '<span>' + esc(fmtN(x.tuny)) + ' t</span>' : '<span>tuny: –</span>') + '<span>' + esc(x.km) + ' km</span>' + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
+        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + '<span>' + esc(x.km) + ' km</span>' + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
         '<button class="ed" type="button" data-i="' + i + '">Upravit</button></div>').join('');
     } catch (e) { list.innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
@@ -483,7 +483,7 @@
     const x = histRows[+b.dataset.i]; if (!x) return;
     editId = x.id;
     $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
-    $('eTrasa').value = x.trasa; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTuny').value = fmtN(x.tuny); $('eKm').value = x.km; $('ePozn').value = x.poznamka || '';
+    $('eTrasa').value = x.trasa; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join(''); $('eKm').value = x.km; $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
     show('editView'); window.scrollTo(0, 0);
   });
@@ -492,14 +492,15 @@
   $('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('eMsg'); clearMsg(msg);
-    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', trasa: 'eTrasa', zakaznik: 'eZak', druh: 'eDruh', tuny: 'eTuny', km: 'eKm', poznamka: 'ePozn' };
+    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', trasa: 'eTrasa', zakaznik: 'eZak', druh: 'eDruh', km: 'eKm', poznamka: 'ePozn' };
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad'));
     const v = { id: editId }, bad = [];
     Object.keys(ids).forEach(k => v[k] = $(ids[k]).value.trim());
     ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'zakaznik', 'druh', 'km'].forEach(k => { if (!v[k]) bad.push(k); });
-    if (v.tuny && !(toNum(v.tuny) > 0 && toNum(v.tuny) <= 100)) bad.push('tuny');
+    v.tuny = Array.from($('eTunyBox').querySelectorAll('input')).map(i => i.value.trim());
+    const badT = Array.from($('eTunyBox').querySelectorAll('input')).filter(i => { const t = i.value.trim(); return t && !(toNum(t) > 0 && toNum(t) <= 100); });
     if (v.km && !(toNum(v.km) >= 0 && toNum(v.km) <= 5000)) bad.push('km');
-    if (bad.length) { bad.forEach(k => $(ids[k]).classList.add('bad')); return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err'); }
+    if (bad.length || badT.length) { bad.forEach(k => $(ids[k]).classList.add('bad')); badT.forEach(i => i.classList.add('bad')); return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err'); }
     if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
       ['eDatV', 'eCasV'].forEach(i => $(i).classList.add('bad')); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
