@@ -4,7 +4,7 @@
  * a nasaďte jako Webová aplikace (Spustit jako: já, Přístup: kdokoli).
  *
  * Listy: "Řidiči" (Jméno, Příjmení, Dopravce, SPZ, Typ vozidla, PIN, Aktivní)
- *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář, Q = ID záznamu (skrytý), R = Poznámka, S–AA = Tuny 2–10, AB–AJ = Cena 2–10 (ceny vyplňuje kancelář))
+ *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář, N = Poznámka, O = Plné km, pak střídavě Tuny 1, Cena 1, Tuny 2, Cena 2 … (od P; ceny vyplňuje kancelář), AJ = ID záznamu (skrytý))
  */
 
 var SHEET_DRIVERS = 'Řidiči';
@@ -79,8 +79,12 @@ function serialTime_(hhmm) { // "HH:MM" -> zlomek dne
   return (+p[0] * 60 + +p[1]) / 1440;
 }
 
-var MAX_JIZD = 10;      // tuny/ceny jednotlivých jízd: Tuny 2–10 = sloupce S–AA, Cena 2–10 = sloupce AB–AJ
-var COL_TUNY2 = 19;     // sloupec S
+var MAX_JIZD = 10;      // jízdy 1–10: ve sloupcích P… jsou střídavě Tuny k, Cena k (Tuny 1 = P, Cena 1 = Q, Tuny 2 = R, Cena 2 = S …)
+var COL_NOTE = 14;      // N = Poznámka
+var COL_KM = 15;        // O = Plné kilometry celkem
+var COL_T1 = 16;        // P = Tuny 1
+var COL_ID = 36;        // AJ = ID záznamu (skrytý)
+function colTuny_(k) { return COL_T1 + 2 * k; }   // k = 0 pro 1. jízdu; Cena k je o sloupec dál (vyplňuje kancelář)
 
 function append_(b) {
   var driver = findDriver_(b);
@@ -96,12 +100,12 @@ function append_(b) {
     var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
     var row = sh.getLastRow() + 1;
     function tn(k) { var t = tuny[k]; return (t === null || t === undefined || t === '') ? '' : Number(t); }
-    // jedna přeprava = jeden řádek; sloupec N = tuny 1. jízdy, další jízdy v S...
-    var rng = sh.getRange(row, 1, 1, 15);
+    // jedna přeprava = jeden řádek
+    var rng = sh.getRange(row, 1, 1, 13);
     rng.setNumberFormats([[
       'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
       'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
-      '0', '#,##0.00', '#,##0'
+      '0'
     ]]);
     rng.setValues([[
       new Date(),
@@ -116,20 +120,15 @@ function append_(b) {
       String(b.trasa),
       String(b.zakaznik),
       String(b.druh),
-      n,
-      tn(0),
-      Number(b.km)
+      n
     ]]);
-    // sloupec P (Cena 1) vyplňuje kancelář, skript do něj nezapisuje
-    sh.getRange(row, 17).setNumberFormat('@').setValue(Utilities.getUuid());                       // Q = ID záznamu
-    sh.getRange(row, 18).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));    // R = Poznámka
-    if (n > 1) {
-      var extra = [];
-      for (var k = 1; k < n; k++) extra.push(tn(k));
-      var er = sh.getRange(row, COL_TUNY2, 1, n - 1);
-      er.setNumberFormat('#,##0.00');
-      er.setValues([extra]);
+    sh.getRange(row, COL_NOTE).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));
+    sh.getRange(row, COL_KM).setNumberFormat('#,##0').setValue(Number(b.km));
+    for (var k = 0; k < n; k++) {      // ceny jízd (sloupec za tunami) vyplňuje kancelář, skript do nich nezapisuje
+      var t = tn(k);
+      if (t !== '') sh.getRange(row, colTuny_(k)).setNumberFormat('#,##0.00').setValue(t);
     }
+    sh.getRange(row, COL_ID).setNumberFormat('@').setValue(Utilities.getUuid());
     return { ok: true, row: row, jizd: n };
   } finally {
     lock.releaseLock();
@@ -171,19 +170,19 @@ function list_(b) {
   var last = sh.getLastRow();
   if (last < 2) return { ok: true, rows: [] };
   var start = Math.max(2, last - SCAN_ROWS + 1);
-  var data = sh.getRange(start, 1, last - start + 1, COL_TUNY2 + MAX_JIZD - 2).getDisplayValues();
+  var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
   var rows = [];
   for (var i = data.length - 1; i >= 0 && rows.length < 100; i--) {
     var r = data[i];
-    if (!r[16] || norm_(r[1]) !== full) continue;
+    if (!r[COL_ID - 1] || norm_(r[1]) !== full) continue;
     var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(r[12], 10) || 1));
-    var tuny = [num_(r[13])];
-    for (var k = 1; k < jz; k++) tuny.push(num_(r[COL_TUNY2 - 1 + k - 1]));
+    var tuny = [];
+    for (var k = 0; k < jz; k++) tuny.push(num_(r[colTuny_(k) - 1]));
     rows.push({
-      id: r[16], spz: r[3],
+      id: r[COL_ID - 1], spz: r[3],
       datumNakladky: isoDate_(r[5]), casNakladky: hhmm_(r[6]),
       datumVykladky: isoDate_(r[7]), casVykladky: hhmm_(r[8]),
-      trasa: r[9], zakaznik: r[10], druh: r[11], jizd: jz, tuny: tuny, km: num_(r[14]), poznamka: r[17]
+      trasa: r[9], zakaznik: r[10], druh: r[11], jizd: jz, tuny: tuny, km: num_(r[COL_KM - 1]), poznamka: r[COL_NOTE - 1]
     });
   }
   return { ok: true, rows: rows };
@@ -203,10 +202,10 @@ function update_(b) {
     var last = sh.getLastRow();
     if (last < 2) return { ok: false, error: 'not_found' };
     var start = Math.max(2, last - SCAN_ROWS + 1);
-    var data = sh.getRange(start, 1, last - start + 1, 18).getDisplayValues();
+    var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
     var row = 0, jz = 1;
     for (var i = data.length - 1; i >= 0; i--) {
-      if (data[i][16] === id) {
+      if (data[i][COL_ID - 1] === id) {
         if (norm_(data[i][1]) === full) { row = start + i; jz = Math.max(1, Math.min(MAX_JIZD, parseInt(data[i][12], 10) || 1)); }
         break;
       }
@@ -219,13 +218,11 @@ function update_(b) {
       serialDate_(b.datumVykladky), serialTime_(b.casVykladky),
       String(b.trasa), String(b.zakaznik), String(b.druh)
     ]]);
-    sh.getRange(row, 14, 1, 2).setValues([[tn(0), Number(b.km)]]);
-    if (jz > 1) {
-      var extra = [];
-      for (var k = 1; k < jz; k++) extra.push(tn(k));
-      sh.getRange(row, COL_TUNY2, 1, jz - 1).setValues([extra]);
+    sh.getRange(row, COL_NOTE).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));
+    sh.getRange(row, COL_KM).setValue(Number(b.km));
+    for (var k = 0; k < jz; k++) {
+      sh.getRange(row, colTuny_(k)).setNumberFormat('#,##0.00').setValue(tn(k));
     }
-    sh.getRange(row, 18).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));   // R = Poznámka
     return { ok: true, row: row };
   } finally {
     lock.releaseLock();
