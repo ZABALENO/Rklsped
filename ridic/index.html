@@ -282,6 +282,34 @@
   html.light #eKm{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M8 3L4 21M16 3l4 18M12 4v3M12 10.5v3M12 17v3%22/%3E%3C/svg%3E")}
   html.light #poznamka{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 3h10l4 4v14H5z%22/%3E%3Cpath d=%22M14 3v5h5M8 13h8M8 17h6%22/%3E%3C/svg%3E")}
   html.light #ePozn{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 3h10l4 4v14H5z%22/%3E%3Cpath d=%22M14 3v5h5M8 13h8M8 17h6%22/%3E%3C/svg%3E")}
+
+  /* ===== MÍRNĚJŠÍ KONTRAST (méně unavuje oči), velikosti zůstávají ===== */
+  :root{--mut:#aab7d6;--c:#7fa3f0}
+  html.light{--mut:#46527a;--c:#2f56c4}
+  .panel,.rec{background:#101c44;border:1px solid rgba(127,163,240,.6)}
+  html.light .panel,html.light .rec{background:rgba(255,255,255,.94);border:1px solid rgba(47,86,196,.55)}
+  header{border-bottom:1px solid rgba(127,163,240,.5)}
+  html.light header{border-bottom:1px solid rgba(47,86,196,.4)}
+  h1,.brand,.rec .rt,label,.who b{color:#e3eaf9}
+  html.light h1,html.light .brand,html.light .rec .rt,html.light label,html.light .who b{color:#1a2a5c}
+  .who,.rec .sb{color:#c9d4ee}
+  html.light .who,html.light .rec .sb{color:#2c3a66}
+  input,select,textarea{background-color:#0a1330;color:#e8eefb;border:1px solid rgba(160,190,250,.65)}
+  html.light input,html.light select,html.light textarea{background-color:#fbfcff;color:#16224d;border:1px solid rgba(47,86,196,.6)}
+  textarea::placeholder,input::placeholder{color:#8896ba}
+  html.light input::placeholder,html.light textarea::placeholder{color:#7482a6}
+  input:focus,select:focus,textarea:focus{border-color:#e8c26a;box-shadow:0 0 0 2px rgba(232,194,106,.4)}
+  html.light input:focus,html.light select:focus,html.light textarea:focus{border-color:#2f56c4;box-shadow:0 0 0 2px rgba(47,86,196,.3)}
+  .grp,.rec .dt,.spzbar label{color:#e8c26a}
+  html.light .grp,html.light .rec .dt,html.light .spzbar label{color:#2f56c4}
+  .btn{background:#2c4fc2;border:1px solid #9db8f5}
+  html.light .btn{background:#2f56c4;border:1px solid #1d3a8f}
+  .tabs button,.rec .ed,#logout{border:1px solid rgba(160,190,250,.7);color:#e3eaf9}
+  html.light .tabs button,html.light .rec .ed,html.light #logout{border:1px solid rgba(47,86,196,.6);color:#1a2a5c}
+  .tabs button.on{background:#2c4fc2;color:#fff}
+  html.light .tabs button.on{background:#2f56c4;color:#fff}
+  .who .tags span,.rec .tg span{color:#dbe5fb;background:#1a2a62;border:1px solid rgba(160,190,250,.5)}
+  html.light .who .tags span,html.light .rec .tg span{color:#1a2a5c;background:#e3ebfb;border-color:rgba(47,86,196,.45)}
 </style>
 <script>
 (function(){
