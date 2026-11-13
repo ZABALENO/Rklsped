@@ -52,10 +52,17 @@
   .row2>div{min-width:0}
   .row2 label{margin-top:14px}
   .row label{margin-top:0}
-  input{width:100%;min-width:0;min-height:52px;padding:13px 12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font:500 17px "IBM Plex Sans",system-ui,sans-serif;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
+  input,select{width:100%;min-width:0;min-height:52px;padding:13px 12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font:500 17px "IBM Plex Sans",system-ui,sans-serif;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
+  select{padding-right:40px;background-image:linear-gradient(45deg,transparent 50%,#8fb0ff 50%),linear-gradient(135deg,#8fb0ff 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px;background-repeat:no-repeat;text-overflow:ellipsis}
+  select option{background:#0b1020;color:#fff}
+  html.light select{background-image:linear-gradient(45deg,transparent 50%,#2f5bd6 50%),linear-gradient(135deg,#2f5bd6 50%,transparent 50%)}
+  html.light select option{background:#fff;color:#0f1b3d}
+  .tunyrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .tunyrow>div{min-width:0}
+  .opt{color:var(--mut);font-weight:400;letter-spacing:0;text-transform:none}
   input::placeholder{color:#5b6786}
-  input:focus{border-color:var(--c);box-shadow:0 0 12px rgba(94,138,255,.6)}
-  input.bad{border-color:var(--err);box-shadow:0 0 10px rgba(255,107,94,.45)}
+  input:focus,select:focus{border-color:var(--c);box-shadow:0 0 12px rgba(94,138,255,.6)}
+  input.bad,select.bad{border-color:var(--err);box-shadow:0 0 10px rgba(255,107,94,.45)}
   input[type=date],input[type=time]{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:15px;padding-left:10px;padding-right:6px}
   input::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.7)}
   .unit{position:relative}
@@ -94,10 +101,10 @@
   html.light .who b{color:#0f1b3d}
   html.light .who .tags span{color:#1d388f;background:rgba(47,91,214,.1);border-color:rgba(47,91,214,.45)}
   html.light label{color:#3d4a6e}
-  html.light input{background:#fff;color:#0f1b3d;border-color:rgba(47,91,214,.55)}
+  html.light input,html.light select{background:#fff;color:#0f1b3d;border-color:rgba(47,91,214,.55)}
   html.light input::placeholder{color:#8a96b4}
-  html.light input:focus{box-shadow:0 0 10px rgba(47,91,214,.4)}
-  html.light input.bad{box-shadow:0 0 8px rgba(192,57,43,.35)}
+  html.light input:focus,html.light select:focus{box-shadow:0 0 10px rgba(47,91,214,.4)}
+  html.light input.bad,html.light select.bad{box-shadow:0 0 8px rgba(192,57,43,.35)}
   html.light input::-webkit-calendar-picker-indicator{filter:none;opacity:.7}
   html.light .btn{background:#2f5bd6;border-color:#2f5bd6;color:#fff;box-shadow:0 8px 22px -8px rgba(47,91,214,.7)}
   html.light .btn:hover,html.light .btn:active{background:#1d46b8}
@@ -177,6 +184,15 @@
       <h1>Nová přeprava</h1>
       <p class="lead">Vyplňte údaje a odešlete</p>
 
+      <div id="spzBox" class="hidden" style="margin-bottom:22px">
+        <p class="grp">Vozidlo</p>
+        <label for="spz" style="margin-top:0">SPZ vozidla</label>
+        <select id="spz" required>
+          <option value="">Vyberte SPZ…</option>
+          <option>3TB 0282</option><option>3TB 3005</option><option>1TA 3501</option><option>5M8 7601</option>
+        </select>
+      </div>
+
       <p class="grp">Nakládka</p>
       <div class="row">
         <div><label for="datumNakladky">Datum</label><input id="datumNakladky" type="date" required></div>
@@ -194,15 +210,22 @@
       <input id="trasa" type="text" maxlength="200" placeholder="např. Bohučovice – Ostrava" autocomplete="off" required>
 
       <label for="zakaznik">Zákazník</label>
-      <input id="zakaznik" type="text" maxlength="120" autocomplete="off" required>
+      <select id="zakaznik" required>
+        <option value="">Vyberte zákazníka…</option>
+        <option>Jiří Vaněk</option><option>Ridera Bohemia</option><option>Agroland</option>
+        <option>Wienerberger</option><option>Best</option><option>Petrokámen</option><option>X-Force</option><option>Švarc</option>
+        <option value="__jiny">Jiný…</option>
+      </select>
+      <input id="zakaznikJiny" class="hidden" type="text" maxlength="120" placeholder="Název zákazníka" autocomplete="off" style="margin-top:10px">
 
       <label for="druh">Druh nákladu</label>
       <input id="druh" type="text" maxlength="80" placeholder="např. zemina, cihly, 0/32 A" autocomplete="off" required>
 
-      <div class="row2">
-        <div><label for="jizd">Počet jízd</label><input id="jizd" type="text" inputmode="numeric" autocomplete="off" required></div>
-        <div><label for="tuny">Tuny</label><div class="unit"><input id="tuny" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" required><span>t</span></div></div>
-      </div>
+      <label for="jizd">Počet jízd</label>
+      <input id="jizd" type="text" inputmode="numeric" autocomplete="off" required>
+
+      <label>Tuny za jednotlivé jízdy <span class="opt">(nepovinné)</span></label>
+      <div id="tunyBox" class="tunyrow"></div>
 
       <label for="km">Plné kilometry celkem</label>
       <div class="unit"><input id="km" type="text" inputmode="numeric" placeholder="0" autocomplete="off" required><span>km</span></div>
@@ -248,17 +271,41 @@
   function clearMsg(el) { el.className = 'msg hidden'; el.textContent = ''; }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
+  const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
+  const MAXJ = 30;
+  function buildTuny() {
+    const n = Math.min(MAXJ, Math.max(1, Math.floor(toNum($('jizd').value) || 1)));
+    const box = $('tunyBox'), old = Array.from(box.querySelectorAll('input')).map(i => i.value);
+    box.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('div');
+      d.innerHTML = '<label class="tl" style="margin-top:' + (i < 2 ? 0 : 10) + 'px">Jízda ' + (i + 1) + '</label><div class="unit"><input class="tn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>';
+      d.querySelector('input').value = old[i] || '';
+      box.appendChild(d);
+    }
+  }
+  $('jizd').addEventListener('input', buildTuny);
+  $('zakaznik').addEventListener('change', () => {
+    const j = $('zakaznik').value === '__jiny';
+    $('zakaznikJiny').classList.toggle('hidden', !j);
+    if (j) $('zakaznikJiny').focus();
+  });
+  let driver = null;
   function setDriver(d) {
-    const tags = [d.dopravce, d.spz, d.typ].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
+    driver = d;
+    $('spzBox').classList.toggle('hidden', !!String(d.spz || '').trim());
+    const tags = [d.dopravce, d.spz, 'Sklápěč'].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
     $('who').innerHTML = '<b>' + esc(d.jmeno + ' ' + d.prijmeni) + '</b>' + (tags ? '<div class="tags">' + tags + '</div>' : '');
   }
 
   function resetForm() {
-    ['trasa', 'zakaznik', 'druh', 'tuny', 'km', 'casNakladky', 'casVykladky'].forEach(id => $(id).value = '');
-    $('jizd').value = '1';
-    const t = todayISO();
+    ['trasa', 'zakaznik', 'zakaznikJiny', 'druh', 'km'].forEach(id => $(id).value = '');
+    $('zakaznikJiny').classList.add('hidden');
+    $('jizd').value = '1'; buildTuny();
+    const t = todayISO(), n = new Date(), tm = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
     $('datumNakladky').value = t; $('datumVykladky').value = t;
-    document.querySelectorAll('input.bad').forEach(i => i.classList.remove('bad'));
+    $('casNakladky').value = tm; $('casVykladky').value = tm;
+    document.querySelectorAll('.bad').forEach(i => i.classList.remove('bad'));
     clearMsg($('recMsg'));
     requestId = newId();
   }
@@ -292,22 +339,26 @@
     $('pin').value = ''; clearMsg($('loginMsg')); show('loginView');
   });
 
-  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'zakaznik', 'druh', 'jizd', 'tuny', 'km'];
-  const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
-
+  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'druh', 'jizd', 'km'];
+  
   $('recForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('recMsg'); clearMsg(msg);
-    document.querySelectorAll('input.bad').forEach(i => i.classList.remove('bad'));
+    document.querySelectorAll('.bad').forEach(i => i.classList.remove('bad'));
 
     const v = {};
     FIELDS.forEach(k => v[k] = $(k).value.trim());
     const bad = FIELDS.filter(k => !v[k]);
-    if (v.tuny && !(toNum(v.tuny) > 0 && toNum(v.tuny) <= 100)) bad.push('tuny');
-    if (v.jizd && !(Number.isInteger(toNum(v.jizd)) && toNum(v.jizd) >= 1 && toNum(v.jizd) <= 99)) bad.push('jizd');
+    const badEls = [];
+    if (v.jizd && !(Number.isInteger(toNum(v.jizd)) && toNum(v.jizd) >= 1 && toNum(v.jizd) <= MAXJ)) bad.push('jizd');
     if (v.km && !(toNum(v.km) >= 0 && toNum(v.km) <= 5000)) bad.push('km');
-    if (bad.length) {
-      bad.forEach(k => $(k).classList.add('bad'));
+    v.zakaznik = $('zakaznik').value === '__jiny' ? $('zakaznikJiny').value.trim() : $('zakaznik').value;
+    if (!v.zakaznik) { bad.push('zakaznik'); if ($('zakaznik').value === '__jiny') badEls.push($('zakaznikJiny')); }
+    if (driver && !String(driver.spz || '').trim()) { v.spz = $('spz').value; if (!v.spz) bad.push('spz'); }
+    v.tuny = Array.from($('tunyBox').querySelectorAll('input')).map(i => i.value.trim());
+    $('tunyBox').querySelectorAll('input').forEach(i => { const t = i.value.trim(); if (t && !(toNum(t) > 0 && toNum(t) <= 100)) badEls.push(i); });
+    if (bad.length || badEls.length) {
+      bad.forEach(k => $(k).classList.add('bad')); badEls.forEach(i => i.classList.add('bad'));
       return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err');
     }
     if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {

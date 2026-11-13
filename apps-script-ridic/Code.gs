@@ -86,37 +86,47 @@ function append_(b) {
   }
   if (!driver) return { ok: false, error: 'driver_inactive' };
 
+  var n = Math.max(1, Math.min(30, Math.floor(Number(b.jizd) || 1)));
+  var tuny = Object.prototype.toString.call(b.tuny) === '[object Array]' ? b.tuny : [b.tuny];
+  var spz = String(driver.spz || '').trim() || String(b.spz || '').trim();
+
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
     var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
     var row = sh.getLastRow() + 1;
-    var values = [[
-      new Date(),
-      driver.jmeno + ' ' + driver.prijmeni,
-      driver.dopravce,
-      driver.spz,
-      driver.typ,
-      serialDate_(b.datumNakladky),
-      serialTime_(b.casNakladky),
-      serialDate_(b.datumVykladky),
-      serialTime_(b.casVykladky),
-      String(b.trasa),
-      String(b.zakaznik),
-      String(b.druh),
-      Number(b.jizd),
-      Number(b.tuny),
-      Number(b.km)
-    ]];
+    var now = new Date();
+    var values = [], formats = [];
+    for (var k = 0; k < n; k++) {      // jedna jízda = jeden řádek
+      var t = tuny[k];
+      values.push([
+        now,
+        driver.jmeno + ' ' + driver.prijmeni,
+        driver.dopravce,
+        spz,
+        'Sklápěč',            // typ vozidla je vždy sklápěč
+        serialDate_(b.datumNakladky),
+        serialTime_(b.casNakladky),
+        serialDate_(b.datumVykladky),
+        serialTime_(b.casVykladky),
+        String(b.trasa),
+        String(b.zakaznik),
+        String(b.druh),
+        1,
+        (t === null || t === undefined || t === '') ? '' : Number(t),
+        Number(b.km)
+      ]);
+      formats.push([
+        'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
+        'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
+        '0', '#,##0.00', '#,##0'
+      ]);
+    }
     // sloupec P (Cena) vyplňuje kancelář, skript do něj nezapisuje
-    var rng = sh.getRange(row, 1, 1, 15);
-    rng.setNumberFormats([[
-      'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
-      'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
-      '0', '#,##0.00', '#,##0'
-    ]]);
+    var rng = sh.getRange(row, 1, n, 15);
+    rng.setNumberFormats(formats);
     rng.setValues(values);
-    return { ok: true, row: row };
+    return { ok: true, row: row, rows: n };
   } finally {
     lock.releaseLock();
   }
