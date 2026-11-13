@@ -9,7 +9,7 @@ const { createStore } = require('./lib/store');
 const { buildTrips, isRKL, ownShort, prettySpz } = require('./lib/trips');
 const { sellerOf } = require('./lib/sellers');
 const geo = require('./lib/geo');
-const { pragueToday, subWorkdays, addWorkdays, isWorkday } = require('./lib/workdays');
+const { pragueToday, subWorkdays, addWorkdays, isWorkday, weekendToFriday } = require('./lib/workdays');
 const { eurRate } = require('./lib/rate');
 // „RRRR-MM-DD“ + „HH:MM“ (pražský čas) -> ISO čas UTC
 function pragueIso(date, time) {
@@ -269,9 +269,9 @@ app.get('/api/agents', async (req, res) => {
         const had = !!prev;
         if (prev) for (const f of F) pend[f] += Math.max(0, (v[f] || 0) - (prev[f] || 0));
         prev = v;
-        // přírůstek se zapíše ke dni daného zápisu (i když je to víkend nebo svátek)
+        // přírůstek se zapíše ke dni zápisu; zápisy ze soboty a neděle se přičtou k pátku téhož týdne
         if (had) {
-          const o = (incs[sn.date] = incs[sn.date] || {})[k] = (incs[sn.date] || {})[k] || z();
+          const dd = weekendToFriday(sn.date), o = (incs[dd] = incs[dd] || {})[k] = (incs[dd] || {})[k] || z();
           for (const f of F) { o[f] += pend[f]; pend[f] = 0; }
         }
       }
