@@ -3,80 +3,120 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1f3864">
+<meta name="theme-color" content="#04123f">
 <meta name="robots" content="noindex, nofollow">
-<title>RKL – evidence přeprav</title>
+<title>RKL Opava – evidence přeprav</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --navy:#1f3864; --navy2:#2c4a85; --bg:#f2f4f8; --line:#cfd6e4; --ok:#1e7a3c; --err:#b3261e; }
-  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { margin:0; background:var(--bg); font-family:Arial,Helvetica,sans-serif; color:#1b1f2a; }
-  body { min-height:100vh; padding-bottom:env(safe-area-inset-bottom); }
-  header { background:var(--navy); color:#fff; padding:calc(12px + env(safe-area-inset-top)) 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; position:sticky; top:0; z-index:5; }
-  header h1 { margin:0; font-size:17px; letter-spacing:.2px; }
-  header button { background:transparent; color:#fff; border:1px solid rgba(255,255,255,.5); border-radius:8px; padding:8px 12px; font-size:14px; }
-  main { max-width:520px; margin:0 auto; padding:16px; }
-  .card { background:#fff; border-radius:14px; padding:16px; box-shadow:0 1px 3px rgba(20,30,60,.12); margin-bottom:14px; }
-  .who { font-size:14px; line-height:1.5; color:#3a4258; }
-  .who b { color:#1b1f2a; }
-  label { display:block; font-size:14px; font-weight:bold; margin:14px 0 6px; color:#2a3350; }
-  label:first-child { margin-top:0; }
-  input { width:100%; font-size:17px; padding:14px 12px; border:1.5px solid var(--line); border-radius:10px; background:#fff; color:#1b1f2a; font-family:inherit; min-height:52px; }
-  input:focus { outline:none; border-color:var(--navy2); box-shadow:0 0 0 3px rgba(44,74,133,.18); }
-  input.bad { border-color:var(--err); }
-  .row { display:grid; grid-template-columns:1.3fr 1fr; gap:10px; }
-  .grp { font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:#5a6580; margin:0 0 4px; }
-  button.primary { width:100%; margin-top:18px; background:var(--navy); color:#fff; border:0; border-radius:12px; font-size:18px; font-weight:bold; padding:16px; min-height:56px; }
-  button.primary:active { background:var(--navy2); }
-  button.primary:disabled { opacity:.6; }
-  button.secondary { width:100%; margin-top:10px; background:#fff; color:var(--navy); border:1.5px solid var(--navy); border-radius:12px; font-size:16px; padding:14px; min-height:52px; }
-  .msg { padding:12px 14px; border-radius:10px; font-size:15px; margin-top:14px; line-height:1.4; }
-  .msg.err { background:#fdecea; color:var(--err); }
-  .msg.ok { background:#e6f4ea; color:var(--ok); font-weight:bold; }
-  .hidden { display:none !important; }
-  .hint { font-size:13px; color:#6a7490; margin-top:6px; }
-  .unit { position:relative; }
-  .unit span { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#6a7490; font-size:16px; pointer-events:none; }
-  .unit input { padding-right:44px; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{--c:#5e8aff;--ok:#3ddc97;--err:#ff6b5e;--mut:#8793ad}
+  html,body{margin:0}
+  body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:#1d388f;color:#e9edf7;font:16px/1.4 "IBM Plex Sans",system-ui,sans-serif;overflow-x:hidden;padding-bottom:env(safe-area-inset-bottom);color-scheme:dark}
+  body::before{content:"";position:fixed;inset:-16px;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(1.35) brightness(.3) blur(1px);z-index:-3}
+  .hl{position:fixed;inset:-16px;z-index:-3;pointer-events:none;background:url(/bg.jpg) center/cover no-repeat;filter:grayscale(1) contrast(3.2) brightness(.85) blur(1.3px);mix-blend-mode:screen;opacity:.22}
+  body::after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(900px 500px at 15% -10%,rgba(94,138,255,.35),transparent 60%),radial-gradient(700px 500px at 90% 110%,rgba(242,165,22,.18),transparent 60%),linear-gradient(160deg,rgba(0,3,20,.9),rgba(4,14,56,.86))}
+  .grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(94,138,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(94,138,255,.14) 1px,transparent 1px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 3px);background-size:48px 48px,48px 48px,auto;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 25%,transparent 80%)}
+
+  header{display:flex;align-items:center;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;position:sticky;top:0;z-index:10;background:linear-gradient(180deg,rgba(2,6,22,.92),rgba(2,6,22,.55));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid rgba(94,138,255,.25)}
+  .back{flex:none;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid rgba(94,138,255,.55);background:rgba(94,138,255,.18);color:#fff;text-decoration:none;box-shadow:0 0 14px -2px rgba(94,138,255,.5)}
+  .brand{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-weight:700;font-size:13px;letter-spacing:2.5px;text-transform:uppercase;line-height:1.15}
+  .brand img{width:34px;height:34px;border-radius:8px;box-shadow:0 0 0 1px rgba(94,138,255,.5),0 0 16px rgba(94,138,255,.35);flex:none}
+  .brand small{display:block;font-weight:400;font-size:10px;letter-spacing:2px;color:var(--mut)}
+  #logout{flex:none;background:transparent;color:#cfe0ff;border:1px solid rgba(94,138,255,.55);padding:8px 12px;font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:2px;text-transform:uppercase;cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+
+  main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:16px}
+  .panel{position:relative;background:linear-gradient(155deg,rgba(14,22,52,.88),rgba(4,8,22,.92));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(94,138,255,.5);padding:24px 20px 22px;clip-path:polygon(22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%,0 22px);box-shadow:0 0 50px rgba(94,138,255,.22);animation:arrIn .6s cubic-bezier(.2,.8,.2,1) both}
+  .panel::before{content:"";position:absolute;left:0;top:0;width:72px;height:2px;background:var(--c);box-shadow:0 0 14px var(--c)}
+  .panel::after{content:"";position:absolute;right:0;bottom:0;width:54px;height:2px;background:var(--c);box-shadow:0 0 14px var(--c);opacity:.7}
+  @keyframes arrIn{from{opacity:0;transform:translateX(40px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+  @media (prefers-reduced-motion:reduce){.panel{animation:none}}
+
+  h1{margin:0 0 4px;font-size:clamp(22px,6vw,28px);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;text-shadow:0 0 28px rgba(94,138,255,.55)}
+  .lead{margin:0 0 18px;color:var(--mut);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+
+  .who{font-size:14px;line-height:1.55;color:#aeb9d4}
+  .who b{display:block;color:#fff;font-size:17px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+  .who .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .who .tags span{font:500 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:1px;color:#cfe0ff;background:rgba(94,138,255,.16);border:1px solid rgba(94,138,255,.45);padding:3px 9px}
+
+  .grp{display:flex;align-items:center;gap:10px;margin:0 0 10px;font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:3px;text-transform:uppercase;color:var(--c)}
+  .grp::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(94,138,255,.6),transparent)}
+  .grp.sp{margin-top:22px}
+  label{display:block;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 6px;color:#aeb9d4}
+  .row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px}
+  .row>div{min-width:0}
+  .row label{margin-top:0}
+  input{width:100%;min-width:0;min-height:52px;padding:13px 12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font:500 17px "IBM Plex Sans",system-ui,sans-serif;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
+  input::placeholder{color:#5b6786}
+  input:focus{border-color:var(--c);box-shadow:0 0 12px rgba(94,138,255,.6)}
+  input.bad{border-color:var(--err);box-shadow:0 0 10px rgba(255,107,94,.45)}
+  input[type=date],input[type=time]{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:15px;padding-left:10px;padding-right:6px}
+  input::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.7)}
+  .unit{position:relative}
+  .unit span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--mut);font:600 14px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:1px;pointer-events:none}
+  .unit input{padding-right:48px}
+
+  .btn{display:block;width:100%;margin-top:22px;min-height:56px;padding:15px;background:#1d388f;border:1px solid var(--c);color:#fff;font:700 16px "IBM Plex Sans",system-ui,sans-serif;letter-spacing:3px;text-transform:uppercase;cursor:pointer;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);box-shadow:0 0 24px rgba(94,138,255,.35)}
+  .btn:hover,.btn:active{background:#2747b8}
+  .btn:disabled{opacity:.55}
+
+  .msg{margin-top:16px;padding:12px 14px;font-size:14px;line-height:1.45;border-left:3px solid}
+  .msg.err{color:var(--err);background:rgba(255,107,94,.1);border-color:var(--err)}
+  .msg.ok{color:var(--ok);background:rgba(61,220,151,.1);border-color:var(--ok);font-weight:600;font-size:16px;letter-spacing:.5px}
+  .done-ic{width:56px;height:56px;margin:2px 0 14px;display:block;color:var(--ok);filter:drop-shadow(0 0 12px rgba(61,220,151,.6))}
+  .hidden{display:none!important}
+  footer{text-align:center;font-size:10px;letter-spacing:2px;opacity:.3;padding:0 0 18px;text-transform:uppercase}
 </style>
 </head>
 <body>
+<div class="hl"></div><div class="grid-bg"></div>
 
 <header>
-  <h1><img src="/logo.jpg" alt="" width="26" height="26" style="vertical-align:-6px;border-radius:6px;margin-right:8px">RKL – evidence přeprav</h1>
+  <a class="back" href="https://airkl.cz/" aria-label="Zpět na rozcestník" title="Zpět na rozcestník"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <div class="brand"><img src="/logo.jpg" alt="RKL" width="34" height="34"><div>RKL Opava<small>Evidence přeprav</small></div></div>
   <button id="logout" class="hidden" type="button">Odhlásit</button>
 </header>
 
 <main>
   <!-- PŘIHLÁŠENÍ -->
-  <section id="loginView" class="card hidden">
+  <section id="loginView" class="panel hidden">
+    <h1>Řidiči</h1>
+    <p class="lead">Přihlášení do evidence přeprav</p>
     <form id="loginForm" autocomplete="on" novalidate>
-      <label for="prijmeni">Příjmení</label>
+      <label for="prijmeni" style="margin-top:0">Příjmení</label>
       <input id="prijmeni" name="username" type="text" autocomplete="username" autocapitalize="words" required>
       <label for="pin">PIN</label>
       <input id="pin" name="password" type="password" inputmode="numeric" autocomplete="current-password" required>
-      <button class="primary" id="loginBtn" type="submit">Přihlásit</button>
+      <button class="btn" id="loginBtn" type="submit">Přihlásit</button>
       <div id="loginMsg" class="msg err hidden"></div>
     </form>
   </section>
 
   <!-- FORMULÁŘ -->
-  <section id="formView" class="hidden">
-    <div class="card who" id="who"></div>
+  <section id="formView" class="hidden" style="display:flex;flex-direction:column;gap:16px">
+    <div class="panel who" id="who"></div>
 
-    <form id="recForm" class="card" novalidate>
+    <form id="recForm" class="panel" novalidate>
+      <h1>Nová přeprava</h1>
+      <p class="lead">Vyplňte údaje a odešlete</p>
+
       <p class="grp">Nakládka</p>
       <div class="row">
         <div><label for="datumNakladky">Datum</label><input id="datumNakladky" type="date" required></div>
         <div><label for="casNakladky">Čas</label><input id="casNakladky" type="time" required></div>
       </div>
 
-      <p class="grp" style="margin-top:18px">Vykládka</p>
+      <p class="grp sp">Vykládka</p>
       <div class="row">
         <div><label for="datumVykladky">Datum</label><input id="datumVykladky" type="date" required></div>
         <div><label for="casVykladky">Čas</label><input id="casVykladky" type="time" required></div>
       </div>
 
-      <label for="trasa">Trasa</label>
+      <p class="grp sp">Přeprava</p>
+      <label for="trasa" style="margin-top:0">Trasa</label>
       <input id="trasa" type="text" maxlength="200" placeholder="např. Opava – Praha" autocomplete="off" required>
 
       <label for="objednatel">Objednatel</label>
@@ -85,22 +125,27 @@
       <label for="vaha">Váha</label>
       <div class="unit"><input id="vaha" type="text" inputmode="decimal" placeholder="0" autocomplete="off" required><span>kg</span></div>
 
-      <button class="primary" id="sendBtn" type="submit">Odeslat</button>
+      <button class="btn" id="sendBtn" type="submit">Odeslat</button>
       <div id="recMsg" class="msg hidden"></div>
     </form>
   </section>
 
-  <section id="doneView" class="card hidden">
-    <div class="msg ok">Záznam byl uložen. Děkujeme.</div>
-    <button class="primary" id="againBtn" type="button">Zadat další přepravu</button>
+  <section id="doneView" class="panel hidden">
+    <svg class="done-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l3 3 5-6"/></svg>
+    <div class="msg ok" style="margin-top:0">Záznam byl uložen. Děkujeme.</div>
+    <button class="btn" id="againBtn" type="button">Zadat další přepravu</button>
   </section>
 </main>
+<footer>airkl.cz · Robin Balcar</footer>
 
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
   const views = ['loginView', 'formView', 'doneView'];
-  const show = (name) => { views.forEach(v => $(v).classList.toggle('hidden', v !== name)); $('logout').classList.toggle('hidden', name === 'loginView'); };
+  const show = (name) => {
+    views.forEach(v => $(v).classList.toggle('hidden', v !== name));
+    $('logout').classList.toggle('hidden', name === 'loginView');
+  };
 
   async function api(url, body) {
     const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
@@ -119,14 +164,14 @@
 
   function showMsg(el, text, cls) { el.textContent = text; el.className = 'msg ' + cls; }
   function clearMsg(el) { el.className = 'msg hidden'; el.textContent = ''; }
-
-  function setDriver(d) {
-    $('who').innerHTML = '<b>' + esc(d.jmeno + ' ' + d.prijmeni) + '</b><br>' +
-      esc([d.dopravce, d.spz, d.typ].filter(Boolean).join(' · '));
-  }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
-  function resetForm(keepDates) {
+  function setDriver(d) {
+    const tags = [d.dopravce, d.spz, d.typ].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
+    $('who').innerHTML = '<b>' + esc(d.jmeno + ' ' + d.prijmeni) + '</b>' + (tags ? '<div class="tags">' + tags + '</div>' : '');
+  }
+
+  function resetForm() {
     ['trasa', 'objednatel', 'vaha', 'casNakladky', 'casVykladky'].forEach(id => $(id).value = '');
     const t = todayISO();
     $('datumNakladky').value = t; $('datumVykladky').value = t;
@@ -135,7 +180,6 @@
     requestId = newId();
   }
 
-  // ---- start ----
   (async function init() {
     resetForm();
     const r = await api('/api/ridic/me');
@@ -143,7 +187,6 @@
     else show('loginView');
   })();
 
-  // ---- přihlášení ----
   $('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('loginMsg'); clearMsg(msg);
@@ -163,11 +206,10 @@
 
   $('logout').addEventListener('click', async () => {
     await api('/api/ridic/logout', {});
-    $('pin').value = ''; show('loginView');
+    $('pin').value = ''; clearMsg($('loginMsg')); show('loginView');
   });
 
-  // ---- odeslání záznamu ----
-  const FIELD_IDS = { datumNakladky:1, casNakladky:1, datumVykladky:1, casVykladky:1, trasa:1, objednatel:1, vaha:1 };
+  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'objednatel', 'vaha'];
 
   $('recForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -175,8 +217,8 @@
     document.querySelectorAll('input.bad').forEach(i => i.classList.remove('bad'));
 
     const v = {};
-    Object.keys(FIELD_IDS).forEach(k => v[k] = $(k).value.trim());
-    const bad = Object.keys(FIELD_IDS).filter(k => !v[k]);
+    FIELDS.forEach(k => v[k] = $(k).value.trim());
+    const bad = FIELDS.filter(k => !v[k]);
     const w = Number(v.vaha.replace(/\s/g, '').replace(',', '.'));
     if (v.vaha && !(w > 0)) bad.push('vaha');
     if (bad.length) {
@@ -191,8 +233,8 @@
     $('sendBtn').disabled = true; $('sendBtn').textContent = 'Odesílám…';
     try {
       const r = await api('/api/ridic/zaznam', Object.assign({ requestId }, v));
-      if (r.data.ok) { show('doneView'); }
-      else if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu, údaje zůstanou vyplněné.', 'err'); }
+      if (r.data.ok) show('doneView');
+      else if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); }
       else if (r.status === 400) showMsg(msg, 'Zkontrolujte vyplněné údaje.', 'err');
       else showMsg(msg, 'Záznam se nepodařilo uložit do tabulky. Zkuste to prosím znovu.', 'err');
     } catch (err) {
