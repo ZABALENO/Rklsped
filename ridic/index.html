@@ -227,11 +227,11 @@
   @media (max-width:400px){.brand{font-size:14px;letter-spacing:.5px}.brand small{font-size:12px}#logout{padding:10px 10px}}
 
   /* ikony uvnitř políček (placeholder texty zůstávají) */
-  #prijmeni,#pin,#spz,#datumNakladky,#datumVykladky,#eDatN,#eDatV,#casNakladky,#casVykladky,#eCasN,#eCasV,#trasa,#eTrasa,#zakaznik,#eZak,#druh,#eDruh,#jizd,input.tn,input.etn,#km,#eKm,#poznamka,#ePozn{background-repeat:no-repeat;background-size:26px 26px;background-position:13px 50%;padding-left:52px}
+  #prijmeni,#pin,#spz,#datumNakladky,#datumVykladky,#eDatN,#eDatV,#casNakladky,#casVykladky,#eCasN,#eCasV,#mistoNakladky,#mistoVykladky,#eMistoN,#eMistoV,#zakaznik,#eZak,#druh,#eDruh,#jizd,input.tn,input.etn,,#poznamka,#ePozn{background-repeat:no-repeat;background-size:26px 26px;background-position:13px 50%;padding-left:52px}
   input.tn.tn,input.etn.etn{background-repeat:no-repeat;background-size:26px 26px;background-position:13px 50%;padding-left:52px}
   #datumNakladky,#datumVykladky,#eDatN,#eDatV,#casNakladky,#casVykladky,#eCasN,#eCasV{background-size:20px 20px;background-position:9px 50%;padding-left:36px;padding-right:4px;font-size:17px}
   #datumNakladky::-webkit-calendar-picker-indicator,#datumVykladky::-webkit-calendar-picker-indicator,#eDatN::-webkit-calendar-picker-indicator,#eDatV::-webkit-calendar-picker-indicator,#casNakladky::-webkit-calendar-picker-indicator,#casVykladky::-webkit-calendar-picker-indicator,#eCasN::-webkit-calendar-picker-indicator,#eCasV::-webkit-calendar-picker-indicator{width:0;margin:0;padding:0;opacity:0}
-  #trasa::placeholder,#zakaznik::placeholder,#druh::placeholder,#poznamka::placeholder{font-size:17px}
+  #mistoNakladky::placeholder,#mistoVykladky::placeholder,#zakaznik::placeholder,#druh::placeholder,#poznamka::placeholder{font-size:17px}
   #poznamka,#ePozn{background-position:13px 16px}
   select#spz{background-repeat:no-repeat;background-size:26px 26px,6px 6px,6px 6px;background-position:13px 50%,calc(100% - 22px) 50%,calc(100% - 16px) 50%;padding-left:52px}
   #prijmeni{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%228%22 r=%224%22/%3E%3Cpath d=%22M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7%22/%3E%3C/svg%3E")}
@@ -245,8 +245,8 @@
   #casVykladky{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E")}
   #eCasN{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E")}
   #eCasV{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E")}
-  #trasa{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
-  #eTrasa{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
+  #mistoNakladky,#mistoVykladky{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
+  #eMistoN,#eMistoV{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
   #zakaznik{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 21V8l9-5 9 5v13M9 21v-7h6v7M3 21h18%22/%3E%3C/svg%3E")}
   #eZak{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 21V8l9-5 9 5v13M9 21v-7h6v7M3 21h18%22/%3E%3C/svg%3E")}
   #druh{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ffd166%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8%22/%3E%3C/svg%3E")}
@@ -269,8 +269,8 @@
   html.light #casVykladky{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E")}
   html.light #eCasN{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E")}
   html.light #eCasV{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%229%22/%3E%3Cpath d=%22M12 7v5l3 2%22/%3E%3C/svg%3E")}
-  html.light #trasa{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
-  html.light #eTrasa{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
+  html.light #mistoNakladky,html.light #mistoVykladky{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
+  html.light #eMistoN,html.light #eMistoV{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Ccircle cx=%226%22 cy=%2219%22 r=%222.5%22/%3E%3Ccircle cx=%2218%22 cy=%225%22 r=%222.5%22/%3E%3Cpath d=%22M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5%22/%3E%3C/svg%3E")}
   html.light #zakaznik{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 21V8l9-5 9 5v13M9 21v-7h6v7M3 21h18%22/%3E%3C/svg%3E")}
   html.light #eZak{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M3 21V8l9-5 9 5v13M9 21v-7h6v7M3 21h18%22/%3E%3C/svg%3E")}
   html.light #druh{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231b46c2%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8%22/%3E%3C/svg%3E")}
@@ -404,8 +404,10 @@
       </div>
 
       <p class="grp sp">Přeprava</p>
-      <label for="trasa" style="margin-top:0">Místo odjezdu – příjezdu</label>
-      <input id="trasa" type="text" maxlength="200" placeholder="např. Bohučovice – Ostrava" autocomplete="off" required>
+      <label for="mistoNakladky" style="margin-top:0">Místo nakládky</label>
+      <input id="mistoNakladky" type="text" maxlength="100" placeholder="např. Bohučovice" autocomplete="off" required>
+      <label for="mistoVykladky">Místo vykládky</label>
+      <input id="mistoVykladky" type="text" maxlength="100" placeholder="např. Ostrava" autocomplete="off" required>
 
       <label for="zakaznik">Zákazník</label>
       <input id="zakaznik" type="text" maxlength="120" list="zakList" placeholder="Začněte psát název…" autocomplete="off" autocapitalize="words" required>
@@ -420,8 +422,6 @@
       <label>Tuny za jednotlivé jízdy <span class="opt">(nepovinné)</span></label>
       <div id="tunyBox" class="tunyrow"></div>
 
-      <label for="km">Plné kilometry celkem</label>
-      <div class="unit"><input id="km" type="text" inputmode="numeric" placeholder="0" autocomplete="off" required><span>km</span></div>
 
       <label for="poznamka">Poznámka <span class="opt">(nepovinné)</span></label>
       <textarea id="poznamka" maxlength="300" rows="3" placeholder="např. čekání na vykládce, závada…"></textarea>
@@ -449,16 +449,16 @@
       <p class="grp sp">Vykládka</p>
       <div class="row"><div><label for="eDatV">Datum</label><input id="eDatV" type="date"></div><div><label for="eCasV">Čas</label><input id="eCasV" type="time"></div></div>
       <p class="grp sp">Přeprava</p>
-      <label for="eTrasa" style="margin-top:0">Místo odjezdu – příjezdu</label>
-      <input id="eTrasa" type="text" maxlength="200" autocomplete="off">
+      <label for="eMistoN" style="margin-top:0">Místo nakládky</label>
+      <input id="eMistoN" type="text" maxlength="100" autocomplete="off">
+      <label for="eMistoV">Místo vykládky</label>
+      <input id="eMistoV" type="text" maxlength="100" autocomplete="off">
       <label for="eZak">Zákazník</label>
       <input id="eZak" type="text" maxlength="120" list="zakList" autocomplete="off">
       <label for="eDruh">Druh nákladu</label>
       <input id="eDruh" type="text" maxlength="80" autocomplete="off">
       <label>Tuny za jednotlivé jízdy <span class="opt">(nepovinné)</span></label>
       <div id="eTunyBox" class="tunyrow"></div>
-      <label for="eKm">Plné kilometry</label>
-      <div class="unit"><input id="eKm" type="text" inputmode="numeric" placeholder="0" autocomplete="off"><span>km</span></div>
       <label for="ePozn">Poznámka <span class="opt">(nepovinné)</span></label>
       <textarea id="ePozn" maxlength="300" rows="3"></textarea>
       <button class="btn" id="eSave" type="submit">Uložit změny</button>
@@ -560,7 +560,7 @@
   }
 
   function resetForm() {
-    ['trasa', 'zakaznik', 'druh', 'km', 'poznamka'].forEach(id => $(id).value = '');
+    ['mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh', 'poznamka'].forEach(id => $(id).value = '');
     $('jizd').value = '1'; buildTuny();
     const t = todayISO(), n = new Date(), tm = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
     $('datumNakladky').value = t; $('datumVykladky').value = t;
@@ -599,7 +599,7 @@
     $('pin').value = ''; clearMsg($('loginMsg')); show('loginView');
   });
 
-  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'druh', 'jizd', 'km'];
+  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'mistoNakladky', 'mistoVykladky', 'druh', 'jizd'];
   
   $('recForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -611,7 +611,6 @@
     const bad = FIELDS.filter(k => !v[k]);
     const badEls = [];
     if (v.jizd && !(Number.isInteger(toNum(v.jizd)) && toNum(v.jizd) >= 1 && toNum(v.jizd) <= MAXJ)) bad.push('jizd');
-    if (v.km && !(toNum(v.km) >= 0 && toNum(v.km) <= 5000)) bad.push('km');
     matchCustomer(); v.zakaznik = $('zakaznik').value.trim();
     if (!v.zakaznik) bad.push('zakaznik');
     if (needSpz) { v.spz = $('spz').value; if (!v.spz) bad.push('spz'); }
@@ -656,8 +655,8 @@
       if (!histRows.length) { list.innerHTML = '<div class="empty">Zatím tu nejsou žádné zadané přepravy.</div>'; return; }
       list.innerHTML = histRows.map((x, i) =>
         '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + ' ' + esc(x.casNakladky) + ' → ' + (x.datumVykladky !== x.datumNakladky ? esc(fmtD(x.datumVykladky)) + ' ' : '') + esc(x.casVykladky) + '</div>' +
-        '<div class="rt">' + esc(x.trasa) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
-        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + '<span>' + esc(x.km) + ' km</span>' + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
+        '<div class="rt">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
+        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
         '<button class="ed" type="button" data-i="' + i + '">Upravit</button></div>').join('');
     } catch (e) { list.innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
@@ -666,7 +665,7 @@
     const x = histRows[+b.dataset.i]; if (!x) return;
     editId = x.id;
     $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
-    $('eTrasa').value = x.trasa; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join(''); $('eKm').value = x.km; $('ePozn').value = x.poznamka || '';
+    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join(''); $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
     show('editView'); window.scrollTo(0, 0);
   });
@@ -675,14 +674,13 @@
   $('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('eMsg'); clearMsg(msg);
-    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', trasa: 'eTrasa', zakaznik: 'eZak', druh: 'eDruh', km: 'eKm', poznamka: 'ePozn' };
+    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', mistoNakladky: 'eMistoN', mistoVykladky: 'eMistoV', zakaznik: 'eZak', druh: 'eDruh', poznamka: 'ePozn' };
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad'));
     const v = { id: editId }, bad = [];
     Object.keys(ids).forEach(k => v[k] = $(ids[k]).value.trim());
-    ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'trasa', 'zakaznik', 'druh', 'km'].forEach(k => { if (!v[k]) bad.push(k); });
+    ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh'].forEach(k => { if (!v[k]) bad.push(k); });
     v.tuny = Array.from($('eTunyBox').querySelectorAll('input')).map(i => i.value.trim());
     const badT = Array.from($('eTunyBox').querySelectorAll('input')).filter(i => { const t = i.value.trim(); return t && !(toNum(t) > 0 && toNum(t) <= 100); });
-    if (v.km && !(toNum(v.km) >= 0 && toNum(v.km) <= 5000)) bad.push('km');
     if (bad.length || badT.length) { bad.forEach(k => $(ids[k]).classList.add('bad')); badT.forEach(i => i.classList.add('bad')); return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err'); }
     if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
       ['eDatV', 'eCasV'].forEach(i => $(i).classList.add('bad')); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
