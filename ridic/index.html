@@ -210,13 +210,8 @@
       <input id="trasa" type="text" maxlength="200" placeholder="např. Bohučovice – Ostrava" autocomplete="off" required>
 
       <label for="zakaznik">Zákazník</label>
-      <select id="zakaznik" required>
-        <option value="">Vyberte zákazníka…</option>
-        <option>Jiří Vaněk</option><option>Ridera Bohemia</option><option>Agroland</option>
-        <option>Wienerberger</option><option>Best</option><option>Petrokámen</option><option>X-Force</option><option>Švarc</option>
-        <option value="__jiny">Jiný…</option>
-      </select>
-      <input id="zakaznikJiny" class="hidden" type="text" maxlength="120" placeholder="Název zákazníka" autocomplete="off" style="margin-top:10px">
+      <input id="zakaznik" type="text" maxlength="120" list="zakList" placeholder="Začněte psát název…" autocomplete="off" autocapitalize="words" required>
+      <datalist id="zakList"><option value="MJM"><option value="Agroland"><option value="Petrokámen"><option value="RenoFarmy"><option value="Ridera"><option value="RKL Opava"><option value="Romaton"><option value="Silnice Morava"><option value="Spacemetal"><option value="Tompres"><option value="Vaněk Jiří"><option value="Wienerberger"><option value="Piešťanský"><option value="Zogal"></datalist>
 
       <label for="druh">Druh nákladu</label>
       <input id="druh" type="text" maxlength="80" placeholder="např. zemina, cihly, 0/32 A" autocomplete="off" required>
@@ -285,11 +280,18 @@
     }
   }
   $('jizd').addEventListener('input', buildTuny);
-  $('zakaznik').addEventListener('change', () => {
-    const j = $('zakaznik').value === '__jiny';
-    $('zakaznikJiny').classList.toggle('hidden', !j);
-    if (j) $('zakaznikJiny').focus();
-  });
+  const nz = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  function matchCustomer() {                       // doskočí na zákazníka ze seznamu, pokud je shoda jednoznačná
+    const el = $('zakaznik'), t = nz(el.value);
+    if (!t) return;
+    const names = Array.from(document.querySelectorAll('#zakList option')).map(o => o.value);
+    const exact = names.find(n => nz(n) === t);
+    const pre = names.filter(n => nz(n).startsWith(t)), inc = names.filter(n => nz(n).includes(t));
+    const hit = exact || (pre.length === 1 ? pre[0] : (!pre.length && inc.length === 1 ? inc[0] : ''));
+    if (hit) el.value = hit;
+  }
+  $('zakaznik').addEventListener('change', matchCustomer);
+  $('zakaznik').addEventListener('blur', matchCustomer);
   let driver = null;
   function setDriver(d) {
     driver = d;
@@ -299,8 +301,7 @@
   }
 
   function resetForm() {
-    ['trasa', 'zakaznik', 'zakaznikJiny', 'druh', 'km'].forEach(id => $(id).value = '');
-    $('zakaznikJiny').classList.add('hidden');
+    ['trasa', 'zakaznik', 'druh', 'km'].forEach(id => $(id).value = '');
     $('jizd').value = '1'; buildTuny();
     const t = todayISO(), n = new Date(), tm = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
     $('datumNakladky').value = t; $('datumVykladky').value = t;
@@ -352,8 +353,8 @@
     const badEls = [];
     if (v.jizd && !(Number.isInteger(toNum(v.jizd)) && toNum(v.jizd) >= 1 && toNum(v.jizd) <= MAXJ)) bad.push('jizd');
     if (v.km && !(toNum(v.km) >= 0 && toNum(v.km) <= 5000)) bad.push('km');
-    v.zakaznik = $('zakaznik').value === '__jiny' ? $('zakaznikJiny').value.trim() : $('zakaznik').value;
-    if (!v.zakaznik) { bad.push('zakaznik'); if ($('zakaznik').value === '__jiny') badEls.push($('zakaznikJiny')); }
+    matchCustomer(); v.zakaznik = $('zakaznik').value.trim();
+    if (!v.zakaznik) bad.push('zakaznik');
     if (driver && !String(driver.spz || '').trim()) { v.spz = $('spz').value; if (!v.spz) bad.push('spz'); }
     v.tuny = Array.from($('tunyBox').querySelectorAll('input')).map(i => i.value.trim());
     $('tunyBox').querySelectorAll('input').forEach(i => { const t = i.value.trim(); if (t && !(toNum(t) > 0 && toNum(t) <= 100)) badEls.push(i); });
