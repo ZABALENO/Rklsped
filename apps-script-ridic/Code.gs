@@ -25,6 +25,7 @@ function doPost(e) {
     if (body.action === 'doc') return out_(doc_(body));
     if (body.action === 'ceny') return out_(prices_list_(body));
     if (body.action === 'cenySet') return out_(prices_set_(body));
+    if (body.action === 'docGet') return out_(docGet_(body));
     return out_({ ok: false, error: 'unknown_action' });
   } catch (err) {
     return out_({ ok: false, error: 'server_error' });
@@ -294,7 +295,7 @@ function prices_list_(b) {
       id: r[COL_ID - 1], ridic: r[1], dopravce: r[2], spz: r[3],
       datumNakladky: isoDate_(r[5]), datumVykladky: isoDate_(r[7]),
       mistoNakladky: r[9], mistoVykladky: r[10], zakaznik: r[11], druh: r[12],
-      jizd: jz, tuny: tuny, ceny: ceny, poznamka: r[COL_NOTE - 1]
+      jizd: jz, tuny: tuny, ceny: ceny, poznamka: r[COL_NOTE - 1], doc: r[COL_DOC - 1] ? String(r[COL_DOC - 1]) : ''
     });
   }
   return { ok: true, rows: rows };
@@ -328,6 +329,27 @@ function prices_set_(b) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// vrátí PDF dokladu (base64) k záznamu – jen pro Soukeníka
+function docGet_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var id = String(b.id || '');
+  if (!id) return { ok: false, error: 'not_found' };
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  var last = sh.getLastRow();
+  if (last < 2) return { ok: false, error: 'not_found' };
+  var start = Math.max(2, last - SCAN_ROWS + 1);
+  var ids = sh.getRange(start, COL_ID, last - start + 1, 1).getDisplayValues();
+  var row = 0;
+  for (var i = ids.length - 1; i >= 0; i--) { if (ids[i][0] === id) { row = start + i; break; } }
+  if (!row) return { ok: false, error: 'not_found' };
+  var m = /\/d\/([\w-]+)/.exec(String(sh.getRange(row, COL_DOC).getFormula() || ''));
+  if (!m) return { ok: false, error: 'no_doc' };
+  try {
+    var blob = DriveApp.getFileById(m[1]).getBlob();
+    return { ok: true, pdf: Utilities.base64Encode(blob.getBytes()) };
+  } catch (e) { return { ok: false, error: 'no_doc' }; }
 }
 
 function customers_() {
