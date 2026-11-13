@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f3864">
+<meta name="robots" content="noindex, nofollow">
+<title>RKL – evidence přeprav</title>
+<style>
+  :root { --navy:#1f3864; --navy2:#2c4a85; --bg:#f2f4f8; --line:#cfd6e4; --ok:#1e7a3c; --err:#b3261e; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:var(--bg); font-family:Arial,Helvetica,sans-serif; color:#1b1f2a; }
+  body { min-height:100vh; padding-bottom:env(safe-area-inset-bottom); }
+  header { background:var(--navy); color:#fff; padding:calc(12px + env(safe-area-inset-top)) 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; position:sticky; top:0; z-index:5; }
+  header h1 { margin:0; font-size:17px; letter-spacing:.2px; }
+  header button { background:transparent; color:#fff; border:1px solid rgba(255,255,255,.5); border-radius:8px; padding:8px 12px; font-size:14px; }
+  main { max-width:520px; margin:0 auto; padding:16px; }
+  .card { background:#fff; border-radius:14px; padding:16px; box-shadow:0 1px 3px rgba(20,30,60,.12); margin-bottom:14px; }
+  .who { font-size:14px; line-height:1.5; color:#3a4258; }
+  .who b { color:#1b1f2a; }
+  label { display:block; font-size:14px; font-weight:bold; margin:14px 0 6px; color:#2a3350; }
+  label:first-child { margin-top:0; }
+  input { width:100%; font-size:17px; padding:14px 12px; border:1.5px solid var(--line); border-radius:10px; background:#fff; color:#1b1f2a; font-family:inherit; min-height:52px; }
+  input:focus { outline:none; border-color:var(--navy2); box-shadow:0 0 0 3px rgba(44,74,133,.18); }
+  input.bad { border-color:var(--err); }
+  .row { display:grid; grid-template-columns:1.3fr 1fr; gap:10px; }
+  .grp { font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:#5a6580; margin:0 0 4px; }
+  button.primary { width:100%; margin-top:18px; background:var(--navy); color:#fff; border:0; border-radius:12px; font-size:18px; font-weight:bold; padding:16px; min-height:56px; }
+  button.primary:active { background:var(--navy2); }
+  button.primary:disabled { opacity:.6; }
+  button.secondary { width:100%; margin-top:10px; background:#fff; color:var(--navy); border:1.5px solid var(--navy); border-radius:12px; font-size:16px; padding:14px; min-height:52px; }
+  .msg { padding:12px 14px; border-radius:10px; font-size:15px; margin-top:14px; line-height:1.4; }
+  .msg.err { background:#fdecea; color:var(--err); }
+  .msg.ok { background:#e6f4ea; color:var(--ok); font-weight:bold; }
+  .hidden { display:none !important; }
+  .hint { font-size:13px; color:#6a7490; margin-top:6px; }
+  .unit { position:relative; }
+  .unit span { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#6a7490; font-size:16px; pointer-events:none; }
+  .unit input { padding-right:44px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><img src="/logo.jpg" alt="" width="26" height="26" style="vertical-align:-6px;border-radius:6px;margin-right:8px">RKL – evidence přeprav</h1>
+  <button id="logout" class="hidden" type="button">Odhlásit</button>
+</header>
+
+<main>
+  <!-- PŘIHLÁŠENÍ -->
+  <section id="loginView" class="card hidden">
+    <form id="loginForm" autocomplete="on" novalidate>
+      <label for="prijmeni">Příjmení</label>
+      <input id="prijmeni" name="username" type="text" autocomplete="username" autocapitalize="words" required>
+      <label for="pin">PIN</label>
+      <input id="pin" name="password" type="password" inputmode="numeric" autocomplete="current-password" required>
+      <button class="primary" id="loginBtn" type="submit">Přihlásit</button>
+      <div id="loginMsg" class="msg err hidden"></div>
+    </form>
+  </section>
+
+  <!-- FORMULÁŘ -->
+  <section id="formView" class="hidden">
+    <div class="card who" id="who"></div>
+
+    <form id="recForm" class="card" novalidate>
+      <p class="grp">Nakládka</p>
+      <div class="row">
+        <div><label for="datumNakladky">Datum</label><input id="datumNakladky" type="date" required></div>
+        <div><label for="casNakladky">Čas</label><input id="casNakladky" type="time" required></div>
+      </div>
+
+      <p class="grp" style="margin-top:18px">Vykládka</p>
+      <div class="row">
+        <div><label for="datumVykladky">Datum</label><input id="datumVykladky" type="date" required></div>
+        <div><label for="casVykladky">Čas</label><input id="casVykladky" type="time" required></div>
+      </div>
+
+      <label for="trasa">Trasa</label>
+      <input id="trasa" type="text" maxlength="200" placeholder="např. Opava – Praha" autocomplete="off" required>
+
+      <label for="objednatel">Objednatel</label>
+      <input id="objednatel" type="text" maxlength="120" autocomplete="off" required>
+
+      <label for="vaha">Váha</label>
+      <div class="unit"><input id="vaha" type="text" inputmode="decimal" placeholder="0" autocomplete="off" required><span>kg</span></div>
+
+      <button class="primary" id="sendBtn" type="submit">Odeslat</button>
+      <div id="recMsg" class="msg hidden"></div>
+    </form>
+  </section>
+
+  <section id="doneView" class="card hidden">
+    <div class="msg ok">Záznam byl uložen. Děkujeme.</div>
+    <button class="primary" id="againBtn" type="button">Zadat další přepravu</button>
+  </section>
+</main>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const views = ['loginView', 'formView', 'doneView'];
+  const show = (name) => { views.forEach(v => $(v).classList.toggle('hidden', v !== name)); $('logout').classList.toggle('hidden', name === 'loginView'); };
+
+  async function api(url, body) {
+    const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+    const r = await fetch(url, opt);
+    let data = {};
+    try { data = await r.json(); } catch (e) {}
+    return { status: r.status, data };
+  }
+
+  function todayISO() {
+    const d = new Date(); const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+  let requestId = newId();
+
+  function showMsg(el, text, cls) { el.textContent = text; el.className = 'msg ' + cls; }
+  function clearMsg(el) { el.className = 'msg hidden'; el.textContent = ''; }
+
+  function setDriver(d) {
+    $('who').innerHTML = '<b>' + esc(d.jmeno + ' ' + d.prijmeni) + '</b><br>' +
+      esc([d.dopravce, d.spz, d.typ].filter(Boolean).join(' · '));
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+  function resetForm(keepDates) {
+    ['trasa', 'objednatel', 'vaha', 'casNakladky', 'casVykladky'].forEach(id => $(id).value = '');
+    const t = todayISO();
+    $('datumNakladky').value = t; $('datumVykladky').value = t;
+    document.querySelectorAll('input.bad').forEach(i => i.classList.remove('bad'));
+    clearMsg($('recMsg'));
+    requestId = newId();
+  }
+
+  // ---- start ----
+  (async function init() {
+    resetForm();
+    const r = await api('/api/ridic/me');
+    if (r.status === 200 && r.data.ok) { setDriver(r.data.driver); show('formView'); }
+    else show('loginView');
+  })();
+
+  // ---- přihlášení ----
+  $('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('loginMsg'); clearMsg(msg);
+    const prijmeni = $('prijmeni').value.trim(), pin = $('pin').value.trim();
+    if (!prijmeni || !pin) return showMsg(msg, 'Vyplňte příjmení a PIN.', 'err');
+    $('loginBtn').disabled = true;
+    try {
+      const r = await api('/api/ridic/login', { prijmeni, pin });
+      if (r.data.ok) { $('pin').value = ''; setDriver(r.data.driver); show('formView'); }
+      else if (r.status === 429) showMsg(msg, 'Příliš mnoho pokusů. Zkuste to za chvíli.', 'err');
+      else if (r.status === 401) showMsg(msg, 'Špatné příjmení nebo PIN.', 'err');
+      else if (r.status === 503) showMsg(msg, 'Evidence ještě není zprovozněná. Kontaktujte dispečink.', 'err');
+      else showMsg(msg, 'Nepodařilo se spojit s tabulkou. Zkuste to znovu.', 'err');
+    } catch (err) { showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
+    $('loginBtn').disabled = false;
+  });
+
+  $('logout').addEventListener('click', async () => {
+    await api('/api/ridic/logout', {});
+    $('pin').value = ''; show('loginView');
+  });
+
+  // ---- odeslání záznamu ----
+  const FIELD_IDS = { datumNakladky:1, casNakladky:1, datumVykladky:1, casVykladky:1, trasa:1, objednatel:1, vaha:1 };
+
+  $('recForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('recMsg'); clearMsg(msg);
+    document.querySelectorAll('input.bad').forEach(i => i.classList.remove('bad'));
+
+    const v = {};
+    Object.keys(FIELD_IDS).forEach(k => v[k] = $(k).value.trim());
+    const bad = Object.keys(FIELD_IDS).filter(k => !v[k]);
+    const w = Number(v.vaha.replace(/\s/g, '').replace(',', '.'));
+    if (v.vaha && !(w > 0)) bad.push('vaha');
+    if (bad.length) {
+      bad.forEach(k => $(k).classList.add('bad'));
+      return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err');
+    }
+    if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
+      ['datumVykladky', 'casVykladky'].forEach(k => $(k).classList.add('bad'));
+      return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
+    }
+
+    $('sendBtn').disabled = true; $('sendBtn').textContent = 'Odesílám…';
+    try {
+      const r = await api('/api/ridic/zaznam', Object.assign({ requestId }, v));
+      if (r.data.ok) { show('doneView'); }
+      else if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu, údaje zůstanou vyplněné.', 'err'); }
+      else if (r.status === 400) showMsg(msg, 'Zkontrolujte vyplněné údaje.', 'err');
+      else showMsg(msg, 'Záznam se nepodařilo uložit do tabulky. Zkuste to prosím znovu.', 'err');
+    } catch (err) {
+      showMsg(msg, 'Chybí připojení k internetu. Údaje zůstaly vyplněné, zkuste to znovu.', 'err');
+    }
+    $('sendBtn').disabled = false; $('sendBtn').textContent = 'Odeslat';
+  });
+
+  $('againBtn').addEventListener('click', () => { resetForm(); show('formView'); window.scrollTo(0, 0); });
+})();
+</script>
+</body>
+</html>

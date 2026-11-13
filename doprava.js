@@ -342,6 +342,7 @@ app.post('/api/agents/text', async (req, res) => {
   res.json({ ok: true });
 });
 
+require('./lib/ridic').setup(app);   // evidence přeprav od řidičů (/ridic) – vlastní přihlášení, před obecným heslem
 require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava na cestě' });
 // sdílené obrázky (pozadí, logo) z RKL Spedice
 for (const f of ['bg.jpg', 'bg-v2.jpg', 'bg-v3.jpg', 'bg-v4.jpg', 'bgtoggle.js', 'logo.jpg', 'favicon.png', 'tv.js', 'iptv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));

@@ -53,7 +53,7 @@
   main{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:1040px;width:100%;margin:0 auto;padding:12px 24px 56px}
   h1{font-size:clamp(26px,4vw,40px);margin:0 0 6px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff;text-shadow:0 0 30px rgba(94,138,255,.55)}
   p.lead{margin:0 0 30px;color:#8793ad;font-size:14px;letter-spacing:2px;text-transform:uppercase}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px}
   .aitag{display:inline-block;margin-left:6px;padding:1px 9px 2px;border:1px solid #5e8aff;color:#cfe0ff;background:rgba(94,138,255,.18);box-shadow:0 0 14px rgba(94,138,255,.55),inset 0 0 10px rgba(94,138,255,.25);text-shadow:0 0 10px #5e8aff;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
   a.tile{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:#e9edf7;position:relative;min-height:236px;padding:26px 26px 22px;background:linear-gradient(155deg,rgba(14,22,52,.88),rgba(4,8,22,.9));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid color-mix(in srgb,var(--c) 55%,transparent);clip-path:polygon(26px 0,100% 0,100% calc(100% - 26px),calc(100% - 26px) 100%,0 100%,0 26px);box-shadow:0 0 44px -8px var(--c);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;overflow:hidden}
   a.tile::before{content:"";position:absolute;left:0;top:0;width:84px;height:2px;background:var(--c);box-shadow:0 0 14px var(--c)}
@@ -101,6 +101,7 @@ html.light a.tile:hover,html.light a.tile:focus-visible,html.light .tabs button.
 html.light a.tile:nth-of-type(1),html.light .tabs button.tile:nth-child(1){--c:#2f5bd6!important}
 html.light a.tile:nth-of-type(2),html.light .tabs button.tile:nth-child(2){--c:#0f9d6a!important}
 html.light a.tile:nth-of-type(3),html.light .tabs button.tile:nth-child(3){--c:#d98a00!important}
+html.light a.tile:nth-of-type(4),html.light .tabs button.tile:nth-child(4){--c:#d6336c!important}
 html.light .tile .hud,html.light .hud{color:#51597a}
 html.light .tile h2,html.light .tile .tt{color:#0f1b3d;text-shadow:none}
 html.light .tile p,html.light .tile .td{color:#3d4a6e}
@@ -156,6 +157,13 @@ html.light .thbtn{border-color:#2f5bd6;background:rgba(255,255,255,.7);color:#2f
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M21 5h-4"/></svg></span>
       <h2>AI</h2>
       <p>Dashboard a statistika nasazení agentů na jednotlivá firemní odvětví.</p>
+      <span class="go">Otevřít</span>
+    </a>
+    <a class="tile" href="https://dashboard.airkl.cz/ridic" style="--c:#ff6b8a">
+      <div class="hud"><span>04</span><i>modul</i></div>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/><path d="M9 7h6M9 11h6"/></svg></span>
+      <h2>Řidiči</h2>
+      <p>Zadání nakládky, vykládky, trasy a váhy z telefonu.</p>
       <span class="go">Otevřít</span>
     </a>
   </div>
