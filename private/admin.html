@@ -253,7 +253,7 @@ header{padding:4px 2px 6px;gap:6px}.ib{width:28px;height:28px;font-size:13px}sel
 .le.lwcard.ac{border-left:5px solid var(--wc);background:rgba(255,255,255,.04);background:color-mix(in srgb,var(--wc) 15%,transparent)}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><div class="meta" id="meta" style="margin:0;white-space:nowrap">načítám…</div><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><div class="meta" id="meta" style="margin:0;white-space:nowrap">načítám…</div><button class="ib" id="evBtn" title="Evidence agentizace – přístupy a platby">🔑</button><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div id="top2" class="top2"></div>
 <div id="dayw"></div>
 <div id="root"></div></div>
@@ -425,4 +425,30 @@ $('rf').onclick=load;load();
 setInterval(()=>{left--;if(left<=0)load();else if(last)$('lv').title='obnova za '+left+' s';},1000);
 setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové – Dozor':(unacked?'('+unacked+') Dozor agentů':'Dozor agentů')},900);
 })();
-</script></body></html>
+</script>
+<div id="evMod" hidden style="position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.72);overflow:auto;padding:14px"><div style="max-width:760px;margin:0 auto;background:var(--card,#141a2e);color:var(--tx,#e9edf7);border:1px solid var(--line,#2a3558);border-radius:14px;padding:14px 14px 18px">
+<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:16px">Evidence agentizace <span style="color:#ff6b6b;font-size:11px;font-weight:700">DŮVĚRNÉ</span></b><button class="ib" id="evAll" type="button">👁 Zobrazit hesla</button><button class="ib" id="evX" type="button">✕</button></div>
+<div id="evBody" style="margin-top:10px;font-size:13px">načítám…</div></div></div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));let shown=false,D=null;
+  function draw(){ if(!D){return}
+    const sec=t=>'<div style="font-weight:800;margin:14px 0 6px;color:#8fb2ff">'+t+'</div>',td='padding:5px 6px;border-top:1px solid rgba(128,128,128,.25);vertical-align:top';
+    let h=sec('1. Přihlašovací údaje')+'<div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="opacity:.7;text-align:left"><th style="padding:5px 6px">Projekt / systém</th><th style="padding:5px 6px">Heslo nebo údaj</th><th style="padding:5px 6px">Stav / poznámka</th></tr></thead><tbody>'
+      +(D.access||[]).map(r=>'<tr'+(/NEPLATN/i.test(r[2])?' style="opacity:.55;text-decoration:line-through"':'')+'><td style="'+td+'">'+esc(r[0])+'</td><td style="'+td+';font-family:ui-monospace,Menlo,monospace;white-space:nowrap"><span class="evpw" data-v="'+esc(r[1])+'" style="cursor:pointer" title="Klepni pro zobrazení / skrytí">'+(shown?esc(r[1]):'••••••••')+'</span></td><td style="'+td+'">'+esc(r[2])+'</td></tr>').join('')+'</tbody></table></div>';
+    h+=sec('2. Důležité poznámky k přístupům')+'<ul style="margin:0;padding-left:18px">'+(D.notes||[]).map(x=>'<li style="margin:3px 0">'+esc(x)+'</li>').join('')+'</ul>';
+    h+=sec('3. Měsíční platební kalendář')+'<table style="border-collapse:collapse"><thead><tr style="opacity:.7;text-align:left"><th style="padding:5px 10px 5px 6px">Projekt</th><th style="padding:5px 10px">Termín každý měsíc</th><th style="padding:5px 6px;text-align:right">Částka</th></tr></thead><tbody>'+(D.pay||[]).map(r=>'<tr><td style="'+td+'">'+esc(r[0])+'</td><td style="'+td+'">'+esc(r[1])+'</td><td style="'+td+';text-align:right">'+esc(r[2])+'</td></tr>').join('')+'</tbody></table>';
+    h+='<div style="margin-top:8px;font-weight:800">Celkové měsíční náklady: '+esc(D.month)+'<br>Celkové roční náklady: '+esc(D.year)+'</div>';
+    h+=sec('4. Nezařazené / nepotvrzené informace')+'<div>'+(D.unsorted||[]).map(x=>'<p style="margin:4px 0">'+esc(x)+'</p>').join('')+'</div>';
+    h+=sec('5. Bezpečnostní upozornění')+'<div style="opacity:.85">'+esc(D.security)+'</div>';
+    $('evBody').innerHTML=h; $('evAll').textContent=shown?'🙈 Skrýt hesla':'👁 Zobrazit hesla';
+  }
+  async function open(){ $('evMod').hidden=false; shown=false; $('evBody').textContent='načítám…';
+    try{const r=await fetch('/api/agents/evidence',{cache:'no-store'});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);D=j;draw()}catch(e){D=null;$('evBody').textContent='Nepodařilo se načíst: '+e.message}}
+  $('evBtn').addEventListener('click',open);$('evX').addEventListener('click',()=>{$('evMod').hidden=true;D=null;$('evBody').textContent=''});
+  $('evAll').addEventListener('click',()=>{shown=!shown;draw()});
+  $('evBody').addEventListener('click',e=>{const x=e.target.closest('.evpw');if(!x)return;x.textContent=x.textContent==='••••••••'?x.dataset.v:'••••••••'});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('evMod').hidden)$('evX').click()});
+})();
+</script>
+</body></html>
