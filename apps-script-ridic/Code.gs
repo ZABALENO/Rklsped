@@ -4,7 +4,7 @@
  * a nasaďte jako Webová aplikace (Spustit jako: já, Přístup: kdokoli).
  *
  * Listy: "Řidiči" (Jméno, Příjmení, Dopravce, SPZ, Typ vozidla, PIN, Aktivní)
- *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář)
+ *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář, Q = ID záznamu pro úpravy řidičem)
  */
 
 var SHEET_DRIVERS = 'Řidiči';
@@ -18,6 +18,8 @@ function doPost(e) {
 
     if (body.action === 'login') return out_(login_(body));
     if (body.action === 'append') return out_(append_(body));
+    if (body.action === 'list') return out_(list_(body));
+    if (body.action === 'update') return out_(update_(body));
     return out_({ ok: false, error: 'unknown_action' });
   } catch (err) {
     return out_({ ok: false, error: 'server_error' });
@@ -96,7 +98,7 @@ function append_(b) {
     var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
     var row = sh.getLastRow() + 1;
     var now = new Date();
-    var values = [], formats = [];
+    var values = [], formats = [], ids = [];
     for (var k = 0; k < n; k++) {      // jedna jízda = jeden řádek
       var t = tuny[k];
       values.push([
@@ -116,6 +118,7 @@ function append_(b) {
         (t === null || t === undefined || t === '') ? '' : Number(t),
         Number(b.km)
       ]);
+      ids.push([Utilities.getUuid()]);
       formats.push([
         'dd.MM.yyyy HH:mm', '@', '@', '@', '@',
         'dd.MM.yyyy', 'HH:mm', 'dd.MM.yyyy', 'HH:mm', '@', '@', '@',
@@ -126,7 +129,93 @@ function append_(b) {
     var rng = sh.getRange(row, 1, n, 15);
     rng.setNumberFormats(formats);
     rng.setValues(values);
+    sh.getRange(row, 17, n, 1).setNumberFormat('@').setValues(ids);   // Q = ID záznamu
     return { ok: true, row: row, rows: n };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+var SCAN_ROWS = 1500;   // kolik posledních řádků list prohledává
+
+function findDriver_(b) {
+  var list = drivers_();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].aktivni && norm_(list[i].jmeno) === norm_(b.jmeno) && norm_(list[i].prijmeni) === norm_(b.prijmeni)) return list[i];
+  }
+  return null;
+}
+
+function isoDate_(disp) { // "dd.MM.yyyy" -> "YYYY-MM-DD"
+  var m = String(disp).match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})$/);
+  if (!m) return '';
+  return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+}
+
+function hhmm_(disp) {
+  var m = String(disp).match(/^(\d{1,2}):(\d{2})/);
+  return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
+}
+
+function num_(disp) {
+  var t = String(disp).replace(/\s/g, '').replace(',', '.');
+  return t === '' ? '' : t;
+}
+
+// záznamy přihlášeného řidiče (nejnovější první), jen ty s ID
+function list_(b) {
+  var driver = findDriver_(b);
+  if (!driver) return { ok: false, error: 'driver_inactive' };
+  var full = norm_(driver.jmeno + ' ' + driver.prijmeni);
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  var last = sh.getLastRow();
+  if (last < 2) return { ok: true, rows: [] };
+  var start = Math.max(2, last - SCAN_ROWS + 1);
+  var data = sh.getRange(start, 1, last - start + 1, 17).getDisplayValues();
+  var rows = [];
+  for (var i = data.length - 1; i >= 0 && rows.length < 100; i--) {
+    var r = data[i];
+    if (!r[16] || norm_(r[1]) !== full) continue;
+    rows.push({
+      id: r[16], spz: r[3],
+      datumNakladky: isoDate_(r[5]), casNakladky: hhmm_(r[6]),
+      datumVykladky: isoDate_(r[7]), casVykladky: hhmm_(r[8]),
+      trasa: r[9], zakaznik: r[10], druh: r[11], tuny: num_(r[13]), km: num_(r[14])
+    });
+  }
+  return { ok: true, rows: rows };
+}
+
+// úprava vlastního záznamu podle ID
+function update_(b) {
+  var driver = findDriver_(b);
+  if (!driver) return { ok: false, error: 'driver_inactive' };
+  var full = norm_(driver.jmeno + ' ' + driver.prijmeni);
+  var id = String(b.id || '');
+  if (!id) return { ok: false, error: 'not_found' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+    var last = sh.getLastRow();
+    var start = Math.max(2, last - SCAN_ROWS + 1);
+    if (last < 2) return { ok: false, error: 'not_found' };
+    var data = sh.getRange(start, 1, last - start + 1, 17).getDisplayValues();
+    var row = 0;
+    for (var i = data.length - 1; i >= 0; i--) {
+      if (data[i][16] === id) { if (norm_(data[i][1]) === full) row = start + i; break; }
+    }
+    if (!row) return { ok: false, error: 'not_found' };
+    sh.getRange(row, 6, 1, 7).setValues([[
+      serialDate_(b.datumNakladky), serialTime_(b.casNakladky),
+      serialDate_(b.datumVykladky), serialTime_(b.casVykladky),
+      String(b.trasa), String(b.zakaznik), String(b.druh)
+    ]]);
+    sh.getRange(row, 14, 1, 2).setValues([[
+      (b.tuny === null || b.tuny === undefined || b.tuny === '') ? '' : Number(b.tuny),
+      Number(b.km)
+    ]]);
+    return { ok: true, row: row };
   } finally {
     lock.releaseLock();
   }
