@@ -363,8 +363,14 @@
   $('zakaznik').addEventListener('change', matchCustomer);
   $('zakaznik').addEventListener('blur', matchCustomer);
   let driver = null;
+  async function loadCustomers() {      // seznam z tabulky (list „Zákazníci“); při chybě zůstane vestavěný
+    try {
+      const r = await api('/api/ridic/zakaznici');
+      if (r.data.ok && r.data.customers.length) $('zakList').innerHTML = r.data.customers.map(n => '<option value="' + esc(n) + '">').join('');
+    } catch (e) {}
+  }
   function setDriver(d) {
-    driver = d;
+    driver = d; loadCustomers();
     $('spzBox').classList.toggle('hidden', !!String(d.spz || '').trim());
     const tags = [d.dopravce, d.spz, 'Sklápěč'].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
     $('who').innerHTML = '<b>' + esc(d.jmeno + ' ' + d.prijmeni) + '</b>' + (tags ? '<div class="tags">' + tags + '</div>' : '');

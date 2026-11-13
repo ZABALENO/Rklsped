@@ -9,6 +9,7 @@
 
 var SHEET_DRIVERS = 'Řidiči';
 var SHEET_RECORDS = 'Záznamy';
+var SHEET_CUSTOMERS = 'Zákazníci';   // sloupec A = nabízení zákazníci (od řádku 2)
 
 function doPost(e) {
   try {
@@ -19,6 +20,7 @@ function doPost(e) {
     if (body.action === 'login') return out_(login_(body));
     if (body.action === 'append') return out_(append_(body));
     if (body.action === 'list') return out_(list_(body));
+    if (body.action === 'customers') return out_(customers_());
     if (body.action === 'update') return out_(update_(body));
     return out_({ ok: false, error: 'unknown_action' });
   } catch (err) {
@@ -223,4 +225,17 @@ function update_(b) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// seznam zákazníků pro našeptávač ve formuláři (list "Zákazníci", sloupec A)
+function customers_() {
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_CUSTOMERS);
+  if (!sh || sh.getLastRow() < 2) return { ok: true, customers: [] };
+  var vals = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues();
+  var seen = {}, out = [];
+  for (var i = 0; i < vals.length; i++) {
+    var n = String(vals[i][0]).trim();
+    if (n && n.length <= 120 && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; out.push(n); }
+  }
+  return { ok: true, customers: out };
 }
