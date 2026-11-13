@@ -253,7 +253,7 @@ header{padding:4px 2px 6px;gap:6px}.ib{width:28px;height:28px;font-size:13px}sel
 .le.lwcard.ac{border-left:5px solid var(--wc);background:rgba(255,255,255,.04);background:color-mix(in srgb,var(--wc) 15%,transparent)}
 </style></head>
 <body><div class="bgimg"></div><div class="bgimg l3"></div><div class="floor"></div><canvas id="net"></canvas><div class="wrap">
-<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><div class="meta" id="meta" style="margin:0;white-space:nowrap">načítám…</div><button class="ib" id="evBtn" title="Evidence agentizace – přístupy a platby">🔑</button><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
+<header><h1><span class="live" id="lv"></span>Dozor agentů</h1><div class="meta" id="meta" style="margin:0;white-space:nowrap">načítám…</div><button class="ib" id="vyBtn" title="Vyhodnocení: kdy musel uživatel zadání opakovat nebo opravovat">📊</button><button class="ib" id="evBtn" title="Evidence agentizace – přístupy a platby">🔑</button><button class="ib" id="snd" title="Zvukové upozornění">🔕</button><select class="ib" id="skin" title="Skin – volba se pamatuje"><option value="zaklad">ZÁKLAD</option><option value="pulse">PULSE</option><option value="network">NETWORK</option><option value="synth">SYNTH</option><option value="hologram">HOLOGRAM</option><option value="matrix">MATRIX</option><option value="neon">NEON</option><option value="terminal">TERMINAL</option><option value="amber">AMBER</option><option value="dracula">DRACULA</option><option value="day">DEN</option></select><button class="ib" id="rf" title="Obnovit hned">↻</button></header>
 <div id="top2" class="top2"></div>
 <div id="dayw"></div>
 <div id="root"></div></div>
@@ -427,7 +427,7 @@ setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové 
 })();
 </script>
 <div id="evMod" hidden style="position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.72);overflow:auto;padding:14px"><div style="max-width:760px;margin:0 auto;background:var(--card,#141a2e);color:var(--tx,#e9edf7);border:1px solid var(--line,#2a3558);border-radius:14px;padding:14px 14px 18px">
-<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:16px">Evidence agentizace <span style="color:#ff6b6b;font-size:11px;font-weight:700">DŮVĚRNÉ</span></b><button class="ib" id="evAll" type="button">👁 Zobrazit hesla</button><button class="ib" id="evX" type="button">✕</button></div>
+<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:16px">Evidence agentizace <span style="color:#ff6b6b;font-size:11px;font-weight:700">DŮVĚRNÉ</span></b><button class="ib" id="evAll" type="button" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap">👁 Zobrazit hesla</button><button class="ib" id="evX" type="button">✕</button></div>
 <div id="evBody" style="margin-top:10px;font-size:13px">načítám…</div></div></div>
 <script>
 (function(){
@@ -449,6 +449,40 @@ setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové 
   $('evAll').addEventListener('click',()=>{shown=!shown;draw()});
   $('evBody').addEventListener('click',e=>{const x=e.target.closest('.evpw');if(!x)return;x.textContent=x.textContent==='••••••••'?x.dataset.v:'••••••••'});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('evMod').hidden)$('evX').click()});
+})();
+</script>
+
+<div id="vyMod" hidden style="position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.72);overflow:auto;padding:14px"><div style="max-width:820px;margin:0 auto;background:var(--card,#141a2e);color:var(--tx,#e9edf7);border:1px solid var(--line,#2a3558);border-radius:14px;padding:14px 14px 18px">
+<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:16px">Vyhodnocení agentů – opravy a opakování zadání</b><button class="ib" id="vyX" type="button">✕</button></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px"><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="0" type="button">Dnes</button><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="6" type="button">7 dní</button><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="29" type="button">30 dní</button><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="-1" type="button">Vše</button>
+<span style="opacity:.7;font-size:12px;margin-left:6px">od</span><input id="vyF" type="date" class="ib" style="width:auto;height:auto;padding:5px 6px;font-size:12px"><span style="opacity:.7;font-size:12px">do</span><input id="vyT" type="date" class="ib" style="width:auto;height:auto;padding:5px 6px;font-size:12px"><button class="ib" id="vyGo" type="button" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap;font-weight:800">Vyhodnotit</button></div>
+<div style="font-size:11px;opacity:.65;margin-bottom:6px">Počítá se jako oprava: slova jako „ne“, „znovu“, „špatně“, „opravit“, „myslel jsem“…, nebo opakování podobného zadání do 30 min. Je to odhad – každý případ si můžeš rozkliknout.</div>
+<div id="vyBody" style="font-size:13px">Vyber období.</div></div></div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id),E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const pt=n=>{const d=new Date(n);return d.getUTCDate()+'. '+(d.getUTCMonth()+1)+'. '+d.getUTCHours()+':'+String(d.getUTCMinutes()).padStart(2,'0')};
+  const q=(t,mx)=>{t=String(t||'');return E(t.length>mx?t.slice(0,mx)+'…':t)};
+  async function run(){ const f=$('vyF').value,t=$('vyT').value; if(!f||!t){$('vyBody').textContent='Zadej období.';return}
+    $('vyBody').textContent='počítám…';
+    try{const r=await fetch('/api/agents/dozor/eval?from='+f+'&to='+t,{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||r.status);draw(j)}catch(e){$('vyBody').textContent='Nepodařilo se: '+e.message} }
+  function draw(j){
+    const th='padding:5px 8px;text-align:right',tl='padding:5px 8px;text-align:left',td='padding:5px 8px;border-top:1px solid rgba(128,128,128,.25)';
+    let h='<div style="margin:6px 0 10px;font-weight:800">Za '+E(j.from)+' až '+E(j.to)+': '+j.totals.incidents+' oprav / opakování z '+j.totals.total+' zadání ('+j.totals.pct+' %)</div>';
+    h+='<table style="width:100%;border-collapse:collapse"><thead><tr style="opacity:.7"><th style="'+tl+'">Agent</th><th style="'+th+'">Zadání</th><th style="'+th+'">Oprav / opak.</th><th style="'+th+'">%</th></tr></thead><tbody>'
+      +j.agents.map(a=>'<tr><td style="'+td+';font-weight:700">'+E(a.agent)+'</td><td style="'+td+';text-align:right">'+a.total+'</td><td style="'+td+';text-align:right">'+a.incidents+'</td><td style="'+td+';text-align:right;font-weight:800;color:'+(a.pct>=20?'#ff6b6b':a.pct>=10?'#f2a516':'#3ddc84')+'">'+a.pct+' %</td></tr>').join('')+'</tbody></table>';
+    h+='<div style="font-weight:800;margin:14px 0 6px;color:#8fb2ff">Jednotlivé případy ('+j.incidents.length+(j.truncated?', nejnovějších 150':'')+')</div>';
+    h+=j.incidents.length?j.incidents.map(c=>{const f=c.followUp,p=c.previous;return '<details style="border:1px solid rgba(128,128,128,.3);border-radius:10px;padding:6px 10px;margin:6px 0"><summary style="cursor:pointer"><b>'+E(c.agent)+'</b> · '+pt(c.ts)+' · <span style="color:#f2a516">'+E(c.kind)+'</span>'+(c.gapMin!=null?' · '+c.gapMin+' min po předchozím':'')+'<div style="margin-top:3px;font-weight:700;border-left:3px solid #ff6b6b;padding-left:8px">„'+q(f.request,140)+'“</div></summary>'
+      +(p?'<div style="margin-top:8px"><div style="opacity:.65;font-size:11px">PŘEDCHOZÍ ZADÁNÍ ('+E(p.when)+', řádek '+p.row+')</div><div style="border-left:3px solid #5e8aff;padding-left:8px;margin:2px 0 6px">„'+q(p.request,600)+'“</div><div style="opacity:.65;font-size:11px">CO UDĚLAL AGENT</div><div style="padding-left:11px">'+(p.result?q(p.result,600):'<i>bez výsledku</i>')+(p.problem?'<div style="color:#ff6b6b">Problém: '+q(p.problem,300)+'</div>':'')+'</div></div>':'')
+      +'<div style="margin-top:8px"><div style="opacity:.65;font-size:11px">UPRAVENÉ / OPAKOVANÉ ZADÁNÍ (řádek '+f.row+')</div><div style="border-left:3px solid #ff6b6b;padding-left:8px;margin:2px 0 6px">„'+q(f.request,800)+'“</div><div style="opacity:.65;font-size:11px">CO UDĚLAL AGENT POTOM</div><div style="padding-left:11px">'+(f.result?q(f.result,600):'<i>bez výsledku</i>')+'</div></div></details>'}).join(''):'<div style="opacity:.7">V tomto období žádné opravy ani opakování zadání. 👍</div>';
+    $('vyBody').innerHTML=h;
+  }
+  const setP=d=>{const t=new Date(),f=new Date();if(d<0)f.setTime(Date.parse('2026-10-01'));else f.setDate(f.getDate()-d);$('vyF').value=iso(f);$('vyT').value=iso(t);run()};
+  $('vyBtn').addEventListener('click',()=>{$('vyMod').hidden=false;if(!$('vyF').value)setP(6);else run()});
+  $('vyX').addEventListener('click',()=>{$('vyMod').hidden=true});$('vyGo').addEventListener('click',run);
+  document.querySelectorAll('.vyp').forEach(b=>b.addEventListener('click',()=>setP(+b.dataset.d)));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('vyMod').hidden)$('vyX').click()});
 })();
 </script>
 </body></html>
