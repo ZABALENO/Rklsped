@@ -1,4 +1,4 @@
-/* Skenování dokladů v prohlížeči: fotka -> automatický ořez + vyrovnání perspektivy + vylepšení -> vícestránkové PDF.
+/* Skenování příloh v prohlížeči: fotka -> automatický ořez + vyrovnání perspektivy + vylepšení -> vícestránkové PDF.
    Vše běží v telefonu (bez knihoven), na server se posílá až hotové PDF.  Použití: RklScan.create(rootEl) */
 (function () {
   'use strict';
@@ -195,7 +195,7 @@
     root.classList.add('scn');
     root.innerHTML = '';
     const list = mk('div', 'scn-list'), info = mk('div', 'scn-info'), btns = mk('div', 'scn-btns');
-    const camLbl = mk('label', 'scn-btn main', ICO.cam + '<span class="t">Naskenovat doklad</span>'), camIn = mk('input'); camIn.type = 'file'; camIn.accept = 'image/*'; camIn.setAttribute('capture', 'environment'); camIn.hidden = true; camLbl.appendChild(camIn);
+    const camLbl = mk('label', 'scn-btn main', ICO.cam + '<span class="t">Naskenovat přílohu</span>'), camIn = mk('input'); camIn.type = 'file'; camIn.accept = 'image/*'; camIn.setAttribute('capture', 'environment'); camIn.hidden = true; camLbl.appendChild(camIn);
     const galLbl = mk('label', 'scn-btn', ICO.img + '<span>Z galerie nebo PDF</span>'), galIn = mk('input'); galIn.type = 'file'; galIn.accept = 'image/*,application/pdf'; galIn.multiple = true; galIn.hidden = true; galLbl.appendChild(galIn);
     btns.append(camLbl, galLbl); root.append(list, info, btns);
     const lb = mk('div', 'scn-lb hidden'); lb.addEventListener('click', () => lb.classList.add('hidden')); document.body.appendChild(lb);
@@ -222,7 +222,7 @@
         );
         card.append(im, nb, row); if (p.busy) card.classList.add('busy'); list.appendChild(card);
       });
-      camLbl.querySelector('.t').textContent = (pages.length || pdfFile) ? 'Přidat další stránku' : 'Naskenovat doklad';
+      camLbl.querySelector('.t').textContent = (pages.length || pdfFile) ? 'Přidat další stránku' : 'Naskenovat přílohu';
     }
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     function changed() { if (opts.onChange) opts.onChange(); }
@@ -230,7 +230,7 @@
       const W = p.ow, H = p.oh, url = URL.createObjectURL(p.orig);
       const m = Math.min(W, H) * 0.06;
       let q = (p.quad || [[m, m], [W - m, m], [W - m, H - m], [m, H - m]]).map(pt => pt.slice());
-      const ov = mk('div', 'scn-ed'), tip = mk('div', 'scn-ed-tip', 'Přetáhněte rohy tak, aby rámeček obepínal doklad'), wrap = mk('div', 'scn-ed-wrap'), box = mk('div', 'scn-ed-box'), img = mk('img'), bar = mk('div', 'scn-ed-bar');
+      const ov = mk('div', 'scn-ed'), tip = mk('div', 'scn-ed-tip', 'Přetáhněte rohy tak, aby rámeček obepínal přílohu'), wrap = mk('div', 'scn-ed-wrap'), box = mk('div', 'scn-ed-box'), img = mk('img'), bar = mk('div', 'scn-ed-bar');
       img.src = url; img.alt = ''; img.draggable = false;
       const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), poly = document.createElementNS(NS, 'polygon');
       svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.appendChild(poly);
@@ -274,7 +274,7 @@
         const c0 = fit(big, LONG), orig = await toBlob(big, 0.9), fq = big.width / c0.width, q0 = detect(c0), quad = q0 && q0.map(pt => [pt[0] * fq, pt[1] * fq]);
         const p = { id: ++seq, orig, quad, auto: quad, ow: big.width, oh: big.height, crop: !!quad, mode: 'doc', rot: 0 };
         pages.push(p); await reprocess(p);
-        setInfo(quad ? '' : 'Okraje dokladu se nepodařilo najít. Upravte ořez ručně.'); if (!quad) editCrop(p);
+        setInfo(quad ? '' : 'Okraje přílohy se nepodařilo najít. Upravte ořez ručně.'); if (!quad) editCrop(p);
       } catch (e) { setInfo('Fotku se nepodařilo načíst.', true); }
       busy--; if (!busy && !info.classList.contains('err') && pages.every(x => x.quad || !x.busy) === false) { /* nic */ }
     }

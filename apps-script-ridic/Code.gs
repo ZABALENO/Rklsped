@@ -4,7 +4,7 @@
  * a nasaďte jako Webová aplikace (Spustit jako: já, Přístup: kdokoli).
  *
  * Listy: "Řidiči" (Jméno, Příjmení, Dopravce, SPZ, Typ vozidla, PIN, Aktivní)
- *        "Záznamy" (zapisuje se sem: J = Místo nakládky, K = Místo vykládky, O = Poznámka, P = Doklad (odkaz), pak střídavě Tuny 1, Cena 1, Tuny 2, Cena 2 … (od Q; ceny vyplňuje kancelář), AK = ID záznamu (skrytý))
+ *        "Záznamy" (zapisuje se sem: J = Místo nakládky, K = Místo vykládky, O = Poznámka, P = Příloha (odkaz), pak střídavě Tuny 1, Cena 1, Tuny 2, Cena 2 … (od Q; ceny vyplňuje kancelář), AK = ID záznamu (skrytý))
  */
 
 var SHEET_DRIVERS = 'Řidiči';
@@ -13,7 +13,7 @@ var SHEET_CUSTOMERS = 'Zákazníci';   // sloupec A = nabízení zákazníci (od
 
 function layout_() {
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
-  O = String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Doklad' ? 1 : 0;
+  O = String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Příloha' || String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Doklad' ? 1 : 0;
   COL_NOTE = 15 + O; COL_DOC = O ? 1 : 16;
 }
 
@@ -91,22 +91,23 @@ function serialTime_(hhmm) { // "HH:MM" -> zlomek dne
 }
 
 var MAX_JIZD = 10;      // jízdy 1–10: ve sloupcích Q… jsou střídavě Tuny k, Cena k (Tuny 1 = Q, Cena 1 = R, Tuny 2 = S, Cena 2 = T …)
-var O = 0;              // posun prvních 15 sloupců: 1 = nové rozložení (A = Doklad), 0 = staré
+var O = 0;              // posun prvních 15 sloupců: 1 = nové rozložení (A = Příloha), 0 = staré
 var COL_NOTE = 15;      // Poznámka (nové rozložení: P)
 var COL_DOC = 16;       // Doklad (nové rozložení: A) – odkazy na PDF na Google Disku
 var COL_T1 = 17;        // Q = Tuny 1
 var COL_ID = 37;        // AK = ID záznamu (skrytý)
-var DOC_FOLDER = 'Doklady řidičů - Řepa';
+var DOC_FOLDER = 'Přílohy řidičů - Řepa';
+var DOC_FOLDER_OLD = 'Doklady řidičů - Řepa';
 function colTuny_(k) { return COL_T1 + 2 * k; }   // k = 0 pro 1. jízdu; Cena k je o sloupec dál (vyplňuje kancelář)
 
-// odkazy na doklady z buňky (hypertextové úseky; záloha: starší vzorec HYPERLINK)
+// odkazy na přílohy z buňky (hypertextové úseky; záloha: starší vzorec HYPERLINK)
 function docUrls_(rt, formula) {
   var out = [];
   if (rt) { var runs = rt.getRuns(); for (var i = 0; i < runs.length; i++) { var u = runs[i].getLinkUrl(); if (u && out.indexOf(u) < 0) out.push(u); } }
   if (!out.length && formula) { var m = /"(https:[^"]+)"/.exec(String(formula)); if (m) out.push(m[1]); }
   return out;
 }
-// text buňky: jedna ikona 📄 na doklad (každá s vlastním odkazem)
+// text buňky: jedna ikona 📄 na přílohu (každá s vlastním odkazem)
 function docRich_(urls) {
   if (!urls.length) return SpreadsheetApp.newRichTextValue().setText('').build();
   var text = '', pos = [];
@@ -259,7 +260,7 @@ function update_(b) {
   }
 }
 
-// uloží doklad (PDF, base64) k vlastnímu záznamu na Google Disk a vloží odkaz do tabulky (sloupec Doklad)
+// uloží přílohu (PDF, base64) k vlastnímu záznamu na Google Disk a vloží odkaz do tabulky (sloupec Příloha)
 function doc_(b) {
   var driver = findDriver_(b);
   if (!driver) return { ok: false, error: 'driver_inactive' };
@@ -279,8 +280,9 @@ function doc_(b) {
       if (data[i][COL_ID - 1] === id) { if (norm_(data[i][1+O]) === full) { row = start + i; info = data[i]; } break; }
     }
     if (!row) return { ok: false, error: 'not_found' };
-    var it = DriveApp.getFoldersByName(DOC_FOLDER);
-    var folder = it.hasNext() ? it.next() : DriveApp.createFolder(DOC_FOLDER);
+    var it = DriveApp.getFoldersByName(DOC_FOLDER), folder;
+    if (it.hasNext()) folder = it.next();
+    else { var old = DriveApp.getFoldersByName(DOC_FOLDER_OLD); if (old.hasNext()) { folder = old.next(); folder.setName(DOC_FOLDER); } else folder = DriveApp.createFolder(DOC_FOLDER); }
     var safe = function (t) { return String(t || '').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, '_').slice(0, 40); };
     var name = isoDate_(info[5+O]) + '_' + safe(driver.prijmeni) + '_' + safe(info[11+O]) + '_' + id.slice(0, 6) + '.pdf';
     var blob = Utilities.newBlob(Utilities.base64Decode(String(b.pdf)), 'application/pdf', name);
@@ -359,7 +361,7 @@ function prices_set_(b) {
   }
 }
 
-// vrátí PDF dokladu (base64) k záznamu – jen pro Soukeníka
+// vrátí PDF přílohy (base64) k záznamu – jen pro Soukeníka
 function docGet_(b) {
   if (!admin_(b)) return { ok: false, error: 'forbidden' };
   var id = String(b.id || '');
@@ -393,11 +395,11 @@ function customers_() {
   return { ok: true, customers: out };
 }
 
-// JEDNORÁZOVÁ MIGRACE: sloupec Doklad přesune na začátek (A) jako ikony 📄 s odkazy; stará pozice (P) zanikne
+// JEDNORÁZOVÁ MIGRACE: sloupec Příloha přesune na začátek (A) jako ikony 📄 s odkazy; stará pozice (P) zanikne
 function presunDoklad() {
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
-  if (String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Doklad') return 'uz hotovo';
-  if (String(sh.getRange(1, 16).getDisplayValue()).trim() !== 'Doklad') return 'neocekavane rozlozeni';
+  if (String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Příloha') return 'uz hotovo';
+  if (String(sh.getRange(1, 16).getDisplayValue()).trim() !== 'Doklad' && String(sh.getRange(1, 16).getDisplayValue()).trim() !== 'Příloha') return 'neocekavane rozlozeni';
   var last = sh.getLastRow(), urls = [];
   if (last >= 2) {
     var rg = sh.getRange(2, 16, last - 1, 1), rts = rg.getRichTextValues(), fms = rg.getFormulas();
@@ -405,7 +407,7 @@ function presunDoklad() {
   }
   sh.insertColumnBefore(1);
   sh.getRange(1, 2).copyTo(sh.getRange(1, 1), SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
-  sh.getRange(1, 1).setValue('Doklad');
+  sh.getRange(1, 1).setValue('Příloha');
   sh.deleteColumn(17);
   if (urls.length) {
     var vals = urls.map(function (u) { return [docRich_(u)]; });

@@ -311,7 +311,7 @@
   .who .tags span,.rec .tg span{color:#dbe5fb;background:#1a2a62;border:1px solid rgba(160,190,250,.5)}
   html.light .who .tags span,html.light .rec .tg span{color:#1a2a5c;background:#e3ebfb;border-color:rgba(47,86,196,.45)}
 
-  /* skener dokladů */
+  /* skener příloh */
   .scn-btns{display:grid;gap:10px;margin-top:10px}
   .scn-btn{display:flex;align-items:center;justify-content:center;gap:12px;min-height:64px;padding:12px;border:1px solid var(--c);color:#e3eaf9;font:700 18px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer;background:transparent;text-align:center}
   .scn-btn.main{background:#2c4fc2;border-color:#9db8f5;color:#fff;font-size:20px}
@@ -497,7 +497,7 @@
       <label for="poznamka">Poznámka <span class="opt">(nepovinné)</span></label>
       <textarea id="poznamka" maxlength="300" rows="3" placeholder="např. čekání na vykládce, závada…"></textarea>
 
-      <label>Doklad <span class="opt">(nepovinné)</span></label>
+      <label>Příloha <span class="opt">(nepovinné)</span></label>
       <div id="scanBox"></div>
 
       <button class="btn" id="sendBtn" type="submit">Odeslat</button>
@@ -550,7 +550,7 @@
       <div id="eTunyBox" class="tunyrow"></div>
       <label for="ePozn">Poznámka <span class="opt">(nepovinné)</span></label>
       <textarea id="ePozn" maxlength="300" rows="3"></textarea>
-      <label>Doklad <span class="opt">(přidat nebo nahradit)</span></label>
+      <label>Příloha <span class="opt">(přidat nebo nahradit)</span></label>
       <div id="eScanBox"></div>
       <button class="btn" id="eSave" type="submit">Uložit změny</button>
       <button class="btn ghost" id="eCancel" type="button">Zpět na historii</button>
@@ -595,9 +595,9 @@
       const pdf = await sc.getPdf(); if (!pdf) return '';
       const u = await api('/api/ridic/doklad', { id, pdf: pdf.b64, pages: pdf.pages });
       if (u.data && u.data.ok) { sc.clear(); return ''; }
-      if (u.status === 413) return 'Doklad je příliš velký.';
-      return 'Doklad se nepodařilo nahrát. Zkuste ho přidat znovu v Historii (Upravit).';
-    } catch (e) { return 'Doklad se nepodařilo nahrát (' + (e && e.message === 'too_big' ? 'příliš velký' : 'chyba připojení') + '). Zkuste ho přidat znovu v Historii (Upravit).'; }
+      if (u.status === 413) return 'Příloha je příliš velká.';
+      return 'Přílohu se nepodařilo nahrát. Zkuste ji přidat znovu v Historii (Upravit).';
+    } catch (e) { return 'Přílohu se nepodařilo nahrát (' + (e && e.message === 'too_big' ? 'příliš velký' : 'chyba připojení') + '). Zkuste ji přidat znovu v Historii (Upravit).'; }
   }
 
   function todayISO() {
@@ -753,14 +753,14 @@
       return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
 
-    if (scan.isBusy()) return showMsg(msg, 'Počkejte, doklad se ještě zpracovává.', 'err');
+    if (scan.isBusy()) return showMsg(msg, 'Počkejte, příloha se ještě zpracovává.', 'err');
     $('sendBtn').disabled = true; $('sendBtn').textContent = 'Odesílám…';
     try {
       const r = await api('/api/ridic/zaznam', Object.assign({ requestId }, v));
       if (r.data.ok) {
         let warn = '';
         if (scan.count() && r.data.id) { $('sendBtn').textContent = 'Nahrávám doklad…'; warn = await uploadDoc(scan, r.data.id); }
-        else if (scan.count()) warn = 'Doklad se nepodařilo přiřadit. Přidejte ho v Historii (Upravit).';
+        else if (scan.count()) warn = 'Přílohu se nepodařilo přiřadit. Přidejte ji v Historii (Upravit).';
         const dw = $('doneWarn'); dw.textContent = warn; dw.classList.toggle('hidden', !warn);
         show('doneView');
       }
@@ -790,7 +790,7 @@
       list.innerHTML = histRows.map((x, i) =>
         '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + ' ' + esc(x.casNakladky) + ' → ' + (x.datumVykladky !== x.datumNakladky ? esc(fmtD(x.datumVykladky)) + ' ' : '') + esc(x.casVykladky) + '</div>' +
         '<div class="rt">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
-        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + (x.hasDoc ? '<span>Doklad ✓</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
+        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + (x.hasDoc ? '<span>Příloha ✓</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
         '<button class="ed" type="button" data-i="' + i + '">Upravit</button></div>').join('');
     } catch (e) { list.innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
@@ -819,7 +819,7 @@
     if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
       ['eDatV', 'eCasV'].forEach(i => $(i).classList.add('bad')); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
-    if (eScan.isBusy()) return showMsg(msg, 'Počkejte, doklad se ještě zpracovává.', 'err');
+    if (eScan.isBusy()) return showMsg(msg, 'Počkejte, příloha se ještě zpracovává.', 'err');
     $('eSave').disabled = true; $('eSave').textContent = 'Ukládám…';
     try {
       const r = await api('/api/ridic/uprav', v);
@@ -844,7 +844,7 @@
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
       x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
-      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Doklad' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
+      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
   }
   function prRender() {
     const drv = $('prDrv').value, only = $('prMiss').checked;
