@@ -52,7 +52,7 @@
   .row2>div{min-width:0}
   .row2 label{margin-top:14px}
   .row label{margin-top:0}
-  input,select{width:100%;min-width:0;min-height:52px;padding:13px 12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font:500 17px "IBM Plex Sans",system-ui,sans-serif;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
+  input,select,textarea{width:100%;min-width:0;min-height:52px;padding:13px 12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;font:500 17px "IBM Plex Sans",system-ui,sans-serif;outline:0;border-radius:0;-webkit-appearance:none;appearance:none}
   select{padding-right:40px;background-image:linear-gradient(45deg,transparent 50%,#8fb0ff 50%),linear-gradient(135deg,#8fb0ff 50%,transparent 50%);background-position:calc(100% - 22px) 50%,calc(100% - 16px) 50%;background-size:6px 6px;background-repeat:no-repeat;text-overflow:ellipsis}
   select option{background:#0b1020;color:#fff}
   html.light select{background-image:linear-gradient(45deg,transparent 50%,#2f5bd6 50%),linear-gradient(135deg,#2f5bd6 50%,transparent 50%)}
@@ -60,9 +60,11 @@
   .tunyrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
   .tunyrow>div{min-width:0}
   .opt{color:var(--mut);font-weight:400;letter-spacing:0;text-transform:none}
+  textarea{min-height:84px;resize:vertical;line-height:1.4}
+  textarea::placeholder{color:#5b6786}
   input::placeholder{color:#5b6786}
-  input:focus,select:focus{border-color:var(--c);box-shadow:0 0 12px rgba(94,138,255,.6)}
-  input.bad,select.bad{border-color:var(--err);box-shadow:0 0 10px rgba(255,107,94,.45)}
+  input:focus,select:focus,textarea:focus{border-color:var(--c);box-shadow:0 0 12px rgba(94,138,255,.6)}
+  input.bad,select.bad,textarea.bad{border-color:var(--err);box-shadow:0 0 10px rgba(255,107,94,.45)}
   input[type=date],input[type=time]{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:15px;padding-left:10px;padding-right:6px}
   input::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.7)}
   .unit{position:relative}
@@ -123,9 +125,9 @@
   html.light .who b{color:#0f1b3d}
   html.light .who .tags span{color:#1d388f;background:rgba(47,91,214,.1);border-color:rgba(47,91,214,.45)}
   html.light label{color:#3d4a6e}
-  html.light input,html.light select{background:#fff;color:#0f1b3d;border-color:rgba(47,91,214,.55)}
+  html.light input,html.light select,html.light textarea{background:#fff;color:#0f1b3d;border-color:rgba(47,91,214,.55)}
   html.light input::placeholder{color:#8a96b4}
-  html.light input:focus,html.light select:focus{box-shadow:0 0 10px rgba(47,91,214,.4)}
+  html.light input:focus,html.light select:focus,html.light textarea:focus{box-shadow:0 0 10px rgba(47,91,214,.4)}
   html.light input.bad,html.light select.bad{box-shadow:0 0 8px rgba(192,57,43,.35)}
   html.light input::-webkit-calendar-picker-indicator{filter:none;opacity:.7}
   html.light .btn{background:#2f5bd6;border-color:#2f5bd6;color:#fff;box-shadow:0 8px 22px -8px rgba(47,91,214,.7)}
@@ -251,6 +253,9 @@
       <label for="km">Plné kilometry celkem</label>
       <div class="unit"><input id="km" type="text" inputmode="numeric" placeholder="0" autocomplete="off" required><span>km</span></div>
 
+      <label for="poznamka">Poznámka <span class="opt">(nepovinné)</span></label>
+      <textarea id="poznamka" maxlength="300" rows="3" placeholder="např. čekání na vykládce, závada…"></textarea>
+
       <button class="btn" id="sendBtn" type="submit">Odeslat</button>
       <div id="recMsg" class="msg hidden"></div>
     </form>
@@ -284,6 +289,8 @@
       <div class="unit"><input id="eTuny" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>
       <label for="eKm">Plné kilometry</label>
       <div class="unit"><input id="eKm" type="text" inputmode="numeric" placeholder="0" autocomplete="off"><span>km</span></div>
+      <label for="ePozn">Poznámka <span class="opt">(nepovinné)</span></label>
+      <textarea id="ePozn" maxlength="300" rows="3"></textarea>
       <button class="btn" id="eSave" type="submit">Uložit změny</button>
       <button class="btn ghost" id="eCancel" type="button">Zpět na historii</button>
       <div id="eMsg" class="msg hidden"></div>
@@ -364,7 +371,7 @@
   }
 
   function resetForm() {
-    ['trasa', 'zakaznik', 'druh', 'km'].forEach(id => $(id).value = '');
+    ['trasa', 'zakaznik', 'druh', 'km', 'poznamka'].forEach(id => $(id).value = '');
     $('jizd').value = '1'; buildTuny();
     const t = todayISO(), n = new Date(), tm = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
     $('datumNakladky').value = t; $('datumVykladky').value = t;
@@ -419,6 +426,7 @@
     matchCustomer(); v.zakaznik = $('zakaznik').value.trim();
     if (!v.zakaznik) bad.push('zakaznik');
     if (driver && !String(driver.spz || '').trim()) { v.spz = $('spz').value; if (!v.spz) bad.push('spz'); }
+    v.poznamka = $('poznamka').value.trim();
     v.tuny = Array.from($('tunyBox').querySelectorAll('input')).map(i => i.value.trim());
     $('tunyBox').querySelectorAll('input').forEach(i => { const t = i.value.trim(); if (t && !(toNum(t) > 0 && toNum(t) <= 100)) badEls.push(i); });
     if (bad.length || badEls.length) {
@@ -460,7 +468,7 @@
       list.innerHTML = histRows.map((x, i) =>
         '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + ' ' + esc(x.casNakladky) + ' → ' + (x.datumVykladky !== x.datumNakladky ? esc(fmtD(x.datumVykladky)) + ' ' : '') + esc(x.casVykladky) + '</div>' +
         '<div class="rt">' + esc(x.trasa) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
-        '<div class="tg">' + (x.tuny ? '<span>' + esc(fmtN(x.tuny)) + ' t</span>' : '<span>tuny: –</span>') + '<span>' + esc(x.km) + ' km</span>' + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' +
+        '<div class="tg">' + (x.tuny ? '<span>' + esc(fmtN(x.tuny)) + ' t</span>' : '<span>tuny: –</span>') + '<span>' + esc(x.km) + ' km</span>' + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
         '<button class="ed" type="button" data-i="' + i + '">Upravit</button></div>').join('');
     } catch (e) { list.innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
@@ -469,7 +477,7 @@
     const x = histRows[+b.dataset.i]; if (!x) return;
     editId = x.id;
     $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
-    $('eTrasa').value = x.trasa; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTuny').value = fmtN(x.tuny); $('eKm').value = x.km;
+    $('eTrasa').value = x.trasa; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTuny').value = fmtN(x.tuny); $('eKm').value = x.km; $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
     show('editView'); window.scrollTo(0, 0);
   });
@@ -478,7 +486,7 @@
   $('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('eMsg'); clearMsg(msg);
-    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', trasa: 'eTrasa', zakaznik: 'eZak', druh: 'eDruh', tuny: 'eTuny', km: 'eKm' };
+    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', trasa: 'eTrasa', zakaznik: 'eZak', druh: 'eDruh', tuny: 'eTuny', km: 'eKm', poznamka: 'ePozn' };
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad'));
     const v = { id: editId }, bad = [];
     Object.keys(ids).forEach(k => v[k] = $(ids[k]).value.trim());
