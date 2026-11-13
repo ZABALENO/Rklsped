@@ -4,7 +4,7 @@
  * a nasaďte jako Webová aplikace (Spustit jako: já, Přístup: kdokoli).
  *
  * Listy: "Řidiči" (Jméno, Příjmení, Dopravce, SPZ, Typ vozidla, PIN, Aktivní)
- *        "Záznamy" (zapisuje se sem: A–O ze skriptu, P = Cena vyplňuje kancelář, J = Místo nakládky, K = Místo vykládky, O = Poznámka, pak střídavě Tuny 1, Cena 1, Tuny 2, Cena 2 … (od P; ceny vyplňuje kancelář), AJ = ID záznamu (skrytý))
+ *        "Záznamy" (zapisuje se sem: J = Místo nakládky, K = Místo vykládky, O = Poznámka, P = Doklad (odkaz), pak střídavě Tuny 1, Cena 1, Tuny 2, Cena 2 … (od Q; ceny vyplňuje kancelář), AK = ID záznamu (skrytý))
  */
 
 var SHEET_DRIVERS = 'Řidiči';
@@ -22,6 +22,9 @@ function doPost(e) {
     if (body.action === 'list') return out_(list_(body));
     if (body.action === 'customers') return out_(customers_());
     if (body.action === 'update') return out_(update_(body));
+    if (body.action === 'doc') return out_(doc_(body));
+    if (body.action === 'ceny') return out_(prices_list_(body));
+    if (body.action === 'cenySet') return out_(prices_set_(body));
     return out_({ ok: false, error: 'unknown_action' });
   } catch (err) {
     return out_({ ok: false, error: 'server_error' });
@@ -79,10 +82,12 @@ function serialTime_(hhmm) { // "HH:MM" -> zlomek dne
   return (+p[0] * 60 + +p[1]) / 1440;
 }
 
-var MAX_JIZD = 10;      // jízdy 1–10: ve sloupcích P… jsou střídavě Tuny k, Cena k (Tuny 1 = P, Cena 1 = Q, Tuny 2 = R, Cena 2 = S …)
+var MAX_JIZD = 10;      // jízdy 1–10: ve sloupcích Q… jsou střídavě Tuny k, Cena k (Tuny 1 = Q, Cena 1 = R, Tuny 2 = S, Cena 2 = T …)
 var COL_NOTE = 15;      // O = Poznámka
-var COL_T1 = 16;        // P = Tuny 1
-var COL_ID = 36;        // AJ = ID záznamu (skrytý)
+var COL_DOC = 16;       // P = Doklad (odkaz na PDF na Google Disku)
+var COL_T1 = 17;        // Q = Tuny 1
+var COL_ID = 37;        // AK = ID záznamu (skrytý)
+var DOC_FOLDER = 'Doklady řidičů - Řepa';
 function colTuny_(k) { return COL_T1 + 2 * k; }   // k = 0 pro 1. jízdu; Cena k je o sloupec dál (vyplňuje kancelář)
 
 function append_(b) {
@@ -127,8 +132,9 @@ function append_(b) {
       var t = tn(k);
       if (t !== '') sh.getRange(row, colTuny_(k)).setNumberFormat('#,##0.00').setValue(t);
     }
-    sh.getRange(row, COL_ID).setNumberFormat('@').setValue(Utilities.getUuid());
-    return { ok: true, row: row, jizd: n };
+    var newId = Utilities.getUuid();
+    sh.getRange(row, COL_ID).setNumberFormat('@').setValue(newId);
+    return { ok: true, row: row, jizd: n, id: newId };
   } finally {
     lock.releaseLock();
   }
@@ -181,7 +187,7 @@ function list_(b) {
       id: r[COL_ID - 1], spz: r[3],
       datumNakladky: isoDate_(r[5]), casNakladky: hhmm_(r[6]),
       datumVykladky: isoDate_(r[7]), casVykladky: hhmm_(r[8]),
-      mistoNakladky: r[9], mistoVykladky: r[10], zakaznik: r[11], druh: r[12], jizd: jz, tuny: tuny, poznamka: r[COL_NOTE - 1]
+      mistoNakladky: r[9], mistoVykladky: r[10], zakaznik: r[11], druh: r[12], jizd: jz, tuny: tuny, poznamka: r[COL_NOTE - 1], hasDoc: !!r[COL_DOC - 1]
     });
   }
   return { ok: true, rows: rows };
@@ -227,7 +233,103 @@ function update_(b) {
   }
 }
 
+// uloží doklad (PDF, base64) k vlastnímu záznamu na Google Disk a vloží odkaz do tabulky (sloupec Doklad)
+function doc_(b) {
+  var driver = findDriver_(b);
+  if (!driver) return { ok: false, error: 'driver_inactive' };
+  var full = norm_(driver.jmeno + ' ' + driver.prijmeni);
+  var id = String(b.id || '');
+  if (!id || !b.pdf) return { ok: false, error: 'not_found' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+    var last = sh.getLastRow();
+    if (last < 2) return { ok: false, error: 'not_found' };
+    var start = Math.max(2, last - SCAN_ROWS + 1);
+    var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
+    var row = 0, info = null;
+    for (var i = data.length - 1; i >= 0; i--) {
+      if (data[i][COL_ID - 1] === id) { if (norm_(data[i][1]) === full) { row = start + i; info = data[i]; } break; }
+    }
+    if (!row) return { ok: false, error: 'not_found' };
+    var it = DriveApp.getFoldersByName(DOC_FOLDER);
+    var folder = it.hasNext() ? it.next() : DriveApp.createFolder(DOC_FOLDER);
+    var safe = function (t) { return String(t || '').replace(/[\\\/:*?"<>|]/g, '').replace(/\s+/g, '_').slice(0, 40); };
+    var name = isoDate_(info[5]) + '_' + safe(driver.prijmeni) + '_' + safe(info[11]) + '_' + id.slice(0, 6) + '.pdf';
+    var blob = Utilities.newBlob(Utilities.base64Decode(String(b.pdf)), 'application/pdf', name);
+    var file = folder.createFile(blob);
+    var pages = Math.max(1, Math.min(40, Number(b.pages) || 1));
+    sh.getRange(row, COL_DOC).setFormula('=HYPERLINK("' + file.getUrl() + '","Doklad (' + pages + ' str.)")');
+    return { ok: true, row: row };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // seznam zákazníků pro našeptávač ve formuláři (list "Zákazníci", sloupec A)
+// ---- ceny (jen přihlášený Soukeník) ----
+var ADMIN_PRIJMENI = 'soukenik';
+function admin_(b) {
+  var d = findDriver_(b);
+  return (d && norm_(d.prijmeni) === ADMIN_PRIJMENI) ? d : null;
+}
+
+// všechny záznamy všech řidičů (nejnovější první) včetně tun a cen
+function prices_list_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  var last = sh.getLastRow();
+  if (last < 2) return { ok: true, rows: [] };
+  var start = Math.max(2, last - SCAN_ROWS + 1);
+  var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
+  var rows = [];
+  for (var i = data.length - 1; i >= 0 && rows.length < 400; i--) {
+    var r = data[i];
+    if (!r[COL_ID - 1]) continue;
+    var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(r[13], 10) || 1));
+    var tuny = [], ceny = [];
+    for (var k = 0; k < jz; k++) { tuny.push(num_(r[colTuny_(k) - 1])); ceny.push(num_(r[colTuny_(k)])); }
+    rows.push({
+      id: r[COL_ID - 1], ridic: r[1], dopravce: r[2], spz: r[3],
+      datumNakladky: isoDate_(r[5]), datumVykladky: isoDate_(r[7]),
+      mistoNakladky: r[9], mistoVykladky: r[10], zakaznik: r[11], druh: r[12],
+      jizd: jz, tuny: tuny, ceny: ceny, poznamka: r[COL_NOTE - 1]
+    });
+  }
+  return { ok: true, rows: rows };
+}
+
+// zapíše ceny k jízdám jednoho záznamu (prázdná hodnota cenu smaže)
+function prices_set_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var id = String(b.id || '');
+  if (!id) return { ok: false, error: 'not_found' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+    var last = sh.getLastRow();
+    if (last < 2) return { ok: false, error: 'not_found' };
+    var start = Math.max(2, last - SCAN_ROWS + 1);
+    var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
+    var row = 0, jz = 1;
+    for (var i = data.length - 1; i >= 0; i--) {
+      if (data[i][COL_ID - 1] === id) { row = start + i; jz = Math.max(1, Math.min(MAX_JIZD, parseInt(data[i][13], 10) || 1)); break; }
+    }
+    if (!row) return { ok: false, error: 'not_found' };
+    var ceny = Object.prototype.toString.call(b.ceny) === '[object Array]' ? b.ceny : [];
+    for (var k = 0; k < jz; k++) {
+      var v = ceny[k], c = sh.getRange(row, colTuny_(k) + 1);
+      if (v === null || v === undefined || v === '') c.clearContent();
+      else c.setNumberFormat('#,##0.00').setValue(Number(v));
+    }
+    return { ok: true, row: row };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function customers_() {
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_CUSTOMERS);
   if (!sh || sh.getLastRow() < 2) return { ok: true, customers: [] };

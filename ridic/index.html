@@ -310,6 +310,56 @@
   html.light .tabs button.on{background:#2f56c4;color:#fff}
   .who .tags span,.rec .tg span{color:#dbe5fb;background:#1a2a62;border:1px solid rgba(160,190,250,.5)}
   html.light .who .tags span,html.light .rec .tg span{color:#1a2a5c;background:#e3ebfb;border-color:rgba(47,86,196,.45)}
+
+  /* skener dokladů */
+  .scn-btns{display:grid;gap:10px;margin-top:10px}
+  .scn-btn{display:flex;align-items:center;justify-content:center;gap:12px;min-height:64px;padding:12px;border:1px solid var(--c);color:#e3eaf9;font:700 18px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer;background:transparent;text-align:center}
+  .scn-btn.main{background:#2c4fc2;border-color:#9db8f5;color:#fff;font-size:20px}
+  html.light .scn-btn{color:#1a2a5c;border-color:rgba(47,86,196,.6)}
+  html.light .scn-btn.main{background:#2f56c4;border-color:#1d3a8f;color:#fff}
+  .scn-btn:active{filter:brightness(.9)}
+  .scn-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .scn-pg{position:relative;border:1px solid rgba(160,190,250,.5);background:#0a1330;padding:8px;display:flex;flex-direction:column;gap:8px}
+  html.light .scn-pg{background:#fbfcff;border-color:rgba(47,86,196,.5)}
+  .scn-pg img{display:block;width:100%;height:190px;object-fit:contain;background:#fff;cursor:zoom-in}
+  .scn-pg.busy{opacity:.5}
+  .scn-n{position:absolute;left:8px;top:8px;min-width:30px;height:30px;line-height:30px;text-align:center;background:#2c4fc2;color:#fff;font:700 15px "IBM Plex Mono",monospace}
+  .scn-act{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .scn-act .sp{display:none}
+  .scn-ib{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px;border:1px solid rgba(160,190,250,.55);background:transparent;color:#e3eaf9;font:600 13px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+  html.light .scn-ib{color:#1a2a5c;border-color:rgba(47,86,196,.5)}
+  .scn-ib svg,.scn-btn svg{flex:none;width:20px;height:20px}
+  .scn-pdf{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(160,190,250,.5);color:#e3eaf9}
+  html.light .scn-pdf{color:#1a2a5c;border-color:rgba(47,86,196,.5)}
+  .scn-pdf b{overflow-wrap:anywhere}.scn-pdf>div{flex:1;min-width:0}
+  .scn-info{margin-top:10px;font-size:16px;color:var(--mut)}.scn-info.err{color:var(--err)}
+  .scn-info:empty{display:none}
+  .scn-lb{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:8px}
+  .scn-lb img{max-width:100%;max-height:100%;object-fit:contain;background:#fff}
+  body.wide main,body.wide .tabs{max-width:1280px}
+  .pr-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .pr-bar select{flex:1 1 200px;min-height:48px;font-size:17px;background:rgba(6,12,30,.9);color:#e8eeff;border:1px solid rgba(160,190,250,.5);padding:0 10px}
+  .pr-chk{display:flex;align-items:center;gap:8px;font-size:16px;color:#e3eaf9;margin:0;text-transform:none;letter-spacing:0}
+  .pr-chk input{-webkit-appearance:checkbox;appearance:auto;width:24px;height:24px;min-height:0;margin:0;padding:0;background:none!important;accent-color:#5e8aff;flex:none}
+  .pr-ref{min-height:48px;padding:0 16px;background:transparent;color:#e3eaf9;border:1px solid rgba(160,190,250,.55);font:700 14px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
+  .pr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;align-items:start}
+  .pr-card{position:relative;background:linear-gradient(155deg,rgba(14,22,52,.9),rgba(4,8,22,.94));border:1px solid rgba(94,138,255,.4);border-left:3px solid var(--c);padding:12px}
+  .pr-card.miss{border-left-color:#ffb020}
+  .pr-card.done{border-left-color:var(--ok)}
+  .pr-who{font:700 16px "IBM Plex Sans",system-ui,sans-serif;color:#fff}
+  .pr-who small{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-left:6px}
+  .pr-row{display:grid;grid-template-columns:34px 1fr 1.3fr;gap:8px;align-items:center;margin-top:8px}
+  .pr-row b{font:600 13px "IBM Plex Mono",monospace;color:var(--c)}
+  .pr-t{font:600 16px "IBM Plex Mono",monospace;color:#e8eeff}
+  .pr-card input.pc{width:100%;min-height:46px;font-size:18px;text-align:right;padding:0 44px 0 10px;background-image:none!important;background:rgba(6,12,30,.9);color:#fff;border:1px solid rgba(160,190,250,.55)}
+  .pr-in{position:relative}.pr-in span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mut);font:600 13px "IBM Plex Mono",monospace;pointer-events:none}
+  .pr-sv{margin-top:10px;width:100%;min-height:46px;background:#2c4fc2;color:#fff;border:1px solid #9db8f5;font:700 15px "IBM Plex Sans",system-ui,sans-serif;letter-spacing:1px;cursor:pointer}
+  .pr-sv:disabled{opacity:.45;cursor:default}
+  .pr-st{margin-top:6px;font-size:14px;min-height:18px;color:var(--ok)}.pr-st.err{color:var(--err)}
+  html.light .pr-bar select,html.light .pr-card input.pc{background:#fff;color:#111c3d;border-color:rgba(47,86,196,.55)}
+  html.light .pr-card{background:#fbfcff;border-color:rgba(47,86,196,.4)}
+  html.light .pr-who,html.light .pr-t{color:#111c3d}
+  html.light .pr-chk,html.light .pr-ref{color:#1a2a5c;border-color:rgba(47,86,196,.5)}
 </style>
 <script>
 (function(){
@@ -356,6 +406,7 @@
 <nav id="tabs" class="tabs hidden" aria-label="Menu řidiče">
   <button type="button" id="tabNew">Nová přeprava</button>
   <button type="button" id="tabHist">Historie mých jízd</button>
+  <button type="button" id="tabPrice" class="hidden" aria-label="Ceny" title="Ceny" style="flex:0 0 64px;font-size:22px;letter-spacing:0">💵</button>
 </nav>
 <main>
   <!-- PŘIHLÁŠENÍ -->
@@ -426,6 +477,9 @@
       <label for="poznamka">Poznámka <span class="opt">(nepovinné)</span></label>
       <textarea id="poznamka" maxlength="300" rows="3" placeholder="např. čekání na vykládce, závada…"></textarea>
 
+      <label>Doklad <span class="opt">(nepovinné)</span></label>
+      <div id="scanBox"></div>
+
       <button class="btn" id="sendBtn" type="submit">Odeslat</button>
       <div id="recMsg" class="msg hidden"></div>
     </form>
@@ -438,6 +492,21 @@
     </div>
     <div id="histList"></div>
     <div id="histMsg" class="msg hidden"></div>
+  </section>
+
+  <section id="priceView" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="panel" style="padding-bottom:18px">
+      <h1>Ceny</h1>
+      <p class="lead" style="margin-bottom:12px">Všechny přepravy · ceny k jednotlivým tunám</p>
+      <div class="pr-bar">
+        <select id="prDrv" aria-label="Řidič"><option value="">Všichni řidiči</option></select>
+        <label class="pr-chk"><input type="checkbox" id="prMiss"> jen bez ceny</label>
+        <button type="button" id="prRef" class="pr-ref">Obnovit</button>
+      </div>
+      <div id="prInfo" class="scn-info" style="display:block"></div>
+    </div>
+    <div id="prList" class="pr-grid"></div>
+    <div id="prMsg" class="msg hidden"></div>
   </section>
 
   <section id="editView" class="panel hidden">
@@ -461,6 +530,8 @@
       <div id="eTunyBox" class="tunyrow"></div>
       <label for="ePozn">Poznámka <span class="opt">(nepovinné)</span></label>
       <textarea id="ePozn" maxlength="300" rows="3"></textarea>
+      <label>Doklad <span class="opt">(přidat nebo nahradit)</span></label>
+      <div id="eScanBox"></div>
       <button class="btn" id="eSave" type="submit">Uložit změny</button>
       <button class="btn ghost" id="eCancel" type="button">Zpět na historii</button>
       <div id="eMsg" class="msg hidden"></div>
@@ -470,21 +541,24 @@
   <section id="doneView" class="panel hidden">
     <svg class="done-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l3 3 5-6"/></svg>
     <div class="msg ok" style="margin-top:0">Záznam byl uložen. Děkujeme.</div>
+    <div id="doneWarn" class="msg err hidden"></div>
     <button class="btn" id="againBtn" type="button">Zadat další přepravu</button>
   </section>
 </main>
 <footer>airkl.cz · Robin Balcar</footer>
 
+<script src="/ridic/scan.js"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const views = ['loginView', 'formView', 'doneView', 'histView', 'editView'];
+  const views = ['loginView', 'formView', 'doneView', 'histView', 'editView', 'priceView'];
   const show = (name) => {
     views.forEach(v => $(v).classList.toggle('hidden', v !== name));
     $('logout').classList.toggle('hidden', name === 'loginView');
     $('tabs').classList.toggle('hidden', name === 'loginView');
     const h = name === 'histView' || name === 'editView';
-    $('tabHist').classList.toggle('on', h); $('tabNew').classList.toggle('on', !h);
+    $('tabHist').classList.toggle('on', h); $('tabNew').classList.toggle('on', !h && name !== 'priceView'); $('tabPrice').classList.toggle('on', name === 'priceView');
+    document.body.classList.toggle('wide', name === 'priceView');
   };
 
   async function api(url, body) {
@@ -493,6 +567,17 @@
     let data = {};
     try { data = await r.json(); } catch (e) {}
     return { status: r.status, data };
+  }
+
+  const scan = RklScan.create($('scanBox')), eScan = RklScan.create($('eScanBox'));
+  async function uploadDoc(sc, id) {   // vrací '' při úspěchu, jinak text chyby
+    try {
+      const pdf = await sc.getPdf(); if (!pdf) return '';
+      const u = await api('/api/ridic/doklad', { id, pdf: pdf.b64, pages: pdf.pages });
+      if (u.data && u.data.ok) { sc.clear(); return ''; }
+      if (u.status === 413) return 'Doklad je příliš velký.';
+      return 'Doklad se nepodařilo nahrát. Zkuste ho přidat znovu v Historii (Upravit).';
+    } catch (e) { return 'Doklad se nepodařilo nahrát (' + (e && e.message === 'too_big' ? 'příliš velký' : 'chyba připojení') + '). Zkuste ho přidat znovu v Historii (Upravit).'; }
   }
 
   function todayISO() {
@@ -546,7 +631,7 @@
     } catch (e) {}
   }
   function setDriver(d) {
-    driver = d; loadCustomers();
+    driver = d; loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny);
     const own = String(d.dopravce || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === 'rkl opava';
     needSpz = own || !String(d.spz || '').trim();           // řidiči RKL Opava (a řidiči bez SPZ v tabulce) si SPZ volí
     $('spzRow').classList.toggle('hidden', !needSpz);
@@ -566,7 +651,7 @@
     $('datumNakladky').value = t; $('datumVykladky').value = t;
     $('casNakladky').value = tm; $('casVykladky').value = tm;
     document.querySelectorAll('.bad').forEach(i => i.classList.remove('bad'));
-    clearMsg($('recMsg'));
+    clearMsg($('recMsg')); scan.clear();
     requestId = newId();
   }
 
@@ -626,10 +711,17 @@
       return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
 
+    if (scan.isBusy()) return showMsg(msg, 'Počkejte, doklad se ještě zpracovává.', 'err');
     $('sendBtn').disabled = true; $('sendBtn').textContent = 'Odesílám…';
     try {
       const r = await api('/api/ridic/zaznam', Object.assign({ requestId }, v));
-      if (r.data.ok) show('doneView');
+      if (r.data.ok) {
+        let warn = '';
+        if (scan.count() && r.data.id) { $('sendBtn').textContent = 'Nahrávám doklad…'; warn = await uploadDoc(scan, r.data.id); }
+        else if (scan.count()) warn = 'Doklad se nepodařilo přiřadit. Přidejte ho v Historii (Upravit).';
+        const dw = $('doneWarn'); dw.textContent = warn; dw.classList.toggle('hidden', !warn);
+        show('doneView');
+      }
       else if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); }
       else if (r.status === 400) showMsg(msg, 'Zkontrolujte vyplněné údaje.', 'err');
       else showMsg(msg, 'Záznam se nepodařilo uložit do tabulky. Zkuste to prosím znovu.', 'err');
@@ -656,7 +748,7 @@
       list.innerHTML = histRows.map((x, i) =>
         '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + ' ' + esc(x.casNakladky) + ' → ' + (x.datumVykladky !== x.datumNakladky ? esc(fmtD(x.datumVykladky)) + ' ' : '') + esc(x.casVykladky) + '</div>' +
         '<div class="rt">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
-        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
+        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + (x.hasDoc ? '<span>Doklad ✓</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
         '<button class="ed" type="button" data-i="' + i + '">Upravit</button></div>').join('');
     } catch (e) { list.innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
@@ -667,7 +759,7 @@
     $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
     $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join(''); $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
-    show('editView'); window.scrollTo(0, 0);
+    eScan.clear(); show('editView'); window.scrollTo(0, 0);
   });
   $('eCancel').addEventListener('click', () => { loadHist(); window.scrollTo(0, 0); });
   $('eZak').addEventListener('blur', () => { const z = $('zakaznik'), old = z.value; z.value = $('eZak').value; matchCustomer(); $('eZak').value = z.value; z.value = old; });
@@ -685,16 +777,75 @@
     if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
       ['eDatV', 'eCasV'].forEach(i => $(i).classList.add('bad')); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
+    if (eScan.isBusy()) return showMsg(msg, 'Počkejte, doklad se ještě zpracovává.', 'err');
     $('eSave').disabled = true; $('eSave').textContent = 'Ukládám…';
     try {
       const r = await api('/api/ridic/uprav', v);
-      if (r.data.ok) { await loadHist(); window.scrollTo(0, 0); }
+      if (r.data.ok) {
+        if (eScan.count()) { $('eSave').textContent = 'Nahrávám doklad…'; const w = await uploadDoc(eScan, editId); if (w) { showMsg(msg, 'Změny uloženy. ' + w, 'err'); $('eSave').disabled = false; $('eSave').textContent = 'Uložit změny'; return; } }
+        await loadHist(); window.scrollTo(0, 0);
+      }
       else if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); }
       else if (r.status === 404) showMsg(msg, 'Záznam už v tabulce nebyl nalezen.', 'err');
       else if (r.status === 400) showMsg(msg, 'Zkontrolujte vyplněné údaje.', 'err');
       else showMsg(msg, 'Změny se nepodařilo uložit. Zkuste to prosím znovu.', 'err');
     } catch (err) { showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
     $('eSave').disabled = false; $('eSave').textContent = 'Uložit změny';
+  });
+  // ---- ceny (jen Soukeník) ----
+  let prRows = [];
+  const prNum = (x) => String(x == null ? '' : x).replace('.', ',');
+  function prCard(x, i) {
+    const miss = x.ceny.some(c => c === '');
+    return '<div class="pr-card ' + (miss ? 'miss' : 'done') + '" data-i="' + i + '"><div class="pr-who">' + esc(x.ridic) + '<small>' + esc(x.spz) + (x.dopravce ? ' · ' + esc(x.dopravce) : '') + '</small></div>' +
+      '<div class="sb" style="color:#aeb9d4;font-size:14px;margin-top:4px">' + esc(fmtD(x.datumNakladky)) + (x.datumVykladky && x.datumVykladky !== x.datumNakladky ? ' → ' + esc(fmtD(x.datumVykladky)) : '') + '</div>' +
+      '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
+      '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
+      x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
+      '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
+  }
+  function prRender() {
+    const drv = $('prDrv').value, only = $('prMiss').checked;
+    const list = prRows.map((x, i) => [x, i]).filter(([x]) => (!drv || x.ridic === drv) && (!only || x.ceny.some(c => c === '')));
+    $('prList').innerHTML = list.length ? list.map(([x, i]) => prCard(x, i)).join('') : '<div class="empty" style="grid-column:1/-1">Žádné přepravy k zobrazení.</div>';
+    const miss = prRows.filter(x => x.ceny.some(c => c === '')).length;
+    $('prInfo').textContent = 'Zobrazeno ' + list.length + ' z ' + prRows.length + ' · bez kompletní ceny: ' + miss;
+  }
+  async function loadPrices() {
+    const msg = $('prMsg'); clearMsg(msg); show('priceView');
+    $('prList').innerHTML = '<div class="empty" style="grid-column:1/-1">Načítám…</div>';
+    try {
+      const r = await api('/api/ridic/ceny');
+      if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); return; }
+      if (!r.data.ok) { $('prList').innerHTML = ''; return showMsg(msg, 'Přehled se nepodařilo načíst. Zkuste to znovu.', 'err'); }
+      prRows = r.data.rows;
+      const cur = $('prDrv').value, names = [...new Set(prRows.map(x => x.ridic))].sort((a, b) => a.localeCompare(b, 'cs'));
+      $('prDrv').innerHTML = '<option value="">Všichni řidiči</option>' + names.map(n => '<option>' + esc(n) + '</option>').join('');
+      if (names.includes(cur)) $('prDrv').value = cur;
+      prRender();
+    } catch (e) { $('prList').innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
+  }
+  $('tabPrice').addEventListener('click', loadPrices);
+  $('prRef').addEventListener('click', loadPrices);
+  $('prDrv').addEventListener('change', prRender); $('prMiss').addEventListener('change', prRender);
+  $('prList').addEventListener('input', (e) => {
+    if (!e.target.classList.contains('pc')) return;
+    const c = e.target.closest('.pr-card'); c.querySelector('.pr-sv').disabled = false; const st = c.querySelector('.pr-st'); st.textContent = ''; st.className = 'pr-st';
+  });
+  $('prList').addEventListener('click', async (e) => {
+    const b = e.target.closest('.pr-sv'); if (!b) return;
+    const c = b.closest('.pr-card'), x = prRows[+c.dataset.i], st = c.querySelector('.pr-st');
+    const ceny = [...c.querySelectorAll('input.pc')].map(i => i.value.trim());
+    if (ceny.some(v => v !== '' && !/^\d+([.,]\d{1,2})?$/.test(v.replace(/\s/g, '')))) { st.className = 'pr-st err'; st.textContent = 'Zadejte cenu jako číslo.'; return; }
+    b.disabled = true; st.className = 'pr-st'; st.textContent = 'Ukládám…';
+    try {
+      const r = await api('/api/ridic/ceny', { id: x.id, ceny });
+      if (r.data && r.data.ok) {
+        x.ceny = ceny.map(v => v.replace(/\s/g, '').replace(',', '.'));
+        c.classList.toggle('miss', x.ceny.some(v => v === '')); c.classList.toggle('done', !x.ceny.some(v => v === ''));
+        st.textContent = 'Uloženo ✓';
+      } else { b.disabled = false; st.className = 'pr-st err'; st.textContent = r.status === 401 ? 'Přihlášení vypršelo.' : 'Uložení se nepodařilo. Zkuste to znovu.'; }
+    } catch (err) { b.disabled = false; st.className = 'pr-st err'; st.textContent = 'Chybí připojení k internetu.'; }
   });
   $('tabNew').addEventListener('click', () => { show('formView'); window.scrollTo(0, 0); });
   $('tabHist').addEventListener('click', loadHist);
