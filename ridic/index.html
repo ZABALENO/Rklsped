@@ -149,13 +149,7 @@
   /* ===== VYSOKÝ KONTRAST + VĚTŠÍ PÍSMO A TLAČÍTKA (pro řidiče se zhoršeným zrakem) ===== */
   :root{--mut:#d3dcf2;--c:#8fb4ff;--ok:#5af0ae;--err:#ff8a7e}
   html.light{--mut:#2b3558;--c:#1b46c2;--ok:#07663f;--err:#a52a1d}
-  body{font-size:19px;line-height:1.45;background:#050b24}
-  body::before{filter:grayscale(1) brightness(.12) blur(2px)}
-  .hl,.grid-bg{display:none}
-  body::after{background:#050b24}
-  html.light body{background:#f1f5ff}
-  html.light body::before{filter:grayscale(1) brightness(1.5) opacity(.15)}
-  html.light body::after{background:#f1f5ff}
+  body{font-size:19px;line-height:1.45}
   header{background:#020618;border-bottom:2px solid #8fb4ff}
   html.light header{background:#fff;border-bottom:2px solid #1b46c2}
   .back,.thbtn{width:48px;height:48px}
