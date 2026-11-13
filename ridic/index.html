@@ -329,6 +329,17 @@
   .scn-ib{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px;border:1px solid rgba(160,190,250,.55);background:transparent;color:#e3eaf9;font:600 13px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
   html.light .scn-ib{color:#1a2a5c;border-color:rgba(47,86,196,.5)}
   .scn-ib svg,.scn-btn svg{flex:none;width:20px;height:20px}
+  .scn-ed{position:fixed;inset:0;z-index:9999;background:#05070f;display:flex;flex-direction:column;gap:8px;padding:8px;touch-action:none}
+  .scn-ed-tip{color:#e3eaf9;font:600 16px "IBM Plex Sans",system-ui,sans-serif;text-align:center;padding:6px}
+  .scn-ed-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  .scn-ed-box{position:relative;line-height:0;max-width:100%;max-height:100%}
+  .scn-ed-box img{display:block;max-width:100%;max-height:calc(100dvh - 190px);width:auto;height:auto;user-select:none;-webkit-user-select:none}
+  .scn-ed-box svg{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+  .scn-ed-box polygon{fill:rgba(94,138,255,.14);stroke:#ffd23f}
+  .scn-ed-box circle.h{fill:rgba(255,210,63,.12);stroke:#ffd23f;cursor:grab;touch-action:none}
+  .scn-ed-bar{display:flex;flex-direction:column;gap:8px}
+  .scn-ed-row{display:flex;gap:8px}.scn-ed-row .scn-btn{flex:1;min-height:52px;font-size:16px}
+  .scn-ed .scn-btn{color:#e3eaf9;border-color:rgba(160,190,250,.6)}.scn-ed .scn-btn.main{color:#fff}
   .scn-pdf{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(160,190,250,.5);color:#e3eaf9}
   html.light .scn-pdf{color:#1a2a5c;border-color:rgba(47,86,196,.5)}
   .scn-pdf b{overflow-wrap:anywhere}.scn-pdf>div{flex:1;min-width:0}

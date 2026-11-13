@@ -215,7 +215,7 @@
         const modeName = MODES.find(m => m[0] === p.mode)[1];
         row.append(
           b(ICO.rot, 'Otočit', () => { p.rot = (p.rot + 1) % 4; reprocess(p); }),
-          b(ICO.crop, p.crop ? 'Ořez: ano' : 'Ořez: ne', () => { p.crop = !p.crop; reprocess(p); }),
+          b(ICO.crop, 'Upravit ořez', () => editCrop(p)),
           mk('span', 'sp'),
           b('', modeName, () => { p.mode = MODES[(MODES.findIndex(m => m[0] === p.mode) + 1) % MODES.length][0]; reprocess(p); }),
           b(ICO.del, 'Smazat', () => { pages = pages.filter(x => x !== p); if (p.url) URL.revokeObjectURL(p.url); refresh(); changed(); })
@@ -226,6 +226,41 @@
     }
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     function changed() { if (opts.onChange) opts.onChange(); }
+    function editCrop(p) {
+      const W = p.ow, H = p.oh, url = URL.createObjectURL(p.orig);
+      const m = Math.min(W, H) * 0.06;
+      let q = (p.quad || [[m, m], [W - m, m], [W - m, H - m], [m, H - m]]).map(pt => pt.slice());
+      const ov = mk('div', 'scn-ed'), tip = mk('div', 'scn-ed-tip', 'Přetáhněte rohy tak, aby rámeček obepínal doklad'), wrap = mk('div', 'scn-ed-wrap'), box = mk('div', 'scn-ed-box'), img = mk('img'), bar = mk('div', 'scn-ed-bar');
+      img.src = url; img.alt = ''; img.draggable = false;
+      const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), poly = document.createElementNS(NS, 'polygon');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.appendChild(poly);
+      const hs = q.map((pt, i) => {
+        const c = document.createElementNS(NS, 'circle'); c.setAttribute('class', 'h'); svg.appendChild(c);
+        c.addEventListener('pointerdown', e => { e.preventDefault(); c.setPointerCapture(e.pointerId); c._d = true; });
+        c.addEventListener('pointermove', e => {
+          if (!c._d) return; const r = svg.getBoundingClientRect();
+          q[i] = [Math.max(0, Math.min(W, (e.clientX - r.left) / r.width * W)), Math.max(0, Math.min(H, (e.clientY - r.top) / r.height * H))]; draw();
+        });
+        const up = () => { c._d = false; }; c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+        return c;
+      });
+      function draw() {
+        const k = W / Math.max(1, svg.getBoundingClientRect().width || W);
+        poly.setAttribute('points', q.map(pt => pt.join(',')).join(' ')); poly.setAttribute('stroke-width', 3 * k);
+        hs.forEach((c, i) => { c.setAttribute('cx', q[i][0]); c.setAttribute('cy', q[i][1]); c.setAttribute('r', 22 * k); c.setAttribute('stroke-width', 3 * k); });
+      }
+      const btn = (cls, tx, fn) => { const e = mk('button', 'scn-btn ' + cls, '<span>' + tx + '</span>'); e.type = 'button'; e.onclick = fn; return e; };
+      const close = () => { URL.revokeObjectURL(url); ov.remove(); };
+      const row = mk('div', 'scn-ed-row');
+      row.append(
+        btn('', 'Celá fotka', () => { p.crop = false; close(); reprocess(p); }),
+        ...(p.auto ? [btn('', 'Automaticky', () => { q = p.auto.map(pt => pt.slice()); draw(); })] : []),
+        btn('', 'Zrušit', close)
+      );
+      bar.append(btn('main', 'Hotovo', () => { p.quad = q; p.crop = true; close(); reprocess(p); }), row);
+      box.append(img, svg); wrap.appendChild(box); ov.append(tip, wrap, bar); document.body.appendChild(ov);
+      img.onload = draw; if (img.complete) draw(); window.addEventListener('resize', draw, { once: true });
+    }
     async function reprocess(p) {
       p.busy = true; refresh();
       try { const r = await render(p); if (p.url) URL.revokeObjectURL(p.url); p.out = r.blob; p.w = r.w; p.h = r.h; p.url = URL.createObjectURL(r.blob); } catch (e) { setInfo('Stránku se nepodařilo zpracovat.', true); }
@@ -237,9 +272,9 @@
       try {
         const bmp = await decode(file), big = fit(bmp, LONG * 2); if (bmp.close) bmp.close();
         const c0 = fit(big, LONG), orig = await toBlob(big, 0.9), fq = big.width / c0.width, q0 = detect(c0), quad = q0 && q0.map(pt => [pt[0] * fq, pt[1] * fq]);
-        const p = { id: ++seq, orig, quad, crop: !!quad, mode: 'doc', rot: 0 };
+        const p = { id: ++seq, orig, quad, auto: quad, ow: big.width, oh: big.height, crop: !!quad, mode: 'doc', rot: 0 };
         pages.push(p); await reprocess(p);
-        setInfo(quad ? '' : 'Okraje dokladu se nepodařilo najít, použila se celá fotka. Zkuste vyfotit na tmavém podkladu.');
+        setInfo(quad ? '' : 'Okraje dokladu se nepodařilo najít. Upravte ořez ručně.'); if (!quad) editCrop(p);
       } catch (e) { setInfo('Fotku se nepodařilo načíst.', true); }
       busy--; if (!busy && !info.classList.contains('err') && pages.every(x => x.quad || !x.busy) === false) { /* nic */ }
     }
