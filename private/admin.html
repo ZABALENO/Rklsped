@@ -452,12 +452,12 @@ setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové 
 })();
 </script>
 
-<style>.vyt.on{background:rgba(94,138,255,.45)!important;font-weight:800}</style><div id="vyMod" hidden style="position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.72);overflow:auto;padding:14px"><div style="max-width:820px;margin:0 auto;background:var(--card,#141a2e);color:var(--tx,#e9edf7);border:1px solid var(--line,#2a3558);border-radius:14px;padding:14px 14px 18px">
+<style>.vya{width:auto!important;height:auto!important;padding:4px 10px!important;font-size:12px!important;border-radius:14px!important;opacity:.5}.vya.on{opacity:1;background:rgba(94,138,255,.45)!important;font-weight:800}.vyt.on{background:rgba(94,138,255,.45)!important;font-weight:800}</style><div id="vyMod" hidden style="position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.72);overflow:auto;padding:14px"><div style="max-width:820px;margin:0 auto;background:var(--card,#141a2e);color:var(--tx,#e9edf7);border:1px solid var(--line,#2a3558);border-radius:14px;padding:14px 14px 18px">
 <div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:16px">Vyhodnocení agentů – opravy a opakování zadání</b><button class="ib" id="vyX" type="button">✕</button></div>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px"><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="0" type="button">Dnes</button><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="6" type="button">7 dní</button><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="29" type="button">30 dní</button><button class="ib vyp" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap" data-d="-1" type="button">Vše</button>
 <span style="opacity:.7;font-size:12px;margin-left:6px">od</span><input id="vyF" type="date" class="ib" style="width:auto;height:auto;padding:5px 6px;font-size:12px"><span style="opacity:.7;font-size:12px">do</span><input id="vyT" type="date" class="ib" style="width:auto;height:auto;padding:5px 6px;font-size:12px"><button class="ib" id="vyGo" type="button" style="width:auto;height:auto;min-width:0;padding:6px 11px;font-size:12px;white-space:nowrap;font-weight:800">Vyhodnotit</button></div>
 <div style="font-size:11px;opacity:.65;margin-bottom:6px">Počítá se jako oprava: slova jako „ne“, „znovu“, „špatně“, „opravit“, „myslel jsem“…, nebo opakování podobného zadání do 30 min. Je to odhad – každý případ si můžeš rozkliknout.</div>
-<div style="display:flex;gap:6px;margin:6px 0"><button class="ib vyt on" data-t="inc" type="button" style="width:auto;height:auto;padding:6px 12px;font-size:12px">Opravy a opakování</button><button class="ib vyt" data-t="all" type="button" style="width:auto;height:auto;padding:6px 12px;font-size:12px">Všechny požadavky</button><select id="vyA" class="ib" style="width:auto;height:auto;padding:5px 6px;font-size:12px;display:none"></select></div><div id="vyBody" style="font-size:13px">Vyber období.</div></div></div>
+<div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap"><button class="ib vyt on" data-t="inc" type="button" style="width:auto;height:auto;padding:6px 12px;font-size:12px">Opravy a opakování</button><button class="ib vyt" data-t="all" type="button" style="width:auto;height:auto;padding:6px 12px;font-size:12px">Všechny požadavky</button><div id="vyAg" style="display:none;flex-wrap:wrap;gap:5px;align-items:center;flex:1 1 100%"></div></div><div id="vyBody" style="font-size:13px">Vyber období.</div></div></div>
 <script>
 (function(){
   const $=id=>document.getElementById(id),E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -466,14 +466,35 @@ setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové 
   const q=(t,mx)=>{t=String(t||'');return E(t.length>mx?t.slice(0,mx)+'…':t)};
   async function run(){ const f=$('vyF').value,t=$('vyT').value; if(!f||!t){$('vyBody').textContent='Zadej období.';return}
     $('vyBody').textContent='počítám…';
-    try{const r=await fetch('/api/agents/dozor/eval?from='+f+'&to='+t,{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||r.status);J=j;$('vyA').innerHTML='';show()}catch(e){$('vyBody').textContent='Nepodařilo se: '+e.message} }
+    try{const r=await fetch('/api/agents/dozor/eval?from='+f+'&to='+t,{cache:'no-store'}),j=await r.json();if(!r.ok)throw new Error(j.error||r.status);J=j;catSel=-1;selA.clear();show()}catch(e){$('vyBody').textContent='Nepodařilo se: '+e.message} }
   let J=null,tab='inc';
+  const CATS=[['Lori – zápis a kontrola objednávek',/lori|\bz\d{5,}|\bb-?\d{5}|objednavk|zapis|zapsat|zadej|zadat|vyct|doklad/,'#4f8cff'],
+    ['Dopravci a přepravy',/dopravc|preprav|nakladk|vykladk|\btras|pozic|\bspz|ridic|agency/,'#ff9f1c'],
+    ['Ceny, poptávky, kalkulace',/\bcen[aouy]?\b|\bkc\b|\beur\b|sazb|poptavk|nabidk|kalkul/,'#2ecc71'],
+    ['E-maily a komunikace',/e-?mail|outlook|odpoved|poslat|odeslat|zprav|napis/,'#b36bff'],
+    ['Faktury a Premier',/faktur|premier|schval/,'#ff5d73'],
+    ['Kontrola zásilek a zpracování dat',/zasilk|kontrol|zpracovani/,'#19e3ff'],
+    ['Tabulky, logy a skripty',/tabulk|sheet|excel|xlsx|sloupec|radek|google|\blog\b|skill|skript|script|data/,'#c9e03a'],
+    ['Ostatní',/./,'#8da2c8']];
+  const cls=r=>{const t=(String(r.request||'')+' '+String(r.wants||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();for(let i=0;i<CATS.length;i++)if(CATS[i][1].test(t))return i;return CATS.length-1};
+  let catSel=-1;const selA=new Set();
+  function catPie(rs){
+    const n=CATS.map(()=>0);rs.forEach(r=>{n[cls(r)]++});const tot=rs.length||1,c=70,r0=52,w=22,C=2*Math.PI*r0;let acc=0,arcs='';
+    n.forEach((v,i)=>{if(!v)return;const len=C*v/tot;arcs+='<circle cx="'+c+'" cy="'+c+'" r="'+r0+'" fill="none" stroke="'+CATS[i][2]+'" stroke-width="'+w+'" stroke-opacity="'+(catSel<0||catSel===i?1:.25)+'" stroke-dasharray="'+Math.max(0,len-(rs.length>1?1.5:0))+' '+C+'" stroke-dashoffset="'+(-acc)+'" transform="rotate(-90 '+c+' '+c+')"><title>'+E(CATS[i][0])+': '+v+'</title></circle>';acc+=len});
+    const rows=n.map((v,i)=>[v,i]).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]);
+    return '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:6px 0 10px"><svg viewBox="0 0 140 140" style="width:150px;flex:none"><text x="70" y="76" text-anchor="middle" fill="currentColor" font-weight="900" font-size="26">'+rs.length+'</text>'+arcs+'</svg><div style="flex:1;min-width:200px">'
+      +'<div style="font-weight:800;margin-bottom:4px">Oblasti činnosti</div>'
+      +rows.map(x=>'<div class="vyc" data-c="'+x[1]+'" style="display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer;'+(catSel>=0&&catSel!==x[1]?'opacity:.45':'')+'"><i style="width:10px;height:10px;border-radius:3px;background:'+CATS[x[1]][2]+';flex:none"></i><span style="flex:1">'+E(CATS[x[1]][0])+'</span><b>'+x[0]+'</b><span style="opacity:.65;width:38px;text-align:right">'+Math.round(100*x[0]/tot)+' %</span></div>').join('')
+      +'<div style="font-size:11px;opacity:.6;margin-top:4px">Řazeno podle klíčových slov v zadání (odhad). Klepnutím na oblast se seznam níže vyfiltruje.'+(catSel>=0?' <a href="#" id="vyCatX" style="color:#8fb2ff">zrušit filtr</a>':'')+'</div></div></div>';
+  }
   function drawAll(j){
-    const a=$('vyA').value,rs=(j.requests||[]).filter(r=>!a||r.agent===a);
-    $('vyBody').innerHTML='<div style="margin:6px 0 8px;font-weight:800">'+rs.length+' požadavků uživatele'+(a?' pro '+E(a):'')+' za '+E(j.from)+' až '+E(j.to)+(j.requestsTotal>j.requests.length?' (zobrazeno nejnovějších '+j.requests.length+')':'')+'</div>'
+    const base=(j.requests||[]).filter(r=>selA.has(r.agent)),rs=base.filter(r=>catSel<0||cls(r)===catSel);
+    $('vyBody').innerHTML=catPie(base)+'<div style="margin:6px 0 8px;font-weight:800">'+rs.length+' požadavků uživatele'+(selA.size<(j.agents||[]).length?' (vybraní agenti: '+selA.size+')':'')+' za '+E(j.from)+' až '+E(j.to)+(j.requestsTotal>j.requests.length?' (zobrazeno nejnovějších '+j.requests.length+')':'')+'</div>'
       +(rs.length?rs.map(r=>'<div style="border-left:3px solid #5e8aff;padding:4px 0 4px 9px;margin:6px 0"><div style="font-size:11px;opacity:.65">'+E(r.agent)+' · '+pt(r.ts)+' · řádek '+r.row+'</div><div style="font-weight:600;white-space:pre-wrap">„'+E(r.request)+'“</div></div>').join(''):'<div style="opacity:.7">Žádné požadavky.</div>');
   }
-  function show(){ if(!J)return; const sel=$('vyA'); if(tab==='all'){ if(!sel.options.length){sel.innerHTML='<option value="">Všichni agenti</option>'+J.agents.map(g=>'<option>'+E(g.agent)+'</option>').join('')} sel.style.display='';drawAll(J)} else {sel.style.display='none';draw(J)} document.querySelectorAll('.vyt').forEach(b=>b.classList.toggle('on',b.dataset.t===tab)) }
+  function chips(){ const el=$('vyAg'),all=J.agents.map(g=>g.agent),allOn=all.every(x=>selA.has(x));
+    el.innerHTML='<button type="button" class="ib vya'+(allOn?' on':'')+'" data-a="*">Všichni agenti</button>'+all.map(x=>'<button type="button" class="ib vya'+(selA.has(x)?' on':'')+'" data-a="'+E(x)+'">'+E(x)+'</button>').join('') }
+  function show(){ if(!J)return; const el=$('vyAg'); if(tab==='all'){ if(!selA.size)J.agents.forEach(g=>selA.add(g.agent)); chips(); el.style.display='flex'; drawAll(J)} else {el.style.display='none';draw(J)} document.querySelectorAll('.vyt').forEach(b=>b.classList.toggle('on',b.dataset.t===tab)) }
   function draw(j){
     const th='padding:5px 8px;text-align:right',tl='padding:5px 8px;text-align:left',td='padding:5px 8px;border-top:1px solid rgba(128,128,128,.25)';
     let h='<div style="margin:6px 0 10px;font-weight:800">Za '+E(j.from)+' až '+E(j.to)+': '+j.totals.incidents+' oprav / opakování z '+j.totals.total+' zadání ('+j.totals.pct+' %)</div>';
@@ -487,7 +508,8 @@ setInterval(()=>{flip=!flip;document.title=unacked&&flip?'⚠ '+unacked+' nové 
   }
   const setP=d=>{const t=new Date(),f=new Date();if(d<0)f.setTime(Date.parse('2026-10-01'));else f.setDate(f.getDate()-d);$('vyF').value=iso(f);$('vyT').value=iso(t);run()};
   $('vyBtn').addEventListener('click',()=>{$('vyMod').hidden=false;if(!$('vyF').value)setP(6);else run()});
-  document.querySelectorAll('.vyt').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.t;show()}));$('vyA').addEventListener('change',()=>show());
+  document.querySelectorAll('.vyt').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.t;show()}));$('vyAg').addEventListener('click',e=>{const b=e.target.closest('.vya');if(!b)return;const all=J.agents.map(g=>g.agent);if(b.dataset.a==='*'){if(all.every(x=>selA.has(x)))selA.clear();else all.forEach(x=>selA.add(x))}else{if(selA.has(b.dataset.a))selA.delete(b.dataset.a);else selA.add(b.dataset.a)}catSel=-1;chips();drawAll(J)});
+  $('vyBody').addEventListener('click',e=>{const c=e.target.closest('.vyc');if(c){const i=+c.dataset.c;catSel=catSel===i?-1:i;drawAll(J);return}if(e.target.id==='vyCatX'){e.preventDefault();catSel=-1;drawAll(J)}});
   $('vyX').addEventListener('click',()=>{$('vyMod').hidden=true});$('vyGo').addEventListener('click',run);
   document.querySelectorAll('.vyp').forEach(b=>b.addEventListener('click',()=>setP(+b.dataset.d)));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('vyMod').hidden)$('vyX').click()});
