@@ -364,6 +364,8 @@
   .pr-t{font:600 16px "IBM Plex Mono",monospace;color:#e8eeff}
   .pr-card input.pc{width:100%;min-height:46px;font-size:18px;text-align:right;padding:0 44px 0 10px;background-image:none!important;background:rgba(6,12,30,.9);color:#fff;border:1px solid rgba(160,190,250,.55)}
   .pr-in{position:relative}.pr-in span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mut);font:600 13px "IBM Plex Mono",monospace;pointer-events:none}
+  .pr-doc{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;min-height:46px;border:1px solid #9db8f5;color:#e3eaf9;text-decoration:none;font:700 15px "IBM Plex Sans",system-ui,sans-serif}
+  html.light .pr-doc{color:#1a2a5c;border-color:rgba(47,86,196,.6)}
   .pr-sv{margin-top:10px;width:100%;min-height:46px;background:#2c4fc2;color:#fff;border:1px solid #9db8f5;font:700 15px "IBM Plex Sans",system-ui,sans-serif;letter-spacing:1px;cursor:pointer}
   .pr-sv:disabled{opacity:.45;cursor:default}
   .pr-st{margin-top:6px;font-size:14px;min-height:18px;color:var(--ok)}.pr-st.err{color:var(--err)}
@@ -813,7 +815,7 @@
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
       x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
-      '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
+      (x.doc ? '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '" target="_blank" rel="noopener">📄 ' + esc(x.doc) + '</a>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
   }
   function prRender() {
     const drv = $('prDrv').value, only = $('prMiss').checked;
