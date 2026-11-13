@@ -261,7 +261,8 @@ function doc_(b) {
     var blob = Utilities.newBlob(Utilities.base64Decode(String(b.pdf)), 'application/pdf', name);
     var file = folder.createFile(blob);
     var pages = Math.max(1, Math.min(40, Number(b.pages) || 1));
-    sh.getRange(row, COL_DOC).setFormula('=HYPERLINK("' + file.getUrl() + '","Doklad (' + pages + ' str.)")');
+    var label = 'Doklad (' + pages + ' str.)';
+    sh.getRange(row, COL_DOC).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(label).setLinkUrl(file.getUrl()).build());   // odkaz jako text s hypertextem (nezávislé na jazyku tabulky)
     return { ok: true, row: row };
   } finally {
     lock.releaseLock();
@@ -344,7 +345,9 @@ function docGet_(b) {
   var row = 0;
   for (var i = ids.length - 1; i >= 0; i--) { if (ids[i][0] === id) { row = start + i; break; } }
   if (!row) return { ok: false, error: 'not_found' };
-  var m = /\/d\/([\w-]+)/.exec(String(sh.getRange(row, COL_DOC).getFormula() || ''));
+  var cell = sh.getRange(row, COL_DOC), url = '';
+  try { var rt = cell.getRichTextValue(); url = (rt && rt.getLinkUrl()) || ''; } catch (e) {}
+  var m = /\/d\/([\w-]+)/.exec(url || String(cell.getFormula() || ''));
   if (!m) return { ok: false, error: 'no_doc' };
   try {
     var blob = DriveApp.getFileById(m[1]).getBlob();
@@ -362,4 +365,19 @@ function customers_() {
     if (n && n.length <= 120 && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; out.push(n); }
   }
   return { ok: true, customers: out };
+}
+
+// jednorázová oprava: starší odkazy zapsané vzorcem (#ERROR! v české tabulce) převede na odkaz v textu
+function opravOdkazy() {
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  var last = sh.getLastRow(), n = 0;
+  if (last < 2) return 'nic';
+  var rng = sh.getRange(2, COL_DOC, last - 1, 1), f = rng.getFormulas();
+  for (var i = 0; i < f.length; i++) {
+    var m = /"(https:[^"]+)"\s*[,;]\s*"([^"]*)"/.exec(f[i][0] || '');
+    if (!m) continue;
+    sh.getRange(i + 2, COL_DOC).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(m[2]).setLinkUrl(m[1]).build());
+    n++;
+  }
+  return 'opraveno ' + n;
 }
