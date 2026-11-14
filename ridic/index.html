@@ -1002,7 +1002,7 @@
     $('ideaSend').disabled = true;
     try {
       const r = await api('/api/ridic/napad', { text: t });
-      if (r.data && r.data.ok) { $('ideaTxt').value = ''; showMsg(msg, 'Díky! Návrh byl odeslán.', 'ok'); setTimeout(() => { $('ideaBox').classList.add('hidden'); clearMsg(msg); }, 2500); }
+      if (r.data && r.data.ok) { $('ideaTxt').value = ''; showMsg(msg, 'Děkuji a pokusím se vašemu návrhu vyhovět. – Robin Balcar, tel. 725593002', 'ok'); setTimeout(() => { $('ideaBox').classList.add('hidden'); clearMsg(msg); }, 8000); }
       else showMsg(msg, r.status === 429 ? 'Chvilku počkejte a zkuste to znovu.' : r.status === 401 ? 'Přihlášení vypršelo.' : 'Odeslání se nepodařilo.', 'err');
     } catch (e) { showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
     $('ideaSend').disabled = false;
