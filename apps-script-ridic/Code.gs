@@ -458,3 +458,12 @@ function pridatSmeny() {
   layout_();
   return 'hotovo, STRIDE=' + STRIDE + ', ID ve sloupci ' + COL_ID;
 }
+
+
+// JEDNORÁZOVĚ: sloupec Datum nakládky přejmenuje na Datum směny a skryje Datum vykládky
+function jedenDatum() {
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  sh.getRange(1, 7).setValue('Datum směny');
+  sh.hideColumns(9);
+  return 'hotovo';
+}

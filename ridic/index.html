@@ -475,14 +475,9 @@
       <p class="lead">Vyplňte údaje a odešlete</p>
 
 
-      <p class="grp">Nakládka</p>
+      <p class="grp">Směna</p>
       <div class="row1">
-        <div><label for="datumNakladky">Datum</label><input id="datumNakladky" type="date" required></div>
-      </div>
-
-      <p class="grp sp">Vykládka</p>
-      <div class="row1">
-        <div><label for="datumVykladky">Datum</label><input id="datumVykladky" type="date" required></div>
+        <div><label for="datumNakladky">Datum směny</label><input id="datumNakladky" type="date" required><input id="datumVykladky" type="hidden"></div>
       </div>
 
       <p class="grp sp">Přeprava</p>
@@ -544,10 +539,8 @@
     <h1>Úprava jízdy</h1>
     <p class="lead">Změňte údaje a uložte</p>
     <form id="editForm" novalidate>
-      <p class="grp">Nakládka</p>
-      <div class="row1"><div><label for="eDatN">Datum</label><input id="eDatN" type="date"></div></div>
-      <p class="grp sp">Vykládka</p>
-      <div class="row1"><div><label for="eDatV">Datum</label><input id="eDatV" type="date"></div></div>
+      <p class="grp">Směna</p>
+      <div class="row1"><div><label for="eDatN">Datum směny</label><input id="eDatN" type="date"><input id="eDatV" type="hidden"></div></div>
       <p class="grp sp">Přeprava</p>
       <label for="eMistoN" style="margin-top:0">Místo nakládky</label>
       <div class="gpsrow"><input id="eMistoN" type="text" maxlength="100" autocomplete="off"><button type="button" class="gpsb" data-for="eMistoN" aria-label="Použít GPS"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.6"/></svg><span>GPS</span></button></div>
@@ -777,6 +770,7 @@
     const msg = $('recMsg'); clearMsg(msg);
     document.querySelectorAll('.bad').forEach(i => i.classList.remove('bad'));
 
+    $('datumVykladky').value = $('datumNakladky').value;
     const v = {};
     FIELDS.forEach(k => v[k] = $(k).value.trim());
     const bad = FIELDS.filter(k => !v[k]);
@@ -856,6 +850,7 @@
     const msg = $('eMsg'); clearMsg(msg);
     const ids = { jizd: 'eJizd', datumNakladky: 'eDatN', datumVykladky: 'eDatV', mistoNakladky: 'eMistoN', mistoVykladky: 'eMistoV', zakaznik: 'eZak', druh: 'eDruh', poznamka: 'ePozn' };
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad'));
+    $('eDatV').value = $('eDatN').value;
     const v = { id: editId }, bad = [];
     Object.keys(ids).forEach(k => v[k] = $(ids[k]).value.trim());
     ['datumNakladky', 'datumVykladky', 'mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh'].forEach(k => { if (!v[k]) bad.push(k); });
