@@ -203,6 +203,12 @@ function isoDate_(disp) { // "dd.MM.yyyy" -> "YYYY-MM-DD"
   return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
 }
 
+function isoDt_(disp) { // "dd.MM.yyyy HH:mm" -> "YYYY-MM-DDTHH:mm"
+  var m = String(disp).match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})\s+(\d{1,2}):(\d{2})/);
+  if (!m) return '';
+  return m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) + 'T' + ('0' + m[4]).slice(-2) + ':' + m[5];
+}
+
 function hhmm_(disp) {
   var m = String(disp).match(/^(\d{1,2}):(\d{2})/);
   return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
@@ -376,7 +382,7 @@ function prices_list_(b) {
     var tuny = [], ceny = [], smeny = [];
     for (var k = 0; k < jz; k++) { tuny.push(num_(r[colTuny_(k) - 1])); ceny.push(num_(r[colTuny_(k)])); smeny.push(STRIDE > 2 ? smenaCode_(r[colSmena_(k) - 1]) : ''); }
     rows.push({
-      id: r[COL_ID - 1], ridic: r[1+O], dopravce: r[2+O], spz: r[3+O],
+      id: r[COL_ID - 1], zapsano: isoDt_(r[O]), ridic: r[1+O], dopravce: r[2+O], spz: r[3+O],
       datumNakladky: isoDate_(r[5+O]), datumVykladky: isoDate_(r[7+O]),
       mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O],
       jizd: jz, tuny: tuny, ceny: ceny, smeny: smeny, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length

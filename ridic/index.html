@@ -542,6 +542,14 @@
         <label class="pr-chk"><input type="checkbox" id="prMiss"> jen bez ceny</label>
         <button type="button" id="prRef" class="pr-ref">Obnovit</button>
       </div>
+      <div class="pr-bar" style="margin-top:10px">
+        <select id="prSort" aria-label="Řazení">
+          <option value="real-d">Řadit: datum realizace – nejnovější</option>
+          <option value="real-a">Řadit: datum realizace – nejstarší</option>
+          <option value="zap-d">Řadit: zapsáno řidičem – nejnovější</option>
+          <option value="zap-a">Řadit: zapsáno řidičem – nejstarší</option>
+        </select>
+      </div>
       <div id="prInfo" class="scn-info" style="display:block"></div>
     </div>
     <div id="prList" class="pr-grid"></div>
@@ -898,11 +906,13 @@
     $('eSave').disabled = false; $('eSave').textContent = 'Uložit změny';
   });
   // ---- ceny (jen Soukeník) ----
+  const fmtDT = (v) => { const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || ''); return m ? (+m[3]) + '. ' + (+m[2]) + '. ' + m[1] + ' ' + m[4] + ':' + m[5] : '—'; };
   let prRows = [];
   const prNum = (x) => String(x == null ? '' : x).replace('.', ',');
   function prCard(x, i) {
     const miss = x.ceny.some(c => c === '');
     return '<div class="pr-card ' + (miss ? 'miss' : 'done') + '" data-i="' + i + '"><div class="pr-who">' + esc(x.ridic) + '<small>' + esc(x.spz) + (x.dopravce ? ' · ' + esc(x.dopravce) : '') + '</small></div>' +
+      '<div class="sb" style="color:#8fa2d6;font-size:13px;margin-top:4px">Zapsáno: ' + esc(fmtDT(x.zapsano)) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px;margin-top:4px">' + esc(fmtD(x.datumNakladky)) + (x.datumVykladky && x.datumVykladky !== x.datumNakladky ? ' → ' + esc(fmtD(x.datumVykladky)) : '') + '</div>' +
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
@@ -912,6 +922,8 @@
   function prRender() {
     const drv = $('prDrv').value, only = $('prMiss').checked;
     const list = prRows.map((x, i) => [x, i]).filter(([x]) => (!drv || x.ridic === drv) && (!only || x.ceny.some(c => c === '')));
+    const so = $('prSort').value, key = so.startsWith('zap') ? (x => x.zapsano || '') : (x => (x.datumNakladky || '') + '|' + (x.zapsano || ''));
+    list.sort((a, b) => { const A = key(a[0]), B = key(b[0]); return (A < B ? -1 : A > B ? 1 : 0) * (so.endsWith('-a') ? 1 : -1); });
     $('prList').innerHTML = list.length ? list.map(([x, i]) => prCard(x, i)).join('') : '<div class="empty" style="grid-column:1/-1">Žádné přepravy k zobrazení.</div>';
     const miss = prRows.filter(x => x.ceny.some(c => c === '')).length;
     $('prInfo').textContent = 'Zobrazeno ' + list.length + ' z ' + prRows.length + ' · bez kompletní ceny: ' + miss;
@@ -932,7 +944,7 @@
   }
   $('tabPrice').addEventListener('click', loadPrices);
   $('prRef').addEventListener('click', loadPrices);
-  $('prDrv').addEventListener('change', prRender); $('prMiss').addEventListener('change', prRender);
+  $('prDrv').addEventListener('change', prRender); $('prMiss').addEventListener('change', prRender); $('prSort').addEventListener('change', prRender);
   $('prList').addEventListener('input', (e) => {
     if (!e.target.classList.contains('pc')) return;
     const c = e.target.closest('.pr-card'); c.querySelector('.pr-sv').disabled = false; const st = c.querySelector('.pr-st'); st.textContent = ''; st.className = 'pr-st';
