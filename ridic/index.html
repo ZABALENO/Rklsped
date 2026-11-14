@@ -62,6 +62,9 @@
   .thx img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
   .thx::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(to top,rgba(5,14,60,.92),rgba(5,14,60,0))}
   .thx b{position:absolute;left:0;right:0;bottom:calc(9vh + env(safe-area-inset-bottom,0px));z-index:2;text-align:center;color:#fff;font-size:clamp(28px,9vw,44px);font-weight:800;letter-spacing:.3px;text-shadow:0 2px 14px rgba(0,0,0,.55);padding:0 20px;line-height:1.15}
+  .btn.dng{background:transparent;color:#ff6b6b;border:2px solid #ff6b6b;margin-top:12px}
+  .pr-dl{margin-top:8px;width:100%;min-height:42px;background:transparent;color:#ff6b6b;border:1px solid #ff6b6b;border-radius:12px;font:700 14px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
+  html.light .btn.dng,html.light .pr-dl{color:#c0262d;border-color:#c0262d}
   .row1{display:block}
   .dsm{display:flex;gap:8px;align-items:stretch}
   .dsm input[type=date]{flex:1;min-width:0}
@@ -571,6 +574,7 @@
       <div id="eScanBox"></div>
       <button class="btn" id="eSave" type="submit">Uložit změny</button>
       <button class="btn ghost" id="eCancel" type="button">Zpět na historii</button>
+      <button class="btn dng" id="eDel" type="button">Smazat přepravu</button>
       <div id="eMsg" class="msg hidden"></div>
     </form>
   </section>
@@ -903,7 +907,7 @@
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
       x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><span class="pr-sm">' + smTag((x.smeny || [])[k]) + '</span><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
-      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
+      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><button class="pr-dl" type="button">Smazat přepravu</button><div class="pr-st"></div></div>';
   }
   function prRender() {
     const drv = $('prDrv').value, only = $('prMiss').checked;
@@ -947,6 +951,28 @@
         st.textContent = 'Uloženo ✓';
       } else { b.disabled = false; st.className = 'pr-st err'; st.textContent = r.status === 401 ? 'Přihlášení vypršelo.' : 'Uložení se nepodařilo. Zkuste to znovu.'; }
     } catch (err) { b.disabled = false; st.className = 'pr-st err'; st.textContent = 'Chybí připojení k internetu.'; }
+  });
+  $('prList').addEventListener('click', async (e) => {
+    const b = e.target.closest('.pr-dl'); if (!b) return;
+    const c = b.closest('.pr-card'), x = prRows[+c.dataset.i], st = c.querySelector('.pr-st');
+    if (!confirm('Opravdu smazat přepravu řidiče ' + x.ridic + ' (' + fmtD(x.datumNakladky) + ', ' + x.zakaznik + ')? Nelze vrátit zpět.')) return;
+    b.disabled = true; st.className = 'pr-st'; st.textContent = 'Mažu…';
+    try {
+      const r = await api('/api/ridic/smazat', { id: x.id });
+      if (r.data && r.data.ok) { prRows.splice(+c.dataset.i, 1); prRender(); }
+      else { b.disabled = false; st.className = 'pr-st err'; st.textContent = r.status === 401 ? 'Přihlášení vypršelo.' : 'Smazání se nepodařilo.'; }
+    } catch (err) { b.disabled = false; st.className = 'pr-st err'; st.textContent = 'Chybí připojení k internetu.'; }
+  });
+  $('eDel').addEventListener('click', async () => {
+    const msg = $('eMsg'); clearMsg(msg);
+    if (!confirm('Opravdu smazat tuto přepravu? Nelze vrátit zpět.')) return;
+    $('eDel').disabled = true;
+    try {
+      const r = await api('/api/ridic/smazat', { id: editId });
+      if (r.data && r.data.ok) { await loadHist(); window.scrollTo(0, 0); }
+      else showMsg(msg, r.status === 401 ? 'Přihlášení vypršelo.' : 'Smazání se nepodařilo.', 'err');
+    } catch (err) { showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
+    $('eDel').disabled = false;
   });
   $('tabNew').addEventListener('click', () => { show('formView'); window.scrollTo(0, 0); });
   $('tabHist').addEventListener('click', loadHist);

@@ -32,6 +32,7 @@ function doPost(e) {
     if (body.action === 'list') return out_(list_(body));
     if (body.action === 'customers') return out_(customers_());
     if (body.action === 'update') return out_(update_(body));
+    if (body.action === 'delete') return out_(delete_(body));
     if (body.action === 'doc') return out_(doc_(body));
     if (body.action === 'ceny') return out_(prices_list_(body));
     if (body.action === 'cenySet') return out_(prices_set_(body));
@@ -274,6 +275,35 @@ function update_(b) {
       sh.getRange(row, colTuny_(q), 1, STRIDE).clearContent();
     }
     return { ok: true, row: row, jizd: nj };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// smaže záznam (řádek) podle ID: řidič jen svůj, Soukeník (ceny) kterýkoli
+function delete_(b) {
+  var driver = findDriver_(b);
+  if (!driver) return { ok: false, error: 'driver_inactive' };
+  var full = norm_(driver.jmeno + ' ' + driver.prijmeni);
+  var isAdmin = !!admin_(b);
+  var id = String(b.id || '');
+  if (!id) return { ok: false, error: 'not_found' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+    var last = sh.getLastRow();
+    if (last < 2) return { ok: false, error: 'not_found' };
+    var start = Math.max(2, last - SCAN_ROWS + 1);
+    var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
+    for (var i = data.length - 1; i >= 0; i--) {
+      if (data[i][COL_ID - 1] === id) {
+        if (!isAdmin && norm_(data[i][1+O]) !== full) return { ok: false, error: 'not_found' };
+        sh.deleteRow(start + i);
+        return { ok: true };
+      }
+    }
+    return { ok: false, error: 'not_found' };
   } finally {
     lock.releaseLock();
   }
