@@ -105,9 +105,14 @@ var DOC_FOLDER = 'Přílohy řidičů - Řepa';
 var DOC_FOLDER_OLD = 'Doklady řidičů - Řepa';
 function colTuny_(k) { return COL_T1 + STRIDE * k; }
 function colSmena_(k) { return COL_T1 + STRIDE * k + 2; }   // jen při STRIDE 3
-var SM_DEN = '\u2600\uFE0F', SM_NOC = '\uD83C\uDF19';
+var SM_DEN = 'denní', SM_NOC = 'noční';
 function smenaVal_(c) { return c === 'N' ? SM_NOC : (c === 'D' ? SM_DEN : ''); }
-function smenaCode_(disp) { var t = String(disp); return t.indexOf('\uD83C\uDF19') >= 0 ? 'N' : (t.indexOf('\u2600') >= 0 ? 'D' : ''); }
+function smenaCode_(disp) {   // rozumí textu i starším emoji
+  var t = String(disp).toLowerCase();
+  if (t.indexOf('no\u010d') >= 0 || t.indexOf('\uD83C\uDF19') >= 0) return 'N';
+  if (t.indexOf('denn') >= 0 || t.indexOf('den\u0148') >= 0 || t.indexOf('\u2600') >= 0) return 'D';
+  return '';
+}
 function smenyArr_(b) { return Object.prototype.toString.call(b.smeny) === '[object Array]' ? b.smeny : []; }
 function writeSmeny_(sh, row, n, smeny) {
   if (STRIDE < 3) return;
@@ -496,4 +501,24 @@ function jedenDatum() {
   sh.getRange(1, 7).setValue('Datum směny');
   sh.hideColumns(9);
   return 'hotovo';
+}
+
+
+// JEDNORÁZOVĚ: starší emoji ve sloupcích Směna přepíše na text denní / noční
+function smenyNaText() {
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  layout_();
+  var last = sh.getLastRow();
+  if (STRIDE !== 3 || last < 2) return 'nic';
+  var n = 0;
+  for (var k = 0; k < MAX_JIZD; k++) {
+    var rg = sh.getRange(2, colSmena_(k), last - 1, 1), v = rg.getDisplayValues(), out = [];
+    for (var i = 0; i < v.length; i++) {
+      var c = smenaCode_(v[i][0]), nv = c ? smenaVal_(c) : v[i][0];
+      if (nv !== v[i][0]) n++;
+      out.push([nv]);
+    }
+    rg.setNumberFormat('@').setHorizontalAlignment('center').setValues(out);
+  }
+  return 'prepsano ' + n;
 }
