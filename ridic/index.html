@@ -59,9 +59,9 @@
   html.light select option{background:#fff;color:#0f1b3d}
   .thx{position:fixed;inset:0;z-index:999;background:#0a1a5c;opacity:0;pointer-events:none;transition:opacity .7s ease;overflow:hidden}
   .thx.on{opacity:1}
-  .thx img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
-  .thx::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(to top,rgba(5,14,60,.92),rgba(5,14,60,0))}
-  .thx b{position:absolute;left:0;right:0;bottom:calc(9vh + env(safe-area-inset-bottom,0px));z-index:2;text-align:center;color:#fff;font-size:clamp(28px,9vw,44px);font-weight:800;letter-spacing:.3px;text-shadow:0 2px 14px rgba(0,0,0,.55);padding:0 20px;line-height:1.15}
+  .thx img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%}
+  .thx::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18%;background:linear-gradient(to top,rgba(5,14,60,.85),rgba(5,14,60,0))}
+  .thx b{position:absolute;left:0;right:0;bottom:calc(4vh + env(safe-area-inset-bottom,0px));z-index:2;text-align:center;color:#fff;font-size:clamp(22px,6.6vw,38px);white-space:nowrap;font-weight:800;letter-spacing:.3px;text-shadow:0 2px 14px rgba(0,0,0,.55);padding:0 20px;line-height:1.15}
   .btn.dng{background:transparent;color:#ff6b6b;border:2px solid #ff6b6b;margin-top:12px}
   .pr-dl{margin-top:8px;width:100%;min-height:42px;background:transparent;color:#ff6b6b;border:1px solid #ff6b6b;border-radius:12px;font:700 14px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
   html.light .btn.dng,html.light .pr-dl{color:#c0262d;border-color:#c0262d}
@@ -448,7 +448,7 @@
   <button id="logout" class="hidden" type="button">Odhlásit</button>
 </header>
 
-<div id="thx" class="thx" aria-hidden="true"><img src="/ridic/dekuji.jpg" alt=""><b>Děkujeme,<br>tým RKL</b></div>
+<div id="thx" class="thx" aria-hidden="true"><img src="/ridic/dekuji.jpg" alt=""><b>Děkujeme, tým RKL</b></div>
 <nav id="tabs" class="tabs hidden" aria-label="Menu řidiče">
   <button type="button" id="tabNew">Nová přeprava</button>
   <button type="button" id="tabHist">Historie mých jízd</button>
