@@ -672,8 +672,23 @@
       if (r.data.ok && r.data.customers.length) $('zakList').innerHTML = r.data.customers.map(n => '<option value="' + esc(n) + '">').join('');
     } catch (e) {}
   }
+  // předvyplnění města z GPS do míst nakládky a vykládky (jen když jsou prázdná; jde přepsat)
+  let geoTried = false;
+  function prefillCity(force) {
+    if (!navigator.geolocation || (geoTried && !force)) return;
+    if ($('mistoNakladky').value || $('mistoVykladky').value) return;
+    geoTried = true;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const r = await api('/api/ridic/mesto?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude);
+        const c = r.data && r.data.ok && r.data.city;
+        if (c && !$('mistoNakladky').value && !$('mistoVykladky').value) { $('mistoNakladky').value = c; $('mistoVykladky').value = c; }
+      } catch (e) {}
+    }, () => {}, { enableHighAccuracy: false, timeout: 9000, maximumAge: 600000 });
+  }
+  ['mistoNakladky', 'mistoVykladky'].forEach(id => $(id).addEventListener('focus', (e) => { const el = e.target; setTimeout(() => { try { el.select(); } catch (x) {} }, 0); }));
   function setDriver(d) {
-    driver = d; loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny);
+    driver = d; loadCustomers(); prefillCity(false); $('tabPrice').classList.toggle('hidden', !d.ceny);
     const own = String(d.dopravce || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === 'rkl opava';
     needSpz = own || !String(d.spz || '').trim();           // řidiči RKL Opava (a řidiči bez SPZ v tabulce) si SPZ volí
     $('spzRow').classList.toggle('hidden', !needSpz);
@@ -688,7 +703,7 @@
 
   function resetForm() {
     ['mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh', 'poznamka'].forEach(id => $(id).value = '');
-    $('jizd').value = '1'; buildTuny();
+    $('jizd').value = '1'; buildTuny(); geoTried = false; setTimeout(() => prefillCity(false), 0);
     const t = todayISO(), n = new Date(), tm = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
     $('datumNakladky').value = t; $('datumVykladky').value = t;
     $('casNakladky').value = tm; $('casVykladky').value = tm;
@@ -799,7 +814,8 @@
     const x = histRows[+b.dataset.i]; if (!x) return;
     editId = x.id;
     $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
-    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join(''); $('ePozn').value = x.poznamka || '';
+    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join('');
+    $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
     eScan.clear(); show('editView'); window.scrollTo(0, 0);
   });
