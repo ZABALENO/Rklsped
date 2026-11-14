@@ -251,10 +251,16 @@ function update_(b) {
       String(b.mistoNakladky), String(b.mistoVykladky), String(b.zakaznik), String(b.druh)
     ]]);
     sh.getRange(row, COL_NOTE).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));
-    for (var k = 0; k < jz; k++) {
+    // nový počet jízd (volitelný): přidá/odebere jízdy a upraví sloupec Počet jízd
+    var nj = (b.jizd === undefined || b.jizd === null || b.jizd === '') ? jz : Math.max(1, Math.min(MAX_JIZD, Math.floor(Number(b.jizd) || jz)));
+    if (nj !== jz) sh.getRange(row, 14 + O).setValue(nj);
+    for (var k = 0; k < nj; k++) {
       sh.getRange(row, colTuny_(k)).setNumberFormat('#,##0.00').setValue(tn(k));
     }
-    return { ok: true, row: row };
+    for (var q = nj; q < jz; q++) {            // odebrané jízdy: smaže tuny i cenu
+      sh.getRange(row, colTuny_(q), 1, 2).clearContent();
+    }
+    return { ok: true, row: row, jizd: nj };
   } finally {
     lock.releaseLock();
   }
