@@ -956,6 +956,7 @@
     const b = e.target.closest('.pr-dl'); if (!b) return;
     const c = b.closest('.pr-card'), x = prRows[+c.dataset.i], st = c.querySelector('.pr-st');
     if (!confirm('Opravdu smazat přepravu řidiče ' + x.ridic + ' (' + fmtD(x.datumNakladky) + ', ' + x.zakaznik + ')? Nelze vrátit zpět.')) return;
+    if (!confirm('POSLEDNÍ POTVRZENÍ: opravdu trvale smazat tuto přepravu? Řádek zmizí z tabulky.')) return;
     b.disabled = true; st.className = 'pr-st'; st.textContent = 'Mažu…';
     try {
       const r = await api('/api/ridic/smazat', { id: x.id });
@@ -966,6 +967,7 @@
   $('eDel').addEventListener('click', async () => {
     const msg = $('eMsg'); clearMsg(msg);
     if (!confirm('Opravdu smazat tuto přepravu? Nelze vrátit zpět.')) return;
+    if (!confirm('POSLEDNÍ POTVRZENÍ: opravdu trvale smazat tuto přepravu? Řádek zmizí z tabulky.')) return;
     $('eDel').disabled = true;
     try {
       const r = await api('/api/ridic/smazat', { id: editId });
