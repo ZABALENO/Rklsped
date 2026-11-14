@@ -380,6 +380,10 @@
   .sgi:last-child{border-bottom:0}.sgi:active{background:#1d388f}
   html.light .sg{background:#fff;border-color:rgba(47,86,196,.55)}
   html.light .sgi{color:#111c3d;border-bottom-color:rgba(47,86,196,.2)}
+  .gpsrow{display:flex;gap:8px;align-items:stretch}.gpsrow input{flex:1;min-width:0}
+  .gpsb{flex:none;width:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#1d388f;color:#fff;border:1px solid #9db8f5;font:700 12px "IBM Plex Mono",monospace;letter-spacing:1px;cursor:pointer;padding:0}
+  .gpsb:disabled{opacity:.6}.gpsb.err{background:#7a1f1f;border-color:#ff9b9b}
+  html.light .gpsb{background:#2f56c4;border-color:#2f56c4}
 </style>
 <script>
 (function(){
@@ -476,9 +480,9 @@
 
       <p class="grp sp">Přeprava</p>
       <label for="mistoNakladky" style="margin-top:0">Místo nakládky</label>
-      <input id="mistoNakladky" type="text" maxlength="100" placeholder="např. Bohučovice" autocomplete="off" required>
+      <div class="gpsrow"><input id="mistoNakladky" type="text" maxlength="100" placeholder="např. Bohučovice" autocomplete="off" required><button type="button" class="gpsb" data-for="mistoNakladky" aria-label="Použít GPS"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.6"/></svg><span>GPS</span></button></div>
       <label for="mistoVykladky">Místo vykládky</label>
-      <input id="mistoVykladky" type="text" maxlength="100" placeholder="např. Ostrava" autocomplete="off" required>
+      <div class="gpsrow"><input id="mistoVykladky" type="text" maxlength="100" placeholder="např. Ostrava" autocomplete="off" required><button type="button" class="gpsb" data-for="mistoVykladky" aria-label="Použít GPS"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.6"/></svg><span>GPS</span></button></div>
 
       <label for="zakaznik">Zákazník</label>
       <input id="zakaznik" type="text" maxlength="120" placeholder="Začněte psát název…" autocomplete="off" autocapitalize="words" required>
@@ -539,9 +543,9 @@
       <div class="row"><div><label for="eDatV">Datum</label><input id="eDatV" type="date"></div><div><label for="eCasV">Čas</label><input id="eCasV" type="time"></div></div>
       <p class="grp sp">Přeprava</p>
       <label for="eMistoN" style="margin-top:0">Místo nakládky</label>
-      <input id="eMistoN" type="text" maxlength="100" autocomplete="off">
+      <div class="gpsrow"><input id="eMistoN" type="text" maxlength="100" autocomplete="off"><button type="button" class="gpsb" data-for="eMistoN" aria-label="Použít GPS"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.6"/></svg><span>GPS</span></button></div>
       <label for="eMistoV">Místo vykládky</label>
-      <input id="eMistoV" type="text" maxlength="100" autocomplete="off">
+      <div class="gpsrow"><input id="eMistoV" type="text" maxlength="100" autocomplete="off"><button type="button" class="gpsb" data-for="eMistoV" aria-label="Použít GPS"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.6"/></svg><span>GPS</span></button></div>
       <label for="eZak">Zákazník</label>
       <input id="eZak" type="text" maxlength="120" autocomplete="off">
       <label for="eDruh">Druh nákladu</label>
@@ -687,6 +691,21 @@
       if (r.data.ok && r.data.customers.length) $('zakList').innerHTML = r.data.customers.map(n => '<option value="' + esc(n) + '">').join('');
     } catch (e) {}
   }
+  // tlačítko GPS: načte město podle polohy telefonu do příslušného pole
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.gpsb'); if (!b) return;
+    const inp = $(b.dataset.for), lab = b.querySelector('span'), orig = 'GPS';
+    const done = (t, err) => { lab.textContent = t; b.classList.toggle('err', !!err); if (t !== '…') setTimeout(() => { lab.textContent = orig; b.classList.remove('err'); b.disabled = false; }, err ? 2800 : 600); };
+    if (!navigator.geolocation) return done('NELZE', true);
+    b.disabled = true; lab.textContent = '…';
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const r = await api('/api/ridic/mesto?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude);
+        if (r.data && r.data.ok && r.data.city) { inp.value = r.data.city; inp.classList.remove('bad'); inp.dispatchEvent(new Event('input', { bubbles: true })); done('OK'); }
+        else done(r.status === 429 ? 'ZA CHVÍLI' : 'NENALEZENO', true);
+      } catch (err) { done('CHYBA', true); }
+    }, (err) => done(err && err.code === 1 ? 'POVOLTE' : 'NELZE', true), { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
+  });
   // předvyplnění města z GPS do míst nakládky a vykládky (jen když jsou prázdná; jde přepsat)
   let geoTried = false;
   function prefillCity(force) {
