@@ -522,6 +522,13 @@
       <button class="btn" id="sendBtn" type="submit">Odeslat</button>
       <div id="recMsg" class="msg hidden"></div>
     </form>
+    <button class="btn ghost" id="ideaOpen" type="button" style="margin-top:12px">Navrhnout úpravu</button>
+    <div id="ideaBox" class="hidden" style="margin-top:12px">
+      <label for="ideaTxt">Co by se mělo zlepšit?</label>
+      <textarea id="ideaTxt" rows="4" maxlength="1000" placeholder="Napište nápad nebo problém…"></textarea>
+      <button class="btn" id="ideaSend" type="button" style="margin-top:10px">Odeslat návrh</button>
+      <div id="ideaMsg" class="msg hidden"></div>
+    </div>
   </section>
 
   <section id="histView" class="hidden" style="display:flex;flex-direction:column;gap:14px">
@@ -987,6 +994,18 @@
       else showMsg(msg, r.status === 401 ? 'Přihlášení vypršelo.' : 'Smazání se nepodařilo.', 'err');
     } catch (err) { showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
     $('eDel').disabled = false;
+  });
+  $('ideaOpen').addEventListener('click', () => { $('ideaBox').classList.toggle('hidden'); if (!$('ideaBox').classList.contains('hidden')) $('ideaTxt').focus(); });
+  $('ideaSend').addEventListener('click', async () => {
+    const msg = $('ideaMsg'), t = $('ideaTxt').value.trim(); clearMsg(msg);
+    if (t.length < 3) return showMsg(msg, 'Napište prosím alespoň pár slov.', 'err');
+    $('ideaSend').disabled = true;
+    try {
+      const r = await api('/api/ridic/napad', { text: t });
+      if (r.data && r.data.ok) { $('ideaTxt').value = ''; showMsg(msg, 'Díky! Návrh byl odeslán.', 'ok'); setTimeout(() => { $('ideaBox').classList.add('hidden'); clearMsg(msg); }, 2500); }
+      else showMsg(msg, r.status === 429 ? 'Chvilku počkejte a zkuste to znovu.' : r.status === 401 ? 'Přihlášení vypršelo.' : 'Odeslání se nepodařilo.', 'err');
+    } catch (e) { showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
+    $('ideaSend').disabled = false;
   });
   $('tabNew').addEventListener('click', () => { show('formView'); window.scrollTo(0, 0); });
   $('tabHist').addEventListener('click', loadHist);

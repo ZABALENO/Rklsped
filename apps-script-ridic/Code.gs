@@ -33,6 +33,7 @@ function doPost(e) {
     if (body.action === 'customers') return out_(customers_());
     if (body.action === 'update') return out_(update_(body));
     if (body.action === 'delete') return out_(delete_(body));
+    if (body.action === 'napad') return out_(napad_(body));
     if (body.action === 'doc') return out_(doc_(body));
     if (body.action === 'ceny') return out_(prices_list_(body));
     if (body.action === 'cenySet') return out_(prices_set_(body));
@@ -286,6 +287,34 @@ function update_(b) {
       sh.getRange(row, colTuny_(q), 1, STRIDE).clearContent();
     }
     return { ok: true, row: row, jizd: nj };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// nápad na zlepšení od řidiče -> list „Nápady od řidičů“ (vytvoří se při prvním použití)
+var SHEET_IDEAS = 'Nápady od řidičů';
+function napad_(b) {
+  var driver = findDriver_(b);
+  if (!driver) return { ok: false, error: 'driver_inactive' };
+  var text = String(b.text || '').trim();
+  if (text.length < 3 || text.length > 1000) return { ok: false, error: 'bad_request' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var ss = SpreadsheetApp.getActive();
+    var sh = ss.getSheetByName(SHEET_IDEAS);
+    if (!sh) {
+      sh = ss.insertSheet(SHEET_IDEAS);
+      sh.getRange(1, 1, 1, 3).setValues([['Čas', 'Řidič', 'Nápad / návrh na úpravu']]).setFontWeight('bold');
+      sh.setFrozenRows(1);
+      sh.setColumnWidth(1, 130); sh.setColumnWidth(2, 160); sh.setColumnWidth(3, 620);
+      sh.getRange('C:C').setWrap(true).setVerticalAlignment('top');
+    }
+    var row = sh.getLastRow() + 1;
+    sh.getRange(row, 1, 1, 3).setNumberFormats([['dd.MM.yyyy HH:mm', '@', '@']])
+      .setValues([[new Date(), driver.jmeno + ' ' + driver.prijmeni, text]]);
+    return { ok: true };
   } finally {
     lock.releaseLock();
   }
