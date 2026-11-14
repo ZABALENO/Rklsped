@@ -546,6 +546,9 @@
       <input id="eZak" type="text" maxlength="120" autocomplete="off">
       <label for="eDruh">Druh nákladu</label>
       <input id="eDruh" type="text" maxlength="80" autocomplete="off">
+      <label for="eJizd">Počet jízd</label>
+      <input id="eJizd" type="text" inputmode="numeric" autocomplete="off">
+
       <label>Tuny za jednotlivé jízdy <span class="opt">(nepovinné)</span></label>
       <div id="eTunyBox" class="tunyrow"></div>
       <label for="ePozn">Poznámka <span class="opt">(nepovinné)</span></label>
@@ -625,6 +628,18 @@
     }
   }
   $('jizd').addEventListener('input', buildTuny);
+  function buildETuny(vals) {                     // pole tun v úpravě: přesně tolik, kolik je v poli Počet jízd
+    const n = Math.min(MAXJ, Math.max(1, Math.floor(toNum($('eJizd').value) || 1)));
+    const box = $('eTunyBox'), old = vals || Array.from(box.querySelectorAll('input')).map(i => i.value);
+    box.innerHTML = '';
+    for (let k = 0; k < n; k++) {
+      const d = document.createElement('div');
+      d.innerHTML = '<label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>';
+      d.querySelector('input').value = old[k] || '';
+      box.appendChild(d);
+    }
+  }
+  $('eJizd').addEventListener('input', () => buildETuny());
   const nz = (x) => String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   function matchCustomer() {                       // doskočí na zákazníka ze seznamu, pokud je shoda jednoznačná
     const el = $('zakaznik'), t = nz(el.value);
@@ -814,7 +829,7 @@
     const x = histRows[+b.dataset.i]; if (!x) return;
     editId = x.id;
     $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
-    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eTunyBox').innerHTML = x.tuny.map((t, k) => '<div><label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" value="' + esc(fmtN(t)) + '"><span>t</span></div></div>').join('');
+    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eJizd').value = String(x.tuny.length); buildETuny(x.tuny.map(t => fmtN(t)));
     $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
     eScan.clear(); show('editView'); window.scrollTo(0, 0);
@@ -824,18 +839,22 @@
   $('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('eMsg'); clearMsg(msg);
-    const ids = { datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', mistoNakladky: 'eMistoN', mistoVykladky: 'eMistoV', zakaznik: 'eZak', druh: 'eDruh', poznamka: 'ePozn' };
+    const ids = { jizd: 'eJizd', datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', mistoNakladky: 'eMistoN', mistoVykladky: 'eMistoV', zakaznik: 'eZak', druh: 'eDruh', poznamka: 'ePozn' };
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad'));
     const v = { id: editId }, bad = [];
     Object.keys(ids).forEach(k => v[k] = $(ids[k]).value.trim());
     ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh'].forEach(k => { if (!v[k]) bad.push(k); });
     v.tuny = Array.from($('eTunyBox').querySelectorAll('input')).map(i => i.value.trim());
+    const nJ = Math.floor(toNum($('eJizd').value)); v.jizd = nJ;
+    if (!(nJ >= 1 && nJ <= MAXJ)) bad.push('jizd');
     const badT = Array.from($('eTunyBox').querySelectorAll('input')).filter(i => { const t = i.value.trim(); return t && !(toNum(t) > 0 && toNum(t) <= 100); });
     if (bad.length || badT.length) { bad.forEach(k => $(ids[k]).classList.add('bad')); badT.forEach(i => i.classList.add('bad')); return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err'); }
     if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
       ['eDatV', 'eCasV'].forEach(i => $(i).classList.add('bad')); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
     if (eScan.isBusy()) return showMsg(msg, 'Počkejte, příloha se ještě zpracovává.', 'err');
+    const prevJ = (histRows.find(r => r.id === editId) || {}).jizd || v.jizd;
+    if (v.jizd < prevJ && !confirm('Odebrat ' + (prevJ - v.jizd) + ' jízd(y)? Jejich tuny (a případné ceny) se smažou.')) return;
     $('eSave').disabled = true; $('eSave').textContent = 'Ukládám…';
     try {
       const r = await api('/api/ridic/uprav', v);
