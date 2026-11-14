@@ -15,6 +15,9 @@ function layout_() {
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
   O = String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Příloha' || String(sh.getRange(1, 1).getDisplayValue()).trim() === 'Doklad' ? 1 : 0;
   COL_NOTE = 15 + O; COL_DOC = O ? 1 : 16;
+  // nové rozložení: za každou Cenu k je ještě sloupec Směna k (STRIDE 3), jinak jen Tuny+Cena (STRIDE 2)
+  STRIDE = /^Sm[eě]na/i.test(String(sh.getRange(1, COL_T1 + 2).getDisplayValue()).trim()) ? 3 : 2;
+  COL_ID = COL_T1 + STRIDE * MAX_JIZD;
 }
 
 function doPost(e) {
@@ -95,10 +98,20 @@ var O = 0;              // posun prvních 15 sloupců: 1 = nové rozložení (A 
 var COL_NOTE = 15;      // Poznámka (nové rozložení: P)
 var COL_DOC = 16;       // Doklad (nové rozložení: A) – odkazy na PDF na Google Disku
 var COL_T1 = 17;        // Q = Tuny 1
-var COL_ID = 37;        // AK = ID záznamu (skrytý)
+var STRIDE = 2;         // počet sloupců na jízdu: 2 = Tuny, Cena; 3 = Tuny, Cena, Směna
+var COL_ID = 37;        // ID záznamu (skrytý; za posledním sloupcem jízd)
 var DOC_FOLDER = 'Přílohy řidičů - Řepa';
 var DOC_FOLDER_OLD = 'Doklady řidičů - Řepa';
-function colTuny_(k) { return COL_T1 + 2 * k; }   // k = 0 pro 1. jízdu; Cena k je o sloupec dál (vyplňuje kancelář)
+function colTuny_(k) { return COL_T1 + STRIDE * k; }
+function colSmena_(k) { return COL_T1 + STRIDE * k + 2; }   // jen při STRIDE 3
+var SM_DEN = '\u2600\uFE0F', SM_NOC = '\uD83C\uDF19';
+function smenaVal_(c) { return c === 'N' ? SM_NOC : (c === 'D' ? SM_DEN : ''); }
+function smenaCode_(disp) { var t = String(disp); return t.indexOf('\uD83C\uDF19') >= 0 ? 'N' : (t.indexOf('\u2600') >= 0 ? 'D' : ''); }
+function smenyArr_(b) { return Object.prototype.toString.call(b.smeny) === '[object Array]' ? b.smeny : []; }
+function writeSmeny_(sh, row, n, smeny) {
+  if (STRIDE < 3) return;
+  for (var k = 0; k < n; k++) sh.getRange(row, colSmena_(k)).setNumberFormat('@').setHorizontalAlignment('center').setValue(smenaVal_(smeny[k] === 'N' ? 'N' : 'D'));
+}   // k = 0 pro 1. jízdu; Cena k je o sloupec dál (vyplňuje kancelář)
 
 // odkazy na přílohy z buňky (hypertextové úseky; záloha: starší vzorec HYPERLINK)
 function docUrls_(rt, formula) {
@@ -145,9 +158,9 @@ function append_(b) {
       spz,
       'Sklápěč',            // typ vozidla je vždy sklápěč
       serialDate_(b.datumNakladky),
-      serialTime_(b.casNakladky),
+      '',
       serialDate_(b.datumVykladky),
-      serialTime_(b.casVykladky),
+      '',
       String(b.mistoNakladky),
       String(b.mistoVykladky),
       String(b.zakaznik),
@@ -159,6 +172,7 @@ function append_(b) {
       var t = tn(k);
       if (t !== '') sh.getRange(row, colTuny_(k)).setNumberFormat('#,##0.00').setValue(t);
     }
+    writeSmeny_(sh, row, n, smenyArr_(b));
     var newId = Utilities.getUuid();
     sh.getRange(row, COL_ID).setNumberFormat('@').setValue(newId);
     return { ok: true, row: row, jizd: n, id: newId };
@@ -208,13 +222,13 @@ function list_(b) {
     var r = data[i];
     if (!r[COL_ID - 1] || norm_(r[1+O]) !== full) continue;
     var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(r[13+O], 10) || 1));
-    var tuny = [];
-    for (var k = 0; k < jz; k++) tuny.push(num_(r[colTuny_(k) - 1]));
+    var tuny = [], smeny = [];
+    for (var k = 0; k < jz; k++) { tuny.push(num_(r[colTuny_(k) - 1])); smeny.push(STRIDE > 2 ? smenaCode_(r[colSmena_(k) - 1]) : ''); }
     rows.push({
       id: r[COL_ID - 1], spz: r[3+O],
-      datumNakladky: isoDate_(r[5+O]), casNakladky: hhmm_(r[6+O]),
-      datumVykladky: isoDate_(r[7+O]), casVykladky: hhmm_(r[8+O]),
-      mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O], jizd: jz, tuny: tuny, poznamka: r[COL_NOTE - 1], hasDoc: !!r[COL_DOC - 1]
+      datumNakladky: isoDate_(r[5+O]),
+      datumVykladky: isoDate_(r[7+O]),
+      mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O], jizd: jz, tuny: tuny, smeny: smeny, poznamka: r[COL_NOTE - 1], hasDoc: !!r[COL_DOC - 1]
     });
   }
   return { ok: true, rows: rows };
@@ -245,11 +259,9 @@ function update_(b) {
     if (!row) return { ok: false, error: 'not_found' };
     var tuny = Object.prototype.toString.call(b.tuny) === '[object Array]' ? b.tuny : [b.tuny];
     function tn(k) { var t = tuny[k]; return (t === null || t === undefined || t === '') ? '' : Number(t); }
-    sh.getRange(row, 6 + O, 1, 8).setValues([[
-      serialDate_(b.datumNakladky), serialTime_(b.casNakladky),
-      serialDate_(b.datumVykladky), serialTime_(b.casVykladky),
-      String(b.mistoNakladky), String(b.mistoVykladky), String(b.zakaznik), String(b.druh)
-    ]]);
+    sh.getRange(row, 6 + O).setValue(serialDate_(b.datumNakladky));
+    sh.getRange(row, 8 + O).setValue(serialDate_(b.datumVykladky));
+    sh.getRange(row, 10 + O, 1, 4).setValues([[String(b.mistoNakladky), String(b.mistoVykladky), String(b.zakaznik), String(b.druh)]]);
     sh.getRange(row, COL_NOTE).setNumberFormat('@').setValue(String(b.poznamka || '').slice(0, 300));
     // nový počet jízd (volitelný): přidá/odebere jízdy a upraví sloupec Počet jízd
     var nj = (b.jizd === undefined || b.jizd === null || b.jizd === '') ? jz : Math.max(1, Math.min(MAX_JIZD, Math.floor(Number(b.jizd) || jz)));
@@ -257,8 +269,9 @@ function update_(b) {
     for (var k = 0; k < nj; k++) {
       sh.getRange(row, colTuny_(k)).setNumberFormat('#,##0.00').setValue(tn(k));
     }
-    for (var q = nj; q < jz; q++) {            // odebrané jízdy: smaže tuny i cenu
-      sh.getRange(row, colTuny_(q), 1, 2).clearContent();
+    writeSmeny_(sh, row, nj, smenyArr_(b));
+    for (var q = nj; q < jz; q++) {            // odebrané jízdy: smaže tuny, cenu i směnu
+      sh.getRange(row, colTuny_(q), 1, STRIDE).clearContent();
     }
     return { ok: true, row: row, jizd: nj };
   } finally {
@@ -325,13 +338,13 @@ function prices_list_(b) {
     var r = data[i];
     if (!r[COL_ID - 1]) continue;
     var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(r[13+O], 10) || 1));
-    var tuny = [], ceny = [];
-    for (var k = 0; k < jz; k++) { tuny.push(num_(r[colTuny_(k) - 1])); ceny.push(num_(r[colTuny_(k)])); }
+    var tuny = [], ceny = [], smeny = [];
+    for (var k = 0; k < jz; k++) { tuny.push(num_(r[colTuny_(k) - 1])); ceny.push(num_(r[colTuny_(k)])); smeny.push(STRIDE > 2 ? smenaCode_(r[colSmena_(k) - 1]) : ''); }
     rows.push({
       id: r[COL_ID - 1], ridic: r[1+O], dopravce: r[2+O], spz: r[3+O],
       datumNakladky: isoDate_(r[5+O]), datumVykladky: isoDate_(r[7+O]),
       mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O],
-      jizd: jz, tuny: tuny, ceny: ceny, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length
+      jizd: jz, tuny: tuny, ceny: ceny, smeny: smeny, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length
     });
   }
   return { ok: true, rows: rows };
@@ -425,4 +438,23 @@ function presunDoklad() {
   sh.hideColumns(37);
   layout_();
   return 'ok A1=' + sh.getRange(1, 1).getValue() + ' Q1=' + sh.getRange(1, 17).getValue() + ' AK1=' + sh.getRange(1, 37).getValue();
+}
+
+
+// JEDNORÁZOVÁ MIGRACE: za každý sloupec Cena vloží sloupec Směna a skryje sloupce Čas nakládky / Čas vykládky
+function pridatSmeny() {
+  var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  layout_();
+  if (STRIDE === 3) return 'uz hotovo';
+  if (!O) return 'neocekavane rozlozeni';
+  for (var k = MAX_JIZD - 1; k >= 0; k--) {
+    var cenaCol = COL_T1 + 2 * k + 1;
+    sh.insertColumnAfter(cenaCol);
+    sh.getRange(1, cenaCol).copyTo(sh.getRange(1, cenaCol + 1), SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+    sh.getRange(1, cenaCol + 1).setValue('Směna ' + (k + 1));
+    sh.setColumnWidth(cenaCol + 1, 70);
+  }
+  sh.hideColumns(8); sh.hideColumns(10);   // Čas nakládky, Čas vykládky
+  layout_();
+  return 'hotovo, STRIDE=' + STRIDE + ', ID ve sloupci ' + COL_ID;
 }

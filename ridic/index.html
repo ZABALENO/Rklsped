@@ -57,7 +57,16 @@
   select option{background:#0b1020;color:#fff}
   html.light select{background-image:linear-gradient(45deg,transparent 50%,#2f5bd6 50%),linear-gradient(135deg,#2f5bd6 50%,transparent 50%)}
   html.light select option{background:#fff;color:#0f1b3d}
-  .tunyrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .row1{display:block}
+  .tunyrow .tl+div{display:flex;gap:8px;align-items:stretch}
+  .tunyrow .unit{flex:1;min-width:0}
+  .sm{display:flex;flex:none;border:1px solid rgba(255,255,255,.18);border-radius:12px;overflow:hidden}
+  .sm button{border:0;background:transparent;color:#aeb9d4;font-size:22px;line-height:1;padding:0 10px;min-width:46px;cursor:pointer}
+  .sm button[aria-pressed=true]{background:#ffd166;color:#10162b}
+  .sm button[data-v=N][aria-pressed=true]{background:#3b4a9e;color:#fff}
+  html.light .sm{border-color:rgba(0,0,0,.2)} html.light .sm button{color:#4b5878}
+  .pr-sm{font-size:20px;text-align:center}
+  .tunyrow{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
   .tunyrow>div{min-width:0}
   .opt{color:var(--mut);font-weight:400;letter-spacing:0;text-transform:none}
   textarea{min-height:84px;resize:vertical;line-height:1.4}
@@ -359,7 +368,7 @@
   .pr-card.done{border-left-color:var(--ok)}
   .pr-who{font:700 16px "IBM Plex Sans",system-ui,sans-serif;color:#fff}
   .pr-who small{font:500 12px "IBM Plex Mono",monospace;color:var(--mut);margin-left:6px}
-  .pr-row{display:grid;grid-template-columns:34px 1fr 1.3fr;gap:8px;align-items:center;margin-top:8px}
+  .pr-row{display:grid;grid-template-columns:34px 30px 1fr 1.3fr;gap:8px;align-items:center;margin-top:8px}
   .pr-row b{font:600 13px "IBM Plex Mono",monospace;color:var(--c)}
   .pr-t{font:600 16px "IBM Plex Mono",monospace;color:#e8eeff}
   .pr-card input.pc{width:100%;min-height:46px;font-size:18px;text-align:right;padding:0 44px 0 10px;background-image:none!important;background:rgba(6,12,30,.9);color:#fff;border:1px solid rgba(160,190,250,.55)}
@@ -467,15 +476,13 @@
 
 
       <p class="grp">Nakládka</p>
-      <div class="row">
+      <div class="row1">
         <div><label for="datumNakladky">Datum</label><input id="datumNakladky" type="date" required></div>
-        <div><label for="casNakladky">Čas</label><input id="casNakladky" type="time" required></div>
       </div>
 
       <p class="grp sp">Vykládka</p>
-      <div class="row">
+      <div class="row1">
         <div><label for="datumVykladky">Datum</label><input id="datumVykladky" type="date" required></div>
-        <div><label for="casVykladky">Čas</label><input id="casVykladky" type="time" required></div>
       </div>
 
       <p class="grp sp">Přeprava</p>
@@ -538,9 +545,9 @@
     <p class="lead">Změňte údaje a uložte</p>
     <form id="editForm" novalidate>
       <p class="grp">Nakládka</p>
-      <div class="row"><div><label for="eDatN">Datum</label><input id="eDatN" type="date"></div><div><label for="eCasN">Čas</label><input id="eCasN" type="time"></div></div>
+      <div class="row1"><div><label for="eDatN">Datum</label><input id="eDatN" type="date"></div></div>
       <p class="grp sp">Vykládka</p>
-      <div class="row"><div><label for="eDatV">Datum</label><input id="eDatV" type="date"></div><div><label for="eCasV">Čas</label><input id="eCasV" type="time"></div></div>
+      <div class="row1"><div><label for="eDatV">Datum</label><input id="eDatV" type="date"></div></div>
       <p class="grp sp">Přeprava</p>
       <label for="eMistoN" style="margin-top:0">Místo nakládky</label>
       <div class="gpsrow"><input id="eMistoN" type="text" maxlength="100" autocomplete="off"><button type="button" class="gpsb" data-for="eMistoN" aria-label="Použít GPS"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.6"/></svg><span>GPS</span></button></div>
@@ -620,25 +627,29 @@
 
   const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
   const MAXJ = 10;
+  const smHtml = (v) => { v = v === 'N' ? 'N' : 'D'; return '<div class="sm" role="group" aria-label="Směna"><button type="button" data-v="D" aria-pressed="' + (v === 'D') + '" title="Denní směna">☀️</button><button type="button" data-v="N" aria-pressed="' + (v === 'N') + '" title="Noční směna">🌙</button></div>'; };
+  const getSm = (box) => Array.from(box.querySelectorAll('.sm')).map(g => (g.querySelector('[aria-pressed=true]') || {dataset: {v: 'D'}}).dataset.v);
+  document.addEventListener('click', (e) => { const b = e.target.closest('.sm button'); if (!b) return; b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
+  const smTag = (c) => c === 'N' ? '🌙' : (c === 'D' ? '☀️' : '');
   function buildTuny() {
     const n = Math.min(MAXJ, Math.max(1, Math.floor(toNum($('jizd').value) || 1)));
-    const box = $('tunyBox'), old = Array.from(box.querySelectorAll('input')).map(i => i.value);
+    const box = $('tunyBox'), old = Array.from(box.querySelectorAll('input')).map(i => i.value), oldSm = getSm(box);
     box.innerHTML = '';
     for (let i = 0; i < n; i++) {
       const d = document.createElement('div');
-      d.innerHTML = '<label class="tl" style="margin-top:' + (i < 2 ? 0 : 10) + 'px">Jízda ' + (i + 1) + '</label><div class="unit"><input class="tn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>';
+      d.innerHTML = '<label class="tl" style="margin-top:' + (i < 2 ? 0 : 10) + 'px">Jízda ' + (i + 1) + '</label><div><div class="unit"><input class="tn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>' + smHtml(oldSm[i]) + '</div>';
       d.querySelector('input').value = old[i] || '';
       box.appendChild(d);
     }
   }
   $('jizd').addEventListener('input', buildTuny);
-  function buildETuny(vals) {                     // pole tun v úpravě: přesně tolik, kolik je v poli Počet jízd
+  function buildETuny(vals, sms) {                     // pole tun v úpravě: přesně tolik, kolik je v poli Počet jízd
     const n = Math.min(MAXJ, Math.max(1, Math.floor(toNum($('eJizd').value) || 1)));
-    const box = $('eTunyBox'), old = vals || Array.from(box.querySelectorAll('input')).map(i => i.value);
+    const box = $('eTunyBox'), old = vals || Array.from(box.querySelectorAll('input')).map(i => i.value); sms = sms || getSm(box);
     box.innerHTML = '';
     for (let k = 0; k < n; k++) {
       const d = document.createElement('div');
-      d.innerHTML = '<label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>';
+      d.innerHTML = '<label class="tl" style="margin-top:' + (k < 2 ? 0 : 10) + 'px">Jízda ' + (k + 1) + '</label><div><div class="unit"><input class="etn" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>t</span></div>' + smHtml(sms[k]) + '</div>';
       d.querySelector('input').value = old[k] || '';
       box.appendChild(d);
     }
@@ -723,9 +734,8 @@
   function resetForm() {
     ['mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh', 'poznamka'].forEach(id => $(id).value = '');
     $('jizd').value = '1'; buildTuny();
-    const t = todayISO(), n = new Date(), tm = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+    const t = todayISO();
     $('datumNakladky').value = t; $('datumVykladky').value = t;
-    $('casNakladky').value = tm; $('casVykladky').value = tm;
     document.querySelectorAll('.bad').forEach(i => i.classList.remove('bad'));
     clearMsg($('recMsg')); scan.clear();
     requestId = newId();
@@ -760,7 +770,7 @@
     $('pin').value = ''; clearMsg($('loginMsg')); show('loginView');
   });
 
-  const FIELDS = ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'mistoNakladky', 'mistoVykladky', 'druh', 'jizd'];
+  const FIELDS = ['datumNakladky', 'datumVykladky', 'mistoNakladky', 'mistoVykladky', 'druh', 'jizd'];
   
   $('recForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -777,13 +787,14 @@
     if (needSpz) { v.spz = $('spz').value; if (!v.spz) bad.push('spz'); }
     v.poznamka = $('poznamka').value.trim();
     v.tuny = Array.from($('tunyBox').querySelectorAll('input')).map(i => i.value.trim());
+    v.smeny = getSm($('tunyBox'));
     $('tunyBox').querySelectorAll('input').forEach(i => { const t = i.value.trim(); if (t && !(toNum(t) > 0 && toNum(t) <= 100)) badEls.push(i); });
     if (bad.length || badEls.length) {
       bad.forEach(k => $(k).classList.add('bad')); badEls.forEach(i => i.classList.add('bad'));
       return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err');
     }
-    if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
-      ['datumVykladky', 'casVykladky'].forEach(k => $(k).classList.add('bad'));
+    if (v.datumVykladky < v.datumNakladky) {
+      $('datumVykladky').classList.add('bad');
       return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
 
@@ -822,9 +833,9 @@
       histRows = r.data.rows;
       if (!histRows.length) { list.innerHTML = '<div class="empty">Zatím tu nejsou žádné zadané přepravy.</div>'; return; }
       list.innerHTML = histRows.map((x, i) =>
-        '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + ' ' + esc(x.casNakladky) + ' → ' + (x.datumVykladky !== x.datumNakladky ? esc(fmtD(x.datumVykladky)) + ' ' : '') + esc(x.casVykladky) + '</div>' +
+        '<div class="rec"><div class="dt">' + esc(fmtD(x.datumNakladky)) + (x.datumVykladky !== x.datumNakladky ? ' → ' + esc(fmtD(x.datumVykladky)) : '') + '</div>' +
         '<div class="rt">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div><div class="sb">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + '</div>' +
-        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + (x.hasDoc ? '<span>Příloha ✓</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
+        '<div class="tg">' + (x.jizd > 1 ? '<span>' + x.jizd + ' jízd</span>' : '') + x.tuny.map((t, k) => '<span>' + (x.jizd > 1 ? (k + 1) + '. ' : '') + smTag((x.smeny || [])[k]) + ' ' + (t ? esc(fmtN(t)) + ' t' : 'tuny: –') + '</span>').join('') + (x.spz ? '<span>' + esc(x.spz) + '</span>' : '') + (x.hasDoc ? '<span>Příloha ✓</span>' : '') + '</div>' + (x.poznamka ? '<div class="sb" style="margin-top:8px;font-style:italic">' + esc(x.poznamka) + '</div>' : '') +
         '<button class="ed" type="button" data-i="' + i + '">Upravit</button></div>').join('');
     } catch (e) { list.innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
@@ -832,8 +843,8 @@
     const b = e.target.closest('.ed'); if (!b) return;
     const x = histRows[+b.dataset.i]; if (!x) return;
     editId = x.id;
-    $('eDatN').value = x.datumNakladky; $('eCasN').value = x.casNakladky; $('eDatV').value = x.datumVykladky; $('eCasV').value = x.casVykladky;
-    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eJizd').value = String(x.tuny.length); buildETuny(x.tuny.map(t => fmtN(t)));
+    $('eDatN').value = x.datumNakladky; $('eDatV').value = x.datumVykladky;
+    $('eMistoN').value = x.mistoNakladky; $('eMistoV').value = x.mistoVykladky; $('eZak').value = x.zakaznik; $('eDruh').value = x.druh; $('eJizd').value = String(x.tuny.length); buildETuny(x.tuny.map(t => fmtN(t)), x.smeny || []);
     $('ePozn').value = x.poznamka || '';
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad')); clearMsg($('eMsg'));
     eScan.clear(); show('editView'); window.scrollTo(0, 0);
@@ -843,18 +854,19 @@
   $('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('eMsg'); clearMsg(msg);
-    const ids = { jizd: 'eJizd', datumNakladky: 'eDatN', casNakladky: 'eCasN', datumVykladky: 'eDatV', casVykladky: 'eCasV', mistoNakladky: 'eMistoN', mistoVykladky: 'eMistoV', zakaznik: 'eZak', druh: 'eDruh', poznamka: 'ePozn' };
+    const ids = { jizd: 'eJizd', datumNakladky: 'eDatN', datumVykladky: 'eDatV', mistoNakladky: 'eMistoN', mistoVykladky: 'eMistoV', zakaznik: 'eZak', druh: 'eDruh', poznamka: 'ePozn' };
     document.querySelectorAll('#editForm .bad').forEach(i => i.classList.remove('bad'));
     const v = { id: editId }, bad = [];
     Object.keys(ids).forEach(k => v[k] = $(ids[k]).value.trim());
-    ['datumNakladky', 'casNakladky', 'datumVykladky', 'casVykladky', 'mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh'].forEach(k => { if (!v[k]) bad.push(k); });
+    ['datumNakladky', 'datumVykladky', 'mistoNakladky', 'mistoVykladky', 'zakaznik', 'druh'].forEach(k => { if (!v[k]) bad.push(k); });
     v.tuny = Array.from($('eTunyBox').querySelectorAll('input')).map(i => i.value.trim());
+    v.smeny = getSm($('eTunyBox'));
     const nJ = Math.floor(toNum($('eJizd').value)); v.jizd = nJ;
     if (!(nJ >= 1 && nJ <= MAXJ)) bad.push('jizd');
     const badT = Array.from($('eTunyBox').querySelectorAll('input')).filter(i => { const t = i.value.trim(); return t && !(toNum(t) > 0 && toNum(t) <= 100); });
     if (bad.length || badT.length) { bad.forEach(k => $(ids[k]).classList.add('bad')); badT.forEach(i => i.classList.add('bad')); return showMsg(msg, 'Vyplňte prosím všechna pole správně.', 'err'); }
-    if (v.datumVykladky + 'T' + v.casVykladky < v.datumNakladky + 'T' + v.casNakladky) {
-      ['eDatV', 'eCasV'].forEach(i => $(i).classList.add('bad')); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
+    if (v.datumVykladky < v.datumNakladky) {
+      $('eDatV').classList.add('bad'); return showMsg(msg, 'Vykládka nemůže být dřív než nakládka.', 'err');
     }
     if (eScan.isBusy()) return showMsg(msg, 'Počkejte, příloha se ještě zpracovává.', 'err');
     const prevJ = (histRows.find(r => r.id === editId) || {}).jizd || v.jizd;
@@ -882,7 +894,7 @@
       '<div class="sb" style="color:#aeb9d4;font-size:14px;margin-top:4px">' + esc(fmtD(x.datumNakladky)) + (x.datumVykladky && x.datumVykladky !== x.datumNakladky ? ' → ' + esc(fmtD(x.datumVykladky)) : '') + '</div>' +
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
-      x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
+      x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><span class="pr-sm">' + smTag((x.smeny || [])[k]) + '</span><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
       (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><div class="pr-st"></div></div>';
   }
   function prRender() {
