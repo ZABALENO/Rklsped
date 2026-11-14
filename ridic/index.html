@@ -57,6 +57,12 @@
   select option{background:#0b1020;color:#fff}
   html.light select{background-image:linear-gradient(45deg,transparent 50%,#2f5bd6 50%),linear-gradient(135deg,#2f5bd6 50%,transparent 50%)}
   html.light select option{background:#fff;color:#0f1b3d}
+  .thx{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(10,18,40,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .45s ease;padding:24px;text-align:center}
+  .thx.on{opacity:1}
+  .thx svg{width:min(60vw,240px);height:auto;transform:scale(.8);transition:transform .6s cubic-bezier(.2,1.3,.4,1)}
+  .thx.on svg{transform:scale(1)}
+  .thx b{color:#fff;font-size:26px;letter-spacing:.3px}
+  .thx span{color:#d6def5;font-size:16px}
   .row1{display:block}
   .dsm{display:flex;gap:8px;align-items:stretch}
   .dsm input[type=date]{flex:1;min-width:0}
@@ -440,6 +446,7 @@
   <button id="logout" class="hidden" type="button">Odhlásit</button>
 </header>
 
+<div id="thx" class="thx" aria-hidden="true"><svg viewBox="0 0 120 120" fill="none"><circle cx="60" cy="60" r="54" fill="#22b573"/><path d="M34 62l17 17 35-37" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Děkujeme!</b><span>Přeprava byla odeslána</span></div>
 <nav id="tabs" class="tabs hidden" aria-label="Menu řidiče">
   <button type="button" id="tabNew">Nová přeprava</button>
   <button type="button" id="tabHist">Historie mých jízd</button>
@@ -624,6 +631,7 @@
 
   const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
   const MAXJ = 10;
+  function thanks() { const t = $('thx'); t.classList.add('on'); try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} setTimeout(() => t.classList.remove('on'), 1800); }
   const smHtml = (v) => { v = v === 'N' ? 'N' : 'D'; return '<div class="sm" role="group" aria-label="Směna"><button type="button" data-v="D" aria-pressed="' + (v === 'D') + '" title="Denní směna">☀️</button><button type="button" data-v="N" aria-pressed="' + (v === 'N') + '" title="Noční směna">🌙</button></div>'; };
   const getSm = (box) => Array.from(box.querySelectorAll('.sm')).map(g => (g.querySelector('[aria-pressed=true]') || {dataset: {v: 'D'}}).dataset.v);
   document.addEventListener('click', (e) => { const b = e.target.closest('.sm button'); if (!b) return; b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
@@ -807,6 +815,7 @@
         else if (scan.count()) warn = 'Přílohu se nepodařilo přiřadit. Přidejte ji v Historii (Upravit).';
         const dw = $('doneWarn'); dw.textContent = warn; dw.classList.toggle('hidden', !warn);
         show('doneView');
+        thanks();
       }
       else if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); }
       else if (r.status === 400) showMsg(msg, 'Zkontrolujte vyplněné údaje.', 'err');
