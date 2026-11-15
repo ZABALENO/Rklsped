@@ -564,6 +564,8 @@
         <label style="margin:0 0 8px">Řidiči: admin (ikonka peněz), PIN, počet přeprav</label>
         <div id="admList" style="display:flex;flex-direction:column;gap:2px"></div>
         <div id="admMsg" class="msg" role="status"></div>
+        <label style="margin:16px 0 8px">Rozpis: kolik přeprav který den kdo zapsal</label>
+        <div id="admDny"></div>
       </div>
     </div>
     <div id="prList" class="pr-grid"></div>
@@ -965,6 +967,11 @@
     const r = await api('/api/ridic/admini');
     if (!r.data || !r.data.ok) { showMsg($('admMsg'), 'Seznam adminů se nepodařilo načíst.', 'err'); return; }
     const rows = r.data.rows; $('admList')._rows = rows;
+    const byDay = {}; (r.data.dny || []).forEach(x => { (byDay[x.den] = byDay[x.den] || []).push(x); });
+    $('admDny').innerHTML = Object.keys(byDay).sort().reverse().slice(0, 31).map(d => {
+      const l = byDay[d], sum = l.reduce((a, x) => a + x.n, 0);
+      return '<div style="padding:8px 0;border-bottom:1px solid rgba(160,190,250,.18)"><b>' + esc(fmtD(d)) + '</b> <small style="opacity:.75">· celkem ' + sum + '</small><br><small>' + l.sort((a, b) => b.n - a.n).map(x => esc(x.ridic) + ' <b>' + x.n + '</b>').join(' · ') + '</small></div>';
+    }).join('') || '<div class="empty">Zatím žádné zápisy.</div>';
     $('admList').innerHTML = rows.map((x, i) => '<label class="pr-chk" style="min-height:48px;align-items:center;gap:10px;border-bottom:1px solid rgba(160,190,250,.18)"><input type="checkbox" data-i="' + i + '"' + (x.admin ? ' checked' : '') + '><span style="flex:1;min-width:0">' + esc(x.jmeno + ' ' + x.prijmeni) + (x.aktivni ? '' : ' <i style="opacity:.6">(neaktivní)</i>') + '<br><small style="opacity:.75">PIN: <b>' + esc(x.pin || '–') + '</b> · přeprav: <b>' + x.pocet + '</b></small></span></label>').join('');
   }
   $('admList').addEventListener('change', async (e) => {

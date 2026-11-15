@@ -568,14 +568,23 @@ function smenyNaText() {
 // ---- správa adminů (jen majitel; sloupec H "Admin" v listu Řidiči) ----
 function adminList_(b) {
   if (b.owner !== true) return { ok: false, error: 'forbidden' };
-  var cnt = {};
+  var cnt = {}, perDay = {};
   var rec = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
   var last = rec.getLastRow();
   if (last >= 2) {
-    var names = rec.getRange(2, 2 + O, last - 1, 1).getDisplayValues();
-    for (var i = 0; i < names.length; i++) { var k = norm_(names[i][0]); if (k) cnt[k] = (cnt[k] || 0) + 1; }
+    var vals = rec.getRange(2, 1, last - 1, 2 + O).getDisplayValues();
+    for (var i = 0; i < vals.length; i++) {
+      var nm = String(vals[i][1 + O]).trim(), k = norm_(nm);
+      if (!k) continue;
+      cnt[k] = (cnt[k] || 0) + 1;
+      var den = isoDt_(vals[i][O]).slice(0, 10);
+      if (den) { var key = den + '|' + nm; perDay[key] = (perDay[key] || 0) + 1; }
+    }
   }
-  return { ok: true, rows: drivers_().map(function (d) {
+  var dny = Object.keys(perDay).sort().reverse().slice(0, 400).map(function (key) {
+    var p = key.split('|'); return { den: p[0], ridic: p[1], n: perDay[key] };
+  });
+  return { ok: true, dny: dny, rows: drivers_().map(function (d) {
     return { jmeno: String(d.jmeno).trim(), prijmeni: String(d.prijmeni).trim(), aktivni: d.aktivni, admin: !!d.admin, pin: d.pin, pocet: cnt[norm_(d.jmeno + ' ' + d.prijmeni)] || 0 };
   }) };
 }
