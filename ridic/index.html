@@ -464,7 +464,7 @@
     <form id="loginForm" autocomplete="on" novalidate>
       <label for="prijmeni" style="margin-top:0">Příjmení</label>
       <input id="prijmeni" name="username" type="text" autocomplete="username" autocapitalize="words" required>
-      <label for="pin">PIN</label>
+      <label for="pin" id="pinLbl">PIN</label>
       <input id="pin" name="password" type="password" inputmode="numeric" autocomplete="current-password" required>
       <button class="btn" id="loginBtn" type="submit">Přihlásit</button>
       <div id="loginMsg" class="msg err hidden"></div>
@@ -784,6 +784,16 @@
     else show('loginView');
   })();
 
+    // příjmení „Balcar“ přepne pole PIN na heslo s písmeny
+  const pwMode = () => {
+    const on = String($('prijmeni').value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === 'balcar';
+    $('pinLbl').textContent = on ? 'Heslo' : 'PIN';
+    $('pin').setAttribute('inputmode', on ? 'text' : 'numeric');
+    $('pin').setAttribute('autocapitalize', on ? 'none' : 'off');
+    $('pin').setAttribute('autocorrect', 'off');
+  };
+  $('prijmeni').addEventListener('input', pwMode);
+  $('prijmeni').addEventListener('change', pwMode);
   $('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('loginMsg'); clearMsg(msg);
