@@ -568,7 +568,16 @@ function smenyNaText() {
 // ---- správa adminů (jen majitel; sloupec H "Admin" v listu Řidiči) ----
 function adminList_(b) {
   if (b.owner !== true) return { ok: false, error: 'forbidden' };
-  return { ok: true, rows: drivers_().map(function (d) { return { jmeno: String(d.jmeno).trim(), prijmeni: String(d.prijmeni).trim(), aktivni: d.aktivni, admin: !!d.admin }; }) };
+  var cnt = {};
+  var rec = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  var last = rec.getLastRow();
+  if (last >= 2) {
+    var names = rec.getRange(2, 2 + O, last - 1, 1).getDisplayValues();
+    for (var i = 0; i < names.length; i++) { var k = norm_(names[i][0]); if (k) cnt[k] = (cnt[k] || 0) + 1; }
+  }
+  return { ok: true, rows: drivers_().map(function (d) {
+    return { jmeno: String(d.jmeno).trim(), prijmeni: String(d.prijmeni).trim(), aktivni: d.aktivni, admin: !!d.admin, pin: d.pin, pocet: cnt[norm_(d.jmeno + ' ' + d.prijmeni)] || 0 };
+  }) };
 }
 
 function adminSet_(b) {

@@ -561,7 +561,7 @@
       </div>
       <div id="prInfo" class="scn-info" style="display:block"></div>
       <div id="admBox" class="hidden" style="margin-top:14px;border-top:1px solid rgba(160,190,250,.3);padding-top:12px">
-        <label style="margin:0 0 8px">Kdo vidí ikonku peněz (admin)</label>
+        <label style="margin:0 0 8px">Řidiči: admin (ikonka peněz), PIN, počet přeprav</label>
         <div id="admList" style="display:flex;flex-direction:column;gap:2px"></div>
         <div id="admMsg" class="msg" role="status"></div>
       </div>
@@ -964,8 +964,8 @@
   async function loadAdmins() {
     const r = await api('/api/ridic/admini');
     if (!r.data || !r.data.ok) { showMsg($('admMsg'), 'Seznam adminů se nepodařilo načíst.', 'err'); return; }
-    $('admList').innerHTML = r.data.rows.filter(x => x.aktivni).map((x, i) => '<label class="pr-chk" style="min-height:44px"><input type="checkbox" data-i="' + i + '"' + (x.admin ? ' checked' : '') + '> ' + esc(x.jmeno + ' ' + x.prijmeni) + '</label>').join('');
-    $('admList')._rows = r.data.rows.filter(x => x.aktivni);
+    const rows = r.data.rows; $('admList')._rows = rows;
+    $('admList').innerHTML = rows.map((x, i) => '<label class="pr-chk" style="min-height:48px;align-items:center;gap:10px;border-bottom:1px solid rgba(160,190,250,.18)"><input type="checkbox" data-i="' + i + '"' + (x.admin ? ' checked' : '') + '><span style="flex:1;min-width:0">' + esc(x.jmeno + ' ' + x.prijmeni) + (x.aktivni ? '' : ' <i style="opacity:.6">(neaktivní)</i>') + '<br><small style="opacity:.75">PIN: <b>' + esc(x.pin || '–') + '</b> · přeprav: <b>' + x.pocet + '</b></small></span></label>').join('');
   }
   $('admList').addEventListener('change', async (e) => {
     const cb = e.target.closest('input[data-i]'); if (!cb) return;
