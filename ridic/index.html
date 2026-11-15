@@ -560,6 +560,11 @@
         </select>
       </div>
       <div id="prInfo" class="scn-info" style="display:block"></div>
+      <div id="admBox" class="hidden" style="margin-top:14px;border-top:1px solid rgba(160,190,250,.3);padding-top:12px">
+        <label style="margin:0 0 8px">Kdo vidí ikonku peněz (admin)</label>
+        <div id="admList" style="display:flex;flex-direction:column;gap:2px"></div>
+        <div id="admMsg" class="msg" role="status"></div>
+      </div>
     </div>
     <div id="prList" class="pr-grid"></div>
     <div id="prMsg" class="msg hidden"></div>
@@ -743,8 +748,11 @@
       } catch (err) { done('CHYBA', true); }
     }, (err) => done(err && err.code === 1 ? 'POVOLTE' : 'NELZE', true), { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
   });
+  function enter() { if (driver && driver.owner) loadPrices(); else show('formView'); }
   function setDriver(d) {
-    driver = d; loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny);
+    driver = d; if (!d.owner) loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny);
+    $('tabNew').classList.toggle('hidden', !!d.owner); $('tabHist').classList.toggle('hidden', !!d.owner);
+    $('admBox').classList.toggle('hidden', !d.owner);
     const own = String(d.dopravce || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === 'rkl opava';
     needSpz = own || !String(d.spz || '').trim();           // řidiči RKL Opava (a řidiči bez SPZ v tabulce) si SPZ volí
     $('spzRow').classList.toggle('hidden', !needSpz);
@@ -770,7 +778,7 @@
   (async function init() {
     resetForm();
     const r = await api('/api/ridic/me');
-    if (r.status === 200 && r.data.ok) { setDriver(r.data.driver); show('formView'); }
+    if (r.status === 200 && r.data.ok) { setDriver(r.data.driver); enter(); }
     else show('loginView');
   })();
 
@@ -782,7 +790,7 @@
     $('loginBtn').disabled = true;
     try {
       const r = await api('/api/ridic/login', { prijmeni, pin });
-      if (r.data.ok) { $('pin').value = ''; setDriver(r.data.driver); show('formView'); }
+      if (r.data.ok) { $('pin').value = ''; setDriver(r.data.driver); enter(); }
       else if (r.status === 429) showMsg(msg, 'Příliš mnoho pokusů. Zkuste to za chvíli.', 'err');
       else if (r.status === 401) showMsg(msg, 'Špatné příjmení nebo PIN.', 'err');
       else if (r.status === 503) showMsg(msg, 'Evidence ještě není zprovozněná. Kontaktujte dispečink.', 'err');
@@ -948,11 +956,25 @@
       const cur = $('prDrv').value, names = [...new Set(prRows.map(x => x.ridic))].sort((a, b) => a.localeCompare(b, 'cs'));
       $('prDrv').innerHTML = '<option value="">Všichni řidiči</option>' + names.map(n => '<option>' + esc(n) + '</option>').join('');
       if (names.includes(cur)) $('prDrv').value = cur;
-      prRender();
+      prRender(); if (driver && driver.owner) loadAdmins();
     } catch (e) { $('prList').innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
   $('tabPrice').addEventListener('click', loadPrices);
   $('prRef').addEventListener('click', loadPrices);
+  async function loadAdmins() {
+    const r = await api('/api/ridic/admini');
+    if (!r.data || !r.data.ok) { showMsg($('admMsg'), 'Seznam adminů se nepodařilo načíst.', 'err'); return; }
+    $('admList').innerHTML = r.data.rows.filter(x => x.aktivni).map((x, i) => '<label class="pr-chk" style="min-height:44px"><input type="checkbox" data-i="' + i + '"' + (x.admin ? ' checked' : '') + '> ' + esc(x.jmeno + ' ' + x.prijmeni) + '</label>').join('');
+    $('admList')._rows = r.data.rows.filter(x => x.aktivni);
+  }
+  $('admList').addEventListener('change', async (e) => {
+    const cb = e.target.closest('input[data-i]'); if (!cb) return;
+    const x = $('admList')._rows[+cb.dataset.i], msg = $('admMsg'); cb.disabled = true; clearMsg(msg);
+    const r = await api('/api/ridic/admini', { jmeno: x.jmeno, prijmeni: x.prijmeni, admin: cb.checked });
+    cb.disabled = false;
+    if (r.data && r.data.ok) showMsg(msg, x.jmeno + ' ' + x.prijmeni + (cb.checked ? ': ikonka peněz zapnuta.' : ': ikonka peněz vypnuta.'), 'ok');
+    else { cb.checked = !cb.checked; showMsg(msg, 'Změnu se nepodařilo uložit.', 'err'); }
+  });
   $('prDrv').addEventListener('change', prRender); $('prMiss').addEventListener('change', prRender); $('prSort').addEventListener('change', prRender);
   $('prList').addEventListener('input', (e) => {
     if (!e.target.classList.contains('pc')) return;

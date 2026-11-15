@@ -38,6 +38,8 @@ function doPost(e) {
     if (body.action === 'ceny') return out_(prices_list_(body));
     if (body.action === 'cenySet') return out_(prices_set_(body));
     if (body.action === 'docGet') return out_(docGet_(body));
+    if (body.action === 'adminList') return out_(adminList_(body));
+    if (body.action === 'adminSet') return out_(adminSet_(body));
     return out_({ ok: false, error: 'unknown_action' });
   } catch (err) {
     return out_({ ok: false, error: 'server_error' });
@@ -325,7 +327,7 @@ function napad_(b) {
 
 // smaže záznam (řádek) podle ID: řidič jen svůj, Soukeník (ceny) kterýkoli
 function delete_(b) {
-  var driver = findDriver_(b);
+  var driver = b.owner === true ? { jmeno: 'Robin', prijmeni: 'Balcar' } : findDriver_(b);
   if (!driver) return { ok: false, error: 'driver_inactive' };
   var full = norm_(driver.jmeno + ' ' + driver.prijmeni);
   var isAdmin = !!admin_(b);
@@ -392,6 +394,7 @@ function doc_(b) {
 // ---- ceny (jen přihlášený Soukeník) ----
 var ADMIN_PRIJMENI = 'soukenik';
 function admin_(b) {
+  if (b.owner === true) return { jmeno: 'Robin', prijmeni: 'Balcar', admin: true };   // majitel (skryté přihlášení v aplikaci)
   var d = findDriver_(b);
   return (d && d.admin) ? d : null;
 }
@@ -559,4 +562,36 @@ function smenyNaText() {
     rg.setNumberFormat('@').setHorizontalAlignment('center').setValues(out);
   }
   return 'prepsano ' + n;
+}
+
+
+// ---- správa adminů (jen majitel; sloupec H "Admin" v listu Řidiči) ----
+function adminList_(b) {
+  if (b.owner !== true) return { ok: false, error: 'forbidden' };
+  return { ok: true, rows: drivers_().map(function (d) { return { jmeno: String(d.jmeno).trim(), prijmeni: String(d.prijmeni).trim(), aktivni: d.aktivni, admin: !!d.admin }; }) };
+}
+
+function adminSet_(b) {
+  if (b.owner !== true) return { ok: false, error: 'forbidden' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_DRIVERS);
+    var head = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 8)).getDisplayValues()[0];
+    var col = 0;
+    for (var c = 7; c < head.length; c++) if (norm_(head[c]) === 'admin') { col = c + 1; break; }
+    if (!col) { col = 8; sh.getRange(1, col).setValue('Admin'); }
+    var rows = sh.getDataRange().getDisplayValues();
+    var want = norm_(b.jmeno + ' ' + b.prijmeni);
+    for (var i = 1; i < rows.length; i++) {
+      if (norm_(rows[i][0] + ' ' + rows[i][1]) === want) {
+        sh.getRange(i + 1, col).setValue(b.admin === true ? 'ANO' : '');
+        SpreadsheetApp.flush();
+        return { ok: true };
+      }
+    }
+    return { ok: false, error: 'not_found' };
+  } finally {
+    lock.releaseLock();
+  }
 }
