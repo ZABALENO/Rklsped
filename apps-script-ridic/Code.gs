@@ -56,19 +56,22 @@ function drivers_() {
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_DRIVERS);
   var rows = sh.getDataRange().getDisplayValues();
   var list = [];
+  // sloupec H = Admin (ano = vidí ikonku peněz); dokud sloupec v listu není, je admin jen Soukeník
+  var hasAdminCol = rows.length > 0 && rows[0].length >= 8;
   for (var i = 1; i < rows.length; i++) {
     var r = rows[i];
     if (!r[0] && !r[1]) continue;
     list.push({
       jmeno: r[0], prijmeni: r[1], dopravce: r[2], spz: r[3], typ: r[4],
-      pin: String(r[5]).trim(), aktivni: norm_(r[6]) === 'ano'
+      pin: String(r[5]).trim(), aktivni: norm_(r[6]) === 'ano',
+      admin: hasAdminCol ? norm_(r[7]) === 'ano' : norm_(r[1]) === 'soukenik'
     });
   }
   return list;
 }
 
 function publicDriver_(d) {
-  return { jmeno: d.jmeno, prijmeni: d.prijmeni, dopravce: d.dopravce, spz: d.spz, typ: d.typ };
+  return { jmeno: d.jmeno, prijmeni: d.prijmeni, dopravce: d.dopravce, spz: d.spz, typ: d.typ, admin: !!d.admin };
 }
 
 function login_(b) {
@@ -390,7 +393,7 @@ function doc_(b) {
 var ADMIN_PRIJMENI = 'soukenik';
 function admin_(b) {
   var d = findDriver_(b);
-  return (d && norm_(d.prijmeni) === ADMIN_PRIJMENI) ? d : null;
+  return (d && d.admin) ? d : null;
 }
 
 // všechny záznamy všech řidičů (nejnovější první) včetně tun a cen
