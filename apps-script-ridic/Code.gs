@@ -10,6 +10,8 @@
 var SHEET_DRIVERS = 'Řidiči';
 var SHEET_RECORDS = 'Záznamy';
 var SHEET_DONE = 'Zpracováno';
+var SHEET_LORI = 'Přepravy do Lori';
+var LORI_DELAY_MS = 30 * 60 * 1000;
 var SHEET_CUSTOMERS = 'Zákazníci';   // sloupec A = nabízení zákazníci (od řádku 2)
 
 function layout_() {
@@ -801,7 +803,7 @@ function zprac_(b) {
   var id = String(b.id || '');
   if (!/^[0-9a-f-]{8,64}$/i.test(id)) return { ok: false, error: 'bad_request' };
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
+  lock.waitLock(30000);
   try {
     var sh = zpracSheet_(true), last = sh.getLastRow();
     var ids = last > 1 ? sh.getRange(2, 1, last - 1, 1).getValues() : [];
@@ -810,18 +812,20 @@ function zprac_(b) {
     if (b.done === true) {
       if (!rows.length) {
         var who = (d.jmeno ? d.jmeno + ' ' : '') + (d.prijmeni || b.prijmeni || '');
-        sh.appendRow([id, String(who).trim(), Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm')]);
+        var now = new Date();
+        sh.appendRow([id, String(who).trim(), Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm'), now.getTime(), '']);
       }
     } else {
       for (var j = rows.length - 1; j >= 0; j--) sh.deleteRow(rows[j]);
+      loriRemove_(id);   // odfajfknuto = z listu Přepravy do Lori zmizí hned
     }
+    syncLoriLocked_();
     SpreadsheetApp.flush();
     return { ok: true, done: b.done === true };
   } finally {
     lock.releaseLock();
   }
 }
-
 
 // ---- úprava příloh (jen admin): smazání přílohy a výměna PDF po odebrání stránek ----
 function docFileId_(url) { var m = /\/d\/([\w-]+)/.exec(String(url || '')); return m ? m[1] : ''; }
@@ -870,4 +874,70 @@ function docRepl_(b) {
     if (old) { try { old.setTrashed(true); } catch (e) {} }
     return { ok: true, docs: urls.length };
   } finally { lock.releaseLock(); }
+}
+
+
+// ---- přepravy do Lori: zaškrtnuté fajfkou se po 30 minutách zkopírují do listu „Přepravy do Lori“ ----
+function loriSheet_(create) {
+  var ss = SpreadsheetApp.getActive(), lo = ss.getSheetByName(SHEET_LORI);
+  if (!lo && create) {
+    var rec = ss.getSheetByName(SHEET_RECORDS);
+    lo = ss.insertSheet(SHEET_LORI);
+    rec.getRange(1, 1, 1, rec.getLastColumn()).copyTo(lo.getRange(1, 1));
+    lo.setFrozenRows(1);
+  }
+  return lo;
+}
+function loriIds_(lo) {
+  var m = {}, last = lo.getLastRow();
+  if (last < 2) return m;
+  lo.getRange(2, COL_ID, last - 1, 1).getDisplayValues().forEach(function (r, i) { if (r[0]) m[r[0]] = i + 2; });
+  return m;
+}
+function loriRemove_(id) {
+  var lo = loriSheet_(false);
+  if (!lo || lo.getLastRow() < 2) return;
+  var vals = lo.getRange(2, COL_ID, lo.getLastRow() - 1, 1).getDisplayValues();
+  for (var i = vals.length - 1; i >= 0; i--) if (vals[i][0] === id) lo.deleteRow(i + 2);
+}
+function zpracTs_(row) {
+  if (Number(row[3]) > 0) return Number(row[3]);
+  var m = /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})$/.exec(String(row[2] || ''));
+  return m ? new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime() : 0;
+}
+function syncLoriLocked_() {
+  var dn = zpracSheet_(false);
+  if (!dn || dn.getLastRow() < 2) return 0;
+  var data = dn.getRange(2, 1, dn.getLastRow() - 1, 5).getValues(), now = Date.now(), due = [];
+  for (var i = 0; i < data.length; i++) {
+    if (data[i][4]) continue;
+    var ts = zpracTs_(data[i]);
+    if (ts && now - ts >= LORI_DELAY_MS) due.push(i);
+  }
+  if (!due.length) return 0;
+  var rec = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS), lo = loriSheet_(true), have = loriIds_(lo);
+  var recIds = rec.getRange(2, COL_ID, Math.max(1, rec.getLastRow() - 1), 1).getDisplayValues(), pos = {};
+  for (var r = 0; r < recIds.length; r++) if (recIds[r][0]) pos[recIds[r][0]] = r + 2;
+  var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm'), n = 0;
+  for (var k = 0; k < due.length; k++) {
+    var id = String(data[due[k]][0]);
+    if (!have[id] && pos[id]) {
+      var dest = lo.getLastRow() + 1;
+      rec.getRange(pos[id], 1, 1, rec.getLastColumn()).copyTo(lo.getRange(dest, 1));
+      have[id] = dest; n++;
+    }
+    dn.getRange(due[k] + 2, 5).setValue(stamp);
+  }
+  if (dn.getRange(1, 4).getValue() !== 'Čas (ms)') dn.getRange(1, 4, 1, 2).setValues([['Čas (ms)', 'Zkopírováno do Lori']]).setFontWeight('bold');
+  return n;
+}
+function syncLoriTick() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try { syncLoriLocked_(); SpreadsheetApp.flush(); } finally { lock.releaseLock(); }
+}
+// jednorázově spustit v editoru: založí časovač (každých 5 minut)
+function installLoriTrigger_() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'syncLoriTick') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('syncLoriTick').timeBased().everyMinutes(5).create();
 }
