@@ -11,7 +11,7 @@ var SHEET_DRIVERS = 'Řidiči';
 var SHEET_RECORDS = 'Záznamy';
 var SHEET_DONE = 'Zpracováno';
 var SHEET_LORI = 'Přepravy do Lori';
-var LORI_DELAY_MS = 30 * 60 * 1000;
+var LORI_DELAY_MS = 0;   // okamžitě po zaškrtnutí
 var SHEET_CUSTOMERS = 'Zákazníci';   // sloupec A = nabízení zákazníci (od řádku 2)
 
 function layout_() {
