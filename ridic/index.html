@@ -1036,7 +1036,7 @@
     $('dkT').innerHTML = '<thead><tr>' + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
       rows.map(o => '<tr>' + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinks(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
     $('dkAddBtn').classList.toggle('hidden', !dkAddable()); if (!dkAddable()) $('dkAdd').classList.add('hidden');
-    $('dkInfo').textContent = (driver && driver.owner ? 'Úprava: dvojklik na buňku. ' : '') + 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
+    $('dkInfo').textContent = (driver && driver.ceny ? 'Úprava: dvojklik na buňku. ' : '') + 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
   }
   // do Záznamů přidá souhrnný sloupec „Směna“ (první vyplněná Směna 1–10) hned za „Čas zápisu“
   function dkPrep(sheets) {
@@ -1069,7 +1069,7 @@
   }
   $('pcBtn').addEventListener('click', () => setPc(!document.documentElement.classList.contains('pc')));
 
-  const dkEd = (sh, c) => !!(driver && driver.owner && sh.rn && !(sh.ro || []).includes(c));
+  const dkEd = (sh, c) => !!(driver && driver.ceny && sh.rn && !(sh.ro || []).includes(c));
   $('dkT').addEventListener('dblclick', (e) => {
     const td = e.target.closest('td.ed'); if (!td || td.querySelector('input')) return;
     const sh = dkData[dkSheet], i = +td.dataset.i, c = +td.dataset.c, old = sh.rows[i][c];
@@ -1088,10 +1088,10 @@
     inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') finish(true); else if (ev.key === 'Escape') finish(false); });
     inp.addEventListener('blur', () => finish(true));
   });
-  const dkAddable = () => driver && driver.owner && dkData && ['Řidiči', 'Zákazníci'].includes((dkData[dkSheet] || {}).name);
+  const dkAddable = () => driver && driver.ceny && dkData && ['Řidiči', 'Zákazníci'].includes((dkData[dkSheet] || {}).name);
   function dkAddOpen() {
     const sh = dkData[dkSheet];
-    $('dkAddF').innerHTML = sh.head.map((h, c) => '<div><label style="margin:0 0 4px">' + esc(h) + '</label><input type="text" data-col="' + sh.cn[c] + '" maxlength="200" autocomplete="off" value="' + (sh.name === 'Řidiči' && h === 'Aktivní' ? 'ANO' : sh.name === 'Řidiči' && h === 'Dopravce' ? 'RKL Opava' : '') + '"></div>').join('');
+    $('dkAddF').innerHTML = sh.head.map((h, c) => (sh.name === 'Řidiči' && h === 'Admin' && !(driver && driver.owner)) ? '' : '<div><label style="margin:0 0 4px">' + esc(h) + '</label><input type="text" data-col="' + sh.cn[c] + '" maxlength="200" autocomplete="off" value="' + (sh.name === 'Řidiči' && h === 'Aktivní' ? 'ANO' : sh.name === 'Řidiči' && h === 'Dopravce' ? 'RKL Opava' : '') + '"></div>').join('');
     $('dkAdd').classList.remove('hidden');
   }
   $('dkAddBtn').addEventListener('click', dkAddOpen);

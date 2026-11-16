@@ -657,10 +657,11 @@ function vse_(b) {
     if (isRec) { res.reverse(); mt.reverse(); rn.reverse(); }
     var o = { name: sh.getName(), head: keep.map(function (c) { return head[c]; }), rows: res.slice(0, 3000), total: total };
     if (isRec) { o.meta = mt.slice(0, 3000); o.docCol = keep.indexOf(COL_DOC - 1); }
-    if (owner) {
-      o.rn = rn.slice(0, 3000);
-      o.cn = keep.map(function (c) { return c + 1; });
-      o.ro = isRec ? [keep.indexOf(COL_DOC - 1), keep.indexOf(COL_ID - 1)].filter(function (x) { return x >= 0; }) : [];
+    o.rn = rn.slice(0, 3000);
+    o.cn = keep.map(function (c) { return c + 1; });
+    o.ro = isRec ? [keep.indexOf(COL_DOC - 1), keep.indexOf(COL_ID - 1)].filter(function (x) { return x >= 0; }) : [];
+    if (sh.getName() === SHEET_DRIVERS && !owner) {   // PIN a Admin mění jen majitel
+      [head.indexOf('PIN'), head.indexOf('Admin')].forEach(function (c) { var k = keep.indexOf(c); if (k >= 0) o.ro.push(k); });
     }
     out.push(o);
   });
@@ -670,11 +671,15 @@ function vse_(b) {
 
 // ---- úpravy v tabulce (jen majitel) ----
 function bunka_(b) {
-  if (b.owner !== true) return { ok: false, error: 'forbidden' };
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
   var row = parseInt(b.row, 10), col = parseInt(b.col, 10);
   var sh = SpreadsheetApp.getActive().getSheetByName(String(b.sheet || ''));
   if (!sh || !(row >= 2) || !(col >= 1) || col > sh.getMaxColumns() || row > sh.getMaxRows()) return { ok: false, error: 'bad_request' };
   if (sh.getName() === SHEET_RECORDS && (col === COL_ID || col === COL_DOC)) return { ok: false, error: 'readonly' };
+  if (sh.getName() === SHEET_DRIVERS && b.owner !== true) {
+    var hn = norm_(sh.getRange(1, col).getDisplayValue());
+    if (hn === 'pin' || hn === 'admin') return { ok: false, error: 'readonly' };   // PIN a Admin mění jen majitel
+  }
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -692,7 +697,7 @@ function bunka_(b) {
 }
 
 function radek_(b) {
-  if (b.owner !== true) return { ok: false, error: 'forbidden' };
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
   var name = String(b.sheet || '');
   if (name !== SHEET_DRIVERS && name !== SHEET_CUSTOMERS) return { ok: false, error: 'bad_request' };
   var sh = SpreadsheetApp.getActive().getSheetByName(name);
@@ -706,6 +711,7 @@ function radek_(b) {
       if (!jm || !pr || !pin) return { ok: false, error: 'missing' };
       for (var i = 1; i < all.length; i++) if (norm_(all[i][0] + ' ' + all[i][1]) === norm_(jm + ' ' + pr)) return { ok: false, error: 'duplicate' };
       if (!String(vals['7'] || '').trim()) vals['7'] = 'ANO';
+      if (b.owner !== true) delete vals['8'];   // admina nastavuje jen majitel
     } else {
       var nm = String(vals['1'] || '').trim();
       if (!nm) return { ok: false, error: 'missing' };
