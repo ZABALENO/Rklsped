@@ -691,7 +691,9 @@
 
   const toNum = (x) => Number(String(x).replace(/\s/g, '').replace(',', '.'));
   const MAXJ = 10;
-  function thanks(dnes) { const t = $('thx'); const lo = dnes >= 1 && dnes <= 6; t.classList.add('t2'); const im = $('thxImg'), u = dnes <= 2 ? '/ridic/dekuji2.jpg?v=1' : dnes <= 4 ? '/ridic/dekuji3.jpg?v=1' : lo ? '/ridic/dekuji4.jpg?v=1' : '/ridic/dekuji.jpg?v=6'; if (im.getAttribute('src') !== u) im.setAttribute('src', u); t.classList.add('on'); try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} setTimeout(() => t.classList.remove('on'), 2600); }
+  // dočasně vypnuto: poděkovací fotka se znovu zapne sama 16. 11. 2026 v 11:04
+  const THX_OFF_UNTIL = Date.parse('2026-11-16T11:04:00+01:00');
+  function thanks(dnes) { if (Date.now() < THX_OFF_UNTIL) return; const t = $('thx'); const lo = dnes >= 1 && dnes <= 6; t.classList.add('t2'); const im = $('thxImg'), u = dnes <= 2 ? '/ridic/dekuji2.jpg?v=1' : dnes <= 4 ? '/ridic/dekuji3.jpg?v=1' : lo ? '/ridic/dekuji4.jpg?v=1' : '/ridic/dekuji.jpg?v=6'; if (im.getAttribute('src') !== u) im.setAttribute('src', u); t.classList.add('on'); try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} setTimeout(() => t.classList.remove('on'), 2600); }
   const smHtml = (v) => { v = v === 'N' ? 'N' : 'D'; return '<div class="sm" role="group" aria-label="Směna"><button type="button" data-v="D" aria-pressed="' + (v === 'D') + '" title="Denní směna">☀️</button><button type="button" data-v="N" aria-pressed="' + (v === 'N') + '" title="Noční směna">🌙</button></div>'; };
   const getSm = (box) => Array.from(box.querySelectorAll('.sm')).map(g => (g.querySelector('[aria-pressed=true]') || {dataset: {v: 'D'}}).dataset.v);
   document.addEventListener('click', (e) => { const b = e.target.closest('.sm button'); if (!b) return; b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
