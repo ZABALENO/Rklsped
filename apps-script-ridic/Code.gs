@@ -38,6 +38,7 @@ function doPost(e) {
     if (body.action === 'ceny') return out_(prices_list_(body));
     if (body.action === 'cenySet') return out_(prices_set_(body));
     if (body.action === 'docGet') return out_(docGet_(body));
+    if (body.action === 'vse') return out_(vse_(body));
     if (body.action === 'adminList') return out_(adminList_(body));
     if (body.action === 'adminSet') return out_(adminSet_(body));
     return out_({ ok: false, error: 'unknown_action' });
@@ -612,4 +613,31 @@ function adminSet_(b) {
   } finally {
     lock.releaseLock();
   }
+}
+
+
+// ---- všechna data ze všech listů (jen admin; PIN vidí jen majitel) ----
+function vse_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var owner = b.owner === true;
+  var out = [];
+  SpreadsheetApp.getActive().getSheets().forEach(function (sh) {
+    var vals = sh.getDataRange().getDisplayValues();
+    if (!vals.length) { out.push({ name: sh.getName(), head: [], rows: [], total: 0 }); return; }
+    var head = vals[0], rows = vals.slice(1);
+    var keep = [];
+    for (var c = 0; c < head.length; c++) {
+      var has = String(head[c]).trim() !== '';
+      for (var r = 0; r < rows.length && !has; r++) if (String(rows[r][c]).trim() !== '') has = true;
+      if (has) keep.push(c);
+    }
+    var pinCol = (sh.getName() === SHEET_DRIVERS) ? head.indexOf('PIN') : -1;
+    var res = rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); }).map(function (r) {
+      return keep.map(function (c) { return (c === pinCol && !owner && String(r[c]).trim()) ? '••••' : r[c]; });
+    });
+    var total = res.length;
+    if (sh.getName() === SHEET_RECORDS) res.reverse();
+    out.push({ name: sh.getName(), head: keep.map(function (c) { return head[c]; }), rows: res.slice(0, 3000), total: total });
+  });
+  return { ok: true, sheets: out };
 }

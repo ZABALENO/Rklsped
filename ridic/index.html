@@ -27,6 +27,22 @@
   .brand small{display:block;font-weight:400;font-size:10px;letter-spacing:2px;color:var(--mut)}
   #logout{flex:none;background:transparent;color:#cfe0ff;border:1px solid rgba(94,138,255,.55);padding:8px 12px;font:600 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:2px;text-transform:uppercase;cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
 
+  html.pc main{max-width:none!important;padding:14px 22px 30px!important}
+  html.pc #tabs{display:none!important}
+  #deskView{display:flex;flex-direction:column;gap:10px}
+  .dk-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .dk-tab{background:transparent;color:#cfe0ff;border:1px solid rgba(94,138,255,.45);font:600 13px "IBM Plex Mono",monospace;padding:9px 14px;cursor:pointer}
+  .dk-tab.on{background:#1d388f;color:#fff;border-color:var(--c)}
+  .dk-tab small{opacity:.7;margin-left:6px}
+  .dk-q{flex:1;min-width:220px;max-width:420px}
+  .dk-wrap{overflow:auto;max-height:calc(100vh - 190px);border:1px solid rgba(94,138,255,.35);background:rgba(4,8,22,.55)}
+  .dk-t{border-collapse:collapse;font:13px/1.35 "IBM Plex Sans",system-ui,sans-serif;color:#e8eefc;min-width:100%}
+  .dk-t th{position:sticky;top:0;background:#13245f;color:#fff;text-align:left;padding:8px 10px;white-space:nowrap;cursor:pointer;border-bottom:2px solid var(--c);z-index:1}
+  .dk-t td{padding:6px 10px;border-bottom:1px solid rgba(160,190,250,.14);white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+  .dk-t tr:nth-child(even) td{background:rgba(94,138,255,.06)}
+  .dk-t tr:hover td{background:rgba(94,138,255,.2)}
+  .dk-t td.n{text-align:right;font-variant-numeric:tabular-nums}
+  html.light .dk-t{color:#0a1438}html.light .dk-wrap{background:#fff}html.light .dk-t th{background:#dfe8ff;color:#0a1438}html.light .dk-tab{color:#0a1438;border-color:#1b46c2}html.light .dk-tab.on{background:#2b5cff;color:#fff}
   main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:16px}
   .panel{position:relative;background:linear-gradient(155deg,rgba(14,22,52,.88),rgba(4,8,22,.92));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(94,138,255,.5);padding:24px 20px 22px;clip-path:polygon(22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%,0 22px);box-shadow:0 0 50px rgba(94,138,255,.22);animation:arrIn .6s cubic-bezier(.2,.8,.2,1) both}
   .panel::before{content:"";position:absolute;left:0;top:0;width:72px;height:2px;background:var(--c);box-shadow:0 0 14px var(--c)}
@@ -447,6 +463,7 @@
   <a class="back" href="https://airkl.cz/" aria-label="Zpět na rozcestník" title="Zpět na rozcestník"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
   <div class="brand"><img src="/logo.jpg" alt="RKL" width="34" height="34"><div>RKL Opava<small>Evidence přeprav</small></div></div>
   <button id="thBtn" class="thbtn" type="button" aria-label="Světlý nebo tmavý motiv"><svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.9 1.9M16.8 16.8l1.9 1.9M18.7 5.3l-1.9 1.9M7.2 16.8l-1.9 1.9"/></svg></button>
+  <button id="pcBtn" class="thbtn hidden" type="button" title="Rozložení pro počítač" aria-label="Rozložení pro počítač" style="width:auto;padding:0 12px;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:1px">🖥 PC</button>
   <button id="logout" class="hidden" type="button">Odhlásit</button>
 </header>
 
@@ -542,6 +559,12 @@
     <div id="histMsg" class="msg hidden"></div>
   </section>
 
+  <section id="deskView" class="hidden">
+    <div class="dk-bar" id="dkTabs"></div>
+    <div class="dk-bar"><input id="dkQ" class="dk-q" type="search" placeholder="Hledat v listu…" autocomplete="off"><button class="scn-btn" id="dkCsv" type="button" style="padding:8px 14px">Stáhnout CSV</button><button class="scn-btn" id="dkRef" type="button" style="padding:8px 14px">Obnovit</button><span id="dkInfo" style="opacity:.8;font-size:13px"></span></div>
+    <div id="dkMsg" class="msg" role="status"></div>
+    <div class="dk-wrap"><table class="dk-t" id="dkT"></table></div>
+  </section>
   <section id="priceView" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="panel" style="padding-bottom:18px">
       <h1>Ceny</h1>
@@ -616,7 +639,7 @@
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const views = ['loginView', 'formView', 'doneView', 'histView', 'editView', 'priceView'];
+  const views = ['loginView', 'formView', 'doneView', 'histView', 'editView', 'priceView', 'deskView'];
   const show = (name) => {
     views.forEach(v => $(v).classList.toggle('hidden', v !== name));
     $('logout').classList.toggle('hidden', name === 'loginView');
@@ -750,11 +773,17 @@
       } catch (err) { done('CHYBA', true); }
     }, (err) => done(err && err.code === 1 ? 'POVOLTE' : 'NELZE', true), { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
   });
-  function enter() { if (driver && driver.owner) loadPrices(); else show('formView'); }
+  function enter() {
+    if (driver && driver.ceny && document.documentElement.classList.contains('pc')) return loadDesk();
+    if (driver && driver.owner) loadPrices(); else show('formView');
+  }
   function setDriver(d) {
     driver = d; if (!d.owner) loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny);
     $('tabNew').classList.toggle('hidden', !!d.owner); $('tabHist').classList.toggle('hidden', !!d.owner);
     $('admBox').classList.toggle('hidden', !d.owner);
+    $('pcBtn').classList.toggle('hidden', !d.ceny);
+    let pcOn = false; try { pcOn = localStorage.getItem('rklPc') === '1'; } catch (e) {}
+    document.documentElement.classList.toggle('pc', !!d.ceny && pcOn); $('pcBtn').textContent = (!!d.ceny && pcOn) ? '📱 Mobil' : '🖥 PC'; dkData = null;
     const own = String(d.dopravce || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === 'rkl opava';
     needSpz = own || !String(d.spz || '').trim();           // řidiči RKL Opava (a řidiči bez SPZ v tabulce) si SPZ volí
     $('spzRow').classList.toggle('hidden', !needSpz);
@@ -813,7 +842,7 @@
 
   $('logout').addEventListener('click', async () => {
     await api('/api/ridic/logout', {});
-    $('pin').value = ''; clearMsg($('loginMsg')); show('loginView');
+    $('pin').value = ''; clearMsg($('loginMsg')); document.documentElement.classList.remove('pc'); $('pcBtn').classList.add('hidden'); dkData = null; show('loginView');
   });
 
   const FIELDS = ['datumNakladky', 'datumVykladky', 'mistoNakladky', 'mistoVykladky', 'druh', 'jizd'];
@@ -971,6 +1000,54 @@
       prRender(); if (driver && driver.owner) loadAdmins();
     } catch (e) { $('prList').innerHTML = ''; showMsg(msg, 'Chybí připojení k internetu.', 'err'); }
   }
+
+  // ---- rozložení pro počítač: všechna data ze všech listů ----
+  let dkData = null, dkSheet = 0, dkSort = { c: -1, d: 1 };
+  const isNumLike = (v) => /^-?\d+([.,]\d+)?$/.test(String(v).trim());
+  function dkRender() {
+    const sh = dkData && dkData[dkSheet]; if (!sh) return;
+    $('dkTabs').innerHTML = dkData.map((x, i) => '<button type="button" class="dk-tab' + (i === dkSheet ? ' on' : '') + '" data-i="' + i + '">' + esc(x.name) + '<small>' + x.total + '</small></button>').join('');
+    const q = $('dkQ').value.trim().toLowerCase();
+    let rows = sh.rows.map((r, i) => ({ r, i }));
+    if (q) rows = rows.filter(o => o.r.some(v => String(v).toLowerCase().includes(q)));
+    if (dkSort.c >= 0) {
+      const c = dkSort.c, num = rows.every(o => !String(o.r[c]).trim() || isNumLike(o.r[c]));
+      rows.sort((a, b) => {
+        const x = a.r[c], y = b.r[c];
+        const cmp = num ? (parseFloat(String(x).replace(',', '.')) || 0) - (parseFloat(String(y).replace(',', '.')) || 0) : String(x).localeCompare(String(y), 'cs', { numeric: true });
+        return (cmp || a.i - b.i) * dkSort.d;
+      });
+    }
+    $('dkT').innerHTML = '<thead><tr>' + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
+      rows.map(o => '<tr>' + o.r.map(v => '<td' + (isNumLike(v) ? ' class="n"' : '') + ' title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
+    $('dkInfo').textContent = 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
+  }
+  async function loadDesk(force) {
+    const msg = $('dkMsg'); clearMsg(msg); show('deskView');
+    if (dkData && !force) return dkRender();
+    $('dkInfo').textContent = 'Načítám všechna data…';
+    const r = await api('/api/ridic/vse');
+    if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); return; }
+    if (!r.data || !r.data.ok) { $('dkInfo').textContent = ''; return showMsg(msg, 'Data se nepodařilo načíst. Zkuste to znovu.', 'err'); }
+    dkData = r.data.sheets; if (dkSheet >= dkData.length) dkSheet = 0; dkSort = { c: -1, d: 1 }; dkRender();
+  }
+  function setPc(on) {
+    document.documentElement.classList.toggle('pc', on);
+    try { localStorage.setItem('rklPc', on ? '1' : '0'); } catch (e) {}
+    $('pcBtn').textContent = on ? '📱 Mobil' : '🖥 PC';
+    if (on) loadDesk(); else enter();
+  }
+  $('pcBtn').addEventListener('click', () => setPc(!document.documentElement.classList.contains('pc')));
+  $('dkTabs').addEventListener('click', (e) => { const b = e.target.closest('.dk-tab'); if (!b) return; dkSheet = +b.dataset.i; dkSort = { c: -1, d: 1 }; dkRender(); });
+  $('dkT').addEventListener('click', (e) => { const h = e.target.closest('th'); if (!h) return; const c = +h.dataset.c; dkSort = dkSort.c === c ? { c, d: -dkSort.d } : { c, d: 1 }; dkRender(); });
+  $('dkQ').addEventListener('input', dkRender);
+  $('dkRef').addEventListener('click', () => loadDesk(true));
+  $('dkCsv').addEventListener('click', () => {
+    const sh = dkData && dkData[dkSheet]; if (!sh) return;
+    const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const csv = '﻿' + [sh.head].concat(sh.rows).map(r => r.map(q).join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = sh.name + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
   $('tabPrice').addEventListener('click', loadPrices);
   $('prRef').addEventListener('click', loadPrices);
   async function loadAdmins() {
