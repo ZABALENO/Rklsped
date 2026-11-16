@@ -962,3 +962,6 @@ function installLoriTrigger_() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'syncLoriTick') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('syncLoriTick').timeBased().everyMinutes(5).create();
 }
+
+// jednorázově spustit v editoru: založí list Přepravy do Lori (a hned zapíše zaškrtnuté)
+function zalozListLori() { var lock = LockService.getScriptLock(); lock.waitLock(30000); try { loriSheet_(true); syncLoriLocked_(); SpreadsheetApp.flush(); } finally { lock.releaseLock(); } }
