@@ -39,6 +39,8 @@ function doPost(e) {
     if (body.action === 'cenySet') return out_(prices_set_(body));
     if (body.action === 'docGet') return out_(docGet_(body));
     if (body.action === 'vse') return out_(vse_(body));
+    if (body.action === 'bunka') return out_(bunka_(body));
+    if (body.action === 'radek') return out_(radek_(body));
     if (body.action === 'adminList') return out_(adminList_(body));
     if (body.action === 'adminSet') return out_(adminSet_(body));
     return out_({ ok: false, error: 'unknown_action' });
@@ -644,17 +646,84 @@ function vse_(b) {
       if (has) keep.push(c);
     }
     var pinCol = (sh.getName() === SHEET_DRIVERS) ? head.indexOf('PIN') : -1;
-    var res = [], mt = [];
+    var res = [], mt = [], rn = [];
     rows.forEach(function (r, i) {
       if (!r.some(function (x) { return String(x).trim() !== ''; })) return;
       res.push(keep.map(function (c) { return (c === pinCol && !owner && String(r[c]).trim()) ? '••••' : r[c]; }));
+      rn.push(i + 2);
       if (meta) mt.push(meta[i]);
     });
     var total = res.length;
-    if (isRec) { res.reverse(); mt.reverse(); }
+    if (isRec) { res.reverse(); mt.reverse(); rn.reverse(); }
     var o = { name: sh.getName(), head: keep.map(function (c) { return head[c]; }), rows: res.slice(0, 3000), total: total };
     if (isRec) { o.meta = mt.slice(0, 3000); o.docCol = keep.indexOf(COL_DOC - 1); }
+    if (owner) {
+      o.rn = rn.slice(0, 3000);
+      o.cn = keep.map(function (c) { return c + 1; });
+      o.ro = isRec ? [keep.indexOf(COL_DOC - 1), keep.indexOf(COL_ID - 1)].filter(function (x) { return x >= 0; }) : [];
+    }
     out.push(o);
   });
   return { ok: true, sheets: out };
+}
+
+
+// ---- úpravy v tabulce (jen majitel) ----
+function bunka_(b) {
+  if (b.owner !== true) return { ok: false, error: 'forbidden' };
+  var row = parseInt(b.row, 10), col = parseInt(b.col, 10);
+  var sh = SpreadsheetApp.getActive().getSheetByName(String(b.sheet || ''));
+  if (!sh || !(row >= 2) || !(col >= 1) || col > sh.getMaxColumns() || row > sh.getMaxRows()) return { ok: false, error: 'bad_request' };
+  if (sh.getName() === SHEET_RECORDS && (col === COL_ID || col === COL_DOC)) return { ok: false, error: 'readonly' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var cell = sh.getRange(row, col);
+    if (String(cell.getDisplayValue()) !== String(b.old === undefined ? '' : b.old)) return { ok: false, error: 'conflict' };
+    var v = String(b.value === undefined ? '' : b.value);
+    var head = String(sh.getRange(1, col).getDisplayValue()).trim();
+    if ((sh.getName() === SHEET_DRIVERS && norm_(head) === 'pin') || /^0\d+$/.test(v)) cell.setNumberFormat('@');
+    cell.setValue(v);
+    SpreadsheetApp.flush();
+    return { ok: true, value: cell.getDisplayValue() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function radek_(b) {
+  if (b.owner !== true) return { ok: false, error: 'forbidden' };
+  var name = String(b.sheet || '');
+  if (name !== SHEET_DRIVERS && name !== SHEET_CUSTOMERS) return { ok: false, error: 'bad_request' };
+  var sh = SpreadsheetApp.getActive().getSheetByName(name);
+  var vals = b.vals || {};
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var all = sh.getDataRange().getDisplayValues();
+    if (name === SHEET_DRIVERS) {
+      var jm = String(vals['1'] || '').trim(), pr = String(vals['2'] || '').trim(), pin = String(vals['6'] || '').trim();
+      if (!jm || !pr || !pin) return { ok: false, error: 'missing' };
+      for (var i = 1; i < all.length; i++) if (norm_(all[i][0] + ' ' + all[i][1]) === norm_(jm + ' ' + pr)) return { ok: false, error: 'duplicate' };
+      if (!String(vals['7'] || '').trim()) vals['7'] = 'ANO';
+    } else {
+      var nm = String(vals['1'] || '').trim();
+      if (!nm) return { ok: false, error: 'missing' };
+      for (var j = 1; j < all.length; j++) if (norm_(all[j][0]) === norm_(nm)) return { ok: false, error: 'duplicate' };
+    }
+    var row = sh.getLastRow() + 1;
+    if (row > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 10);
+    Object.keys(vals).forEach(function (k) {
+      var c = parseInt(k, 10);
+      if (!(c >= 1) || c > sh.getMaxColumns()) return;
+      var cell = sh.getRange(row, c), v = String(vals[k]).trim();
+      if (!v) return;
+      if ((name === SHEET_DRIVERS && c === 6) || /^0\d+$/.test(v)) cell.setNumberFormat('@');
+      cell.setValue(v);
+    });
+    SpreadsheetApp.flush();
+    return { ok: true, row: row };
+  } finally {
+    lock.releaseLock();
+  }
 }

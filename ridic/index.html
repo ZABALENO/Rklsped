@@ -42,6 +42,7 @@
   .dk-t tr:nth-child(even) td{background:rgba(94,138,255,.06)}
   .dk-t tr:hover td{background:rgba(94,138,255,.2)}
   .dk-t td.dk-doc{overflow:visible}.dk-t .pr-doc{display:inline-flex;min-height:28px;padding:2px 10px;font-size:12px;margin-right:6px;flex:none}
+  .dk-t td.ed{cursor:cell}.dk-t td.ed:hover{outline:1px dashed var(--c)}.dk-t td input{font:inherit;padding:2px 6px;min-height:0;width:100%;min-width:140px;background:#fff;color:#0a1438;border:2px solid var(--c)}
   .dk-t td.n{text-align:right;font-variant-numeric:tabular-nums}
   html.light .dk-t{color:#0a1438}html.light .dk-wrap{background:#fff}html.light .dk-t th{background:#dfe8ff;color:#0a1438}html.light .dk-tab{color:#0a1438;border-color:#1b46c2}html.light .dk-tab.on{background:#2b5cff;color:#fff}
   main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:16px}
@@ -570,7 +571,8 @@
 
   <section id="deskView" class="hidden">
     <div class="dk-bar" id="dkTabs"></div>
-    <div class="dk-bar"><input id="dkQ" class="dk-q" type="search" placeholder="Hledat v listu…" autocomplete="off"><button class="scn-btn" id="dkCsv" type="button" style="padding:8px 14px">Stáhnout CSV</button><button class="scn-btn" id="dkRef" type="button" style="padding:8px 14px">Obnovit</button><span id="dkInfo" style="opacity:.8;font-size:13px"></span></div>
+    <div class="dk-bar"><input id="dkQ" class="dk-q" type="search" placeholder="Hledat v listu…" autocomplete="off"><button class="scn-btn" id="dkCsv" type="button" style="padding:8px 14px">Stáhnout CSV</button><button class="scn-btn" id="dkRef" type="button" style="padding:8px 14px">Obnovit</button><button class="scn-btn hidden" id="dkAddBtn" type="button" style="padding:8px 14px">+ Přidat</button><span id="dkInfo" style="opacity:.8;font-size:13px"></span></div>
+    <div id="dkAdd" class="hidden" style="border:1px solid rgba(94,138,255,.4);padding:12px"><div id="dkAddF" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"></div><div style="margin-top:10px;display:flex;gap:8px"><button class="scn-btn" id="dkAddSave" type="button" style="padding:8px 16px">Uložit nový řádek</button><button class="scn-btn" id="dkAddCancel" type="button" style="padding:8px 16px">Zrušit</button></div></div>
     <div id="dkMsg" class="msg" role="status"></div>
     <div class="dk-wrap"><table class="dk-t" id="dkT"></table></div>
   </section>
@@ -1032,8 +1034,23 @@
       });
     }
     $('dkT').innerHTML = '<thead><tr>' + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
-      rows.map(o => '<tr>' + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinks(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (isNumLike(v) ? ' class="n"' : '') + ' title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
-    $('dkInfo').textContent = 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
+      rows.map(o => '<tr>' + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinks(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
+    $('dkAddBtn').classList.toggle('hidden', !dkAddable()); if (!dkAddable()) $('dkAdd').classList.add('hidden');
+    $('dkInfo').textContent = (driver && driver.owner ? 'Úprava: dvojklik na buňku. ' : '') + 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
+  }
+  // do Záznamů přidá souhrnný sloupec „Směna“ (první vyplněná Směna 1–10) hned za „Čas zápisu“
+  function dkPrep(sheets) {
+    sheets.forEach(sh => {
+      if (!sh.meta) return;
+      const sm = sh.head.map((h, i) => /^Směna \d+$/.test(h) ? i : -1).filter(i => i >= 0);
+      let ins = sh.head.indexOf('Čas zápisu'); ins = ins >= 0 ? ins + 1 : (sh.head.indexOf('Řidič') >= 0 ? sh.head.indexOf('Řidič') : 0);
+      sh.head.splice(ins, 0, 'Směna');
+      sh.rows.forEach(r => { const f = sm.map(i => r[i]).find(v => String(v).trim()); r.splice(ins, 0, f || ''); });
+      if (sh.cn) sh.cn.splice(ins, 0, 0);
+      if (sh.docCol >= ins) sh.docCol++;
+      sh.ro = (sh.ro || []).map(i => i >= ins ? i + 1 : i).concat(sh.rn ? [ins] : []);
+    });
+    return sheets;
   }
   async function loadDesk(force) {
     const msg = $('dkMsg'); clearMsg(msg); show('deskView');
@@ -1042,7 +1059,7 @@
     const r = await api('/api/ridic/vse');
     if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); return; }
     if (!r.data || !r.data.ok) { $('dkInfo').textContent = ''; return showMsg(msg, 'Data se nepodařilo načíst. Zkuste to znovu.', 'err'); }
-    dkData = r.data.sheets; if (dkSheet >= dkData.length) dkSheet = 0; dkSort = { c: -1, d: 1 }; dkRender();
+    dkData = dkPrep(r.data.sheets); if (dkSheet >= dkData.length) dkSheet = 0; dkSort = { c: -1, d: 1 }; dkRender();
   }
   function setPc(on) {
     document.documentElement.classList.toggle('pc', on);
@@ -1051,6 +1068,42 @@
     if (on) loadDesk(); else enter();
   }
   $('pcBtn').addEventListener('click', () => setPc(!document.documentElement.classList.contains('pc')));
+
+  const dkEd = (sh, c) => !!(driver && driver.owner && sh.rn && !(sh.ro || []).includes(c));
+  $('dkT').addEventListener('dblclick', (e) => {
+    const td = e.target.closest('td.ed'); if (!td || td.querySelector('input')) return;
+    const sh = dkData[dkSheet], i = +td.dataset.i, c = +td.dataset.c, old = sh.rows[i][c];
+    td.innerHTML = '<input type="text" maxlength="500">'; const inp = td.firstChild; inp.value = old; inp.focus(); inp.select();
+    let done = false;
+    const finish = async (save) => {
+      if (done) return; done = true;
+      const val = inp.value;
+      if (!save || val === old) return dkRender();
+      td.innerHTML = '…';
+      const r = await api('/api/ridic/bunka', { sheet: sh.name, row: sh.rn[i], col: sh.cn[c], value: val, old });
+      if (r.data && r.data.ok) { sh.rows[i][c] = r.data.value; showMsg($('dkMsg'), 'Uloženo.', 'ok'); setTimeout(() => clearMsg($('dkMsg')), 1800); dkRender(); }
+      else if (r.status === 409) { showMsg($('dkMsg'), 'Buňka se mezitím změnila jinde. Načítám aktuální data.', 'err'); loadDesk(true); }
+      else { showMsg($('dkMsg'), 'Změnu se nepodařilo uložit.', 'err'); dkRender(); }
+    };
+    inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') finish(true); else if (ev.key === 'Escape') finish(false); });
+    inp.addEventListener('blur', () => finish(true));
+  });
+  const dkAddable = () => driver && driver.owner && dkData && ['Řidiči', 'Zákazníci'].includes((dkData[dkSheet] || {}).name);
+  function dkAddOpen() {
+    const sh = dkData[dkSheet];
+    $('dkAddF').innerHTML = sh.head.map((h, c) => '<div><label style="margin:0 0 4px">' + esc(h) + '</label><input type="text" data-col="' + sh.cn[c] + '" maxlength="200" autocomplete="off" value="' + (sh.name === 'Řidiči' && h === 'Aktivní' ? 'ANO' : sh.name === 'Řidiči' && h === 'Dopravce' ? 'RKL Opava' : '') + '"></div>').join('');
+    $('dkAdd').classList.remove('hidden');
+  }
+  $('dkAddBtn').addEventListener('click', dkAddOpen);
+  $('dkAddCancel').addEventListener('click', () => $('dkAdd').classList.add('hidden'));
+  $('dkAddSave').addEventListener('click', async () => {
+    const sh = dkData[dkSheet], vals = {}; $('dkAddF').querySelectorAll('input').forEach(i => { vals[i.dataset.col] = i.value; });
+    const b = $('dkAddSave'); b.disabled = true;
+    const r = await api('/api/ridic/radek', { sheet: sh.name, vals });
+    b.disabled = false;
+    if (r.data && r.data.ok) { $('dkAdd').classList.add('hidden'); showMsg($('dkMsg'), 'Řádek přidán.', 'ok'); await loadDesk(true); }
+    else showMsg($('dkMsg'), r.status === 409 ? 'Takový záznam už v listu existuje.' : r.status === 400 ? 'Vyplňte povinná pole (u řidiče jméno, příjmení a PIN, u zákazníka název).' : 'Řádek se nepodařilo přidat.', 'err');
+  });
   $('dkTabs').addEventListener('click', (e) => { const b = e.target.closest('.dk-tab'); if (!b) return; dkSheet = +b.dataset.i; dkSort = { c: -1, d: 1 }; dkRender(); });
   $('dkT').addEventListener('click', (e) => { const h = e.target.closest('th'); if (!h) return; const c = +h.dataset.c; dkSort = dkSort.c === c ? { c, d: -dkSort.d } : { c, d: 1 }; dkRender(); });
   $('dkQ').addEventListener('input', dkRender);
