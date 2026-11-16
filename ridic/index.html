@@ -1047,12 +1047,17 @@
     sheets.forEach(sh => {
       if (!sh.meta) return;
       const sm = sh.head.map((h, i) => /^Směna \d+$/.test(h) ? i : -1).filter(i => i >= 0);
+      const derived = sh.rows.map(r => { const f = sm.map(i => r[i]).find(v => String(v).trim()); return f || ''; });
+      const shift = i => i - sm.filter(k => k < i).length;
+      const drop = (arr) => arr.filter((_, i) => !sm.includes(i));
+      sh.head = drop(sh.head); sh.rows = sh.rows.map(drop); if (sh.cn) sh.cn = drop(sh.cn);
+      sh.ro = (sh.ro || []).filter(i => !sm.includes(i)).map(shift); if (sh.docCol >= 0) sh.docCol = shift(sh.docCol);
       let ins = sh.head.indexOf('Čas zápisu'); ins = ins >= 0 ? ins + 1 : (sh.head.indexOf('Řidič') >= 0 ? sh.head.indexOf('Řidič') : 0);
       sh.head.splice(ins, 0, 'Směna');
-      sh.rows.forEach(r => { const f = sm.map(i => r[i]).find(v => String(v).trim()); r.splice(ins, 0, f || ''); });
+      sh.rows.forEach((r, k) => r.splice(ins, 0, derived[k]));
       if (sh.cn) sh.cn.splice(ins, 0, 0);
       if (sh.docCol >= ins) sh.docCol++;
-      sh.ro = (sh.ro || []).map(i => i >= ins ? i + 1 : i).concat(sh.rn ? [ins] : []);
+      sh.ro = sh.ro.map(i => i >= ins ? i + 1 : i).concat(sh.rn ? [ins] : []);
     });
     return sheets;
   }
