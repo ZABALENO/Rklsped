@@ -1061,7 +1061,10 @@
         sh.head.splice(ins, 0, name); sh.rows.forEach((r, k) => r.splice(ins, 0, vals[k]));
         if (sh.cn) sh.cn.splice(ins, 0, 0);
         if (sh.docCol >= ins) sh.docCol++;
-        sh.ro = sh.ro.map(i => i >= ins ? i + 1 : i).concat(sh.rn ? [ins] : []);
+        sh.ro = sh.ro.map(i => i >= ins ? i + 1 : i);
+        const g = {}; Object.keys(sh.grp || {}).forEach(k => { g[+k >= ins ? +k + 1 : +k] = sh.grp[k]; });
+        if (sh.rn) g[ins] = name === 'Cena' ? 'cena' : 'smena';
+        sh.grp = g;
       };
       put('Směna', 'Čas zápisu', 'Řidič', dSm);
       put('Cena', 'Poznámka', 'Tuny 1', dCe);
@@ -1096,7 +1099,7 @@
     const wd = (() => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(d); return m ? ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'][new Date(+m[3], +m[2] - 1, +m[1]).getDay()] + ' ' : ''; })();
     return '<tr class="dk-gap"><td colspan="' + sh.head.length + '">' + esc(wd + d.replace(/\.(\d{2})\./, '. $1. ').replace(/^0/, '').replace(/ 0/, ' ')) + ' <small>· ' + n + ' ' + (n === 1 ? 'zápis' : n < 5 ? 'zápisy' : 'zápisů') + '</small></td></tr>';
   }
-  const dkEd = (sh, c) => !!(driver && driver.ceny && sh.rn && !(sh.ro || []).includes(c));
+  const dkEd = (sh, c) => !!(driver && driver.ceny && sh.rn && (!(sh.ro || []).includes(c)));
   $('dkT').addEventListener('dblclick', (e) => {
     const td = e.target.closest('td.ed'); if (!td || td.querySelector('input')) return;
     const sh = dkData[dkSheet], i = +td.dataset.i, c = +td.dataset.c, old = sh.rows[i][c];
@@ -1107,9 +1110,11 @@
       const val = inp.value;
       if (!save || val === old) return dkRender();
       td.innerHTML = '…';
-      const r = await api('/api/ridic/bunka', { sheet: sh.name, row: sh.rn[i], col: sh.cn[c], value: val, old });
+      const grp = sh.grp && sh.grp[c];
+      const r = grp ? await api('/api/ridic/skup', { row: sh.rn[i], pole: grp, value: val, old }) : await api('/api/ridic/bunka', { sheet: sh.name, row: sh.rn[i], col: sh.cn[c], value: val, old });
       if (r.data && r.data.ok) { sh.rows[i][c] = r.data.value; showMsg($('dkMsg'), 'Uloženo.', 'ok'); setTimeout(() => clearMsg($('dkMsg')), 1800); dkRender(); }
       else if (r.status === 409) { showMsg($('dkMsg'), 'Buňka se mezitím změnila jinde. Načítám aktuální data.', 'err'); loadDesk(true); }
+      else if (r.status === 400 && grp) { showMsg($('dkMsg'), grp === 'smena' ? 'Směna musí být „denní“ nebo „noční“ (stačí d / n).' : 'Cena musí být číslo.', 'err'); dkRender(); }
       else { showMsg($('dkMsg'), 'Změnu se nepodařilo uložit.', 'err'); dkRender(); }
     };
     inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') finish(true); else if (ev.key === 'Escape') finish(false); });

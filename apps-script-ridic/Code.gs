@@ -40,6 +40,7 @@ function doPost(e) {
     if (body.action === 'docGet') return out_(docGet_(body));
     if (body.action === 'vse') return out_(vse_(body));
     if (body.action === 'bunka') return out_(bunka_(body));
+    if (body.action === 'skup') return out_(skup_(body));
     if (body.action === 'radek') return out_(radek_(body));
     if (body.action === 'adminList') return out_(adminList_(body));
     if (body.action === 'adminSet') return out_(adminSet_(body));
@@ -729,6 +730,46 @@ function radek_(b) {
     });
     SpreadsheetApp.flush();
     return { ok: true, row: row };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+// ---- hromadná úprava: Cena / Směna přepravy se přepíše u všech jejích jízd (jen admin) ----
+function skup_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var row = parseInt(b.row, 10), pole = String(b.pole || '');
+  if (!(row >= 2) || (pole !== 'cena' && pole !== 'smena')) return { ok: false, error: 'bad_request' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+    if (row > sh.getLastRow()) return { ok: false, error: 'not_found' };
+    var r = sh.getRange(row, 1, 1, COL_ID).getDisplayValues()[0];
+    if (!r[COL_ID - 1]) return { ok: false, error: 'not_found' };
+    var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(r[13 + O], 10) || 1));
+    var off = pole === 'cena' ? 1 : 2;
+    if (pole === 'smena' && STRIDE < 3) return { ok: false, error: 'bad_request' };
+    var cur = '';
+    for (var k = 0; k < MAX_JIZD && !cur; k++) { var cv = String(r[colTuny_(k) + off - 1] || '').trim(); if (cv) cur = cv; }
+    if (cur !== String(b.old === undefined ? '' : b.old).trim()) return { ok: false, error: 'conflict' };
+    var v = String(b.value === undefined ? '' : b.value).trim();
+    if (pole === 'cena') {
+      var num = v === '' ? null : Number(v.replace(/\s/g, '').replace(',', '.'));
+      if (v !== '' && (isNaN(num) || num < 0)) return { ok: false, error: 'bad_value' };
+      for (var i = 0; i < jz; i++) {
+        var c = sh.getRange(row, colTuny_(i) + 1);
+        if (num === null) c.clearContent(); else c.setNumberFormat('#,##0.00').setValue(num);
+      }
+    } else {
+      var code = /^d$/i.test(v) ? 'D' : /^n$/i.test(v) ? 'N' : smenaCode_(v);
+      if (!code) return { ok: false, error: 'bad_value' };
+      var arr = []; for (var j = 0; j < jz; j++) arr.push(code);
+      writeSmeny_(sh, row, jz, arr);
+    }
+    SpreadsheetApp.flush();
+    return { ok: true, value: sh.getRange(row, colTuny_(0) + off).getDisplayValue() };
   } finally {
     lock.releaseLock();
   }
