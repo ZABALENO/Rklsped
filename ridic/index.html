@@ -1046,18 +1046,25 @@
   function dkPrep(sheets) {
     sheets.forEach(sh => {
       if (!sh.meta) return;
-      const sm = sh.head.map((h, i) => /^Směna \d+$/.test(h) ? i : -1).filter(i => i >= 0);
-      const derived = sh.rows.map(r => { const f = sm.map(i => r[i]).find(v => String(v).trim()); return f || ''; });
-      const shift = i => i - sm.filter(k => k < i).length;
-      const drop = (arr) => arr.filter((_, i) => !sm.includes(i));
+      // Směna a Cena jsou pro všechny jízdy přepravy stejné: Směna 1–10 / Cena 1–10 se sloučí do jednoho sloupce (první vyplněná hodnota)
+      const sm = [], ce = [];
+      sh.head.forEach((h, i) => { if (/^Směna \d+$/.test(h)) sm.push(i); else if (/^Cena \d+$/.test(h)) ce.push(i); });
+      const first = (r, cols) => { const f = cols.map(i => r[i]).find(v => String(v).trim()); return f || ''; };
+      const dSm = sh.rows.map(r => first(r, sm)), dCe = sh.rows.map(r => first(r, ce));
+      const gone = sm.concat(ce);
+      const shift = i => i - gone.filter(k => k < i).length;
+      const drop = (arr) => arr.filter((_, i) => !gone.includes(i));
       sh.head = drop(sh.head); sh.rows = sh.rows.map(drop); if (sh.cn) sh.cn = drop(sh.cn);
-      sh.ro = (sh.ro || []).filter(i => !sm.includes(i)).map(shift); if (sh.docCol >= 0) sh.docCol = shift(sh.docCol);
-      let ins = sh.head.indexOf('Čas zápisu'); ins = ins >= 0 ? ins + 1 : (sh.head.indexOf('Řidič') >= 0 ? sh.head.indexOf('Řidič') : 0);
-      sh.head.splice(ins, 0, 'Směna');
-      sh.rows.forEach((r, k) => r.splice(ins, 0, derived[k]));
-      if (sh.cn) sh.cn.splice(ins, 0, 0);
-      if (sh.docCol >= ins) sh.docCol++;
-      sh.ro = sh.ro.map(i => i >= ins ? i + 1 : i).concat(sh.rn ? [ins] : []);
+      sh.ro = (sh.ro || []).filter(i => !gone.includes(i)).map(shift); if (sh.docCol >= 0) sh.docCol = shift(sh.docCol);
+      const put = (name, after, fallback, vals) => {
+        let ins = sh.head.indexOf(after); ins = ins >= 0 ? ins + 1 : (sh.head.indexOf(fallback) >= 0 ? sh.head.indexOf(fallback) : sh.head.length);
+        sh.head.splice(ins, 0, name); sh.rows.forEach((r, k) => r.splice(ins, 0, vals[k]));
+        if (sh.cn) sh.cn.splice(ins, 0, 0);
+        if (sh.docCol >= ins) sh.docCol++;
+        sh.ro = sh.ro.map(i => i >= ins ? i + 1 : i).concat(sh.rn ? [ins] : []);
+      };
+      put('Směna', 'Čas zápisu', 'Řidič', dSm);
+      put('Cena', 'Poznámka', 'Tuny 1', dCe);
     });
     return sheets;
   }
