@@ -236,6 +236,8 @@ function list_(b) {
   if (last < 2) return { ok: true, rows: [] };
   var start = Math.max(2, last - SCAN_ROWS + 1);
   var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
+  var rts = sh.getRange(start, COL_DOC, last - start + 1, 1).getRichTextValues();
+  var fms = sh.getRange(start, COL_DOC, last - start + 1, 1).getFormulas();
   var rows = [];
   for (var i = data.length - 1; i >= 0 && rows.length < 100; i--) {
     var r = data[i];
@@ -247,7 +249,7 @@ function list_(b) {
       id: r[COL_ID - 1], spz: r[3+O],
       datumNakladky: isoDate_(r[5+O]),
       datumVykladky: isoDate_(r[7+O]),
-      mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O], jizd: jz, tuny: tuny, smeny: smeny, poznamka: r[COL_NOTE - 1], hasDoc: !!r[COL_DOC - 1]
+      mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O], jizd: jz, tuny: tuny, smeny: smeny, poznamka: r[COL_NOTE - 1], hasDoc: !!r[COL_DOC - 1], docs: docUrls_(rts[i][0], fms[i][0]).length
     });
   }
   return { ok: true, rows: rows };
@@ -459,7 +461,9 @@ function prices_set_(b) {
 
 // vrátí PDF přílohy (base64) k záznamu – jen pro Soukeníka
 function docGet_(b) {
-  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var adm = !!admin_(b);
+  var drv = (b.owner === true) ? null : findDriver_(b);
+  if (!adm && !drv) return { ok: false, error: 'forbidden' };   // admin kterýkoli doklad, řidič jen svůj
   var id = String(b.id || '');
   if (!id) return { ok: false, error: 'not_found' };
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
@@ -470,6 +474,7 @@ function docGet_(b) {
   var row = 0;
   for (var i = ids.length - 1; i >= 0; i--) { if (ids[i][0] === id) { row = start + i; break; } }
   if (!row) return { ok: false, error: 'not_found' };
+  if (!adm && norm_(sh.getRange(row, 2 + O).getDisplayValue()) !== norm_(drv.jmeno + ' ' + drv.prijmeni)) return { ok: false, error: 'forbidden' };
   var cell = sh.getRange(row, COL_DOC), urls = docUrls_(cell.getRichTextValue(), cell.getFormula());
   var m = /\/d\/([\w-]+)/.exec(urls[Math.max(0, Math.min(urls.length - 1, parseInt(b.n, 10) || 0))] || '');
   if (!m) return { ok: false, error: 'no_doc' };
@@ -625,6 +630,13 @@ function vse_(b) {
     var vals = sh.getDataRange().getDisplayValues();
     if (!vals.length) { out.push({ name: sh.getName(), head: [], rows: [], total: 0 }); return; }
     var head = vals[0], rows = vals.slice(1);
+    var isRec = sh.getName() === SHEET_RECORDS;
+    var meta = null;
+    if (isRec && rows.length) {
+      var rt = sh.getRange(2, COL_DOC, rows.length, 1).getRichTextValues();
+      var fm = sh.getRange(2, COL_DOC, rows.length, 1).getFormulas();
+      meta = rows.map(function (r, i) { return { id: r[COL_ID - 1] || '', docs: docUrls_(rt[i][0], fm[i][0]).length }; });
+    }
     var keep = [];
     for (var c = 0; c < head.length; c++) {
       var has = String(head[c]).trim() !== '';
@@ -632,12 +644,17 @@ function vse_(b) {
       if (has) keep.push(c);
     }
     var pinCol = (sh.getName() === SHEET_DRIVERS) ? head.indexOf('PIN') : -1;
-    var res = rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); }).map(function (r) {
-      return keep.map(function (c) { return (c === pinCol && !owner && String(r[c]).trim()) ? '••••' : r[c]; });
+    var res = [], mt = [];
+    rows.forEach(function (r, i) {
+      if (!r.some(function (x) { return String(x).trim() !== ''; })) return;
+      res.push(keep.map(function (c) { return (c === pinCol && !owner && String(r[c]).trim()) ? '••••' : r[c]; }));
+      if (meta) mt.push(meta[i]);
     });
     var total = res.length;
-    if (sh.getName() === SHEET_RECORDS) res.reverse();
-    out.push({ name: sh.getName(), head: keep.map(function (c) { return head[c]; }), rows: res.slice(0, 3000), total: total });
+    if (isRec) { res.reverse(); mt.reverse(); }
+    var o = { name: sh.getName(), head: keep.map(function (c) { return head[c]; }), rows: res.slice(0, 3000), total: total };
+    if (isRec) { o.meta = mt.slice(0, 3000); o.docCol = keep.indexOf(COL_DOC - 1); }
+    out.push(o);
   });
   return { ok: true, sheets: out };
 }
