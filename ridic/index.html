@@ -50,6 +50,10 @@
   .pr-dx{width:46px;flex:none;border:1px solid #9db8f5;border-left:0;background:transparent;color:#ff9a96;font-size:18px;cursor:pointer}
   .dk-t .pr-dw{flex:none;margin-right:6px}.dk-t .pr-dx{width:28px;font-size:14px}
   .dk-bar .scn-btn{min-height:32px!important;padding:4px 12px!important;font-size:13px!important;gap:6px}
+  #mistoNakladky,#mistoVykladky,#eMistoN,#eMistoV{font-size:18px!important;letter-spacing:0}
+  .pscalts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 2px;font-size:14px;opacity:.95}
+  .pscb{min-height:40px;padding:4px 14px;border:1px solid rgba(160,190,250,.55);background:transparent;color:inherit;font:600 15px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
+  .pscb.on{background:#2f56c4;border-color:#2f56c4;color:#fff}
   .dk-zp{width:30px;height:30px;border-radius:50%;border:2px solid rgba(160,190,250,.5);background:transparent;color:transparent;font:700 16px/1 sans-serif;cursor:pointer;padding:0}
   .dk-zp:hover{border-color:#6fcf97}
   tr.zp td{background:rgba(70,150,105,.22)!important}
@@ -800,6 +804,35 @@
       if (r.data.ok && r.data.customers.length) $('zakList').innerHTML = r.data.customers.map(n => '<option value="' + esc(n) + '">').join('');
     } catch (e) {}
   }
+  // PSČ: po zadání města (opuštění pole) se za něj automaticky doplní PSČ, např. „Ostrava, 702 00“
+  async function fillPsc(inp) {
+    const v = inp.value.trim(), m = /^(.*?)\s*,\s*(\d{3}\s?\d{2})$/.exec(v), base = (m ? m[1] : v).trim();
+    if (base.length < 2 || /^\d/.test(base)) return;
+    if (m && (!inp.dataset.pscCity || inp.dataset.pscCity === base)) return;   // PSČ zadal řidič sám, nebo se město nezměnilo
+    inp.dataset.pscCity = '';
+    let r = await api('/api/ridic/psc?q=' + encodeURIComponent(base));
+    if (r.status === 429) { await new Promise(z => setTimeout(z, 1700)); r = await api('/api/ridic/psc?q=' + encodeURIComponent(base)); }
+    if (!(r.data && r.data.ok && r.data.psc) || inp.value.trim() !== v) return;
+    inp.value = base + ', ' + r.data.psc; inp.dataset.pscCity = base; inp.classList.remove('bad');
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    pscAlts(inp, base, [r.data.psc].concat(r.data.alts || []));
+  }
+  // nabídka dalších PSČ téhož města (klepnutím se PSČ ve slově nahradí); pole lze vždy upravit i ručně
+  function pscAlts(inp, base, all) {
+    let box = inp.parentNode.querySelector('.pscalts[data-for="' + inp.id + '"]');
+    if (box) box.remove();
+    if (all.length < 2) return;
+    box = document.createElement('div'); box.className = 'pscalts'; box.dataset.for = inp.id;
+    box.innerHTML = '<span>Další PSČ:</span>' + all.map(x => '<button type="button" class="pscb">' + esc(x) + '</button>').join('');
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('.pscb'); if (!b) return;
+      inp.value = base + ', ' + b.textContent; inp.dataset.pscCity = base; inp.dispatchEvent(new Event('input', { bubbles: true }));
+      box.querySelectorAll('.pscb').forEach(x => x.classList.toggle('on', x === b));
+    });
+    (inp.closest('.gpsrow') || inp).insertAdjacentElement('afterend', box);
+    box.querySelector('.pscb').classList.add('on');
+  }
+  ['mistoNakladky', 'mistoVykladky', 'eMistoN', 'eMistoV'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', () => fillPsc(el)); });
   // tlačítko GPS: načte město podle polohy telefonu do příslušného pole
   document.addEventListener('click', (e) => {
     const b = e.target.closest('.gpsb'); if (!b) return;
@@ -810,7 +843,7 @@
     navigator.geolocation.getCurrentPosition(async (pos) => {
       try {
         const r = await api('/api/ridic/mesto?lat=' + pos.coords.latitude + '&lon=' + pos.coords.longitude);
-        if (r.data && r.data.ok && r.data.city) { inp.value = r.data.city; inp.classList.remove('bad'); inp.dispatchEvent(new Event('input', { bubbles: true })); done('OK'); }
+        if (r.data && r.data.ok && r.data.city) { inp.value = r.data.city; inp.classList.remove('bad'); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); done('OK'); }
         else done(r.status === 429 ? 'ZA CHVÍLI' : 'NENALEZENO', true);
       } catch (err) { done('CHYBA', true); }
     }, (err) => done(err && err.code === 1 ? 'POVOLTE' : 'NELZE', true), { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
