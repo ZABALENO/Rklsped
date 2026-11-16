@@ -43,6 +43,8 @@ function doPost(e) {
     if (body.action === 'bunka') return out_(bunka_(body));
     if (body.action === 'skup') return out_(skup_(body));
     if (body.action === 'zprac') return out_(zprac_(body));
+    if (body.action === 'docDel') return out_(docDel_(body));
+    if (body.action === 'docRepl') return out_(docRepl_(body));
     if (body.action === 'radek') return out_(radek_(body));
     if (body.action === 'adminList') return out_(adminList_(body));
     if (body.action === 'adminSet') return out_(adminSet_(body));
@@ -818,4 +820,54 @@ function zprac_(b) {
   } finally {
     lock.releaseLock();
   }
+}
+
+
+// ---- úprava příloh (jen admin): smazání přílohy a výměna PDF po odebrání stránek ----
+function docFileId_(url) { var m = /\/d\/([\w-]+)/.exec(String(url || '')); return m ? m[1] : ''; }
+function docRowById_(sh, id) {
+  var last = sh.getLastRow(); if (last < 2) return 0;
+  var ids = sh.getRange(2, COL_ID, last - 1, 1).getDisplayValues();
+  for (var i = ids.length - 1; i >= 0; i--) if (ids[i][0] === id) return i + 2;
+  return 0;
+}
+function docDel_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var id = String(b.id || ''), n = parseInt(b.n, 10);
+  if (!id || !(n >= 0)) return { ok: false, error: 'bad_request' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS), row = docRowById_(sh, id);
+    if (!row) return { ok: false, error: 'not_found' };
+    var dc = sh.getRange(row, COL_DOC), urls = docUrls_(dc.getRichTextValue(), dc.getFormula());
+    if (n >= urls.length) return { ok: false, error: 'not_found' };
+    var fid = docFileId_(urls[n]);
+    urls.splice(n, 1);
+    dc.setRichTextValue(docRich_(urls));
+    if (fid) { try { DriveApp.getFileById(fid).setTrashed(true); } catch (e) {} }   // do koše na Disku (jde obnovit)
+    return { ok: true, docs: urls.length };
+  } finally { lock.releaseLock(); }
+}
+function docRepl_(b) {
+  if (!admin_(b)) return { ok: false, error: 'forbidden' };
+  var id = String(b.id || ''), n = parseInt(b.n, 10);
+  if (!id || !(n >= 0) || !b.pdf) return { ok: false, error: 'bad_request' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS), row = docRowById_(sh, id);
+    if (!row) return { ok: false, error: 'not_found' };
+    var dc = sh.getRange(row, COL_DOC), urls = docUrls_(dc.getRichTextValue(), dc.getFormula());
+    if (n >= urls.length) return { ok: false, error: 'not_found' };
+    var fid = docFileId_(urls[n]), old = null, folder = null;
+    if (fid) { try { old = DriveApp.getFileById(fid); var ps = old.getParents(); if (ps.hasNext()) folder = ps.next(); } catch (e) {} }
+    var name = (old ? old.getName().replace(/\.pdf$/i, '') : 'priloha_' + id.slice(0, 6)) + '_upr.pdf';
+    var blob = Utilities.newBlob(Utilities.base64Decode(String(b.pdf)), 'application/pdf', name);
+    var file = folder ? folder.createFile(blob) : DriveApp.createFile(blob);
+    urls[n] = file.getUrl();
+    dc.setRichTextValue(docRich_(urls));
+    if (old) { try { old.setTrashed(true); } catch (e) {} }
+    return { ok: true, docs: urls.length };
+  } finally { lock.releaseLock(); }
 }

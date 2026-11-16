@@ -39,6 +39,16 @@
   .dk-t{border-collapse:collapse;font:13px/1.35 "IBM Plex Sans",system-ui,sans-serif;color:#e8eefc;min-width:100%}
   .dk-t th{position:sticky;top:0;background:#13245f;color:#fff;text-align:left;padding:8px 10px;white-space:nowrap;cursor:pointer;border-bottom:2px solid var(--c);z-index:1}
   .dk-t td{padding:6px 10px;border-bottom:1px solid rgba(160,190,250,.14);white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+  #dxBox{display:flex}#dxBox.hidden{display:none}
+  .dx-card{background:#0b1638;color:#e8eefc;border:1px solid rgba(94,138,255,.5);padding:16px;width:min(420px,100%);max-height:90vh;overflow:auto}
+  html.light .dx-card{background:#fff;color:#111c3d}
+  .dx-pg{display:flex;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid rgba(160,190,250,.18);font-size:16px}
+  .dx-pg input[type=checkbox]{width:26px!important;height:26px!important;min-height:0!important;padding:0!important;margin:0;flex:none}.dx-pg span{flex:1}.dx-pg a{color:#8fb3ff;font-size:14px}
+  .dx-b{display:block;width:100%;min-height:48px;margin-top:8px;font:600 16px "IBM Plex Sans",system-ui,sans-serif;background:transparent;color:inherit;border:2px solid rgba(160,190,250,.5);cursor:pointer}
+  .dx-b:disabled{opacity:.4}.dx-red{border-color:#d9534f;color:#ff9a96}
+  .pr-dw{display:inline-flex;align-items:stretch;flex:1 1 150px}.pr-dw .pr-doc{flex:1 1 auto}
+  .pr-dx{width:46px;flex:none;border:1px solid #9db8f5;border-left:0;background:transparent;color:#ff9a96;font-size:18px;cursor:pointer}
+  .dk-t .pr-dw{flex:none;margin-right:6px}.dk-t .pr-dx{width:28px;font-size:14px}
   .dk-zp{width:30px;height:30px;border-radius:50%;border:2px solid rgba(160,190,250,.5);background:transparent;color:transparent;font:700 16px/1 sans-serif;cursor:pointer;padding:0}
   .dk-zp:hover{border-color:#6fcf97}
   tr.zp td{background:rgba(70,150,105,.22)!important}
@@ -585,6 +595,7 @@
     <div id="histMsg" class="msg hidden"></div>
   </section>
 
+<div id="dxBox" class="hidden" style="position:fixed;inset:0;z-index:50;background:rgba(0,6,20,.7);align-items:center;justify-content:center;padding:14px"><div class="dx-card"><h3 id="dxTitle" style="margin:0 0 10px">Příloha</h3><div id="dxPages"></div><div id="dxMsg" style="min-height:20px;margin:8px 0;font-size:14px;color:#ffb4b4"></div><button type="button" id="dxPart" class="dx-b" disabled>Smazat vybrané stránky</button><button type="button" id="dxAll" class="dx-b dx-red">Smazat celou přílohu</button><button type="button" id="dxCancel" class="dx-b">Zavřít</button></div></div>
   <section id="deskView" class="hidden">
     <div class="dk-bar" id="dkTabs"></div>
     <div class="dk-bar"><input id="dkQ" class="dk-q" type="search" placeholder="Hledat v listu…" autocomplete="off"><button class="scn-btn" id="dkCsv" type="button" style="padding:8px 14px">Stáhnout CSV</button><button class="scn-btn" id="dkRef" type="button" style="padding:8px 14px">Obnovit</button><button class="scn-btn hidden" id="dkAddBtn" type="button" style="padding:8px 14px">+ Přidat</button><span id="dkInfo" style="opacity:.8;font-size:13px"></span></div>
@@ -1005,7 +1016,7 @@
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
       x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><span class="pr-sm">' + smTag((x.smeny || [])[k]) + '</span><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
-      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-zp" type="button" aria-pressed="' + (x.zprac ? 'true' : 'false') + '">' + (x.zprac ? '✓ Zpracováno (zrušit)' : '✓ Označit jako zpracováno') + '</button>' + '<button class="pr-sv" type="button" disabled>Uložit</button><button class="pr-dl" type="button">Smazat přepravu</button><div class="pr-st"></div></div>';
+      (x.docs ? '<div class="pr-docs">' + docLinksAdm(x.id, x.docs) + '</div>' : '') + '<button class="pr-zp" type="button" aria-pressed="' + (x.zprac ? 'true' : 'false') + '">' + (x.zprac ? '✓ Zpracováno (zrušit)' : '✓ Označit jako zpracováno') + '</button>' + '<button class="pr-sv" type="button" disabled>Uložit</button><button class="pr-dl" type="button">Smazat přepravu</button><div class="pr-st"></div></div>';
   }
   function prRender() {
     const drv = $('prDrv').value, only = $('prMiss').checked;
@@ -1033,6 +1044,36 @@
 
   // ---- rozložení pro počítač: všechna data ze všech listů ----
   let dkPick = true, dkData = null, dkSheet = 0, dkSort = { c: -1, d: 1 };
+  const docLinksAdm = (id, n) => Array.from({ length: n }, (_, k) => '<span class="pr-dw"><a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(id) + '?n=' + k + '" target="_blank" rel="noopener">📄 Příloha' + (n > 1 ? ' ' + (k + 1) : '') + '</a><button type="button" class="pr-dx" data-id="' + esc(id) + '" data-n="' + k + '" title="Smazat přílohu nebo stránky" aria-label="Upravit přílohu">✂</button></span>').join('');
+  // úprava přílohy: smazání celé přílohy nebo vybraných stránek
+  let dxCur = null;
+  const dxClose = () => { $('dxBox').classList.add('hidden'); dxCur = null; };
+  const dxRefresh = () => { if (!$('deskView').classList.contains('hidden')) loadDesk(true); else loadPrices(); };
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('.pr-dx'); if (!b) return;
+    dxCur = { id: b.dataset.id, n: +b.dataset.n, pages: 0 };
+    $('dxTitle').textContent = 'Příloha ' + (dxCur.n + 1); $('dxMsg').textContent = ''; $('dxPages').innerHTML = 'Načítám stránky…';
+    $('dxPart').disabled = true; $('dxAll').disabled = false; $('dxBox').classList.remove('hidden');
+    const r = await api('/api/ridic/doklad-info/' + encodeURIComponent(dxCur.id) + '?n=' + dxCur.n);
+    if (!dxCur) return;
+    if (!r.data || !r.data.ok) { $('dxPages').innerHTML = ''; $('dxMsg').textContent = 'Stránky se nepodařilo načíst. Můžete smazat celou přílohu.'; return; }
+    dxCur.pages = r.data.pages;
+    $('dxPages').innerHTML = Array.from({ length: dxCur.pages }, (_, k) => '<label class="dx-pg"><input type="checkbox" data-p="' + (k + 1) + '"><span>Strana ' + (k + 1) + '</span><a href="/api/ridic/doklad/' + encodeURIComponent(dxCur.id) + '?n=' + dxCur.n + '#page=' + (k + 1) + '" target="_blank" rel="noopener">otevřít</a></label>').join('');
+  });
+  $('dxPages').addEventListener('change', () => { const c = $('dxPages').querySelectorAll('input:checked').length; $('dxPart').disabled = !c; $('dxPart').textContent = c ? 'Smazat vybrané stránky (' + c + ')' : 'Smazat vybrané stránky'; });
+  $('dxCancel').addEventListener('click', dxClose);
+  $('dxBox').addEventListener('click', (e) => { if (e.target === $('dxBox')) dxClose(); });
+  async function dxRun(strany) {
+    if (!dxCur) return;
+    $('dxPart').disabled = true; $('dxAll').disabled = true; $('dxMsg').textContent = 'Ukládám…';
+    const r = await api('/api/ridic/doklad-smaz', { id: dxCur.id, n: dxCur.n, strany });
+    if (r.data && r.data.ok) { dxClose(); dxRefresh(); } else { $('dxAll').disabled = false; $('dxMsg').textContent = r.status === 401 ? 'Přihlášení vypršelo.' : 'Úprava se nepodařila. Zkuste to znovu.'; $('dxPart').disabled = false; }
+  }
+  $('dxAll').addEventListener('click', () => { if (confirm('Opravdu smazat celou přílohu? Soubor půjde obnovit jen z koše na Google Disku.')) dxRun(null); });
+  $('dxPart').addEventListener('click', () => {
+    const sel = [...$('dxPages').querySelectorAll('input:checked')].map(i => +i.dataset.p); if (!sel.length) return;
+    if (confirm('Opravdu smazat vybrané stránky (' + sel.join(', ') + ')?' + (sel.length >= dxCur.pages ? ' Smaže se tím celá příloha.' : ''))) dxRun(sel);
+  });
   const docLinks = (id, n) => Array.from({ length: n }, (_, k) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(id) + '?n=' + k + '" target="_blank" rel="noopener">📄 Příloha' + (n > 1 ? ' ' + (k + 1) : '') + '</a>').join('');
   const isNumLike = (v) => /^-?\d+([.,]\d+)?$/.test(String(v).trim());
   function dkRender() {
@@ -1050,7 +1091,7 @@
       });
     }
     $('dkT').innerHTML = '<thead><tr>' + (sh.meta ? '<th class="zc" title="Zpracováno – lze předat do Lori">✓</th>' : '') + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
-      rows.map((o, ri) => dkDayRow(sh, rows, ri) + '<tr' + (sh.meta && sh.meta[o.i] && sh.meta[o.i].zprac ? ' class="zp"' : '') + '>' + (sh.meta ? '<td class="zc">' + (sh.meta[o.i] && sh.meta[o.i].id ? '<button type="button" class="dk-zp" data-i="' + o.i + '" title="Zpracováno">✓</button>' : '') + '</td>' : '') + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinks(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
+      rows.map((o, ri) => dkDayRow(sh, rows, ri) + '<tr' + (sh.meta && sh.meta[o.i] && sh.meta[o.i].zprac ? ' class="zp"' : '') + '>' + (sh.meta ? '<td class="zc">' + (sh.meta[o.i] && sh.meta[o.i].id ? '<button type="button" class="dk-zp" data-i="' + o.i + '" title="Zpracováno">✓</button>' : '') + '</td>' : '') + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinksAdm(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
     $('dkAddBtn').classList.toggle('hidden', !dkAddable()); if (!dkAddable()) $('dkAdd').classList.add('hidden');
     $('dkInfo').textContent = (driver && driver.ceny ? 'Úprava: dvojklik na buňku. ' : '') + 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
   }
