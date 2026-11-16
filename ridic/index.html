@@ -1032,7 +1032,7 @@
   }
 
   // ---- rozložení pro počítač: všechna data ze všech listů ----
-  let dkData = null, dkSheet = 0, dkSort = { c: -1, d: 1 };
+  let dkPick = true, dkData = null, dkSheet = 0, dkSort = { c: -1, d: 1 };
   const docLinks = (id, n) => Array.from({ length: n }, (_, k) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(id) + '?n=' + k + '" target="_blank" rel="noopener">📄 Příloha' + (n > 1 ? ' ' + (k + 1) : '') + '</a>').join('');
   const isNumLike = (v) => /^-?\d+([.,]\d+)?$/.test(String(v).trim());
   function dkRender() {
@@ -1085,18 +1085,19 @@
   }
   async function loadDesk(force) {
     const msg = $('dkMsg'); clearMsg(msg); show('deskView');
-    if (dkData && !force) return dkRender();
+    const zi = () => { const i = (dkData || []).findIndex(x => x.name === 'Záznamy'); if (i >= 0) dkSheet = i; };
+    if (dkData && !force) { if (dkPick) { zi(); dkPick = false; } return dkRender(); }
     $('dkInfo').textContent = 'Načítám všechna data…';
     const r = await api('/api/ridic/vse');
     if (r.status === 401) { show('loginView'); showMsg($('loginMsg'), 'Přihlášení vypršelo. Přihlaste se znovu.', 'err'); return; }
     if (!r.data || !r.data.ok) { $('dkInfo').textContent = ''; return showMsg(msg, 'Data se nepodařilo načíst. Zkuste to znovu.', 'err'); }
-    dkData = dkPrep(r.data.sheets); if (dkSheet >= dkData.length) dkSheet = 0; dkSort = { c: -1, d: 1 }; dkRender();
+    dkData = dkPrep(r.data.sheets); if (dkSheet >= dkData.length) dkSheet = 0; if (dkPick) { zi(); dkPick = false; } dkSort = { c: -1, d: 1 }; dkRender();
   }
   function setPc(on) {
     document.documentElement.classList.toggle('pc', on);
     try { localStorage.setItem('rklPc', on ? '1' : '0'); } catch (e) {}
     $('pcBtn').textContent = on ? '📱 Mobil' : '🖥 PC';
-    if (on) loadDesk(); else enter();
+    if (on) { dkPick = true; loadDesk(); } else enter();
   }
   $('pcBtn').addEventListener('click', () => setPc(!document.documentElement.classList.contains('pc')));
 
