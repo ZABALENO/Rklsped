@@ -9,6 +9,7 @@
 
 var SHEET_DRIVERS = 'Řidiči';
 var SHEET_RECORDS = 'Záznamy';
+var SHEET_DONE = 'Zpracováno';
 var SHEET_CUSTOMERS = 'Zákazníci';   // sloupec A = nabízení zákazníci (od řádku 2)
 
 function layout_() {
@@ -41,6 +42,7 @@ function doPost(e) {
     if (body.action === 'vse') return out_(vse_(body));
     if (body.action === 'bunka') return out_(bunka_(body));
     if (body.action === 'skup') return out_(skup_(body));
+    if (body.action === 'zprac') return out_(zprac_(body));
     if (body.action === 'radek') return out_(radek_(body));
     if (body.action === 'adminList') return out_(adminList_(body));
     if (body.action === 'adminSet') return out_(adminSet_(body));
@@ -415,6 +417,7 @@ function prices_list_(b) {
   var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
   var rts = sh.getRange(start, COL_DOC, last - start + 1, 1).getRichTextValues();
   var fms = sh.getRange(start, COL_DOC, last - start + 1, 1).getFormulas();
+  var zp = zpracMap_();
   var rows = [];
   for (var i = data.length - 1; i >= 0 && rows.length < 400; i--) {
     var r = data[i];
@@ -426,7 +429,7 @@ function prices_list_(b) {
       id: r[COL_ID - 1], zapsano: isoDt_(r[O]), ridic: r[1+O], dopravce: r[2+O], spz: r[3+O],
       datumNakladky: isoDate_(r[5+O]), datumVykladky: isoDate_(r[7+O]),
       mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O],
-      jizd: jz, tuny: tuny, ceny: ceny, smeny: smeny, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length
+      jizd: jz, tuny: tuny, ceny: ceny, smeny: smeny, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length, zprac: zp[r[COL_ID - 1]] ? 1 : 0
     });
   }
   return { ok: true, rows: rows };
@@ -629,7 +632,9 @@ function vse_(b) {
   if (!admin_(b)) return { ok: false, error: 'forbidden' };
   var owner = b.owner === true;
   var out = [];
+  var zp = zpracMap_();
   SpreadsheetApp.getActive().getSheets().forEach(function (sh) {
+    if (sh.getName() === SHEET_DONE) return;
     var vals = sh.getDataRange().getDisplayValues();
     if (!vals.length) { out.push({ name: sh.getName(), head: [], rows: [], total: 0 }); return; }
     var head = vals[0], rows = vals.slice(1);
@@ -638,7 +643,7 @@ function vse_(b) {
     if (isRec && rows.length) {
       var rt = sh.getRange(2, COL_DOC, rows.length, 1).getRichTextValues();
       var fm = sh.getRange(2, COL_DOC, rows.length, 1).getFormulas();
-      meta = rows.map(function (r, i) { return { id: r[COL_ID - 1] || '', docs: docUrls_(rt[i][0], fm[i][0]).length }; });
+      meta = rows.map(function (r, i) { return { id: r[COL_ID - 1] || '', docs: docUrls_(rt[i][0], fm[i][0]).length, zprac: zp[r[COL_ID - 1]] ? 1 : 0 }; });
     }
     var keep = [];
     for (var c = 0; c < head.length; c++) {
@@ -770,6 +775,46 @@ function skup_(b) {
     }
     SpreadsheetApp.flush();
     return { ok: true, value: sh.getRange(row, colTuny_(0) + off).getDisplayValue() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+// ---- potvrzení „zpracováno, lze předat do Lori“ (list Zpracováno: ID záznamu, Zpracoval, Čas) ----
+function zpracSheet_(create) {
+  var ss = SpreadsheetApp.getActive(), sh = ss.getSheetByName(SHEET_DONE);
+  if (!sh && create) { sh = ss.insertSheet(SHEET_DONE); sh.getRange(1, 1, 1, 3).setValues([['ID záznamu', 'Zpracoval', 'Čas']]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  return sh;
+}
+function zpracMap_() {
+  var sh = zpracSheet_(false), m = {};
+  if (!sh || sh.getLastRow() < 2) return m;
+  sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().forEach(function (r) { if (r[0]) m[String(r[0])] = true; });
+  return m;
+}
+function zprac_(b) {
+  var d = admin_(b);
+  if (!d) return { ok: false, error: 'forbidden' };
+  var id = String(b.id || '');
+  if (!/^[0-9a-f-]{8,64}$/i.test(id)) return { ok: false, error: 'bad_request' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = zpracSheet_(true), last = sh.getLastRow();
+    var ids = last > 1 ? sh.getRange(2, 1, last - 1, 1).getValues() : [];
+    var rows = [];
+    for (var i = 0; i < ids.length; i++) if (String(ids[i][0]) === id) rows.push(i + 2);
+    if (b.done === true) {
+      if (!rows.length) {
+        var who = (d.jmeno ? d.jmeno + ' ' : '') + (d.prijmeni || b.prijmeni || '');
+        sh.appendRow([id, String(who).trim(), Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy HH:mm')]);
+      }
+    } else {
+      for (var j = rows.length - 1; j >= 0; j--) sh.deleteRow(rows[j]);
+    }
+    SpreadsheetApp.flush();
+    return { ok: true, done: b.done === true };
   } finally {
     lock.releaseLock();
   }

@@ -39,6 +39,17 @@
   .dk-t{border-collapse:collapse;font:13px/1.35 "IBM Plex Sans",system-ui,sans-serif;color:#e8eefc;min-width:100%}
   .dk-t th{position:sticky;top:0;background:#13245f;color:#fff;text-align:left;padding:8px 10px;white-space:nowrap;cursor:pointer;border-bottom:2px solid var(--c);z-index:1}
   .dk-t td{padding:6px 10px;border-bottom:1px solid rgba(160,190,250,.14);white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+  .dk-zp{width:30px;height:30px;border-radius:50%;border:2px solid rgba(160,190,250,.5);background:transparent;color:transparent;font:700 16px/1 sans-serif;cursor:pointer;padding:0}
+  .dk-zp:hover{border-color:#6fcf97}
+  tr.zp td{background:rgba(70,150,105,.22)!important}
+  tr.zp .dk-zp{background:#3f9a68;border-color:#3f9a68;color:#fff}
+  .dk-t td.zc,.dk-t th.zc{width:44px;text-align:center;padding:4px 8px;cursor:default}
+  .pr-zp{width:100%;min-height:48px;margin:10px 0 0;font:600 16px "IBM Plex Sans",system-ui,sans-serif;background:transparent;color:#cfe0ff;border:2px solid rgba(160,190,250,.45);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+  .pr-card.zp{background:linear-gradient(155deg,rgba(40,95,70,.55),rgba(14,40,32,.9));border-color:rgba(90,185,130,.55)}
+  .pr-card.zp .pr-zp{background:#3f9a68;border-color:#3f9a68;color:#fff}
+  html.light tr.zp td{background:rgba(70,150,105,.2)!important}
+  html.light .pr-card.zp{background:#e6f4ec}
+  html.light .pr-zp{color:#1b46c2}html.light .pr-card.zp .pr-zp{color:#fff}
   .dk-t td.ed:empty::before{content:"+ doplnit";color:rgba(160,190,250,.35);font-size:11px}
   .dk-t tr:nth-child(even) td{background:rgba(94,138,255,.06)}
   .dk-t tr:hover td{background:rgba(94,138,255,.2)}
@@ -988,13 +999,13 @@
   const prNum = (x) => String(x == null ? '' : x).replace('.', ',');
   function prCard(x, i) {
     const miss = x.ceny.some(c => c === '');
-    return '<div class="pr-card ' + (miss ? 'miss' : 'done') + '" data-i="' + i + '"><div class="pr-who">' + esc(x.ridic) + '<small>' + esc(x.spz) + (x.dopravce ? ' · ' + esc(x.dopravce) : '') + '</small></div>' +
+    return '<div class="pr-card ' + (miss ? 'miss' : 'done') + (x.zprac ? ' zp' : '') + '" data-i="' + i + '"><div class="pr-who">' + esc(x.ridic) + '<small>' + esc(x.spz) + (x.dopravce ? ' · ' + esc(x.dopravce) : '') + '</small></div>' +
       '<div class="sb" style="color:#8fa2d6;font-size:13px;margin-top:4px">Zapsáno: ' + esc(fmtDT(x.zapsano)) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px;margin-top:4px">' + esc(fmtD(x.datumNakladky)) + (x.datumVykladky && x.datumVykladky !== x.datumNakladky ? ' → ' + esc(fmtD(x.datumVykladky)) : '') + '</div>' +
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
       x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><span class="pr-sm">' + smTag((x.smeny || [])[k]) + '</span><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
-      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-sv" type="button" disabled>Uložit</button><button class="pr-dl" type="button">Smazat přepravu</button><div class="pr-st"></div></div>';
+      (x.docs ? '<div class="pr-docs">' + Array.from({ length: x.docs }, (_, n) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(x.id) + '?n=' + n + '" target="_blank" rel="noopener">📄 Příloha' + (x.docs > 1 ? ' ' + (n + 1) : '') + '</a>').join('') + '</div>' : '') + '<button class="pr-zp" type="button" aria-pressed="' + (x.zprac ? 'true' : 'false') + '">' + (x.zprac ? '✓ Zpracováno (zrušit)' : '✓ Označit jako zpracováno') + '</button>' + '<button class="pr-sv" type="button" disabled>Uložit</button><button class="pr-dl" type="button">Smazat přepravu</button><div class="pr-st"></div></div>';
   }
   function prRender() {
     const drv = $('prDrv').value, only = $('prMiss').checked;
@@ -1038,8 +1049,8 @@
         return (cmp || a.i - b.i) * dkSort.d;
       });
     }
-    $('dkT').innerHTML = '<thead><tr>' + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
-      rows.map((o, ri) => dkDayRow(sh, rows, ri) + '<tr>' + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinks(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
+    $('dkT').innerHTML = '<thead><tr>' + (sh.meta ? '<th class="zc" title="Zpracováno – lze předat do Lori">✓</th>' : '') + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
+      rows.map((o, ri) => dkDayRow(sh, rows, ri) + '<tr' + (sh.meta && sh.meta[o.i] && sh.meta[o.i].zprac ? ' class="zp"' : '') + '>' + (sh.meta ? '<td class="zc">' + (sh.meta[o.i] && sh.meta[o.i].id ? '<button type="button" class="dk-zp" data-i="' + o.i + '" title="Zpracováno">✓</button>' : '') + '</td>' : '') + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinks(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
     $('dkAddBtn').classList.toggle('hidden', !dkAddable()); if (!dkAddable()) $('dkAdd').classList.add('hidden');
     $('dkInfo').textContent = (driver && driver.ceny ? 'Úprava: dvojklik na buňku. ' : '') + 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
   }
@@ -1098,8 +1109,19 @@
     if (ri > 0 && day(rows[ri - 1].r) === d) return '';
     let n = 0; for (let k = ri; k < rows.length && day(rows[k].r) === d; k++) n++;
     const wd = (() => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(d); return m ? ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'][new Date(+m[3], +m[2] - 1, +m[1]).getDay()] + ' ' : ''; })();
-    return '<tr class="dk-gap"><td colspan="' + sh.head.length + '">' + esc(wd + d.replace(/\.(\d{2})\./, '. $1. ').replace(/^0/, '').replace(/ 0/, ' ')) + ' <small>· ' + n + ' ' + (n === 1 ? 'zápis' : n < 5 ? 'zápisy' : 'zápisů') + '</small></td></tr>';
+    return '<tr class="dk-gap"><td colspan="' + (sh.head.length + 1) + '">' + esc(wd + d.replace(/\.(\d{2})\./, '. $1. ').replace(/^0/, '').replace(/ 0/, ' ')) + ' <small>· ' + n + ' ' + (n === 1 ? 'zápis' : n < 5 ? 'zápisy' : 'zápisů') + '</small></td></tr>';
   }
+  async function zpracToggle(id, done) {
+    const r = await api('/api/ridic/zprac', { id, done });
+    return !!(r.data && r.data.ok);
+  }
+  $('dkT').addEventListener('click', async (e) => {
+    const b = e.target.closest('.dk-zp'); if (!b) return;
+    const sh = dkData[dkSheet], m = sh.meta[+b.dataset.i]; if (!m || !m.id) return;
+    const nv = !m.zprac; b.disabled = true; m.zprac = nv ? 1 : 0; b.closest('tr').classList.toggle('zp', nv);
+    if (!(await zpracToggle(m.id, nv))) { m.zprac = nv ? 0 : 1; showMsg($('dkMsg'), 'Potvrzení se nepodařilo uložit.', 'err'); }
+    dkRender();
+  });
   const dkEd = (sh, c) => !!(driver && driver.ceny && sh.rn && (!(sh.ro || []).includes(c)));
   $('dkT').addEventListener('dblclick', (e) => {
     const td = e.target.closest('td.ed'); if (!td || td.querySelector('input')) return;
@@ -1138,7 +1160,7 @@
     else showMsg($('dkMsg'), r.status === 409 ? 'Takový záznam už v listu existuje.' : r.status === 400 ? 'Vyplňte povinná pole (u řidiče jméno, příjmení a PIN, u zákazníka název).' : 'Řádek se nepodařilo přidat.', 'err');
   });
   $('dkTabs').addEventListener('click', (e) => { const b = e.target.closest('.dk-tab'); if (!b) return; dkSheet = +b.dataset.i; dkSort = { c: -1, d: 1 }; dkRender(); });
-  $('dkT').addEventListener('click', (e) => { const h = e.target.closest('th'); if (!h) return; const c = +h.dataset.c; dkSort = dkSort.c === c ? { c, d: -dkSort.d } : { c, d: 1 }; dkRender(); });
+  $('dkT').addEventListener('click', (e) => { const h = e.target.closest('th'); if (!h || h.dataset.c === undefined) return; const c = +h.dataset.c; dkSort = dkSort.c === c ? { c, d: -dkSort.d } : { c, d: 1 }; dkRender(); });
   $('dkQ').addEventListener('input', dkRender);
   $('dkRef').addEventListener('click', () => loadDesk(true));
   $('dkCsv').addEventListener('click', () => {
@@ -1187,6 +1209,14 @@
         st.textContent = 'Uloženo ✓';
       } else { b.disabled = false; st.className = 'pr-st err'; st.textContent = r.status === 401 ? 'Přihlášení vypršelo.' : 'Uložení se nepodařilo. Zkuste to znovu.'; }
     } catch (err) { b.disabled = false; st.className = 'pr-st err'; st.textContent = 'Chybí připojení k internetu.'; }
+  });
+  $('prList').addEventListener('click', async (e) => {
+    const b = e.target.closest('.pr-zp'); if (!b) return;
+    const c = b.closest('.pr-card'), x = prRows[+c.dataset.i], st = c.querySelector('.pr-st'), nv = !x.zprac;
+    b.disabled = true;
+    const ok = await zpracToggle(x.id, nv); b.disabled = false;
+    if (ok) { x.zprac = nv ? 1 : 0; c.classList.toggle('zp', nv); b.setAttribute('aria-pressed', nv); b.textContent = nv ? '✓ Zpracováno (zrušit)' : '✓ Označit jako zpracováno'; }
+    else { st.className = 'pr-st err'; st.textContent = 'Potvrzení se nepodařilo uložit.'; }
   });
   $('prList').addEventListener('click', async (e) => {
     const b = e.target.closest('.pr-dl'); if (!b) return;
