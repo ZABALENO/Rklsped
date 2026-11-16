@@ -877,28 +877,49 @@ function docRepl_(b) {
 }
 
 
-// ---- přepravy do Lori: zaškrtnuté fajfkou se po 30 minutách zkopírují do listu „Přepravy do Lori“ ----
+// ---- přepravy do Lori: zaškrtnuté fajfkou se po 30 minutách zapíšou do listu „Přepravy do Lori“ ----
+// List je určený pro agenta, který objednávky přepisuje do Lori: jeden řádek = jedna přeprava, čistý text, přílohy jako odkazy.
+var LORI_HEAD = ['Datum nakládky', 'Datum vykládky', 'Zákazník', 'Místo nakládky', 'Místo vykládky', 'Druh materiálu', 'Řidič', 'Dopravce', 'SPZ', 'Počet jízd', 'Tuny po jízdách', 'Tuny celkem', 'Cena', 'Směna', 'Poznámka', 'Příloha 1', 'Příloha 2', 'Příloha 3', 'Potvrzeno (kdo, kdy)', 'Stav v Lori (vyplní agent)', 'ID záznamu'];
+var LORI_ID_COL = 21;
 function loriSheet_(create) {
   var ss = SpreadsheetApp.getActive(), lo = ss.getSheetByName(SHEET_LORI);
   if (!lo && create) {
-    var rec = ss.getSheetByName(SHEET_RECORDS);
     lo = ss.insertSheet(SHEET_LORI);
-    rec.getRange(1, 1, 1, rec.getLastColumn()).copyTo(lo.getRange(1, 1));
-    lo.setFrozenRows(1);
+    lo.getRange(1, 1, lo.getMaxRows(), LORI_HEAD.length).setNumberFormat('@');
+    lo.getRange(1, 1, 1, LORI_HEAD.length).setValues([LORI_HEAD]).setFontWeight('bold').setBackground('#1f3a6e').setFontColor('#ffffff').setWrap(true).setVerticalAlignment('middle');
+    lo.setFrozenRows(1); lo.setFrozenColumns(3);
+    var w = [95, 95, 170, 150, 150, 120, 140, 120, 90, 60, 150, 80, 80, 70, 200, 110, 110, 110, 160, 170, 80];
+    for (var c = 0; c < w.length; c++) lo.setColumnWidth(c + 1, w[c]);
+    lo.getRange(2, 1, lo.getMaxRows() - 1, LORI_HEAD.length).setVerticalAlignment('top');
+    var rule = SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=$T2<>""').setBackground('#dcefe3').setRanges([lo.getRange(2, 1, lo.getMaxRows() - 1, LORI_HEAD.length)]).build();
+    lo.setConditionalFormatRules([rule]);
   }
   return lo;
 }
 function loriIds_(lo) {
   var m = {}, last = lo.getLastRow();
   if (last < 2) return m;
-  lo.getRange(2, COL_ID, last - 1, 1).getDisplayValues().forEach(function (r, i) { if (r[0]) m[r[0]] = i + 2; });
+  lo.getRange(2, LORI_ID_COL, last - 1, 1).getDisplayValues().forEach(function (r, i) { if (r[0]) m[r[0]] = i + 2; });
   return m;
 }
 function loriRemove_(id) {
   var lo = loriSheet_(false);
   if (!lo || lo.getLastRow() < 2) return;
-  var vals = lo.getRange(2, COL_ID, lo.getLastRow() - 1, 1).getDisplayValues();
+  var vals = lo.getRange(2, LORI_ID_COL, lo.getLastRow() - 1, 1).getDisplayValues();
   for (var i = vals.length - 1; i >= 0; i--) if (vals[i][0] === id) lo.deleteRow(i + 2);
+}
+// jeden řádek Záznamů -> přehledný řádek pro Lori
+function loriRow_(rec, pos, kdo, kdy) {
+  var d = rec.getRange(pos, 1, 1, COL_ID).getDisplayValues()[0], v = rec.getRange(pos, 1, 1, COL_ID).getValues()[0];
+  var dc = rec.getRange(pos, COL_DOC), urls = docUrls_(dc.getRichTextValue(), dc.getFormula());
+  var jz = Math.max(1, Math.min(MAX_JIZD, parseInt(d[13 + O], 10) || 1)), tuny = [], sum = 0, cena = '';
+  for (var k = 0; k < jz; k++) {
+    var t = v[colTuny_(k) - 1];
+    if (t !== '' && t !== null && !isNaN(Number(t))) { tuny.push((jz > 1 ? (k + 1) + ') ' : '') + String(Number(t)).replace('.', ',') + ' t'); sum += Number(t); }
+    if (cena === '' && v[colTuny_(k)] !== '' && v[colTuny_(k)] !== null) cena = String(v[colTuny_(k)]).replace('.', ',');
+  }
+  var smena = STRIDE >= 3 ? d[colTuny_(0) + 1] : '';
+  return [d[5 + O], d[7 + O], d[11 + O], d[9 + O], d[10 + O], d[12 + O], d[1 + O], d[2 + O], d[3 + O], String(jz), tuny.join('; '), sum ? String(Math.round(sum * 100) / 100).replace('.', ',') + ' t' : '', cena, smena, d[COL_NOTE - 1], urls[0] || '', urls[1] || '', urls[2] || '', kdo + (kdy ? ', ' + kdy : ''), '', d[COL_ID - 1]];
 }
 function zpracTs_(row) {
   if (Number(row[3]) > 0) return Number(row[3]);
@@ -923,7 +944,7 @@ function syncLoriLocked_() {
     var id = String(data[due[k]][0]);
     if (!have[id] && pos[id]) {
       var dest = lo.getLastRow() + 1;
-      rec.getRange(pos[id], 1, 1, rec.getLastColumn()).copyTo(lo.getRange(dest, 1));
+      lo.getRange(dest, 1, 1, LORI_HEAD.length).setValues([loriRow_(rec, pos[id], String(data[due[k]][1] || ''), String(data[due[k]][2] || ''))]);
       have[id] = dest; n++;
     }
     dn.getRange(due[k] + 2, 5).setValue(stamp);
