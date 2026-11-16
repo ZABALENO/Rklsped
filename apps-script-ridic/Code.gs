@@ -919,7 +919,7 @@ function loriRow_(rec, pos, kdo, kdy) {
     if (cena === '' && v[colTuny_(k)] !== '' && v[colTuny_(k)] !== null) cena = String(v[colTuny_(k)]).replace('.', ',');
   }
   var smena = STRIDE >= 3 ? d[colTuny_(0) + 1] : '';
-  return [d[5 + O], d[7 + O], d[11 + O], d[9 + O], d[10 + O], d[12 + O], d[1 + O], d[2 + O], d[3 + O], String(jz), tuny.join('; '), sum ? String(Math.round(sum * 100) / 100).replace('.', ',') + ' t' : '', cena, smena, d[COL_NOTE - 1], urls[0] || '', urls[1] || '', urls[2] || '', kdo + (kdy ? ', ' + kdy : ''), '', d[COL_ID - 1]];
+  return [d[5 + O], d[7 + O], d[11 + O], d[9 + O], d[10 + O], d[12 + O], d[1 + O], d[2 + O], d[3 + O], String(jz), tuny.join('; '), sum ? String(Math.round(sum * 100) / 100).replace('.', ',') + ' t' : '', cena, smena, d[COL_NOTE - 1], urls[0] || '', urls[1] || '', urls[2] || '', kdo + (kdy ? ', ' + kdy : ''), '', d[COL_ID - 1]].map(function (x) { return String(x).replace(/\s+/g, ' ').trim(); });
 }
 function zpracTs_(row) {
   if (Number(row[3]) > 0) return Number(row[3]);
@@ -929,7 +929,7 @@ function zpracTs_(row) {
 function syncLoriLocked_() {
   var dn = zpracSheet_(false);
   if (!dn || dn.getLastRow() < 2) return 0;
-  var data = dn.getRange(2, 1, dn.getLastRow() - 1, 5).getValues(), now = Date.now(), due = [];
+  var data = dn.getRange(2, 1, dn.getLastRow() - 1, 5).getDisplayValues(), now = Date.now(), due = [];
   for (var i = 0; i < data.length; i++) {
     if (data[i][4]) continue;
     var ts = zpracTs_(data[i]);
@@ -965,3 +965,13 @@ function installLoriTrigger_() {
 
 // jednorázově spustit v editoru: založí list Přepravy do Lori (a hned zapíše zaškrtnuté)
 function zalozListLori() { var lock = LockService.getScriptLock(); lock.waitLock(30000); try { loriSheet_(true); syncLoriLocked_(); SpreadsheetApp.flush(); } finally { lock.releaseLock(); } }
+
+// jednorázová oprava již zapsaných řádků v listu Přepravy do Lori (mezery, formát času potvrzení)
+function opravLori() {
+  var lo = loriSheet_(false), dn = zpracSheet_(false);
+  if (!lo || lo.getLastRow() < 2) return;
+  var w = {}; dn.getRange(2, 1, Math.max(1, dn.getLastRow() - 1), 3).getDisplayValues().forEach(function (r) { if (r[0]) w[r[0]] = r[1] + ', ' + r[2]; });
+  var rg = lo.getRange(2, 1, lo.getLastRow() - 1, LORI_HEAD.length), v = rg.getValues();
+  v = v.map(function (r) { r = r.map(function (x) { return String(x).replace(/\s+/g, ' ').trim(); }); if (w[r[LORI_ID_COL - 1]]) r[18] = w[r[LORI_ID_COL - 1]]; return r; });
+  rg.setValues(v);
+}
