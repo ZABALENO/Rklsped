@@ -154,7 +154,15 @@ function lblText(c,f){const o=[];for(const k of LBL.map(x=>x[0])){if(!f.includes
  else if(k==='stop')v=c.speed>0||c.stopMin==null||c.stopMin<15||ageMin(c)>=1440?'':fdur(c.stopMin);else if(k==='nU')v=c.nU?'→ '+esc(c.nU):'';
  else if(k==='dU')v=c.dU!=null?c.dU+' km':'';else if(k==='rule'){const R=ruleFor(c);v=R?esc(ruleShort(R,c)):''}
  if(v)o.push(v)}return o.join(' · ')}
-function lblZoom(){const m=$('map');if(m)m.classList.toggle('lblhide',!curProf()&&map.getZoom()<9)}
+// štítky se nepřekrývají: z blízkých aut se zobrazí jen ta, která se vejdou; přiblížením přibývají další
+function lblZoom(){const m=$('map');if(!m)return;m.classList.toggle('lblhide',!curProf()&&map.getZoom()<11);
+ if(m.classList.contains('lblhide'))return;
+ const tv=document.body.classList.contains('tv'),H=tv?22:16,items=[];
+ for(const [spz,mk] of Object.entries(markers)){const t=mk.getTooltip&&mk.getTooltip();const el=t&&t.getElement&&t.getElement();if(!el)continue;
+  const pt=map.latLngToContainerPoint(mk.getLatLng()),w=(el.textContent||'').length*(tv?8.6:6.4)+14;items.push({el,x:pt.x+(tv?13:8),y:pt.y,w,pr:mk.options.fillColor==='#2ee08a'||mk.options.fillColor==='#5e8aff'?1:0})}
+ items.sort((a,b)=>a.pr-b.pr);   // auta s barvou podle pravidla / stojící dlouho mají přednost
+ const placed=[];for(const it of items){const r={l:it.x,r:it.x+it.w,t:it.y-H/2,b:it.y+H/2};
+  const hit=placed.some(q=>r.l<q.r&&r.r>q.l&&r.t<q.b&&r.b>q.t);it.el.style.visibility=hit?'hidden':'';if(!hit)placed.push(r)}}
 const inProf=c=>{const p=curProf();return !p||p.spz.some(x=>x.toLowerCase()===c.spz.toLowerCase())};
 function visible(){const q=$('q').value.trim().toLowerCase(),mv=$('mv').checked,old=$('old').checked;
 return cars.filter(c=>inProf(c)&&(!old||ageMin(c)<=7*1440)&&(!mv||(c.speed>0&&ageMin(c)<60))&&(!q||[c.spz,c.driver,c.group,c.trailer,c.place].join(' ').toLowerCase().includes(q))).sort((a,b)=>me&&$('folc').checked?dOf(a)-dOf(b):a.spz.localeCompare(b.spz))}
@@ -424,7 +432,7 @@ function lblUI(){$('lbon').checked=pmLabel.on;$('lbf').style.opacity=pmLabel.on?
  const sc=cars.find(c=>pmSel.has(c.spz.toLowerCase()))||cars[0];$('lbpv').innerHTML=sc&&pmLabel.on?'Náhled: '+(lblText(sc,pmLabel.f)||'<i>(prázdný štítek)</i>'):'Štítek se nezobrazí.'}
 $('lbon').onchange=()=>{pmLabel.on=$('lbon').checked;lblUI()};
 $('lbf').onchange=e=>{const k=e.target.dataset.k;if(!k)return;const a=new Set(pmLabel.f);if(e.target.checked)a.add(k);else a.delete(k);pmLabel.f=LBL.map(x=>x[0]).filter(x=>a.has(x));lblUI()};
-map.on('zoomend',lblZoom);
+map.on('zoomend moveend',lblZoom);
 function rulesUI(){
  $('prules').innerHTML=pmRules.map((r,i)=>{const T=RT[r.t];
   const sw='<div class="sw">'+RCOL.map((c,k)=>'<label title="'+RCN[k]+'"><input type="radio" name="rc'+i+'" data-i="'+i+'" data-k="c" value="'+c+'"'+(r.c===c?' checked':'')+'><span style="background:'+c+'"></span></label>').join('')+'</div>';
