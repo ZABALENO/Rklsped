@@ -320,4 +320,37 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.class
 {const q=new URLSearchParams(location.search);if(q.has('tv'))ls.set('gps_tv',q.get('tv')==='0'?'0':'1');if(q.has('rot'))ls.set('gps_rot',String(Math.max(0,Math.min(300,+q.get('rot')||0))))}
 loadProfiles().then(()=>{if(ls.get('gps_tv')==='1')setTv(true)});
 </script>
+<script>
+/* ===== trasa přepravy (odkaz „Na mapě“ z dashboardů): ?spz=…&p=… ===== */
+(function(){
+const q=new URLSearchParams(location.search),spz=q.get('spz'),pp=q.get('p');if(!spz||!pp)return;
+first=false;
+const tl=L.layerGroup().addTo(map);let card=document.createElement('div');card.id='trasa';document.body.appendChild(card);
+const st=document.createElement('style');st.textContent='#trasa{position:fixed;z-index:1300;top:104px;right:10px;width:min(360px,calc(100% - 20px));max-height:34vh;overflow:auto;background:#0d1a4a;color:#e9edf7;border:1px solid rgba(94,138,255,.5);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.45);font-size:13px}#trasa .th{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid rgba(94,138,255,.3)}#trasa .th b{font-size:15px;flex:1}#trasa button{background:none;border:0;color:#9aa6c2;font-size:18px;min-width:34px;min-height:34px}#trasa .pl{display:flex;gap:9px;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(94,138,255,.15)}#trasa .pl .n{flex:1;min-width:0}#trasa .pl small{display:block;color:#9aa6c2}#trasa .pl .d{text-align:right;white-space:nowrap;font-weight:600}#trasa .tg{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex:none}#trasa .msg{padding:10px 12px;color:#9aa6c2}body.tv #trasa{display:none}';document.head.appendChild(st);
+const fmt=m=>m>=60?Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min':m+' min';
+const badge=(s,i)=>'<div style="width:26px;height:26px;border-radius:50%;background:'+(s==='L'?'#1f9d55':'#d6453a')+';color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:700 12px sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.5)">'+(s==='L'?'↑':'↓')+'</div>';
+let fitted=false,tm=null;
+function head(x){return'<div class="th"><b>'+esc(spz)+' · trasa</b><button id="trx" title="Zavřít trasu">✕</button></div>'+x}
+function bind(){const b=document.getElementById('trx');if(b)b.onclick=()=>{clearInterval(tm);tl.clearLayers();card.remove();history.replaceState(null,'','/polohy')}}
+async function load(){
+  try{
+    const r=await fetch('/api/polohy/trasa?spz='+encodeURIComponent(spz)+'&p='+encodeURIComponent(pp),{credentials:'same-origin'});const j=await r.json();
+    if(!r.ok)throw new Error(j.error||'Chyba');
+    tl.clearLayers();const b=[];
+    const pts=j.places.filter(p=>p.ll);
+    if(j.route&&j.route.line&&j.route.line.length>1){L.polyline(j.route.line,{color:'#35c9e8',weight:4,opacity:.85}).addTo(tl);j.route.line.forEach(x=>b.push(x))}
+    else if(pts.length>1)L.polyline(pts.map(p=>p.ll),{color:'#35c9e8',weight:3,dashArray:'6 8'}).addTo(tl);
+    pts.forEach(p=>{L.marker(p.ll,{icon:L.divIcon({className:'',html:badge(p.side),iconSize:[26,26],iconAnchor:[13,13]}),zIndexOffset:500}).bindTooltip((p.side==='L'?'Nakládka: ':'Vykládka: ')+p.name+(p.cc&&p.cc!=='CZ'?' ('+p.cc+')':'')).addTo(tl);b.push(p.ll)});
+    let carHtml='<div class="msg">Vozidlo '+esc(spz)+' nemá v GPS aktuální polohu.</div>';
+    if(j.car){const c=j.car;b.push([c.lat,c.lon]);
+      L.circleMarker([c.lat,c.lon],{radius:11,color:'#fff',weight:3,fillColor:'#ffb020',fillOpacity:1}).bindTooltip(esc(c.spz),{permanent:true,direction:'top',offset:[0,-10]}).addTo(tl);
+      carHtml='<div class="msg">🚚 '+(c.speed>0?c.speed+' km/h':'stojí')+(c.place?' · '+esc(c.place):'')+(c.driver?' · '+esc(c.driver):'')+'</div>'}
+    const rows=j.places.map(p=>{const d=p.fromCar;return'<div class="pl"><span class="tg" style="background:'+(p.side==='L'?'#1f9d55':'#d6453a')+'">'+(p.side==='L'?'↑':'↓')+'</span><div class="n"><b>'+esc(p.name)+'</b>'+(p.cc&&p.cc!=='CZ'?' ('+esc(p.cc)+')':'')+'<small>'+(p.zip?esc(p.zip)+' · ':'')+(p.side==='L'?'nakládka':'vykládka')+(p.ll?'':' · místo se nepodařilo najít na mapě')+'</small></div><div class="d">'+(d?d.km+' km<small>'+(d.road?'':'~ ')+fmt(d.min)+'</small>':'')+'</div></div>'}).join('');
+    card.innerHTML=head(carHtml+rows+(j.route?'<div class="msg">Celá trasa: '+j.route.km+' km · '+fmt(j.route.min)+'. Vzdálenosti jsou od aktuální polohy auta, místa podle PSČ/obce (orientačně).</div>':''));bind();
+    if(!fitted&&b.length){fitted=true;map.fitBounds(L.latLngBounds(b).pad(.15),{paddingTopLeft:[0,0],paddingBottomRight:[0,matchMedia('(max-width:760px)').matches?160:0]})}
+  }catch(e){card.innerHTML=head('<div class="msg">'+esc(e.message)+'</div>');bind()}
+}
+load();tm=setInterval(load,60000);
+})();
+</script>
 </body></html>

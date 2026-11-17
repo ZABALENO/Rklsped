@@ -25,6 +25,8 @@
   .brand img{width:34px;height:34px;border-radius:7px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
   .brand small{display:block;font-weight:400;font-size:12px;opacity:.8}
   .chg{font-weight:600;font-size:12px;margin-top:1px}
+  .gpsmap{display:inline-block;margin-left:6px;padding:0 7px;line-height:20px;border-radius:10px;border:1px solid #35c9e8;background:rgba(53,201,232,.12);color:#0a7a92;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap}
+  .gpsmap:hover{background:#35c9e8;color:#04202a} html.dark .gpsmap{color:#35c9e8}
   .gps{flex:none;margin-left:6px;height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:17px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.13);color:#fff;font-weight:600;text-decoration:none}
   .gps:hover{background:rgba(255,255,255,.28)}
   html.dark .gps{border-color:rgba(53,201,232,.6);color:#35c9e8;background:rgba(53,201,232,.1)}
@@ -496,6 +498,8 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d}. ${+m}.`; };
   const COLNAMES = { spz: 'SPZ', prepr: 'Přeprava', carrier: 'Dopravce', date: 'Datum nakl.od', unlTo: 'Datum vykl.do', incCzk: 'Příjem CZK', incEur: 'Příjem EUR' };
   let D = null;
+  const GPS = new Set();   // SPZ vozidel s GPS
+  async function loadGps() { try { const j = await api('/api/gps-spz'); GPS.clear(); (j.spz || []).forEach(z => GPS.add(z)); if (D) render(); } catch {} }
 
   async function api(path, body) {
     const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
@@ -532,6 +536,11 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
     if (D.diag) { const g = D.diag; $('diag').innerHTML = `Filtr (${esc(g.from)} – ${esc(g.to)}): řádků v tabulce <b>${g.rows}</b> → vybraní dopravci <b>${g.own}</b> → ${g.relaceCol ? 'Západ 1 ' : 'bez filtru relace '}<b>${g.zapad}</b> → s číslem přepravy <b>${g.prepr}</b> → v období <b>${g.inWindow}</b> → SPZ <b>${g.spz}</b>${g.noCarrier ? ' · bez dopravce ' + g.noCarrier : ''}`; }
     const open = new Set([...$('rows').querySelectorAll('tr.open')].map(tr => tr.dataset.key));
     let lastSpz = null;
+    const mapLink = x => {   // „Na mapě“: trasa přepravy + poloha vozidla (jen pro SPZ z GPS)
+      if (!x.spz || !GPS.has(x.spz.replace(/[\s-]+/g, '').toUpperCase()) || !x.route || !x.route.length) return '';
+      const p = btoa(unescape(encodeURIComponent(JSON.stringify(x.route.map(r => ({ n: r.name, c: r.cc, z: r.zip, s: r.side })))))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return `<a class="gpsmap" target="_blank" rel="noopener" title="Trasa a poloha vozidla na mapě" href="/gps-go?spz=${encodeURIComponent(x.spz)}&p=${p}">📍 Na mapě</a>`;
+    };
     $('rows').innerHTML = t.map(x => {
       const firstOfSpz = x.spz !== lastSpz; lastSpz = x.spz;
       const dd = iso => { if (!iso) return '?'; const [, m, d] = iso.split('-'); return `${+d}.${+m}.`; };
@@ -539,7 +548,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
         `<span class="d ${x.lastUnload === D.today ? 'today' : ''}" title="poslední termín vykládky${x.unloaded ? ' · vyloženo ' + x.unloaded + ' z ' + x.orders : ''}">↓ <b>${dd(x.lastUnload)}</b></span>`;
       const breakdown = `CZK ${nf.format(x.czk)} + EUR ${nf2.format(x.eur)} × ${nf2.format(D.rate.value)}`;
       return `<tr data-key="${esc(x.key)}" class="${open.has(x.key) ? 'open' : ''}${x.carrier ? ' ext' : ''}">
-        <td class="c-spz" title="${esc(x.prepr || '')}">${firstOfSpz ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') + (x.carrier ? `<small class="cr">${esc(x.carrier)}</small>` : '') : ''}</td>
+        <td class="c-spz" title="${esc(x.prepr || '')}">${firstOfSpz ? (x.spz ? `<span class="spz">${esc(x.spz)}</span>` : '<span class="spz none">bez SPZ</span>') + (firstOfSpz ? mapLink(x) : '') + (x.carrier ? `<small class="cr">${esc(x.carrier)}</small>` : '') : ''}</td>
         <td class="c-pz"><span class="pz num">${esc(x.prepr || '—')}</span></td>
         <td class="c-route route" title="${esc(x.route.map(p => p.name + (p.cc && p.cc !== 'CZ' ? ' (' + p.cc + ')' : '')).join(' → '))}"><div class="rt"><div class="rti">${(x.lines && x.lines.length ? x.lines : [{ route: x.route }]).map(l => `<div class="ol">${routeHtml(l.route)}</div>`).join('')}</div></div></td>
         <td class="c-n num">${x.orders}</td>
@@ -736,6 +745,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
   tick(); setInterval(tick, 30000);
   applyView();
   poll(false); setInterval(() => poll(false), 60000);
+  loadGps(); setInterval(loadGps, 5 * 60 * 1000);
 })();
 </script>
 <script src="/iptv.js" defer></script>
