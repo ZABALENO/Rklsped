@@ -1,0 +1,187 @@
+openapi: 3.0.3
+info:
+  title: RKL GPS API
+  version: "1.0"
+  description: |
+    Jen pro čtení. Aktuální polohy vozidel, historie jízd (souhrny, zastávky, jízdy, body trasy)
+    a trasa přepravy s odhadem příjezdu. Data pocházejí z GPS systému EchoTrack.
+    Přihlášení klíčem: hlavička `X-API-Key: <klíč>` nebo `Authorization: Bearer <klíč>`.
+servers:
+  - url: https://dashboard.airkl.cz
+security:
+  - ApiKey: []
+  - Bearer: []
+paths:
+  /api/polohy:
+    get:
+      summary: Aktuální polohy všech vozidel
+      responses:
+        "200":
+          description: Seznam vozidel
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Positions" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "502": { description: GPS systém je nedostupný }
+  /api/polohy/historie:
+    get:
+      summary: Historie jednoho vozidla (podklad pro reporty)
+      description: |
+        Najednou nejvýše 32 dní. První načtení trvá několik sekund, stejný dotaz se 3 minuty drží v paměti.
+        Dotazy se na straně GPS systému řadí za sebe, nevolej proto víc vozidel současně.
+      parameters:
+        - { name: car, in: query, required: true, schema: { type: integer }, description: "ID vozidla z /api/polohy (pole id)" }
+        - { name: from, in: query, required: true, schema: { type: string }, example: "2026-11-01", description: "YYYY-MM-DD nebo YYYY-MM-DDTHH:MM (čas v Praze)" }
+        - { name: to, in: query, required: true, schema: { type: string }, example: "2026-11-17" }
+        - { name: light, in: query, schema: { type: integer, enum: [0, 1] }, description: "1 = jen souhrn (bez bodů a řádků), rychlejší a menší odpověď" }
+      responses:
+        "200":
+          description: Souhrn za období
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/History" }
+        "400": { description: Neplatné datum, vozidlo nebo období delší než 32 dní }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "502": { description: Historii se nepodařilo načíst }
+  /api/polohy/trasa:
+    get:
+      summary: Trasa přepravy a poloha vozidla (vzdálenost a čas k místům)
+      parameters:
+        - { name: spz, in: query, required: true, schema: { type: string }, example: "2TF 5107" }
+        - name: p
+          in: query
+          required: true
+          description: |
+            Místa trasy jako JSON pole zakódované v base64url (UTF-8), nejvýše 12 míst.
+            Položka: `{"n":"Praha","c":"CZ","z":"110 00","s":"U"}` (n = název, c = země, z = PSČ, s = `L` nakládka / `U` vykládka).
+          schema: { type: string }
+      responses:
+        "200":
+          description: Místa se souřadnicemi, silniční trasa a vzdálenost od auta
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Route" }
+        "400": { description: Chybí nebo je neplatný parametr p }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    ApiKey: { type: apiKey, in: header, name: X-API-Key }
+    Bearer: { type: http, scheme: bearer }
+  responses:
+    Unauthorized:
+      description: Chybí nebo je špatný klíč
+      content: { application/json: { schema: { type: object, properties: { error: { type: string } } } } }
+  schemas:
+    Car:
+      type: object
+      properties:
+        spz: { type: string, example: "2TF 5107" }
+        id: { type: integer, nullable: true, example: 361, description: "ID pro /api/polohy/historie" }
+        speed: { type: number, description: "km/h" }
+        time: { type: string, nullable: true, description: "čas poslední polohy (ISO 8601, pražský čas s offsetem)" }
+        driver: { type: string }
+        trailer: { type: string }
+        lat: { type: number }
+        lon: { type: number }
+        heading: { type: number, nullable: true, description: "směr ve stupních, null = neznámý" }
+        group: { type: string, description: "skupina (nepovinné)" }
+        place: { type: string, description: "nejbližší místo (nepovinné)" }
+        country: { type: string, description: "stát (nepovinné)" }
+        odometer: { type: number, description: "tachometr v km (nepovinné)" }
+    Positions:
+      type: object
+      properties:
+        cars: { type: array, items: { $ref: "#/components/schemas/Car" } }
+        fetchedAt: { type: string, description: "kdy se data načetla z GPS systému (cache 25 s)" }
+        stale: { type: boolean, description: "true = poslední pokus selhal, data jsou starší" }
+        error: { type: string }
+    Day:
+      type: object
+      properties:
+        day: { type: string, example: "2026-11-16" }
+        km: { type: number, description: "ujeté km podle tachometru" }
+        driveMs: { type: integer, description: "doba jízdy v ms" }
+        stopMs: { type: integer, description: "doba stání v ms" }
+        maxSpeed: { type: number }
+        countries: { type: array, items: { type: string } }
+        drivers: { type: array, items: { type: string } }
+    Stop:
+      type: object
+      properties:
+        from: { type: string }
+        to: { type: string }
+        durMs: { type: integer }
+        place: { type: string }
+        country: { type: string }
+        lat: { type: number, nullable: true }
+        lon: { type: number, nullable: true }
+        odo: { type: number, nullable: true }
+        open: { type: boolean, description: "true = vozidlo na místě stojí dosud" }
+    Trip:
+      type: object
+      properties:
+        from: { type: string }
+        to: { type: string }
+        fromPlace: { type: string }
+        toPlace: { type: string }
+        km: { type: number, nullable: true }
+        maxSpeed: { type: number }
+    History:
+      type: object
+      properties:
+        carId: { type: string }
+        from: { type: string }
+        to: { type: string }
+        summary:
+          type: object
+          properties:
+            total:
+              type: object
+              properties:
+                km: { type: number }
+                driveMs: { type: integer }
+                stopMs: { type: integer }
+                maxSpeed: { type: number }
+                countries: { type: array, items: { type: string } }
+                drivers: { type: array, items: { type: string } }
+                records: { type: integer }
+            days: { type: array, items: { $ref: "#/components/schemas/Day" } }
+            stops: { type: array, items: { $ref: "#/components/schemas/Stop" } }
+            trips: { type: array, items: { $ref: "#/components/schemas/Trip" } }
+        points:
+          type: array
+          description: "jen bez light=1; [lat, lon, čas v ms od 1. 1. 1970 UTC]"
+          items: { type: array, items: { type: number } }
+        rows:
+          type: array
+          description: "jen bez light=1; záznamy z tabulky GPS (čas, země, místo, rychlost, řidič, návěs, tachometr)"
+          items: { type: object }
+    Route:
+      type: object
+      properties:
+        spz: { type: string }
+        car: { allOf: [{ $ref: "#/components/schemas/Car" }], nullable: true, description: "null = vozidlo nemá GPS polohu" }
+        route:
+          type: object
+          nullable: true
+          properties:
+            line: { type: array, items: { type: array, items: { type: number } }, description: "[lat, lon]" }
+            km: { type: integer }
+            min: { type: integer }
+        places:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              cc: { type: string }
+              zip: { type: string }
+              side: { type: string, enum: [L, U] }
+              ll: { type: array, nullable: true, items: { type: number }, description: "[lat, lon] podle PSČ/obce (orientačně), null = nenalezeno" }
+              fromCar:
+                type: object
+                nullable: true
+                properties:
+                  km: { type: integer }
+                  min: { type: integer }
+                  road: { type: boolean, description: "false = odhad vzdušnou čarou × 1,25 při 65 km/h" }
