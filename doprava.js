@@ -191,6 +191,7 @@ app.post('/ai/login', (req, res) => {
   res.cookie('rkl_ai', aiTok(), { httpOnly: true, sameSite: 'lax', secure: req.secure, path: '/', maxAge: 30 * 864e5 });
   aiTrack(req, res, 'login').finally(() => res.json({ ok: true }));
 });
+app.get('/ai/gps-go', (req, res) => aiOk(req) ? require('./lib/polohy').gpsGo(req, res) : res.redirect('/ai'));   // tlačítko GPS v /ai (po přihlášení do /ai)
 app.get('/ai/logout', (req, res) => { aiSeen.delete(vCookie(req)); res.clearCookie('rkl_ai', { path: '/' }); res.redirect('/ai'); });
 app.get('/ai', async (req, res) => { if (!aiOk(req)) return res.type('html').send(AI_LOGIN); await aiTrack(req, res, 'visit'); res.sendFile(path.join(__dirname, 'private', 'ai.html')); });
 require('./lib/widget').setup(app, { aiOk, aiTok, port: PORT });   // widget pro iPhone (vlastní ověření klíčem) – před obecnou kontrolou přihlášení
@@ -346,6 +347,7 @@ app.post('/api/agents/text', async (req, res) => {
 require('./lib/ridic').setup(app);   // evidence přeprav od řidičů (/ridic) – vlastní přihlášení, před obecným heslem
 try { require('./lib/polohy').setup(app); } catch (e) { console.error('Polohy:', e.message); }   // GPS /polohy (EchoTrack) – vlastní heslo, před obecným přihlášením
 require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava na cestě' });
+app.get('/gps-go', require('./lib/polohy').gpsGo);   // tlačítko GPS v horní liště (po přihlášení do dashboardu)
 // sdílené obrázky (pozadí, logo) z RKL Spedice
 for (const f of ['bg.jpg', 'bg-v2.jpg', 'bg-v3.jpg', 'bg-v4.jpg', 'bgtoggle.js', 'logo.jpg', 'favicon.png', 'tv.js', 'iptv.js']) app.get('/' + f, (req, res) => res.sendFile(path.join(__dirname, 'public', f)));
 app.use(express.static(path.join(__dirname, 'public-doprava'), { maxAge: 0 }));

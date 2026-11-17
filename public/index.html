@@ -44,6 +44,9 @@
   #q:focus{outline:2px solid #ffd77a}
   .route .cd{font-size:.72em;font-weight:500;color:#5d6b80;background:#f1f4f8;border-radius:3px;padding:0 4px;vertical-align:1px}
   .chg{font-weight:600;font-size:12px;opacity:1;margin-top:1px}
+  .gps{flex:none;margin-left:6px;height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:17px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.13);color:#fff;font-weight:600;text-decoration:none}
+  .gps:hover{background:rgba(255,255,255,.28)}
+  html.dark .gps{border-color:rgba(53,201,232,.6);color:#35c9e8;background:rgba(53,201,232,.1)}
   .odhl{flex:none;margin-left:6px;height:34px;padding:0 14px;display:inline-flex;align-items:center;border-radius:17px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.13);color:#fff;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap}
   .odhl:hover{background:rgba(255,255,255,.28)}
   html.dark .odhl{border-color:rgba(242,165,22,.6);color:#f2a516;background:rgba(242,165,22,.1)}
@@ -581,6 +584,7 @@ html.dark .darkbtn:hover{background:rgba(242,165,22,.32)}
       <div class="srch"><button class="srchbtn" id="srchBtn" aria-pressed="false" title="Hledat v seznamu (jako Ctrl+F)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Hledat</button><input id="q" type="search" placeholder="Hledat v seznamu…" aria-label="Hledat" autocomplete="off" hidden></div>
     </div>
     <div class="clock"><div id="clock"></div><div class="chg" id="chg"></div></div>
+  <a class="gps" href="/gps-go" title="Polohy vozidel na mapě (GPS)">GPS</a>
   <a class="odhl" href="/logout" title="Odhlásit se">Odhlásit</a>
   </div>
 </header>

@@ -13,7 +13,7 @@ label{font-size:13px;color:#b8c2dc;display:flex;gap:6px;align-items:center}#cnt{
 #map{flex:1;min-width:0}.leaflet-popup-content{font:13px/1.4 system-ui,sans-serif;color:#10183a}
 @media(max-width:760px){main{flex-direction:column}#side{width:100%;max-width:none;height:38%;order:2;border-right:0;border-top:1px solid rgba(94,138,255,.3)}#map{order:1}header h1{font-size:16px}}
 </style></head><body>
-<header><a class="btn" href="https://airkl.cz/" title="Zpět na rozcestník">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
+<header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
 <main><div id="side"><div id="tools"><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
 <label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><div id="cnt"></div></div><div id="list"></div></div><div id="map"></div></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -39,5 +39,6 @@ async function load(){try{const r=await fetch('/api/polohy');if(r.status===401){
 if(!r.ok){$('st').textContent='Chyba: '+(j.error||r.status);$('st').className='st bad';return}
 cars=j.cars;render();$('st').textContent='aktualizováno '+new Date(j.fetchedAt).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+(j.stale?' – POZOR: '+j.error:'');$('st').className='st'+(j.stale?' bad':'')}
 catch(e){$('st').textContent='Nelze načíst data';$('st').className='st bad'}}
+$('bk').onclick=e=>{if(document.referrer&&history.length>1){e.preventDefault();history.back()}};
 $('rf').onclick=load;load();setInterval(load,30000);
 </script></body></html>
