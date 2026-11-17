@@ -28,10 +28,65 @@ body.drag #side{transition:none}
 .row{padding:12px}.row b{font-size:17px}#q{font-size:16px;padding:12px}
 }
 
+
+[hidden]{display:none!important}
+.card label.f{text-align:left}
+nav#tabs{display:flex;gap:6px;padding:8px 12px;background:#0b1538;border-bottom:1px solid rgba(94,138,255,.3);flex:none}
+nav#tabs button{flex:1;max-width:200px;min-height:42px;border:1px solid rgba(94,138,255,.5);background:transparent;color:#cfe0ff;border-radius:10px;font:600 14px system-ui;cursor:pointer}
+nav#tabs button.on{background:#1d388f;color:#fff;border-color:#5e8aff;box-shadow:0 0 14px rgba(94,138,255,.4)}
+body:not([data-v="map"]) main{display:none!important}
+.view{display:none;flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+body[data-v="hist"] #v-hist,body[data-v="rep"] #v-rep{display:block}
+.vwrap{max-width:1100px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+.card{background:#0f1a44;border:1px solid rgba(94,138,255,.35);border-radius:12px;padding:14px}
+.card h2,.card h3{margin:0 0 10px;font-size:17px;letter-spacing:1px}.card h3{font-size:15px}
+.card label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#b8c2dc;margin-bottom:10px}
+.card input[type=text],.card input[type=datetime-local],.card select,.card input:not([type]){width:100%;padding:12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;border-radius:8px;font-size:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.pri{background:#1d388f!important;border-color:#5e8aff!important;font-weight:700;min-height:46px;width:100%;font-size:16px!important}
+.msg{margin-top:8px;font-size:14px;color:#9aa6c2;min-height:18px}.msg.bad{color:#ff8a7a}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.kpi{background:#0f1a44;border:1px solid rgba(94,138,255,.35);border-radius:12px;padding:10px 12px}.kpi span{display:block;font-size:12px;color:#9aa6c2}.kpi b{font-size:22px}
+#hmap{height:48vh;min-height:280px;border-radius:12px;overflow:hidden;border:1px solid rgba(94,138,255,.35)}
+.ev{display:grid;grid-template-columns:28px 1fr auto;gap:2px 8px;padding:10px 4px;border-bottom:1px solid rgba(94,138,255,.15);cursor:pointer;align-items:center}
+.ev:hover{background:rgba(94,138,255,.12)}.ev small{color:#9aa6c2}.ev .ic{grid-row:1/3;font-size:18px;text-align:center}.ev .r{text-align:right;font-weight:600}
+table.t{width:100%;border-collapse:collapse;font-size:14px}table.t th,table.t td{padding:8px 6px;border-bottom:1px solid rgba(94,138,255,.2);text-align:left;vertical-align:top}table.t th{color:#9aa6c2;font-weight:600;font-size:12px;position:sticky;top:0;background:#0f1a44}
+table.t td.n,table.t th.n{text-align:right;white-space:nowrap}.tw{overflow:auto;max-height:60vh}
+tr.tot td{font-weight:700;border-top:2px solid rgba(94,138,255,.5)}tr.car{cursor:pointer}tr.car:hover{background:rgba(94,138,255,.12)}tr.day td{color:#b8c2dc;font-size:13px;background:rgba(0,0,0,.2)}
+.cl{max-height:240px;overflow:auto;border:1px solid rgba(94,138,255,.3);border-radius:8px;padding:4px 8px}.cl label{display:flex;gap:8px;align-items:center;padding:7px 0;font-size:15px;color:#e9edf7;border-bottom:1px solid rgba(94,138,255,.1)}
+.cl input{width:20px;height:20px}.rowbtns{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}.rowbtns .btn{flex:1}
+details.card summary{cursor:pointer;font-weight:600}
+@media(max-width:760px){nav#tabs button{max-width:none}.two{grid-template-columns:1fr}.kpi b{font-size:19px}#hmap{height:42vh}}
 </style></head><body>
 <header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
+<nav id="tabs"><button data-v="map" class="on">Mapa</button><button data-v="hist">Historie</button><button data-v="rep">Reporty</button></nav>
 <main><div id="side"><div id="grab" aria-label="Posunout seznam"></div><div id="tools"><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
 <label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label id="fol"><input type="checkbox" id="folc" checked> mapa mě sleduje · auta seřazena podle vzdálenosti</label><div id="cnt"></div></div><div id="list"></div></div><div id="map"></div></main>
+<datalist id="carlist"></datalist>
+<section class="view" id="v-hist"><div class="vwrap">
+ <div class="card"><h2>Historie vozidla</h2>
+  <label class="f">Vozidlo (SPZ)<input id="hcar" list="carlist" placeholder="začněte psát SPZ" autocomplete="off" autocapitalize="characters"></label>
+  <label class="f">Období<select id="hpre"><option value="today">Dnes</option><option value="yesterday">Včera</option><option value="week">Tento týden</option><option value="lastweek">Minulý týden</option><option value="month">Tento měsíc</option><option value="lastmonth">Minulý měsíc</option><option value="custom">Vlastní…</option></select></label>
+  <div class="two" id="hcust" hidden><label class="f">Od<input type="datetime-local" id="hf"></label><label class="f">Do<input type="datetime-local" id="ht"></label></div>
+  <button class="btn pri" id="hgo">Zobrazit historii</button><div class="msg" id="hmsg"></div></div>
+ <div id="hres" hidden>
+  <div class="kpis" id="hk"></div>
+  <div id="hmap"></div>
+  <div class="card"><h3>Jízdy a zastávky</h3><div id="hev"></div></div>
+  <div class="card"><h3>Po dnech</h3><div class="tw"><table class="t" id="hdays"></table></div></div>
+  <details class="card"><summary>Tabulka záznamů</summary><div class="tw" style="margin-top:8px"><table class="t" id="hrows"></table></div></details>
+ </div></div></section>
+<section class="view" id="v-rep"><div class="vwrap">
+ <div class="card"><h2>Reporty</h2>
+  <label class="f">Hledat vozidlo / skupinu<input id="rq" placeholder="SPZ, skupina, řidič…" autocomplete="off"></label>
+  <div class="cl" id="rcars"></div>
+  <div class="rowbtns"><button class="btn" id="rall">Vybrat zobrazená</button><button class="btn" id="rnone">Zrušit výběr</button></div>
+  <div class="msg" id="rcnt"></div>
+  <label class="f">Období<select id="rpre"><option value="yesterday">Včera</option><option value="week">Tento týden</option><option value="lastweek" selected>Minulý týden</option><option value="month">Tento měsíc</option><option value="lastmonth">Minulý měsíc</option><option value="custom">Vlastní…</option></select></label>
+  <div class="two" id="rcust" hidden><label class="f">Od<input type="datetime-local" id="rf"></label><label class="f">Do<input type="datetime-local" id="rt"></label></div>
+  <button class="btn pri" id="rgo">Vytvořit report</button><div class="msg" id="rmsg"></div></div>
+ <div id="rres" class="card" hidden><div class="rowbtns"><button class="btn" id="rcsv">Stáhnout do Excelu (CSV)</button></div><div class="tw"><table class="t" id="rtab"></table></div></div>
+</div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -46,7 +101,7 @@ const dOf=c=>me?km(me.lat,me.lon,c.lat,c.lon):null;
 const fk=d=>d==null?'':(d<10?d.toFixed(1):Math.round(d)).toString().replace('.',',')+' km';
 function visible(){const q=$('q').value.trim().toLowerCase(),mv=$('mv').checked,old=$('old').checked;
 return cars.filter(c=>(!old||ageMin(c)<=7*1440)&&(!mv||(c.speed>0&&ageMin(c)<60))&&(!q||[c.spz,c.driver,c.group,c.trailer,c.place].join(' ').toLowerCase().includes(q))).sort((a,b)=>me&&$('folc').checked?dOf(a)-dOf(b):a.spz.localeCompare(b.spz))}
-function popup(c){return'<b>'+esc(c.spz)+'</b>'+(c.group?' · '+esc(c.group):'')+'<br>'+(c.driver?esc(c.driver)+'<br>':'')+'Rychlost: '+c.speed+' km/h<br>'+(c.place?esc((c.country?c.country+' – ':'')+c.place)+'<br>':'')+(c.trailer?'Návěs: '+esc(c.trailer)+'<br>':'')+(me?'Vzdálenost od vás: <b>'+fk(dOf(c))+'</b><br>':'')+'<small>'+esc(when(c))+' ('+ago(c)+')</small>'}
+function popup(c){return'<b>'+esc(c.spz)+'</b>'+(c.group?' · '+esc(c.group):'')+'<br>'+(c.driver?esc(c.driver)+'<br>':'')+'Rychlost: '+c.speed+' km/h<br>'+(c.place?esc((c.country?c.country+' – ':'')+c.place)+'<br>':'')+(c.trailer?'Návěs: '+esc(c.trailer)+'<br>':'')+'<a href="#" class="hl" data-id="'+c.id+'" data-spz="'+esc(c.spz)+'">Historie vozidla ›</a><br>'+(me?'Vzdálenost od vás: <b>'+fk(dOf(c))+'</b><br>':'')+'<small>'+esc(when(c))+' ('+ago(c)+')</small>'}
 function render(){lastRender=Date.now();const v=visible();layer.clearLayers();markers={};
 $('cnt').textContent='Zobrazeno '+v.length+' z '+cars.length+' vozidel';
 $('list').innerHTML=v.map(c=>'<div class="row" data-s="'+esc(c.spz)+'"><span class="dot" style="background:'+colorOf(c)+'"></span><b>'+esc(c.spz)+'</b><span class="sp">'+(c.speed>0&&ageMin(c)<60?c.speed+' km/h':'')+'</span><small>'+(me?'<span class="dist">'+fk(dOf(c))+'</span> · ':'')+esc(c.driver||c.group||'')+(c.place?' · '+esc(c.place):'')+'</small><small style="text-align:right">'+ago(c)+'</small></div>').join('');
@@ -104,4 +159,92 @@ function toggleLoc(){
 map.on('dragstart',()=>{$('folc').checked=false});
 $('folc').onchange=render;
 $('rf').onclick=load;load();setInterval(load,30000);
-</script></body></html>
+</script>
+<script>
+/* ===== záložky Mapa / Historie / Reporty ===== */
+const fmtH=ms=>{const m=Math.round(ms/60000);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+' h'};
+const fmtKm=k=>k==null?'–':Math.round(k).toLocaleString('cs-CZ')+' km';
+const tz='Europe/Prague',fmtDT=iso=>new Date(iso).toLocaleString('cs-CZ',{timeZone:tz,day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
+const fmtT=iso=>new Date(iso).toLocaleTimeString('cs-CZ',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+const fmtD=k=>{const [y,m,d]=k.split('-');return +d+'. '+ +m+'. '+y};
+let hmap=null,hlayer=null,hpts=[];
+function showView(v){document.body.dataset.v=v;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+ if(v==='map')setTimeout(()=>map.invalidateSize(),50);if(v==='hist'&&hmap)setTimeout(()=>hmap.invalidateSize(),50);if(v==='hist'||v==='rep')fillCars()}
+document.body.dataset.v='map';
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showView(b.dataset.v));
+const loc=d=>{const z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes())};
+function range(p){const n=new Date(),sod=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()),dd=(d,k)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+k),end=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59);
+ const mon=sod(dd(n,-((n.getDay()+6)%7)));
+ if(p==='today')return[sod(n),n];if(p==='yesterday')return[dd(sod(n),-1),end(dd(n,-1))];if(p==='week')return[mon,n];
+ if(p==='lastweek')return[dd(mon,-7),end(dd(mon,-1))];if(p==='month')return[new Date(n.getFullYear(),n.getMonth(),1),n];
+ if(p==='lastmonth')return[new Date(n.getFullYear(),n.getMonth()-1,1),end(new Date(n.getFullYear(),n.getMonth(),0))];return null}
+function getRange(pre,f,t){if(pre.value==='custom'){if(!f.value||!t.value)throw new Error('Vyplňte období od–do.');return[f.value,t.value]}const r=range(pre.value);return[loc(r[0]),loc(r[1])]}
+$('hpre').onchange=()=>$('hcust').hidden=$('hpre').value!=='custom';$('rpre').onchange=()=>$('rcust').hidden=$('rpre').value!=='custom';
+function usable(){return cars.filter(c=>c.id&&ageMin(c)<=30*1440).sort((a,b)=>a.spz.localeCompare(b.spz))}
+function fillCars(){const u=usable();$('carlist').innerHTML=u.map(c=>'<option value="'+esc(c.spz)+'">'+esc([c.group,c.driver].filter(Boolean).join(' · '))+'</option>').join('');drawRepCars()}
+const carBySpz=v=>{v=String(v||'').trim().toLowerCase();return cars.find(c=>c.spz.toLowerCase()===v)};
+async function api(url){const r=await fetch(url);let j={};try{j=await r.json()}catch{}if(r.status===401){location.reload();throw new Error('Přihlášení vypršelo.')}if(!r.ok)throw new Error(j.error||('Chyba '+r.status));return j}
+
+/* ===== Historie ===== */
+function ensureHmap(){if(hmap)return;hmap=L.map('hmap').setView([49.94,17.9],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(hmap);hlayer=L.layerGroup().addTo(hmap)}
+function dot(c,sz){return L.divIcon({className:'',html:'<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+c+';border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.5)"></div>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})}
+async function runHist(){
+ const msg=$('hmsg');msg.className='msg';const c=carBySpz($('hcar').value);
+ if(!c){msg.textContent='Vyberte vozidlo ze seznamu (podle SPZ).';msg.className='msg bad';return}
+ let r;try{r=getRange($('hpre'),$('hf'),$('ht'))}catch(e){msg.textContent=e.message;msg.className='msg bad';return}
+ $('hgo').disabled=true;msg.textContent='Načítám historii… (několik sekund)';
+ try{const j=await api('/api/polohy/historie?car='+c.id+'&from='+encodeURIComponent(r[0])+'&to='+encodeURIComponent(r[1]));renderHist(c,j);msg.textContent=''}
+ catch(e){msg.textContent=e.message;msg.className='msg bad'}finally{$('hgo').disabled=false}}
+function renderHist(c,j){
+ const s=j.summary,t=s.total;$('hres').hidden=false;ensureHmap();setTimeout(()=>hmap.invalidateSize(),50);hlayer.clearLayers();hpts=j.points||[];
+ $('hk').innerHTML=[['Ujeto',fmtKm(t.km)],['Doba jízdy',fmtH(t.driveMs)],['Doba stání',fmtH(t.stopMs)],['Max. rychlost',t.maxSpeed+' km/h'],['Státy',(t.countries||[]).join(', ')||'–'],['Řidič',(t.drivers||[]).join(', ')||'–']].map(x=>'<div class="kpi"><span>'+x[0]+'</span><b>'+esc(x[1])+'</b></div>').join('');
+ if(hpts.length){const ll=hpts.map(p=>[p[0],p[1]]);L.polyline(ll,{color:'#2e7dff',weight:4,opacity:.85}).addTo(hlayer);
+  L.marker(ll[0],{icon:dot('#2ee08a',16)}).bindTooltip('Začátek').addTo(hlayer);L.marker(ll[ll.length-1],{icon:dot('#ff5a4d',16)}).bindTooltip('Konec / poslední poloha').addTo(hlayer);
+  for(const st of s.stops){if(st.lat==null)continue;L.marker([st.lat,st.lon],{icon:dot('#f2a516',13)}).bindPopup('<b>'+esc(st.place||'Zastávka')+'</b><br>'+fmtDT(st.from)+' – '+fmtDT(st.to)+'<br>Stání: '+fmtH(st.durMs)).addTo(hlayer)}
+  hmap.fitBounds(L.latLngBounds(ll).pad(.1))}else{hmap.setView([c.lat,c.lon],10)}
+ const ev=[...s.trips.map(x=>({k:'t',x,at:x.from})),...s.stops.map(x=>({k:'s',x,at:x.from}))].sort((a,b)=>a.at<b.at?-1:1);
+ $('hev').innerHTML=ev.length?ev.map((e,i)=>e.k==='t'?'<div class="ev" data-i="'+i+'"><span class="ic">🚚</span><b>'+esc(e.x.fromPlace||'?')+' → '+esc(e.x.toPlace||'?')+'</b><span class="r">'+fmtKm(e.x.km)+'</span><small>'+fmtDT(e.x.from)+' – '+fmtT(e.x.to)+' · max '+e.x.maxSpeed+' km/h'+(e.x.open?' · jede':'')+'</small></div>':'<div class="ev" data-i="'+i+'"><span class="ic">🅿️</span><b>'+esc(e.x.place||'Zastávka')+(e.x.country?' ('+esc(e.x.country)+')':'')+'</b><span class="r">'+fmtH(e.x.durMs)+'</span><small>'+fmtDT(e.x.from)+' – '+(e.x.open?'dosud':fmtT(e.x.to))+'</small></div>').join(''):'<div class="msg">V tomto období nejsou žádné záznamy.</div>';
+ $('hev').onclick=e=>{const el=e.target.closest('.ev');if(!el)return;const x=ev[+el.dataset.i];hmap.invalidateSize();
+  if(x.k==='s'&&x.x.lat!=null){hmap.setView([x.x.lat,x.x.lon],14)}else if(x.k==='t'){const a=Date.parse(x.x.from),b=Date.parse(x.x.to),pp=hpts.filter(p=>p[2]>=a&&p[2]<=b).map(p=>[p[0],p[1]]);if(pp.length)hmap.fitBounds(L.latLngBounds(pp).pad(.15))}
+  $('hmap').scrollIntoView({behavior:'smooth',block:'center'})};
+ $('hdays').innerHTML='<tr><th>Den</th><th class="n">Km</th><th class="n">Jízda</th><th class="n">Stání</th><th class="n">Max</th><th>Státy</th></tr>'+s.days.map(d=>'<tr><td>'+fmtD(d.day)+'</td><td class="n">'+fmtKm(d.km)+'</td><td class="n">'+fmtH(d.driveMs)+'</td><td class="n">'+fmtH(d.stopMs)+'</td><td class="n">'+d.maxSpeed+'</td><td>'+esc(d.countries.join(', '))+'</td></tr>').join('');
+ const rows=j.rows||[],cut=rows.slice(-600).reverse();
+ $('hrows').innerHTML='<tr><th>Čas</th><th>Stát</th><th>Místo</th><th class="n">km/h</th><th>Řidič</th><th>Návěs</th><th class="n">Tachometr</th></tr>'+cut.map(r=>'<tr><td>'+fmtDT(r.t)+'</td><td>'+esc(r.country)+'</td><td>'+esc(r.place)+'</td><td class="n">'+r.speed+'</td><td>'+esc(r.driver)+'</td><td>'+esc(r.trailer)+'</td><td class="n">'+(r.odo==null?'':r.odo)+'</td></tr>').join('')+(rows.length>cut.length?'<tr><td colspan="7">Zobrazeno posledních '+cut.length+' z '+rows.length+' záznamů.</td></tr>':'')}
+$('hgo').onclick=runHist;
+document.addEventListener('click',e=>{const a=e.target.closest('a.hl');if(!a)return;e.preventDefault();map.closePopup();$('hcar').value=a.dataset.spz;$('hpre').value='today';$('hcust').hidden=true;showView('hist');runHist()});
+
+/* ===== Reporty ===== */
+let repSel=new Set(),repData=null;
+function drawRepCars(){const q=$('rq').value.trim().toLowerCase();const u=usable().filter(c=>!q||[c.spz,c.group,c.driver].join(' ').toLowerCase().includes(q));
+ $('rcars').innerHTML=u.map(c=>'<label><input type="checkbox" data-id="'+c.id+'"'+(repSel.has(c.id)?' checked':'')+'> <span><b>'+esc(c.spz)+'</b> <small style="color:#9aa6c2">'+esc([c.group,c.driver].filter(Boolean).join(' · '))+'</small></span></label>').join('')||'<div class="msg">Žádná vozidla.</div>';
+ $('rcnt').textContent='Vybráno '+repSel.size+' vozidel'+(repSel.size>30?' (nejvýše 30 najednou)':'')}
+$('rq').oninput=drawRepCars;
+$('rcars').onchange=e=>{const i=+e.target.dataset.id;if(e.target.checked)repSel.add(i);else repSel.delete(i);$('rcnt').textContent='Vybráno '+repSel.size+' vozidel'+(repSel.size>30?' (nejvýše 30 najednou)':'')};
+$('rall').onclick=()=>{$('rcars').querySelectorAll('input').forEach(i=>{i.checked=true;repSel.add(+i.dataset.id)});drawRepCars()};
+$('rnone').onclick=()=>{repSel.clear();drawRepCars()};
+async function runRep(){
+ const msg=$('rmsg');msg.className='msg';const ids=[...repSel];
+ if(!ids.length){msg.textContent='Vyberte aspoň jedno vozidlo.';msg.className='msg bad';return}
+ if(ids.length>30){msg.textContent='Vyberte nejvýše 30 vozidel.';msg.className='msg bad';return}
+ let r;try{r=getRange($('rpre'),$('rf'),$('rt'))}catch(e){msg.textContent=e.message;msg.className='msg bad';return}
+ $('rgo').disabled=true;const out=[];let fail=0;
+ for(let i=0;i<ids.length;i++){const c=cars.find(x=>x.id===ids[i]);msg.textContent='Zpracovávám '+(i+1)+' / '+ids.length+': '+(c?c.spz:ids[i])+'…';
+  try{const j=await api('/api/polohy/historie?light=1&car='+ids[i]+'&from='+encodeURIComponent(r[0])+'&to='+encodeURIComponent(r[1]));out.push({c,s:j.summary})}catch(e){fail++;out.push({c,err:e.message})}}
+ repData={r,out};renderRep();msg.textContent=fail?('Hotovo, '+fail+' vozidel se nepodařilo načíst.'):'Hotovo.';if(fail)msg.className='msg bad';$('rgo').disabled=false}
+function renderRep(){
+ const {out}=repData;$('rres').hidden=false;let tk=0,td=0,ts=0;
+ let h='<tr><th>Vozidlo</th><th class="n">Km</th><th class="n">Jízda</th><th class="n">Stání</th><th class="n">Max</th><th>Státy</th><th>Řidiči</th></tr>';
+ out.forEach((o,i)=>{if(o.err){h+='<tr><td>'+esc(o.c?o.c.spz:'?')+'</td><td colspan="6" style="color:#ff8a7a">'+esc(o.err)+'</td></tr>';return}
+  const t=o.s.total;tk+=t.km;td+=t.driveMs;ts+=t.stopMs;
+  h+='<tr class="car" data-i="'+i+'"><td><b>'+esc(o.c.spz)+'</b><br><small style="color:#9aa6c2">'+esc(o.c.group||'')+'</small></td><td class="n">'+fmtKm(t.km)+'</td><td class="n">'+fmtH(t.driveMs)+'</td><td class="n">'+fmtH(t.stopMs)+'</td><td class="n">'+t.maxSpeed+'</td><td>'+esc(t.countries.join(', '))+'</td><td>'+esc(t.drivers.join(', '))+'</td></tr>'
+  +o.s.days.map(d=>'<tr class="day" data-p="'+i+'" hidden><td>'+fmtD(d.day)+'</td><td class="n">'+fmtKm(d.km)+'</td><td class="n">'+fmtH(d.driveMs)+'</td><td class="n">'+fmtH(d.stopMs)+'</td><td class="n">'+d.maxSpeed+'</td><td>'+esc(d.countries.join(', '))+'</td><td>'+esc(d.drivers.join(', '))+'</td></tr>').join('')});
+ h+='<tr class="tot"><td>Celkem</td><td class="n">'+fmtKm(tk)+'</td><td class="n">'+fmtH(td)+'</td><td class="n">'+fmtH(ts)+'</td><td></td><td></td><td></td></tr>';
+ $('rtab').innerHTML=h;$('rtab').onclick=e=>{const tr=e.target.closest('tr.car');if(!tr)return;$('rtab').querySelectorAll('tr.day[data-p="'+tr.dataset.i+'"]').forEach(x=>x.hidden=!x.hidden)}}
+const csvq=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+$('rcsv').onclick=()=>{if(!repData)return;const L2=[['SPZ','Skupina','Datum','Km','Jízda (h)','Stání (h)','Max km/h','Státy','Řidiči']];
+ for(const o of repData.out){if(o.err)continue;const t=o.s.total,h=ms=>(ms/36e5).toFixed(2).replace('.',',');L2.push([o.c.spz,o.c.group||'','CELKEM',Math.round(t.km),h(t.driveMs),h(t.stopMs),t.maxSpeed,t.countries.join(' '),t.drivers.join(', ')]);
+  for(const d of o.s.days)L2.push([o.c.spz,o.c.group||'',d.day,Math.round(d.km),h(d.driveMs),h(d.stopMs),d.maxSpeed,d.countries.join(' '),d.drivers.join(', ')])}
+ const blob=new Blob(['﻿'+L2.map(r=>r.map(csvq).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gps-report-'+repData.r[0].slice(0,10)+'_'+repData.r[1].slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
+$('rgo').onclick=runRep;
+</script>
+</body></html>
