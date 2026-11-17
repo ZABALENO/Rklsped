@@ -134,7 +134,7 @@ function render(){lastRender=Date.now();const v=visible();layer.clearLayers();ma
 $('cnt').textContent='Zobrazeno '+v.length+' z '+cars.length+' vozidel';
 $('list').innerHTML=v.map(c=>'<div class="row" data-s="'+esc(c.spz)+'"><span class="dot" style="background:'+colorOf(c)+'"></span><b>'+esc(c.spz)+'</b><span class="sp">'+(c.speed>0&&ageMin(c)<60?c.speed+' km/h':'')+'</span><small>'+(me?'<span class="dist">'+fk(dOf(c))+'</span> · ':'')+esc(c.driver||c.group||'')+(c.place?' · '+esc(c.place):'')+'</small><small style="text-align:right">'+ago(c)+'</small></div>').join('');
 for(const c of v){const tv=document.body.classList.contains('tv');const m=L.circleMarker([c.lat,c.lon],{radius:tv?11:7,color:'#fff',weight:1.5,fillColor:colorOf(c),fillOpacity:.95}).bindPopup(popup(c)).bindTooltip(c.spz,tv?{permanent:true,direction:'right',offset:[12,0],className:'tvlbl'}:{direction:'top',offset:[0,-6]});m.addTo(layer);markers[c.spz]=m}
-if(first&&v.length){map.fitBounds(L.latLngBounds(v.filter(c=>ageMin(c)<1440).map(c=>[c.lat,c.lon]).concat([[49.94,17.9]])).pad(.1),{paddingBottomRight:[0,mq.matches?Math.round(H()*.45):0]});first=false}}
+if(first&&v.length){map.fitBounds(L.latLngBounds(v.map(c=>[c.lat,c.lon])).pad(.1),{maxZoom:13,paddingBottomRight:[0,mq.matches?Math.round(H()*.45):0]});first=false}}
 $('list').onclick=e=>{const r=e.target.closest('.row');if(!r)return;peek();const m=markers[r.dataset.s];if(m){map.setView(m.getLatLng(),Math.max(map.getZoom(),12));m.openPopup()}};
 
 /* ---- spodní panel se seznamem na telefonu: tažením nahoru zakryje mapu, dolů ji odkryje ---- */
