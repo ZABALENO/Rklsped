@@ -63,6 +63,8 @@ details.card summary{cursor:pointer;font-weight:600}
 .modal{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:12px}
 .mbox{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#0f1a44;border:1px solid rgba(94,138,255,.5);border-radius:14px;padding:16px}
 .mbox h3{margin:0 0 10px;font-size:18px}.mbox input[type=text],.mbox input:not([type]){width:100%;padding:12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;border-radius:8px;font-size:16px;margin-bottom:8px}
+.lbon{display:flex;gap:8px;align-items:center;margin:4px 0 6px}.lbf{display:flex;flex-wrap:wrap;gap:6px 14px}.lbf label{display:flex;gap:6px;align-items:center;font-size:14px;margin:0}#lbpv{font-family:ui-monospace,monospace;color:#cfe}
+.vlbl{background:rgba(5,10,30,.78)!important;color:#fff!important;border:1px solid rgba(94,138,255,.55)!important;border-radius:4px;font:600 11px/13px system-ui,sans-serif!important;padding:1px 5px!important;box-shadow:none!important}.vlbl:before{display:none!important}.vlbl b{font-weight:800}.vlbl.tvlbl{font-size:15px!important;padding:2px 6px!important}#map.lblhide .vlbl{display:none}
 .rfoot{margin-top:12px;text-align:center;font-size:13px}.rfoot a{color:#9aa6c2;text-decoration:underline}
 details.rc{border:1px solid rgba(94,138,255,.35);border-radius:12px;margin-bottom:8px;background:rgba(15,26,68,.55)}details.rc>summary{list-style:none;cursor:pointer;padding:10px 12px;display:grid;grid-template-columns:1fr auto auto;gap:2px 12px;align-items:center}details.rc>summary::-webkit-details-marker{display:none}
 details.rc>summary b{font-size:16px}details.rc>summary .k{font-weight:700;text-align:right}details.rc>summary small{color:#9aa6c2}details.rc>summary .sub{grid-column:1/-1;color:#9aa6c2;font-size:12px}
@@ -90,11 +92,14 @@ body.tv #side{z-index:1000}
 <header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="tvb" title="Zobrazení pro televizi">TV</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
 <nav id="tabs"><button data-v="map" class="on">Mapa</button><button data-v="hist">Historie</button><button data-v="rep">Reporty</button></nav>
 <main><div id="side"><div id="grab" aria-label="Posunout seznam"></div><div id="tools"><div id="pbar"><select id="prof" aria-label="Profil zobrazení"></select><button class="btn" id="pedit" title="Upravit profil">✎</button><button class="btn" id="pnew" title="Nový profil">＋</button></div><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
-<label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label>červeně, když stojí déle než <select id="slim"><option value="0">(vypnuto)</option><option value="30">30 min</option><option value="60">1 h</option><option value="120">2 h</option><option value="240">4 h</option><option value="480">8 h</option><option value="1440">24 h</option></select></label><div class="legend"><span><i style="background:#2ee08a"></i>jede</span><span><i style="background:#5e8aff"></i>stojí</span><span><i style="background:#ff4d4d"></i>stojí dlouho</span><span><i style="background:#7d869e"></i>bez signálu</span></div><label id="fol"><input type="checkbox" id="folc"> mapa mě průběžně sleduje</label> <a href="#" id="locoff" style="margin-left:8px">vypnout polohu</a><span style="display:block;opacity:.7">auta seřazena podle vzdálenosti</span><div id="cnt"></div></div><div id="tvhead"></div><div id="list"></div></div><div id="map"></div></main>
+<label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label>červeně, když stojí déle než <select id="slim"><option value="0">(vypnuto)</option><option value="30">30 min</option><option value="60">1 h</option><option value="120">2 h</option><option value="240">4 h</option><option value="480">8 h</option><option value="1440">24 h</option></select></label><div class="legend"><span><i style="background:#2ee08a"></i>jede</span><span><i style="background:#5e8aff"></i>stojí</span><span><i style="background:#ff4d4d"></i>stojí dlouho</span><span><i style="background:#7d869e"></i>bez signálu</span></div><div id="fol" style="flex-wrap:wrap;gap:2px 14px;align-items:center;font-size:13px"><label><input type="checkbox" id="folc"> mapa mě průběžně sleduje</label><a href="#" id="locoff">vypnout polohu</a><span style="width:100%;opacity:.7">auta seřazena podle vzdálenosti</span></div><div id="cnt"></div></div><div id="tvhead"></div><div id="list"></div></div><div id="map"></div></main>
 <div class="modal" id="pm" hidden><div class="mbox"><h3 id="pmt">Profil</h3>
 <label class="f" style="display:block;font-size:13px;color:#b8c2dc;margin-bottom:4px">Název profilu</label><input id="pmn" maxlength="40" placeholder="např. Západ export" autocomplete="off">
 <input id="pmq" placeholder="Hledat SPZ, skupinu, řidiče…" autocomplete="off"><div class="cl" id="pml"></div>
 <div class="rhead"><b>Barvy podle pravidel</b> <small>(platí první shodné shora; vozidlo se obarví danou barvou)</small></div><div id="prules"></div><button class="btn" id="pradd" type="button">＋ Přidat pravidlo</button>
+<div class="rhead"><b>Štítek u auta na mapě</b> <small>(co se zobrazí vedle barevné tečky)</small></div>
+<label class="lbon"><input type="checkbox" id="lbon"> Zobrazovat štítek</label>
+<div id="lbf" class="lbf"></div><div class="msg" id="lbpv"></div>
 <div class="rowbtns"><button class="btn" id="pma">Vybrat zobrazená</button><button class="btn" id="pmz">Zrušit výběr</button></div><div class="msg" id="pmc">&nbsp;</div>
 <div class="rowbtns"><button class="btn pri" id="pms">Uložit</button><button class="btn del" id="pmd">Smazat</button><button class="btn" id="pmx">Zavřít</button></div><div class="msg" id="pmm"></div></div></div>
 <button class="btn" id="tvx">Ukončit TV</button>
@@ -141,14 +146,23 @@ const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),h=Math.
 const dOf=c=>me?km(me.lat,me.lon,c.lat,c.lon):null;
 const fk=d=>d==null?'':(d<10?d.toFixed(1):Math.round(d)).toString().replace('.',',')+' km';
 const curProf=()=>profiles.find(p=>p.id===profId)||null;
+const LBL=[['spz','SPZ tahače'],['driver','Řidič'],['trailer','Návěs'],['speed','Rychlost'],['group','Skupina'],['place','Místo'],['stop','Doba stání'],['nU','Vykládka (název)'],['dU','Vzdálenost k vykládce'],['rule','Důvod barvy (pravidlo)']];
+const lblCfg=()=>{const p=curProf();return p&&p.label?p.label:{on:true,f:['spz']}};
+function lblText(c,f){const o=[];for(const k of LBL.map(x=>x[0])){if(!f.includes(k))continue;let v='';
+ if(k==='spz')v='<b>'+esc(c.spz)+'</b>';else if(k==='driver')v=esc(c.driver||'');else if(k==='trailer')v=c.trailer?'↔ '+esc(c.trailer):'';
+ else if(k==='speed')v=c.speed>0&&ageMin(c)<60?c.speed+' km/h':'';else if(k==='group')v=esc(c.group||'');else if(k==='place')v=esc(c.place||'');
+ else if(k==='stop')v=c.speed>0||c.stopMin==null||c.stopMin<15||ageMin(c)>=1440?'':fdur(c.stopMin);else if(k==='nU')v=c.nU?'→ '+esc(c.nU):'';
+ else if(k==='dU')v=c.dU!=null?c.dU+' km':'';else if(k==='rule'){const R=ruleFor(c);v=R?esc(ruleShort(R,c)):''}
+ if(v)o.push(v)}return o.join(' · ')}
+function lblZoom(){const m=$('map');if(m)m.classList.toggle('lblhide',!curProf()&&map.getZoom()<9)}
 const inProf=c=>{const p=curProf();return !p||p.spz.some(x=>x.toLowerCase()===c.spz.toLowerCase())};
 function visible(){const q=$('q').value.trim().toLowerCase(),mv=$('mv').checked,old=$('old').checked;
 return cars.filter(c=>inProf(c)&&(!old||ageMin(c)<=7*1440)&&(!mv||(c.speed>0&&ageMin(c)<60))&&(!q||[c.spz,c.driver,c.group,c.trailer,c.place].join(' ').toLowerCase().includes(q))).sort((a,b)=>me&&$('folc').checked?dOf(a)-dOf(b):a.spz.localeCompare(b.spz))}
 function popup(c){return'<b>'+esc(c.spz)+'</b>'+(c.group?' · '+esc(c.group):'')+'<br>'+(c.driver?esc(c.driver)+'<br>':'')+'Rychlost: '+c.speed+' km/h<br>'+(()=>{const R=ruleFor(c);return R?'<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+R.c+';margin-right:5px"></span><b>'+esc(rtxt(R))+'</b><br>':''})()+(c.trip?(c.nL?'Nakládka: '+esc(c.nL)+' ('+c.dL+' km)<br>':'')+(c.nU?'Vykládka: '+esc(c.nU)+' ('+c.dU+' km)'+(c.dUd!=null?(c.dUd>=0.3?' ↓ blíží se':c.dUd<=-0.3?' ↑ vzdaluje se':''):'')+'<br>':''):'')+(stopTxt(c)?'<b'+(longStop(c)?' style="color:#d6453a"':'')+'>'+stopTxt(c)+'</b><br>':'')+(c.place?esc((c.country?c.country+' – ':'')+c.place)+'<br>':'')+(c.trailer?'Návěs: '+esc(c.trailer)+'<br>':'')+'<a href="#" class="hl" data-id="'+c.id+'" data-spz="'+esc(c.spz)+'">Historie vozidla ›</a><br>'+(me?'Vzdálenost od vás: <b>'+fk(dOf(c))+'</b><br>':'')+'<small>'+esc(when(c))+' ('+ago(c)+')</small>'}
-function render(){lastRender=Date.now();if(typeof legendUI==='function')legendUI();const v=visible();layer.clearLayers();markers={};
+function render(){lastRender=Date.now();{const z=map.getSize();if(!z.x||!z.y)map.invalidateSize()}if(typeof legendUI==='function')legendUI();const v=visible();layer.clearLayers();markers={};
 $('cnt').textContent='Zobrazeno '+v.length+' z '+cars.length+' vozidel';
 $('list').innerHTML=v.map(c=>'<div class="row" data-s="'+esc(c.spz)+'"><span class="dot" style="background:'+colorOf(c)+'"></span><b>'+esc(c.spz)+'</b><span class="sp">'+(c.speed>0&&ageMin(c)<60?c.speed+' km/h':'')+'</span><small>'+(me?'<span class="dist">'+fk(dOf(c))+'</span> · ':'')+esc(c.driver||c.group||'')+(c.place?' · '+esc(c.place):'')+'</small><small style="text-align:right">'+(ruleFor(c)?'<span style="color:'+ruleFor(c).c+';font-weight:600">'+esc(ruleShort(ruleFor(c),c))+'</span>':stopTxt(c)&&c.stopMin>=15?(longStop(c)?'<span style="color:#ff6b6b;font-weight:600">':'<span>')+stopTxt(c).replace('Stojí ','stojí ')+'</span>':ago(c))+'</small></div>').join('');
-for(const c of v){const tv=document.body.classList.contains('tv');const m=L.circleMarker([c.lat,c.lon],{radius:tv?11:7,color:'#fff',weight:1.5,fillColor:colorOf(c),fillOpacity:.95}).bindPopup(popup(c)).bindTooltip(c.spz,tv?{permanent:true,direction:'right',offset:[12,0],className:'tvlbl'}:{direction:'top',offset:[0,-6]});m.addTo(layer);markers[c.spz]=m}
+for(const c of v){const tv=document.body.classList.contains('tv');const m=L.circleMarker([c.lat,c.lon],{radius:tv?11:7,color:'#fff',weight:1.5,fillColor:colorOf(c),fillOpacity:.95}).bindPopup(popup(c));const lc=lblCfg(),lt=lc.on?lblText(c,lc.f):'';if(lt)m.bindTooltip(lt,{permanent:true,direction:'right',offset:[tv?13:8,0],className:'vlbl'+(tv?' tvlbl':'')});m.addTo(layer);markers[c.spz]=m}lblZoom();
 if(first&&v.length){map.fitBounds(L.latLngBounds(v.map(c=>[c.lat,c.lon])).pad(.1),{maxZoom:13,paddingBottomRight:[0,mq.matches?Math.round(H()*.45):0]});first=false}}
 $('list').onclick=e=>{const r=e.target.closest('.row');if(!r)return;peek();const m=markers[r.dataset.s];if(m){map.setView(m.getLatLng(),Math.max(map.getZoom(),12));m.openPopup()}};
 
@@ -313,7 +327,7 @@ function pmList(){const q=$('pmq').value.trim().toLowerCase();const all=[...cars
  const list=all.filter(c=>!q||[c.spz,c.group,c.driver].join(' ').toLowerCase().includes(q));
  $('pml').innerHTML=list.map(c=>'<label><input type="checkbox" data-s="'+esc(c.spz)+'"'+(pmSel.has(c.spz.toLowerCase())?' checked':'')+'> <span><b>'+esc(c.spz)+'</b> <small style="color:#9aa6c2">'+esc([c.group,c.driver].filter(Boolean).join(' · '))+'</small></span></label>').join('')||'<div class="msg">Žádná vozidla.</div>';
  $('pmc').textContent='Vybráno '+pmSel.size+' vozidel'}
-function openProf(id){const p=profiles.find(x=>x.id===id);pmId=p?p.id:'';pmSel=new Set(p?p.spz.map(x=>x.toLowerCase()):[]);pmRules=p&&p.rules?JSON.parse(JSON.stringify(p.rules)):[];rulesUI();
+function openProf(id){const p=profiles.find(x=>x.id===id);pmId=p?p.id:'';pmSel=new Set(p?p.spz.map(x=>x.toLowerCase()):[]);pmRules=p&&p.rules?JSON.parse(JSON.stringify(p.rules)):[];rulesUI();pmLabel=p&&p.label?JSON.parse(JSON.stringify(p.label)):{on:true,f:['spz']};lblUI();
  $('pmt').textContent=p?'Upravit profil':'Nový profil';$('pmn').value=p?p.name:'';$('pmq').value='';$('pmd').hidden=!p;$('pmm').textContent='';pmList();$('pm').hidden=false;if(!p)$('pmn').focus()}
 $('pnew').onclick=()=>openProf('');$('pedit').onclick=()=>profId&&openProf(profId);$('pmx').onclick=()=>$('pm').hidden=true;
 $('pmq').oninput=pmList;
@@ -322,7 +336,7 @@ $('pma').onclick=()=>{$('pml').querySelectorAll('input').forEach(i=>{i.checked=t
 $('pmz').onclick=()=>{pmSel.clear();pmList()};
 $('pms').onclick=async()=>{const m=$('pmm');m.className='msg';const name=$('pmn').value.trim();if(!name){m.textContent='Zadejte název profilu.';m.className='msg bad';return}
  const spz=cars.filter(c=>pmSel.has(c.spz.toLowerCase())).map(c=>c.spz);for(const x of (curProfById(pmId)||{spz:[]}).spz)if(pmSel.has(x.toLowerCase())&&!spz.some(y=>y.toLowerCase()===x.toLowerCase()))spz.push(x);
- try{const r=await fetch('/api/polohy/profily',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pmId,name,spz,rules:pmRules})});const j=await r.json();if(!r.ok)throw new Error(j.error||('Chyba '+r.status));
+ try{const r=await fetch('/api/polohy/profily',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pmId,name,spz,rules:pmRules,label:pmLabel})});const j=await r.json();if(!r.ok)throw new Error(j.error||('Chyba '+r.status));
   profId=j.profile.id;ls.set('gps_prof',profId);$('pm').hidden=true;await loadProfiles();first=true;render()}catch(e){m.textContent=e.message;m.className='msg bad'}};
 const curProfById=id=>profiles.find(p=>p.id===id);
 $('pmd').onclick=async()=>{if(!pmId||!confirm('Opravdu smazat profil „'+$('pmn').value+'“? Smaže se pro všechny.'))return;
@@ -404,7 +418,13 @@ function ruleMatch(r,c){const a=ageMin(c);
   case 'idleOut':return a<1440&&c.trip&&!(c.speed>0)&&(c.stopMin||0)>=r.a&&(c.dL==null||c.dL>r.r)&&(c.dU==null||c.dU>r.r);
  }return false}
 ruleFor=c=>{const p=curProf();if(!p||!p.rules)return null;for(const r of p.rules)if(ruleMatch(r,c))return r;return null};
-let pmRules=[];
+let pmRules=[],pmLabel={on:true,f:['spz']};
+function lblUI(){$('lbon').checked=pmLabel.on;$('lbf').style.opacity=pmLabel.on?1:.4;
+ $('lbf').innerHTML=LBL.map(([k,n])=>'<label><input type="checkbox" data-k="'+k+'"'+(pmLabel.f.includes(k)?' checked':'')+'> '+n+'</label>').join('');
+ const sc=cars.find(c=>pmSel.has(c.spz.toLowerCase()))||cars[0];$('lbpv').innerHTML=sc&&pmLabel.on?'Náhled: '+(lblText(sc,pmLabel.f)||'<i>(prázdný štítek)</i>'):'Štítek se nezobrazí.'}
+$('lbon').onchange=()=>{pmLabel.on=$('lbon').checked;lblUI()};
+$('lbf').onchange=e=>{const k=e.target.dataset.k;if(!k)return;const a=new Set(pmLabel.f);if(e.target.checked)a.add(k);else a.delete(k);pmLabel.f=LBL.map(x=>x[0]).filter(x=>a.has(x));lblUI()};
+map.on('zoomend',lblZoom);
 function rulesUI(){
  $('prules').innerHTML=pmRules.map((r,i)=>{const T=RT[r.t];
   const sw='<div class="sw">'+RCOL.map((c,k)=>'<label title="'+RCN[k]+'"><input type="radio" name="rc'+i+'" data-i="'+i+'" data-k="c" value="'+c+'"'+(r.c===c?' checked':'')+'><span style="background:'+c+'"></span></label>').join('')+'</div>';
