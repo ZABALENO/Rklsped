@@ -83,7 +83,7 @@ body.tv .leaflet-top.leaflet-left{display:none}
 body.tv #side{z-index:1000}
 @media(max-width:760px){body.tv #side{width:42%!important}}
 </style></head><body>
-<header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="tvb" title="Zobrazení pro televizi">TV</button><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
+<header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="tvb" title="Zobrazení pro televizi">TV</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
 <nav id="tabs"><button data-v="map" class="on">Mapa</button><button data-v="hist">Historie</button><button data-v="rep">Reporty</button></nav>
 <main><div id="side"><div id="grab" aria-label="Posunout seznam"></div><div id="tools"><div id="pbar"><select id="prof" aria-label="Profil zobrazení"></select><button class="btn" id="pedit" title="Upravit profil">✎</button><button class="btn" id="pnew" title="Nový profil">＋</button></div><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
 <label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label>červeně, když stojí déle než <select id="slim"><option value="0">(vypnuto)</option><option value="30">30 min</option><option value="60">1 h</option><option value="120">2 h</option><option value="240">4 h</option><option value="480">8 h</option><option value="1440">24 h</option></select></label><div class="legend"><span><i style="background:#2ee08a"></i>jede</span><span><i style="background:#5e8aff"></i>stojí</span><span><i style="background:#ff4d4d"></i>stojí dlouho</span><span><i style="background:#7d869e"></i>bez signálu</span></div><label id="fol"><input type="checkbox" id="folc"> mapa mě průběžně sleduje</label> <a href="#" id="locoff" style="margin-left:8px">vypnout polohu</a><span style="display:block;opacity:.7">auta seřazena podle vzdálenosti</span><div id="cnt"></div></div><div id="tvhead"></div><div id="list"></div></div><div id="map"></div></main>
@@ -197,7 +197,7 @@ function toggleLoc(){
 }
 map.on('dragstart',()=>{$('folc').checked=false});$('locoff').onclick=e=>{e.preventDefault();stopLoc()};
 $('folc').onchange=render;$('slim').value=String(stopLim);$('slim').onchange=()=>{stopLim=+$('slim').value;try{localStorage.setItem('gps_stoplim',String(stopLim))}catch{}render()};
-$('rf').onclick=load;load();setInterval(load,30000);
+load();setInterval(load,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 </script>
 <script>
 /* ===== záložky Mapa / Historie / Reporty ===== */
