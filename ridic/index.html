@@ -859,7 +859,7 @@
     if (driver && driver.owner) loadPrices(); else show('formView');
   }
   function setDriver(d) {
-    driver = d; if (!d.owner) loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny); $('tabGps').classList.toggle('hidden', !d.ceny && !d.gps); if (d.gps && !d.ceny) { $('tabGps').textContent = 'GPS ' + d.gps.split(',').join(' + '); $('tabGps').style.flex = '0 0 auto'; $('tabGps').style.padding = '0 12px'; }
+    driver = d; if (!d.owner) loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny); $('tabGps').classList.toggle('hidden', !d.ceny && !d.gps); 
     $('tabNew').classList.toggle('hidden', !!d.owner); $('tabHist').classList.toggle('hidden', !!d.owner);
     $('admBox').classList.toggle('hidden', !d.owner);
     $('pcBtn').classList.toggle('hidden', !d.ceny);
