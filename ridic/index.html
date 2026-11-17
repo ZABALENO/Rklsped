@@ -466,7 +466,8 @@
     .brand{font-size:13px;letter-spacing:.5px;gap:8px}
     .brand img{width:34px;height:34px}
     .brand small{white-space:normal;overflow:visible;text-overflow:clip;font-size:11px;line-height:1.15;letter-spacing:0;margin-top:2px}
-    #logout,#pcBtn{min-height:42px;padding:6px 8px;font-size:12px;letter-spacing:.5px;border-width:1px}
+    #logout,#pcBtn{min-height:42px;padding:6px 8px;font-size:12px;letter-spacing:.5px;border-width:1px}    .brand{overflow:hidden}
+    header:has(#pcBtn:not(.hidden)) .brand>div{display:none}   /* admin: tlačítka PC + Odhlásit by jinak překrývala text */
   }
 </style>
 <script>
