@@ -512,6 +512,7 @@
 <nav id="tabs" class="tabs hidden" aria-label="Menu řidiče">
   <button type="button" id="tabNew">Nová přeprava</button>
   <button type="button" id="tabHist">Historie mých jízd</button>
+  <button type="button" id="tabGps" class="hidden" aria-label="GPS" title="Polohy vozidel na mapě" style="flex:0 0 64px;letter-spacing:0">GPS</button>
   <button type="button" id="tabPrice" class="hidden" aria-label="Ceny" title="Ceny" style="flex:0 0 64px;font-size:22px;letter-spacing:0">💵</button>
 </nav>
 <main>
@@ -853,7 +854,7 @@
     if (driver && driver.owner) loadPrices(); else show('formView');
   }
   function setDriver(d) {
-    driver = d; if (!d.owner) loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny);
+    driver = d; if (!d.owner) loadCustomers(); $('tabPrice').classList.toggle('hidden', !d.ceny); $('tabGps').classList.toggle('hidden', !d.ceny);
     $('tabNew').classList.toggle('hidden', !!d.owner); $('tabHist').classList.toggle('hidden', !!d.owner);
     $('admBox').classList.toggle('hidden', !d.owner);
     $('pcBtn').classList.toggle('hidden', !d.ceny);
@@ -1246,6 +1247,7 @@
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = sh.name + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
   $('tabPrice').addEventListener('click', loadPrices);
+  $('tabGps').addEventListener('click', () => { location.href = '/api/ridic/gps-go'; });
   $('prRef').addEventListener('click', loadPrices);
   async function loadAdmins() {
     const r = await api('/api/ridic/admini');

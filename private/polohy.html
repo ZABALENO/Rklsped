@@ -11,7 +11,7 @@ label{font-size:13px;color:#b8c2dc;display:flex;gap:6px;align-items:center}#cnt{
 #list{overflow:auto;flex:1}.row{padding:9px 12px;border-bottom:1px solid rgba(94,138,255,.15);cursor:pointer;display:grid;grid-template-columns:14px 1fr auto;gap:2px 8px;align-items:center}
 .row:hover{background:rgba(94,138,255,.15)}.dot{width:11px;height:11px;border-radius:50%;grid-row:1/3}.row b{font-size:15px}.row small{color:#9aa6c2;font-size:12px}.row .sp{text-align:right;font-weight:600}
 #map{flex:1;min-width:0}.leaflet-popup-content{font:13px/1.4 system-ui,sans-serif;color:#10183a}
-@media(max-width:760px){main{flex-direction:column}#side{width:100%;max-width:none;height:38%;order:2;border-right:0;border-top:1px solid rgba(94,138,255,.3)}#map{order:1}header h1{font-size:16px}}
+@media(max-width:760px){header{padding:8px 10px;gap:6px}a.btn,button.btn{min-height:40px;display:inline-flex;align-items:center;padding:6px 12px}.st{font-size:11px;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row{padding:12px}.row b{font-size:17px}#q{font-size:16px;padding:12px}#map{min-height:0}main{flex-direction:column}#side{width:100%;max-width:none;height:42%;order:2;border-right:0;border-top:1px solid rgba(94,138,255,.3)}#map{order:1}header h1{font-size:16px}}
 </style></head><body>
 <header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
 <main><div id="side"><div id="tools"><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
