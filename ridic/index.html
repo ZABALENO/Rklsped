@@ -1111,17 +1111,21 @@
   });
   const docLinks = (id, n) => Array.from({ length: n }, (_, k) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(id) + '?n=' + k + '" target="_blank" rel="noopener">📄 Příloha' + (n > 1 ? ' ' + (k + 1) : '') + '</a>').join('');
   const isNumLike = (v) => /^-?\d+([.,]\d+)?$/.test(String(v).trim());
+  const dkDateKey = v => { const m = /^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(String(v).trim()); return m ? +m[3] * 10000 + +m[2] * 100 + +m[1] : 0; };
   function dkRender() {
     const sh = dkData && dkData[dkSheet]; if (!sh) return;
     $('dkTabs').innerHTML = dkData.map((x, i) => '<button type="button" class="dk-tab' + (i === dkSheet ? ' on' : '') + '" data-i="' + i + '">' + esc(x.name) + '<small>' + x.total + '</small></button>').join('');
     const q = $('dkQ').value.trim().toLowerCase();
     let rows = sh.rows.map((r, i) => ({ r, i }));
     if (q) rows = rows.filter(o => o.r.some(v => String(v).toLowerCase().includes(q)));
-    if (dkSort.c >= 0) {
-      const c = dkSort.c, num = rows.every(o => !String(o.r[c]).trim() || isNumLike(o.r[c]));
+    const dcol = sh.meta ? sh.head.indexOf('Datum nakládky') : -1;
+    if (dkSort.c < 0 && dcol >= 0) {
+      rows.sort((a, b) => (dkDateKey(b.r[dcol]) - dkDateKey(a.r[dcol])) || (a.i - b.i));   // výchozí řazení: datum přepravy, nejnovější nahoře
+    } else if (dkSort.c >= 0) {
+      const c = dkSort.c, dateCol = c === dcol, num = !dateCol && rows.every(o => !String(o.r[c]).trim() || isNumLike(o.r[c]));
       rows.sort((a, b) => {
         const x = a.r[c], y = b.r[c];
-        const cmp = num ? (parseFloat(String(x).replace(',', '.')) || 0) - (parseFloat(String(y).replace(',', '.')) || 0) : String(x).localeCompare(String(y), 'cs', { numeric: true });
+        const cmp = dateCol ? dkDateKey(x) - dkDateKey(y) : num ? (parseFloat(String(x).replace(',', '.')) || 0) - (parseFloat(String(y).replace(',', '.')) || 0) : String(x).localeCompare(String(y), 'cs', { numeric: true });
         return (cmp || a.i - b.i) * dkSort.d;
       });
     }
@@ -1179,14 +1183,14 @@
 
   // v Záznamech vloží před každý nový den (podle Čas zápisu) záhlaví dne, aby bylo vidět, kde začíná další den
   function dkDayRow(sh, rows, ri) {
-    const dc = sh.head.indexOf('Čas zápisu'); if (!sh.meta || dc < 0) return '';
+    const dc = sh.meta ? sh.head.indexOf('Datum nakládky') : -1; if (dc < 0) return '';
     if (dkSort.c >= 0 && dkSort.c !== dc) return '';
     const day = r => String(r[dc]).trim().slice(0, 10);
     const d = day(rows[ri].r);
     if (ri > 0 && day(rows[ri - 1].r) === d) return '';
     let n = 0; for (let k = ri; k < rows.length && day(rows[k].r) === d; k++) n++;
     const wd = (() => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(d); return m ? ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'][new Date(+m[3], +m[2] - 1, +m[1]).getDay()] + ' ' : ''; })();
-    return '<tr class="dk-gap"><td colspan="' + (sh.head.length + 1) + '">' + esc(wd + d.replace(/\.(\d{2})\./, '. $1. ').replace(/^0/, '').replace(/ 0/, ' ')) + ' <small>· ' + n + ' ' + (n === 1 ? 'zápis' : n < 5 ? 'zápisy' : 'zápisů') + '</small></td></tr>';
+    return '<tr class="dk-gap"><td colspan="' + (sh.head.length + 1) + '">' + esc(wd + d.replace(/\.(\d{2})\./, '. $1. ').replace(/^0/, '').replace(/ 0/, ' ')) + ' <small>· ' + n + ' ' + (n === 1 ? 'přeprava' : n < 5 ? 'přepravy' : 'přeprav') + '</small></td></tr>';
   }
   async function zpracToggle(id, done) {
     const r = await api('/api/ridic/zprac', { id, done });
