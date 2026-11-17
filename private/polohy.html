@@ -63,6 +63,10 @@ details.card summary{cursor:pointer;font-weight:600}
 .modal{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:12px}
 .mbox{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#0f1a44;border:1px solid rgba(94,138,255,.5);border-radius:14px;padding:16px}
 .mbox h3{margin:0 0 10px;font-size:18px}.mbox input[type=text],.mbox input:not([type]){width:100%;padding:12px;background:#000;border:1px solid rgba(94,138,255,.5);color:#fff;border-radius:8px;font-size:16px;margin-bottom:8px}
+.rfoot{margin-top:12px;text-align:center;font-size:13px}.rfoot a{color:#9aa6c2;text-decoration:underline}
+details.rc{border:1px solid rgba(94,138,255,.35);border-radius:12px;margin-bottom:8px;background:rgba(15,26,68,.55)}details.rc>summary{list-style:none;cursor:pointer;padding:10px 12px;display:grid;grid-template-columns:1fr auto auto;gap:2px 12px;align-items:center}details.rc>summary::-webkit-details-marker{display:none}
+details.rc>summary b{font-size:16px}details.rc>summary .k{font-weight:700;text-align:right}details.rc>summary small{color:#9aa6c2}details.rc>summary .sub{grid-column:1/-1;color:#9aa6c2;font-size:12px}
+details.rc[open]>summary{border-bottom:1px solid rgba(94,138,255,.25)}details.rc .rcb{padding:8px 12px 12px}details.rc .meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:#b8c2dc;margin-bottom:8px}details.rc .meta b{color:#fff}
 .rhead{margin:12px 0 6px;font-size:14px}.rhead small{color:#9aa6c2}
 .rrow{border:1px solid rgba(94,138,255,.35);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;background:rgba(0,0,0,.18)}
 .rrow select,.rrow input{background:#000;color:#fff;border:1px solid rgba(94,138,255,.5);border-radius:8px;padding:8px;font-size:15px;min-height:40px}.rrow input[type=number]{width:74px}
@@ -117,7 +121,7 @@ body.tv #side{z-index:1000}
   <label class="f">Období<select id="rpre"><option value="yesterday">Včera</option><option value="week">Tento týden</option><option value="lastweek" selected>Minulý týden</option><option value="month">Tento měsíc</option><option value="lastmonth">Minulý měsíc</option><option value="custom">Vlastní…</option></select></label>
   <div class="two" id="rcust" hidden><label class="f">Od<input type="datetime-local" id="rf"></label><label class="f">Do<input type="datetime-local" id="rt"></label></div>
   <button class="btn pri" id="rgo">Vytvořit report</button><div class="msg" id="rmsg"></div></div>
- <div id="rres" class="card" hidden><div class="rowbtns"><button class="btn" id="rcsv">Stáhnout do Excelu (CSV)</button></div><div class="tw"><table class="t" id="rtab"></table></div></div>
+ <div id="rres" class="card" hidden><div id="rhead"></div><div class="rowbtns" style="margin:8px 0"><button class="btn" id="rexp" type="button">Rozbalit vše</button></div><div id="rout"></div><div class="rfoot"><a href="#" id="rcsv">⬇ Stáhnout do Excelu (CSV)</a></div></div>
 </div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -266,21 +270,30 @@ async function runRep(){
  if(!ids.length){msg.textContent='Vyberte aspoň jedno vozidlo.';msg.className='msg bad';return}
  if(ids.length>30){msg.textContent='Vyberte nejvýše 30 vozidel.';msg.className='msg bad';return}
  let r;try{r=getRange($('rpre'),$('rf'),$('rt'))}catch(e){msg.textContent=e.message;msg.className='msg bad';return}
- $('rgo').disabled=true;const out=[];let fail=0;
+ repOpen=new Set();$('rgo').disabled=true;const out=[];let fail=0;
  for(let i=0;i<ids.length;i++){const c=cars.find(x=>x.id===ids[i]);msg.textContent='Zpracovávám '+(i+1)+' / '+ids.length+': '+(c?c.spz:ids[i])+'…';
-  try{const j=await api('/api/polohy/historie?light=1&car='+ids[i]+'&from='+encodeURIComponent(r[0])+'&to='+encodeURIComponent(r[1]));out.push({c,s:j.summary})}catch(e){fail++;out.push({c,err:e.message})}}
+  try{const j=await api('/api/polohy/historie?light=1&car='+ids[i]+'&from='+encodeURIComponent(r[0])+'&to='+encodeURIComponent(r[1]));out.push({c,s:j.summary})}catch(e){fail++;out.push({c,err:e.message})}
+  repData={r,out};renderRep();if(i===0)$('rres').scrollIntoView({behavior:'smooth',block:'start'})}
  repData={r,out};renderRep();msg.textContent=fail?('Hotovo, '+fail+' vozidel se nepodařilo načíst.'):'Hotovo.';if(fail)msg.className='msg bad';$('rgo').disabled=false}
+let repOpen=new Set();
 function renderRep(){
- const {out}=repData;$('rres').hidden=false;let tk=0,td=0,ts=0;
- let h='<tr><th>Vozidlo</th><th class="n">Km</th><th class="n">Jízda</th><th class="n">Stání</th><th class="n">Max</th><th>Státy</th><th>Řidiči</th></tr>';
- out.forEach((o,i)=>{if(o.err){h+='<tr><td>'+esc(o.c?o.c.spz:'?')+'</td><td colspan="6" style="color:#ff8a7a">'+esc(o.err)+'</td></tr>';return}
-  const t=o.s.total;tk+=t.km;td+=t.driveMs;ts+=t.stopMs;
-  h+='<tr class="car" data-i="'+i+'"><td><b>'+esc(o.c.spz)+'</b><br><small style="color:#9aa6c2">'+esc(o.c.group||'')+'</small></td><td class="n">'+fmtKm(t.km)+'</td><td class="n">'+fmtH(t.driveMs)+'</td><td class="n">'+fmtH(t.stopMs)+'</td><td class="n">'+t.maxSpeed+'</td><td>'+esc(t.countries.join(', '))+'</td><td>'+esc(t.drivers.join(', '))+'</td></tr>'
-  +o.s.days.map(d=>'<tr class="day" data-p="'+i+'" hidden><td>'+fmtD(d.day)+'</td><td class="n">'+fmtKm(d.km)+'</td><td class="n">'+fmtH(d.driveMs)+'</td><td class="n">'+fmtH(d.stopMs)+'</td><td class="n">'+d.maxSpeed+'</td><td>'+esc(d.countries.join(', '))+'</td><td>'+esc(d.drivers.join(', '))+'</td></tr>').join('')});
- h+='<tr class="tot"><td>Celkem</td><td class="n">'+fmtKm(tk)+'</td><td class="n">'+fmtH(td)+'</td><td class="n">'+fmtH(ts)+'</td><td></td><td></td><td></td></tr>';
- $('rtab').innerHTML=h;$('rtab').onclick=e=>{const tr=e.target.closest('tr.car');if(!tr)return;$('rtab').querySelectorAll('tr.day[data-p="'+tr.dataset.i+'"]').forEach(x=>x.hidden=!x.hidden)}}
+ const {out}=repData;$('rres').hidden=false;let tk=0,td=0,ts=0,n=0,mx=0;
+ let h='';
+ out.forEach((o,i)=>{
+  if(o.err){h+='<details class="rc"><summary><b>'+esc(o.c?o.c.spz:'?')+'</b><span class="sub" style="color:#ff8a7a">'+esc(o.err)+'</span></summary></details>';return}
+  const t=o.s.total;tk+=t.km;td+=t.driveMs;ts+=t.stopMs;n++;mx=Math.max(mx,t.maxSpeed||0);
+  const days=o.s.days.map(d=>'<tr><td>'+fmtD(d.day)+'</td><td class="n">'+fmtKm(d.km)+'</td><td class="n">'+fmtH(d.driveMs)+'</td><td class="n">'+fmtH(d.stopMs)+'</td><td class="n">'+d.maxSpeed+'</td><td>'+esc(d.countries.join(', '))+'</td></tr>').join('');
+  h+='<details class="rc" data-i="'+i+'"'+(repOpen.has(i)?' open':'')+'><summary><b>'+esc(o.c.spz)+'</b><span class="k">'+fmtKm(t.km)+'</span><span class="k">'+fmtH(t.driveMs)+'</span><span class="sub">'+esc([o.c.group,t.drivers.join(', '),t.countries.join(', ')].filter(Boolean).join(' · '))+' · jízda / stání '+fmtH(t.driveMs)+' / '+fmtH(t.stopMs)+'</span></summary>'
+  +'<div class="rcb"><div class="meta"><span>Km <b>'+fmtKm(t.km)+'</b></span><span>Jízda <b>'+fmtH(t.driveMs)+'</b></span><span>Stání <b>'+fmtH(t.stopMs)+'</b></span><span>Max <b>'+t.maxSpeed+' km/h</b></span><span>Zastávek <b>'+o.s.stops.length+'</b></span><span>Jízd <b>'+o.s.trips.length+'</b></span></div>'
+  +(t.drivers.length?'<div class="meta"><span>Řidiči: <b>'+esc(t.drivers.join(', '))+'</b></span>'+(t.countries.length?'<span>Státy: <b>'+esc(t.countries.join(', '))+'</b></span>':'')+'</div>':'')
+  +'<div class="tw"><table class="t"><tr><th>Den</th><th class="n">Km</th><th class="n">Jízda</th><th class="n">Stání</th><th class="n">Max</th><th>Státy</th></tr>'+days+'</table></div></div></details>'});
+ $('rhead').innerHTML='<div class="kpis"><div class="kpi"><span>Vozidel</span><b>'+n+'</b></div><div class="kpi"><span>Ujeto</span><b>'+fmtKm(tk)+'</b></div><div class="kpi"><span>Doba jízdy</span><b>'+fmtH(td)+'</b></div><div class="kpi"><span>Doba stání</span><b>'+fmtH(ts)+'</b></div><div class="kpi"><span>Nejvyšší rychlost</span><b>'+mx+' km/h</b></div></div>';
+ $('rout').innerHTML=h;
+ const all=$('rout').querySelectorAll('details.rc[data-i]');$('rexp').textContent=all.length&&[...all].every(d=>d.open)?'Sbalit vše':'Rozbalit vše'}
+$('rout').addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.i!=null){const i=+d.dataset.i;if(d.open)repOpen.add(i);else repOpen.delete(i)}},true);
+$('rexp').onclick=()=>{const all=[...$('rout').querySelectorAll('details.rc[data-i]')],open=!all.every(d=>d.open);all.forEach(d=>{d.open=open;const i=+d.dataset.i;if(open)repOpen.add(i);else repOpen.delete(i)});$('rexp').textContent=open?'Sbalit vše':'Rozbalit vše'};
 const csvq=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-$('rcsv').onclick=()=>{if(!repData)return;const L2=[['SPZ','Skupina','Datum','Km','Jízda (h)','Stání (h)','Max km/h','Státy','Řidiči']];
+$('rcsv').onclick=e=>{e.preventDefault();if(!repData)return;const L2=[['SPZ','Skupina','Datum','Km','Jízda (h)','Stání (h)','Max km/h','Státy','Řidiči']];
  for(const o of repData.out){if(o.err)continue;const t=o.s.total,h=ms=>(ms/36e5).toFixed(2).replace('.',',');L2.push([o.c.spz,o.c.group||'','CELKEM',Math.round(t.km),h(t.driveMs),h(t.stopMs),t.maxSpeed,t.countries.join(' '),t.drivers.join(', ')]);
   for(const d of o.s.days)L2.push([o.c.spz,o.c.group||'',d.day,Math.round(d.km),h(d.driveMs),h(d.stopMs),d.maxSpeed,d.countries.join(' '),d.drivers.join(', ')])}
  const blob=new Blob(['﻿'+L2.map(r=>r.map(csvq).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gps-report-'+repData.r[0].slice(0,10)+'_'+repData.r[1].slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
