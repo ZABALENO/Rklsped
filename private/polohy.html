@@ -10,27 +10,36 @@ main{flex:1;display:flex;min-height:0}#side{width:340px;max-width:42%;display:fl
 label{font-size:13px;color:#b8c2dc;display:flex;gap:6px;align-items:center}#cnt{font-size:12px;color:#9aa6c2}
 #list{overflow:auto;flex:1}.row{padding:9px 12px;border-bottom:1px solid rgba(94,138,255,.15);cursor:pointer;display:grid;grid-template-columns:14px 1fr auto;gap:2px 8px;align-items:center}
 .row:hover{background:rgba(94,138,255,.15)}.dot{width:11px;height:11px;border-radius:50%;grid-row:1/3}.row b{font-size:15px}.row small{color:#9aa6c2;font-size:12px}.row .sp{text-align:right;font-weight:600}
-#map{flex:1;min-width:0}.leaflet-popup-content{font:13px/1.4 system-ui,sans-serif;color:#10183a}
+#map{flex:1;min-width:0}
+.me{width:18px;height:18px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 0 rgba(26,115,232,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 16px rgba(26,115,232,0)}100%{box-shadow:0 0 0 0 rgba(26,115,232,0)}}
+.loc{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#fff;color:#444;cursor:pointer;border-radius:4px;border:2px solid rgba(0,0,0,.25);background-clip:padding-box}
+.loc.on{color:#1a73e8}.loc svg{display:block}
+#fol{display:none}#fol.show{display:flex}
+.dist{color:#7fd6ff;font-weight:600}.leaflet-popup-content{font:13px/1.4 system-ui,sans-serif;color:#10183a}
 @media(max-width:760px){header{padding:8px 10px;gap:6px}a.btn,button.btn{min-height:40px;display:inline-flex;align-items:center;padding:6px 12px}.st{font-size:11px;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row{padding:12px}.row b{font-size:17px}#q{font-size:16px;padding:12px}#map{min-height:0}main{flex-direction:column}#side{width:100%;max-width:none;height:42%;order:2;border-right:0;border-top:1px solid rgba(94,138,255,.3)}#map{order:1}header h1{font-size:16px}}
 </style></head><body>
 <header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
 <main><div id="side"><div id="tools"><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
-<label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><div id="cnt"></div></div><div id="list"></div></div><div id="map"></div></main>
+<label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label id="fol"><input type="checkbox" id="folc" checked> mapa mě sleduje · auta seřazena podle vzdálenosti</label><div id="cnt"></div></div><div id="list"></div></div><div id="map"></div></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const map=L.map('map').setView([49.94,17.9],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
-const layer=L.layerGroup().addTo(map);let cars=[],first=true,markers={};
+const layer=L.layerGroup().addTo(map);let cars=[],first=true,markers={},me=null,meMarker=null,meCircle=null,watchId=null,lastRender=0;
 const ageMin=c=>c.time?(Date.now()-new Date(c.time))/6e4:1e9;
 const colorOf=c=>{const a=ageMin(c);return a>1440?'#7d869e':c.speed>0&&a<60?'#2ee08a':'#5e8aff'};
 function ago(c){const a=ageMin(c);if(a>1e8)return'bez údaje';if(a<1)return'právě teď';if(a<60)return'před '+Math.round(a)+' min';if(a<1440)return'před '+Math.round(a/60)+' h';return'před '+Math.round(a/1440)+' dny'}
 function when(c){return c.time?new Date(c.time).toLocaleString('cs-CZ',{timeZone:'Europe/Prague'}):''}
+const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+const dOf=c=>me?km(me.lat,me.lon,c.lat,c.lon):null;
+const fk=d=>d==null?'':(d<10?d.toFixed(1):Math.round(d)).toString().replace('.',',')+' km';
 function visible(){const q=$('q').value.trim().toLowerCase(),mv=$('mv').checked,old=$('old').checked;
-return cars.filter(c=>(!old||ageMin(c)<=7*1440)&&(!mv||(c.speed>0&&ageMin(c)<60))&&(!q||[c.spz,c.driver,c.group,c.trailer,c.place].join(' ').toLowerCase().includes(q))).sort((a,b)=>a.spz.localeCompare(b.spz))}
-function popup(c){return'<b>'+esc(c.spz)+'</b>'+(c.group?' · '+esc(c.group):'')+'<br>'+(c.driver?esc(c.driver)+'<br>':'')+'Rychlost: '+c.speed+' km/h<br>'+(c.place?esc((c.country?c.country+' – ':'')+c.place)+'<br>':'')+(c.trailer?'Návěs: '+esc(c.trailer)+'<br>':'')+'<small>'+esc(when(c))+' ('+ago(c)+')</small>'}
-function render(){const v=visible();layer.clearLayers();markers={};
+return cars.filter(c=>(!old||ageMin(c)<=7*1440)&&(!mv||(c.speed>0&&ageMin(c)<60))&&(!q||[c.spz,c.driver,c.group,c.trailer,c.place].join(' ').toLowerCase().includes(q))).sort((a,b)=>me&&$('folc').checked?dOf(a)-dOf(b):a.spz.localeCompare(b.spz))}
+function popup(c){return'<b>'+esc(c.spz)+'</b>'+(c.group?' · '+esc(c.group):'')+'<br>'+(c.driver?esc(c.driver)+'<br>':'')+'Rychlost: '+c.speed+' km/h<br>'+(c.place?esc((c.country?c.country+' – ':'')+c.place)+'<br>':'')+(c.trailer?'Návěs: '+esc(c.trailer)+'<br>':'')+(me?'Vzdálenost od vás: <b>'+fk(dOf(c))+'</b><br>':'')+'<small>'+esc(when(c))+' ('+ago(c)+')</small>'}
+function render(){lastRender=Date.now();const v=visible();layer.clearLayers();markers={};
 $('cnt').textContent='Zobrazeno '+v.length+' z '+cars.length+' vozidel';
-$('list').innerHTML=v.map(c=>'<div class="row" data-s="'+esc(c.spz)+'"><span class="dot" style="background:'+colorOf(c)+'"></span><b>'+esc(c.spz)+'</b><span class="sp">'+(c.speed>0&&ageMin(c)<60?c.speed+' km/h':'')+'</span><small>'+esc(c.driver||c.group||'')+(c.place?' · '+esc(c.place):'')+'</small><small style="text-align:right">'+ago(c)+'</small></div>').join('');
+$('list').innerHTML=v.map(c=>'<div class="row" data-s="'+esc(c.spz)+'"><span class="dot" style="background:'+colorOf(c)+'"></span><b>'+esc(c.spz)+'</b><span class="sp">'+(c.speed>0&&ageMin(c)<60?c.speed+' km/h':'')+'</span><small>'+(me?'<span class="dist">'+fk(dOf(c))+'</span> · ':'')+esc(c.driver||c.group||'')+(c.place?' · '+esc(c.place):'')+'</small><small style="text-align:right">'+ago(c)+'</small></div>').join('');
 for(const c of v){const m=L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:1.5,fillColor:colorOf(c),fillOpacity:.95}).bindPopup(popup(c)).bindTooltip(c.spz,{direction:'top',offset:[0,-6]});m.addTo(layer);markers[c.spz]=m}
 if(first&&v.length){map.fitBounds(L.latLngBounds(v.filter(c=>ageMin(c)<1440).map(c=>[c.lat,c.lon]).concat([[49.94,17.9]])).pad(.1));first=false}}
 $('list').onclick=e=>{const r=e.target.closest('.row');if(!r)return;const m=markers[r.dataset.s];if(m){map.setView(m.getLatLng(),Math.max(map.getZoom(),12));m.openPopup()}};
@@ -40,5 +49,26 @@ if(!r.ok){$('st').textContent='Chyba: '+(j.error||r.status);$('st').className='s
 cars=j.cars;render();$('st').textContent='aktualizováno '+new Date(j.fetchedAt).toLocaleTimeString('cs-CZ',{timeZone:'Europe/Prague'})+(j.stale?' – POZOR: '+j.error:'');$('st').className='st'+(j.stale?' bad':'')}
 catch(e){$('st').textContent='Nelze načíst data';$('st').className='st bad'}}
 $('bk').onclick=e=>{if(document.referrer&&history.length>1){e.preventDefault();history.back()}};
+
+const LocCtl=L.Control.extend({options:{position:'topleft'},onAdd(){const d=L.DomUtil.create('div','leaflet-bar');const a=L.DomUtil.create('a','loc',d);a.href='#';a.id='locBtn';a.title='Moje poloha';a.setAttribute('aria-label','Moje poloha');
+a.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="8"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>';
+L.DomEvent.disableClickPropagation(d);L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);toggleLoc()});return d}});
+new LocCtl().addTo(map);
+function stopLoc(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null;me=null;if(meMarker){map.removeLayer(meMarker);meMarker=null}if(meCircle){map.removeLayer(meCircle);meCircle=null}$('locBtn').classList.remove('on');$('fol').classList.remove('show');render()}
+function toggleLoc(){
+ if(watchId!=null){stopLoc();return}
+ if(!navigator.geolocation){alert('Tento prohlížeč neumí zjistit polohu.');return}
+ $('locBtn').classList.add('on');$('folc').checked=true;let firstFix=true;
+ watchId=navigator.geolocation.watchPosition(p=>{
+  me={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};
+  if(!meMarker){meMarker=L.marker([me.lat,me.lon],{icon:L.divIcon({className:'',html:'<div class="me"></div>',iconSize:[18,18]}),zIndexOffset:1000,interactive:false}).addTo(map);meCircle=L.circle([me.lat,me.lon],{radius:me.acc,color:'#1a73e8',weight:1,fillOpacity:.1,interactive:false}).addTo(map)}
+  else{meMarker.setLatLng([me.lat,me.lon]);meCircle.setLatLng([me.lat,me.lon]).setRadius(me.acc)}
+  $('fol').classList.add('show');
+  if(firstFix){firstFix=false;map.setView([me.lat,me.lon],Math.max(map.getZoom(),11));render()}
+  else{if($('folc').checked)map.panTo([me.lat,me.lon]);if(Date.now()-lastRender>10000)render()}
+ },e=>{stopLoc();alert(e.code===1?'Poloha není povolena. Povolte ji v nastavení prohlížeče pro tuto stránku.':'Polohu se nepodařilo zjistit.')},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+}
+map.on('dragstart',()=>{$('folc').checked=false});
+$('folc').onchange=render;
 $('rf').onclick=load;load();setInterval(load,30000);
 </script></body></html>
