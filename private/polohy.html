@@ -17,10 +17,20 @@ label{font-size:13px;color:#b8c2dc;display:flex;gap:6px;align-items:center}#cnt{
 .loc.on{color:#1a73e8}.loc svg{display:block}
 #fol{display:none}#fol.show{display:flex}
 .dist{color:#7fd6ff;font-weight:600}.leaflet-popup-content{font:13px/1.4 system-ui,sans-serif;color:#10183a}
-@media(max-width:760px){header{padding:8px 10px;gap:6px}a.btn,button.btn{min-height:40px;display:inline-flex;align-items:center;padding:6px 12px}.st{font-size:11px;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row{padding:12px}.row b{font-size:17px}#q{font-size:16px;padding:12px}#map{min-height:0}main{flex-direction:column}#side{width:100%;max-width:none;height:42%;order:2;border-right:0;border-top:1px solid rgba(94,138,255,.3)}#map{order:1}header h1{font-size:16px}}
+#grab{display:none}
+@media(max-width:760px){
+header{padding:8px 10px;gap:6px}a.btn,button.btn{min-height:40px;display:inline-flex;align-items:center;padding:6px 12px}.st{font-size:11px;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}header h1{font-size:16px}
+main{position:relative;display:block}#map{position:absolute;inset:0}
+#side{position:absolute;left:0;right:0;bottom:0;width:100%;max-width:none;height:45%;border-right:0;border-radius:16px 16px 0 0;border-top:1px solid rgba(94,138,255,.5);box-shadow:0 -6px 24px rgba(0,0,0,.55);z-index:600;transition:height .25s ease;overflow:hidden}
+body.drag #side{transition:none}
+#grab{display:block;flex:none;padding:10px 0 4px;touch-action:none;cursor:grab}#grab::before{content:"";display:block;width:46px;height:5px;border-radius:3px;background:rgba(160,190,250,.7);margin:0 auto}
+#tools{touch-action:none}#list{overscroll-behavior:contain}
+.row{padding:12px}.row b{font-size:17px}#q{font-size:16px;padding:12px}
+}
+
 </style></head><body>
 <header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
-<main><div id="side"><div id="tools"><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
+<main><div id="side"><div id="grab" aria-label="Posunout seznam"></div><div id="tools"><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
 <label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label id="fol"><input type="checkbox" id="folc" checked> mapa mě sleduje · auta seřazena podle vzdálenosti</label><div id="cnt"></div></div><div id="list"></div></div><div id="map"></div></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -41,8 +51,31 @@ function render(){lastRender=Date.now();const v=visible();layer.clearLayers();ma
 $('cnt').textContent='Zobrazeno '+v.length+' z '+cars.length+' vozidel';
 $('list').innerHTML=v.map(c=>'<div class="row" data-s="'+esc(c.spz)+'"><span class="dot" style="background:'+colorOf(c)+'"></span><b>'+esc(c.spz)+'</b><span class="sp">'+(c.speed>0&&ageMin(c)<60?c.speed+' km/h':'')+'</span><small>'+(me?'<span class="dist">'+fk(dOf(c))+'</span> · ':'')+esc(c.driver||c.group||'')+(c.place?' · '+esc(c.place):'')+'</small><small style="text-align:right">'+ago(c)+'</small></div>').join('');
 for(const c of v){const m=L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:1.5,fillColor:colorOf(c),fillOpacity:.95}).bindPopup(popup(c)).bindTooltip(c.spz,{direction:'top',offset:[0,-6]});m.addTo(layer);markers[c.spz]=m}
-if(first&&v.length){map.fitBounds(L.latLngBounds(v.filter(c=>ageMin(c)<1440).map(c=>[c.lat,c.lon]).concat([[49.94,17.9]])).pad(.1));first=false}}
-$('list').onclick=e=>{const r=e.target.closest('.row');if(!r)return;const m=markers[r.dataset.s];if(m){map.setView(m.getLatLng(),Math.max(map.getZoom(),12));m.openPopup()}};
+if(first&&v.length){map.fitBounds(L.latLngBounds(v.filter(c=>ageMin(c)<1440).map(c=>[c.lat,c.lon]).concat([[49.94,17.9]])).pad(.1),{paddingBottomRight:[0,mq.matches?Math.round(H()*.45):0]});first=false}}
+$('list').onclick=e=>{const r=e.target.closest('.row');if(!r)return;peek();const m=markers[r.dataset.s];if(m){map.setView(m.getLatLng(),Math.max(map.getZoom(),12));m.openPopup()}};
+
+/* ---- spodní panel se seznamem na telefonu: tažením nahoru zakryje mapu, dolů ji odkryje ---- */
+const mq=window.matchMedia('(max-width:760px)'),side=$('side'),main0=document.querySelector('main');
+const PEEK=96,H=()=>main0.clientHeight,states=()=>[PEEK,Math.round(H()*.45),H()];
+function setH(px,anim){if(!mq.matches)return;document.body.classList.toggle('drag',!anim);side.style.height=Math.max(PEEK,Math.min(H(),px))+'px'}
+function snapTo(start,cur){const st=states(),d=cur-start;let t;
+ if(d>30)t=st.find(x=>x>start+10)||st[2];else if(d<-30)t=[...st].reverse().find(x=>x<start-10)||st[0];else t=st.reduce((a,b)=>Math.abs(b-cur)<Math.abs(a-cur)?b:a);
+ document.body.classList.remove('drag');side.style.height=t+'px'}
+function peek(){if(mq.matches){document.body.classList.remove('drag');side.style.height=PEEK+'px'}}
+let drag=null;
+function dragStart(y){drag={y,h:side.offsetHeight,moved:false}}
+function dragMove(y){if(!drag)return;const dy=drag.y-y;if(Math.abs(dy)>4)drag.moved=true;setH(drag.h+dy,false)}
+function dragEnd(){if(!drag)return;const d=drag;drag=null;if(d.moved)snapTo(d.h,side.offsetHeight);else{document.body.classList.remove('drag');const st=states();side.style.height=(side.offsetHeight<=PEEK+5?st[1]:st[0])+'px'}}
+for(const el of [$('grab'),$('tools')]){
+ el.addEventListener('pointerdown',e=>{if(!mq.matches||e.target.closest('input,label'))return;el.setPointerCapture(e.pointerId);dragStart(e.clientY)});
+ el.addEventListener('pointermove',e=>dragMove(e.clientY));
+ el.addEventListener('pointerup',dragEnd);el.addEventListener('pointercancel',dragEnd)}
+{const L0=$('list');let ty=0,th=0,on=false;
+ L0.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;th=side.offsetHeight;on=false},{passive:true});
+ L0.addEventListener('touchmove',e=>{if(!mq.matches)return;const dy=e.touches[0].clientY-ty;
+  if(on||(dy>6&&L0.scrollTop<=0)||(dy<-6&&side.offsetHeight<H()-2)){if(!on){on=true;drag={y:ty,h:th,moved:true}}e.preventDefault();setH(th-dy,false)}},{passive:false});
+ L0.addEventListener('touchend',()=>{if(on){on=false;const d=drag;drag=null;snapTo(d.h,side.offsetHeight)}})}
+window.addEventListener('resize',()=>{if(!mq.matches){side.style.height='';document.body.classList.remove('drag')}map.invalidateSize()});
 ['q','mv','old'].forEach(i=>$(i).oninput=render);
 async function load(){try{const r=await fetch('/api/polohy');if(r.status===401){location.reload();return}const j=await r.json();
 if(!r.ok){$('st').textContent='Chyba: '+(j.error||r.status);$('st').className='st bad';return}
