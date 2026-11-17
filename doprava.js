@@ -345,7 +345,7 @@ app.post('/api/agents/text', async (req, res) => {
 });
 
 require('./lib/ridic').setup(app);   // evidence přeprav od řidičů (/ridic) – vlastní přihlášení, před obecným heslem
-try { require('./lib/polohy').setup(app); } catch (e) { console.error('Polohy:', e.message); }   // GPS /polohy (EchoTrack) – vlastní heslo, před obecným přihlášením
+try { require('./lib/polohy').setup(app, { store: () => store }); } catch (e) { console.error('Polohy:', e.message); }   // GPS /polohy (EchoTrack) – vlastní heslo, před obecným přihlášením
 require('./lib/auth').setup(app, { title: 'RKL Doprava', subtitle: 'Vlastní doprava na cestě' });
 app.get('/gps-go', require('./lib/polohy').gpsGo);   // tlačítko GPS v horní liště (po přihlášení do dashboardu)
 // sdílené obrázky (pozadí, logo) z RKL Spedice
@@ -424,7 +424,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor', 'gps'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
