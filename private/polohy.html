@@ -81,7 +81,7 @@ body.tv #side{z-index:1000}
 <header><a class="btn" id="bk" href="https://airkl.cz/" title="Zpět">←</a><h1>GPS</h1><span class="st" id="st">načítám…</span><span class="sp"></span><button class="btn" id="tvb" title="Zobrazení pro televizi">TV</button><button class="btn" id="rf">Obnovit</button><a class="btn" href="/polohy/logout">Odhlásit</a></header>
 <nav id="tabs"><button data-v="map" class="on">Mapa</button><button data-v="hist">Historie</button><button data-v="rep">Reporty</button></nav>
 <main><div id="side"><div id="grab" aria-label="Posunout seznam"></div><div id="tools"><div id="pbar"><select id="prof" aria-label="Profil zobrazení"></select><button class="btn" id="pedit" title="Upravit profil">✎</button><button class="btn" id="pnew" title="Nový profil">＋</button></div><input id="q" placeholder="Hledat SPZ, řidiče, skupinu…" autocomplete="off">
-<label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label id="fol"><input type="checkbox" id="folc" checked> mapa mě sleduje · auta seřazena podle vzdálenosti</label><div id="cnt"></div></div><div id="tvhead"></div><div id="list"></div></div><div id="map"></div></main>
+<label><input type="checkbox" id="mv"> jen vozidla v pohybu</label><label><input type="checkbox" id="old" checked> skrýt vozidla bez signálu přes 7 dní</label><label id="fol"><input type="checkbox" id="folc"> mapa mě průběžně sleduje</label> <a href="#" id="locoff" style="margin-left:8px">vypnout polohu</a><span style="display:block;opacity:.7">auta seřazena podle vzdálenosti</span><div id="cnt"></div></div><div id="tvhead"></div><div id="list"></div></div><div id="map"></div></main>
 <div class="modal" id="pm" hidden><div class="mbox"><h3 id="pmt">Profil</h3>
 <label class="f" style="display:block;font-size:13px;color:#b8c2dc;margin-bottom:4px">Název profilu</label><input id="pmn" maxlength="40" placeholder="např. Západ export" autocomplete="off">
 <input id="pmq" placeholder="Hledat SPZ, skupinu, řidiče…" autocomplete="off"><div class="cl" id="pml"></div>
@@ -172,9 +172,9 @@ L.DomEvent.disableClickPropagation(d);L.DomEvent.on(a,'click',e=>{L.DomEvent.pre
 new LocCtl().addTo(map);
 function stopLoc(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null;me=null;if(meMarker){map.removeLayer(meMarker);meMarker=null}if(meCircle){map.removeLayer(meCircle);meCircle=null}$('locBtn').classList.remove('on');$('fol').classList.remove('show');render()}
 function toggleLoc(){
- if(watchId!=null){stopLoc();return}
+ if(watchId!=null){if(me)map.setView([me.lat,me.lon],Math.max(map.getZoom(),13));return}
  if(!navigator.geolocation){alert('Tento prohlížeč neumí zjistit polohu.');return}
- $('locBtn').classList.add('on');$('folc').checked=true;let firstFix=true;
+ $('locBtn').classList.add('on');$('folc').checked=false;let firstFix=true;
  watchId=navigator.geolocation.watchPosition(p=>{
   me={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};
   if(!meMarker){meMarker=L.marker([me.lat,me.lon],{icon:L.divIcon({className:'',html:'<div class="me"></div>',iconSize:[18,18]}),zIndexOffset:1000,interactive:false}).addTo(map);meCircle=L.circle([me.lat,me.lon],{radius:me.acc,color:'#1a73e8',weight:1,fillOpacity:.1,interactive:false}).addTo(map)}
@@ -184,7 +184,7 @@ function toggleLoc(){
   else{if($('folc').checked)map.panTo([me.lat,me.lon]);if(Date.now()-lastRender>10000)render()}
  },e=>{stopLoc();alert(e.code===1?'Poloha není povolena. Povolte ji v nastavení prohlížeče pro tuto stránku.':'Polohu se nepodařilo zjistit.')},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
 }
-map.on('dragstart',()=>{$('folc').checked=false});
+map.on('dragstart',()=>{$('folc').checked=false});$('locoff').onclick=e=>{e.preventDefault();stopLoc()};
 $('folc').onchange=render;
 $('rf').onclick=load;load();setInterval(load,30000);
 </script>
