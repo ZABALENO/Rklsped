@@ -95,8 +95,7 @@ const PRETTY = { zapad: 'Západ', vychod: 'Východ', vnitro: 'Vnitro', jih: 'Jih
 const prettyName = raw => String(raw || '').trim().split(/\s+/).map(w => PRETTY[nk(w)] || (w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
 const tripBase = n => { const m = nk(n).match(/^(.*?)\s+prepravy$/); return m ? m[1] : null; };   // sloupec „Západ 1 Přepravy“ = počet přeprav relace Západ 1
 const HIDDEN = new Set(['zapad 5']);
-const TRIP_PREFIX = { 'PV/263': 'vnitro 3', 'PV/262': 'vnitro 2', 'PV/261': 'vnitro 1', 'PZ/261': 'zapad 1' };   // agentní předpony; všechny ostatní přepravy jsou ruční
-const TRIPS_FROM = '2026-11-19';   // od tohoto dne se přepravy (agent / ručně) měří z hlavní tabulky, ne z listu „Počty pozic“   // předpona čísla přepravy ve sloupci Přeprava → relace   // relace skryté všude v dashboardech
+const TRIP_PREFIX = { 'PV/263': 'vnitro 3', 'PV/262': 'vnitro 2', 'PV/261': 'vnitro 1' };   // předpona čísla přepravy ve sloupci Přeprava → relace   // relace skryté všude v dashboardech
 const AGENT_ORDER = ['zapad 1', 'zapad 2', 'zapad 3', 'zapad 4', 'vnitro 1', 'vnitro 2', 'vnitro 3', 'vnitro 4', 'jih', 'vychod'];
 async function updateAgents(counts) {
   if (!counts) return;
@@ -256,18 +255,6 @@ app.get('/api/agents', async (req, res) => {
     const rk = pf ? TRIP_PREFIX[pf] : nk(r.relace); if (!rk) continue;   // předpony PV/261–263 = přepravy zadané agentem, vše ostatní = ručně (podle sloupce Relace) if (HIDDEN.has(rk) || seenTr.has(no)) continue; seenTr.add(no);
     const dd = weekendToFriday(r.date), o = (tripsSheet[rk] = tripsSheet[rk] || {}), q = (o[dd] = o[dd] || { a: 0, m: 0 }); if (pf) q.a++; else q.m++;
   }
-  // uložení denních počtů (nesnižují se: když se předpona z tabulky později smaže, agentní zápis zůstane započítaný)
-  for (const rk of Object.keys(tripsSheet)) for (const d of Object.keys(tripsSheet[rk])) {
-    if (d < TRIPS_FROM) { delete tripsSheet[rk][d]; continue; }
-    const cur = tripsSheet[rk][d], prevD = store.mem.trs[d] || { c: {} }, p0 = prevD.c[rk] || { a: 0, m: 0 };
-    if (cur.a < p0.a || cur.m < p0.m) { cur.a = Math.max(cur.a, p0.a); cur.m = Math.max(cur.m, p0.m); }
-  }
-  for (const d of Object.keys(store.mem.trs)) for (const rk of Object.keys(store.mem.trs[d].c || {})) {
-    const o = (tripsSheet[rk] = tripsSheet[rk] || {}), p0 = store.mem.trs[d].c[rk];
-    if (!o[d]) o[d] = { a: p0.a, m: p0.m }; else { o[d].a = Math.max(o[d].a, p0.a); o[d].m = Math.max(o[d].m, p0.m); }
-  }
-  { const byD = {}; for (const rk of Object.keys(tripsSheet)) for (const d of Object.keys(tripsSheet[rk])) (byD[d] = byD[d] || {})[rk] = tripsSheet[rk][d];
-    for (const d of Object.keys(byD)) if (JSON.stringify((store.mem.trs[d] || {}).c || {}) !== JSON.stringify(byD[d])) await store.put('trs', d, { c: byD[d], u: new Date().toISOString() }); }
   const sheetTexts = {};
   for (const t of sheet.texts || []) if (t.text && !HIDDEN.has(nk(t.name))) sheetTexts[nk(t.name)] = t.text;
   const adj = store.mem.cfg.adj, today = pragueToday();
@@ -302,14 +289,6 @@ app.get('/api/agents', async (req, res) => {
       const t = { pA: cur.pA || 0, pM: cur.pM || 0, tA: cur.tA || 0, tM: cur.tM || 0 };
       if (adjOn && adjOn.key === k) { t.pA += adjOn.count || 0; t.tA += adjOn.trips || 0; }
       rels.push(Object.assign({ key: k, name: prettyName(k), since: SINCE[k] || '', today: td }, t));
-    }
-    // přepravy od TRIPS_FROM: počty z hlavní tabulky (agent = předpony PV/261–263, PZ/261; ostatní ručně) nahradí přírůstky z listu; součty se o rozdíl upraví
-    for (const sr of rels) {
-      let li = { tA: 0, tM: 0 }, si = { tA: 0, tM: 0 };
-      for (const d of Object.keys(incs)) if (d >= TRIPS_FROM && incs[d][sr.key]) { li.tA += incs[d][sr.key].tA; li.tM += incs[d][sr.key].tM; incs[d][sr.key].tA = 0; incs[d][sr.key].tM = 0; }
-      for (const d of Object.keys(tripsSheet[sr.key] || {})) { const q = tripsSheet[sr.key][d]; const o = (incs[d] = incs[d] || {})[sr.key] = (incs[d] || {})[sr.key] || z(); o.tA += q.a; o.tM += q.m; si.tA += q.a; si.tM += q.m; }
-      sr.tA += si.tA - li.tA; sr.tM += si.tM - li.tM;
-      sr.today = (incs[today] && incs[today][sr.key]) || z();
     }
     const lastDate = dl.snaps.length ? dl.snaps[dl.snaps.length - 1].date : null;
     // kdy se naposledy změnil jakýkoli počet pozic (agentních i ručních, objednávek i přeprav): čas posledního snímku, který se liší od předchozího
@@ -463,7 +442,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor', 'gps', 'gpstrk', 'trs'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor', 'gps', 'gpstrk'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
