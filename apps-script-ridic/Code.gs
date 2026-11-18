@@ -48,6 +48,7 @@ function doPost(e) {
     if (body.action === 'docDel') return out_(docDel_(body));
     if (body.action === 'docRepl') return out_(docRepl_(body));
     if (body.action === 'radek') return out_(radek_(body));
+    if (body.action === 'gpsList') return out_({ ok: true, list: drivers_().filter(function (d) { return d.aktivni && d.gps; }).map(function (d) { return String(d.prijmeni).trim(); }) });
     if (body.action === 'adminList') return out_(adminList_(body));
     if (body.action === 'adminSet') return out_(adminSet_(body));
     return out_({ ok: false, error: 'unknown_action' });
@@ -70,20 +71,23 @@ function drivers_() {
   var list = [];
   // sloupec H = Admin (ano = vidí ikonku peněz); dokud sloupec v listu není, je admin jen Soukeník
   var hasAdminCol = rows.length > 0 && rows[0].length >= 8;
+  var gpsCol = -1;   // sloupec „GPS“ (ANO = řidič vidí jen vybraná vozidla v GPS)
+  if (rows.length > 0) for (var g = 0; g < rows[0].length; g++) if (norm_(rows[0][g]) === 'gps') { gpsCol = g; break; }
   for (var i = 1; i < rows.length; i++) {
     var r = rows[i];
     if (!r[0] && !r[1]) continue;
     list.push({
       jmeno: r[0], prijmeni: r[1], dopravce: r[2], spz: r[3], typ: r[4],
       pin: String(r[5]).trim(), aktivni: norm_(r[6]) === 'ano',
-      admin: hasAdminCol ? norm_(r[7]) === 'ano' : norm_(r[1]) === 'soukenik'
+      admin: hasAdminCol ? norm_(r[7]) === 'ano' : norm_(r[1]) === 'soukenik',
+      gps: gpsCol >= 0 && norm_(r[gpsCol]) === 'ano'
     });
   }
   return list;
 }
 
 function publicDriver_(d) {
-  return { jmeno: d.jmeno, prijmeni: d.prijmeni, dopravce: d.dopravce, spz: d.spz, typ: d.typ, admin: !!d.admin };
+  return { jmeno: d.jmeno, prijmeni: d.prijmeni, dopravce: d.dopravce, spz: d.spz, typ: d.typ, admin: !!d.admin, gps: !!d.gps };
 }
 
 function login_(b) {
@@ -671,7 +675,7 @@ function vse_(b) {
     o.cn = keep.map(function (c) { return c + 1; });
     o.ro = isRec ? [keep.indexOf(COL_DOC - 1), keep.indexOf(COL_ID - 1)].filter(function (x) { return x >= 0; }) : [];
     if (sh.getName() === SHEET_DRIVERS && !owner) {   // PIN a Admin mění jen majitel
-      [head.indexOf('PIN'), head.indexOf('Admin')].forEach(function (c) { var k = keep.indexOf(c); if (k >= 0) o.ro.push(k); });
+      [head.indexOf('PIN'), head.indexOf('Admin'), head.indexOf('GPS')].forEach(function (c) { var k = keep.indexOf(c); if (k >= 0) o.ro.push(k); });
     }
     out.push(o);
   });
@@ -688,7 +692,7 @@ function bunka_(b) {
   if (sh.getName() === SHEET_RECORDS && (col === COL_ID || col === COL_DOC)) return { ok: false, error: 'readonly' };
   if (sh.getName() === SHEET_DRIVERS && b.owner !== true) {
     var hn = norm_(sh.getRange(1, col).getDisplayValue());
-    if (hn === 'pin' || hn === 'admin') return { ok: false, error: 'readonly' };   // PIN a Admin mění jen majitel
+    if (hn === 'pin' || hn === 'admin' || hn === 'gps') return { ok: false, error: 'readonly' };   // PIN a Admin mění jen majitel
   }
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
