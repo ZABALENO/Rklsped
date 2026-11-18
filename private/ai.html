@@ -586,7 +586,7 @@
 
   // agent vs. ručně: pozice včetně přeprav; součty od dne nasazení agenta (Západ 1 vč. základu)
   const AM = v => ({ a: (v.pA || 0) + (v.tA || 0), m: (v.pM || 0) + (v.tM || 0) });
-  let agOrders = 0, barMode = 'day', weekOff = 0, dayOff = 0, dayTouched = false, kindMode = 'ord', sortKey = 'tot', sortDir = -1;
+  let agOrders = 0, hdrTot = null, barMode = 'day', weekOff = 0, dayOff = 0, dayTouched = false, kindMode = 'ord', sortKey = 'tot', sortDir = -1;
   const DOW = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
   const dayLbl = off => { const d = isoAdd(today(), -off), w = DOW[new Date(d + 'T12:00:00Z').getUTCDay()]; return (off === 0 ? 'Dnes' : off === 1 ? 'Včera' : w.charAt(0).toUpperCase() + w.slice(1)) + ' · ' + fmtD(d); };
   const isoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -614,6 +614,8 @@
         x.a = x.oA + x.tA; x.m = x.oM + x.tM;
         const q = S.rels.find(r => r.key === x.key).today; x.ta = ord ? q.pA : q.tA; x.tm = ord ? q.pM : q.tM;
       });
+      agOrders = items.reduce((t, x) => t + x.a, 0);   // „zapsal agent“ podle zvoleného tlačítka: jen objednávky / jen přepravy / obojí
+      hdrTot = kindMode === 'all' ? null : items.reduce((t, x) => t + x.a + x.m, 0);
       for (let i = items.length - 1; i >= 0; i--) if (items[i].a + items[i].m + (kindMode === 'all' ? (items[i].xA || 0) + (items[i].xM || 0) : 0) <= 0) items.splice(i, 1);
     }
     { const tot = x => x.a + x.m + (kindMode === 'all' ? (x.xA || 0) + (x.xM || 0) : 0), pc = x => x.a + x.m ? x.a / (x.a + x.m) : -1;
@@ -866,7 +868,7 @@
     const wt = $('weekTgl'); wt.hidden = barMode !== 'week';
     if (barMode === 'week') wt.innerHTML = WEEK_NAMES.map((n, i) => { const r = weekRange(i); return `<button type="button" data-w="${i}" class="${i === weekOff ? 'on' : ''}" title="${fmtD(r[0])} – ${fmtD(r[1])}">${n}</button>`; }).join('');
     document.querySelectorAll('.agord').forEach(e => e.remove());
-    { const host = barMode === 'day' ? dn : barMode === 'week' ? wt : $('barTgl'); const sp = document.createElement('span'); sp.className = 'agord'; sp.title = 'Objednávky + přepravy zadané agentem ve zvoleném období'; { const P0 = pieData(), tt = P0 ? P0.items.reduce((t, x) => t + x.a + x.m, 0) : null; sp.innerHTML = (tt != null ? '<b class="agt">' + nf.format(tt) + '</b><small class="agt">celkem</small><span class="agsep">·</span><small>z toho zapsal agent</small>' : '<small>obj. + přep. agent</small>') + '<b>' + nf.format(agOrders) + '</b>'; } host.appendChild(sp); }
+    { const host = barMode === 'day' ? dn : barMode === 'week' ? wt : $('barTgl'); const sp = document.createElement('span'); sp.className = 'agord'; sp.title = kindMode === 'ord' ? 'Objednávky zadané agentem ve zvoleném období' : kindMode === 'trp' ? 'Přepravy zadané agentem ve zvoleném období' : 'Objednávky + přepravy zadané agentem ve zvoleném období'; { const P0 = pieData(), tt = hdrTot != null ? hdrTot : (P0 ? P0.items.reduce((t, x) => t + x.a + x.m, 0) : null); sp.innerHTML = (tt != null ? '<b class="agt">' + nf.format(tt) + '</b><small class="agt">celkem</small><span class="agsep">·</span><small>z toho zapsal agent</small>' : '<small>obj. + přep. agent</small>') + '<b>' + nf.format(agOrders) + '</b>'; } host.appendChild(sp); }
     const use5 = {}; { const S5 = R.split; if (S5 && S5.days) { const t0 = today(), wm = {}; S5.days.forEach(d => { wm[d.date] = d.wd; }); const first = S5.days.reduce((m, d) => (d.date < m ? d.date : m), t0), wds = []; let dd = isoAdd(t0, -1);
       for (let g = 0; g < 40 && wds.length < 5; g++, dd = isoAdd(dd, -1)) { const dow = new Date(dd + 'T12:00:00Z').getUTCDay(); if (dow === 0 || dow === 6 || wm[dd] === false) continue; wds.push(dd); }
       if (wds.length) { const from = wds[wds.length - 1], to = wds[0]; S5.days.forEach(d => { if (d.date >= from && d.date <= to) for (const k in d.rels) { const q = d.rels[k], z = use5[k] || (use5[k] = { a: 0, m: 0 }); z.a += q.pA || 0; z.m += q.pM || 0; } }); use5.$n = wds.length; } } }
