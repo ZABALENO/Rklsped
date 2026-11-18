@@ -5,12 +5,10 @@ info:
   description: |
     Jen pro čtení. Aktuální polohy vozidel, historie jízd (souhrny, zastávky, jízdy, body trasy)
     a trasa přepravy s odhadem příjezdu. Data pocházejí z GPS systému EchoTrack.
-    Přihlášení klíčem: hlavička `X-API-Key: <klíč>` nebo `Authorization: Bearer <klíč>`.
+    Otevřené, bez přihlášení a bez klíče (limit 120 požadavků/min na IP, historie 12/min; CORS povoleno).
+    Pokud RKL rozhraní zamkne klíčem, posílá se hlavička `X-API-Key: <klíč>` nebo `Authorization: Bearer <klíč>`.
 servers:
   - url: https://dashboard.airkl.cz
-security:
-  - ApiKey: []
-  - Bearer: []
 paths:
   /api/polohy:
     get:
@@ -21,8 +19,22 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Positions" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { description: Příliš mnoho požadavků }
         "502": { description: GPS systém je nedostupný }
+  /api/polohy/profily:
+    get:
+      summary: Šablony (profily) vozidel – seznamy SPZ, pravidla barev, nastavení štítku a mezí teploty
+      responses:
+        "200":
+          description: Seznam šablon
+          content: { application/json: { schema: { type: object, properties: { profiles: { type: array, items: { type: object } }, editable: { type: boolean } } } } }
+  /api/polohy/teplota-hlidani:
+    get:
+      summary: Aktivní hlídání teploty u SPZ (cíl, odchylka, platnost)
+      responses:
+        "200":
+          description: Seznam hlídání
+          content: { application/json: { schema: { type: object, properties: { watch: { type: array, items: { type: object, properties: { spz: { type: string }, target: { type: number }, tol: { type: number }, until: { type: string } } } } } } } }
   /api/polohy/historie:
     get:
       summary: Historie jednoho vozidla (podklad pro reporty)
@@ -41,7 +53,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/History" }
         "400": { description: Neplatné datum, vozidlo nebo období delší než 32 dní }
-        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { description: Příliš mnoho požadavků }
         "502": { description: Historii se nepodařilo načíst }
   /api/polohy/trasa:
     get:
@@ -62,15 +74,8 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Route" }
         "400": { description: Chybí nebo je neplatný parametr p }
-        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { description: Příliš mnoho požadavků }
 components:
-  securitySchemes:
-    ApiKey: { type: apiKey, in: header, name: X-API-Key }
-    Bearer: { type: http, scheme: bearer }
-  responses:
-    Unauthorized:
-      description: Chybí nebo je špatný klíč
-      content: { application/json: { schema: { type: object, properties: { error: { type: string } } } } }
   schemas:
     Car:
       type: object
@@ -88,6 +93,22 @@ components:
         place: { type: string, description: "nejbližší místo (nepovinné)" }
         country: { type: string, description: "stát (nepovinné)" }
         odometer: { type: number, description: "tachometr v km (nepovinné)" }
+        stopMin: { type: integer, description: "jak dlouho vozidlo stojí (min)" }
+        stopKnown: { type: boolean, description: "false = stání začalo před spuštěním sledování (údaj je minimální)" }
+        still: { type: object, description: "minuty beze změny polohy o víc než 50/100/200/500/1000 m", additionalProperties: { type: integer } }
+        temp: { $ref: "#/components/schemas/Reading" }
+        fuel: { $ref: "#/components/schemas/Reading" }
+    Reading:
+      type: object
+      nullable: true
+      description: "Hodnota z reportu (teplota v °C / palivo v litrech); jen u vozidel zapnutých v šabloně nebo s hlídáním. Zapisuje se zhruba po 30 min."
+      properties:
+        v: { type: number, nullable: true }
+        at: { type: string, nullable: true, description: "čas hodnoty (ISO, UTC)" }
+        min: { type: number }
+        max: { type: number }
+        n: { type: integer }
+        upd: { type: string }
     Positions:
       type: object
       properties:
