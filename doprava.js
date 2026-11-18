@@ -252,8 +252,8 @@ app.get('/api/agents', async (req, res) => {
   for (const r of sheet.rows) {
     const m = String(r.prepr || '').match(/[A-Za-z]{2}\s*\/\s*\d{2}[A-Za-z0-9]*/); if (!m || !r.date) continue;
     const no = m[0].replace(/\s+/g, '').toUpperCase(), pf = Object.keys(TRIP_PREFIX).find(q => no.startsWith(q));   // známá předpona určuje relaci; ostatní podle sloupce Relace
-    const rk = pf ? TRIP_PREFIX[pf] : nk(r.relace); if (!rk) continue;   // předpony PV/261–263 = přepravy zadané agentem, vše ostatní = ručně (podle sloupce Relace) if (HIDDEN.has(rk) || seenTr.has(no)) continue; seenTr.add(no);
-    const dd = weekendToFriday(r.date), o = (tripsSheet[rk] = tripsSheet[rk] || {}), q = (o[dd] = o[dd] || { a: 0, m: 0 }); if (pf) q.a++; else q.m++;
+    const rk = pf ? TRIP_PREFIX[pf] : nk(r.relace); if (!rk) continue; if (HIDDEN.has(rk) || seenTr.has(no)) continue; seenTr.add(no);
+    const dd = weekendToFriday(r.date), o = (tripsSheet[rk] = tripsSheet[rk] || {}); o[dd] = (o[dd] || 0) + 1;
   }
   const sheetTexts = {};
   for (const t of sheet.texts || []) if (t.text && !HIDDEN.has(nk(t.name))) sheetTexts[nk(t.name)] = t.text;

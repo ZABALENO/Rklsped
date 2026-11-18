@@ -639,8 +639,8 @@
       let sub = '';
       if (sub2) {
         const y2 = y + h + 4, h2 = 9, A2 = x.xA || 0, M2 = x.xM || 0, tt = A2 + M2, pc2 = tt ? Math.round(100 * A2 / tt) : 0, ty = y2 + 11;
-        const TS = (R.tripsSheet || {})[x.key] || {}; let tsA = 0, tsM = 0; for (const dk in TS) if (barMode === 'all' || (barMode === 'day' ? dk === isoAdd(today(), -dayOff) : (wk && dk >= wk[0] && dk <= wk[1]))) { tsA += TS[dk].a || 0; tsM += TS[dk].m || 0; }
-        sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="9.5" letter-spacing=".4"><title>Podle sloupce Přeprava v tabulce: agent (PV/261–263) ${tsA}, ručně ${tsM}</title>přepravy · tab. ${nf.format(tsA)} / ${nf.format(tsM)}</text>`;
+        const TS = (R.tripsSheet || {})[x.key] || {}; let tsN = 0; for (const dk in TS) if (barMode === 'all' || (barMode === 'day' ? dk === isoAdd(today(), -dayOff) : (wk && dk >= wk[0] && dk <= wk[1]))) tsN += TS[dk];
+        sub = `<text x="${L - 8}" y="${ty}" text-anchor="end" fill="#8fa3c8" font-family="Inter" font-size="9.5" letter-spacing=".4"><title>Přepravy s číslem ve sloupci Přeprava v tabulce: ${tsN}</title>přepravy · tab. ${nf.format(tsN)}</text>`;
         if (A2) sub += `<rect x="${L}" y="${y2}" width="${Math.max(k * A2, 2)}" height="${h2}" fill="${tierBar(pc2)}" opacity=".9"><title>${esc(x.name)}: agent – přepravy ${nf.format(A2)}</title></rect>`;
         if (M2) sub += `<rect x="${L + k * A2}" y="${y2}" width="${Math.max(k * M2, 2)}" height="${h2}" fill="url(#pd)" stroke="#8d98ad" stroke-dasharray="3 2"><title>${esc(x.name)}: ručně – přepravy ${nf.format(M2)}</title></rect>`;
         sub += `<text x="${BX + 52}" y="${ty}" text-anchor="end" class="${tier(pc2)[0]}" fill="${tier(pc2)[1]}" font-family="Inter" font-size="13" font-weight="800">${nf.format(A2)}</text><text x="${BX + 60}" y="${ty}" class="mn" fill="#b4bed2" font-family="Inter" font-size="13" font-weight="800">${nf.format(M2)}</text><text x="${W}" y="${ty}" text-anchor="end" class="${tier(pc2)[0]}" fill="${tier(pc2)[1]}" font-family="Inter" font-size="13" font-weight="800">${tt ? pc2 + ' %' : ''}</text>`;
