@@ -614,7 +614,7 @@
         x.a = x.oA + x.tA; x.m = x.oM + x.tM;
         const q = S.rels.find(r => r.key === x.key).today; x.ta = ord ? q.pA : q.tA; x.tm = ord ? q.pM : q.tM;
       });
-      agOrders = items.reduce((t, x) => t + x.a, 0);   // „zapsal agent“ podle zvoleného tlačítka: jen objednávky / jen přepravy / obojí
+      agOrders = items.reduce((t, x) => t + x.a + (kindMode === 'all' ? (x.xA || 0) : 0), 0);   // „zapsal agent“ podle zvoleného tlačítka: jen objednávky / jen přepravy / obojí
       hdrTot = kindMode === 'all' ? null : items.reduce((t, x) => t + x.a + x.m, 0);
       for (let i = items.length - 1; i >= 0; i--) if (items[i].a + items[i].m + (kindMode === 'all' ? (items[i].xA || 0) + (items[i].xM || 0) : 0) <= 0) items.splice(i, 1);
     }
