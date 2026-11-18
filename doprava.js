@@ -246,6 +246,13 @@ app.get('/api/agents', async (req, res) => {
   const pend = {};
   for (const r of sheet.rows) if (r.date === pragueToday() && r.relace && /\/\d{2}[A-Za-z]/.test((r.order || '') + ' ' + (r.prepr || ''))) pend[nk(r.relace)] = (pend[nk(r.relace)] || 0) + 1;
   for (const r of relations) r.pending = pend[r.key] || 0;
+  // přepravy podle čísel ve sloupci „Přeprava“ (PV/263, PZ/261…): každé unikátní číslo = 1 přeprava, po relaci a dni (datum řádku; víkend → pátek)
+  const tripsSheet = {}, seenTr = new Set();
+  for (const r of sheet.rows) {
+    const m = String(r.prepr || '').match(/[A-Za-z]{2}\s*\/\s*\d{2}[A-Za-z0-9]*/); if (!m || !r.relace || !r.date) continue;
+    const rk = nk(r.relace), no = m[0].replace(/\s+/g, '').toUpperCase(); if (HIDDEN.has(rk) || seenTr.has(no)) continue; seenTr.add(no);
+    const dd = weekendToFriday(r.date), o = (tripsSheet[rk] = tripsSheet[rk] || {}); o[dd] = (o[dd] || 0) + 1;
+  }
   const sheetTexts = {};
   for (const t of sheet.texts || []) if (t.text && !HIDDEN.has(nk(t.name))) sheetTexts[nk(t.name)] = t.text;
   const adj = store.mem.cfg.adj, today = pragueToday();
@@ -323,7 +330,7 @@ app.get('/api/agents', async (req, res) => {
       let n = 0; for (let d = new Date(f + 'T00:00:00Z'); d.toISOString().slice(0, 10) <= today; d = new Date(d.getTime() + 864e5)) if (isWorkday(d)) n++;
       return n;
     })(),
-    sheetKeys: Object.keys(sheetTexts), hasTexts: !!sheet.texts,
+    sheetKeys: Object.keys(sheetTexts), hasTexts: !!sheet.texts, tripsSheet,
   });
 });
 
