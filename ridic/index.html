@@ -1267,14 +1267,15 @@
       const l = byDay[d], sum = l.reduce((a, x) => a + x.n, 0);
       return '<div style="padding:8px 0;border-bottom:1px solid rgba(160,190,250,.18)"><b>' + esc(fmtD(d)) + '</b> <small style="opacity:.75">· celkem ' + sum + '</small><br><small>' + l.sort((a, b) => b.n - a.n).map(x => esc(String(x.ridic).replace(/\s+/g, ' ')) + ' <b>' + x.n + '</b>').join(' · ') + '</small></div>';
     }).join('') || '<div class="empty">Zatím žádné zápisy.</div>';
-    $('admList').innerHTML = rows.map((x, i) => '<label class="pr-chk" style="min-height:48px;align-items:center;gap:10px;border-bottom:1px solid rgba(160,190,250,.18)"><input type="checkbox" data-i="' + i + '"' + (x.admin ? ' checked' : '') + '><span style="flex:1;min-width:0">' + esc(x.jmeno + ' ' + x.prijmeni) + (x.aktivni ? '' : ' <i style="opacity:.6">(neaktivní)</i>') + '<br><small style="opacity:.75">PIN: <b>' + esc(x.pin || '–') + '</b> · přeprav: <b>' + x.pocet + '</b></small></span></label>').join('');
+    $('admList').innerHTML = rows.map((x, i) => '<div style="display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(160,190,250,.18)"><label class="pr-chk" style="flex:1;min-width:0;min-height:48px;align-items:center;gap:10px"><input type="checkbox" data-i="' + i + '"' + (x.admin ? ' checked' : '') + '><span style="flex:1;min-width:0">' + esc(x.jmeno + ' ' + x.prijmeni) + (x.aktivni ? '' : ' <i style="opacity:.6">(neaktivní)</i>') + '<br><small style="opacity:.75">PIN: <b>' + esc(x.pin || '–') + '</b> · přeprav: <b>' + x.pocet + '</b></small></span></label><label class="pr-chk" style="flex:none;min-height:48px;align-items:center;gap:6px;padding-left:8px;border-left:1px solid rgba(160,190,250,.18)"><input type="checkbox" data-g="' + i + '"' + (x.gps ? ' checked' : '') + '><small style="opacity:.85">GPS</small></label></div>').join('');
   }
   $('admList').addEventListener('change', async (e) => {
-    const cb = e.target.closest('input[data-i]'); if (!cb) return;
-    const x = $('admList')._rows[+cb.dataset.i], msg = $('admMsg'); cb.disabled = true; clearMsg(msg);
-    const r = await api('/api/ridic/admini', { jmeno: x.jmeno, prijmeni: x.prijmeni, admin: cb.checked });
+    const cb = e.target.closest('input[data-i],input[data-g]'); if (!cb) return;
+    const gps = cb.dataset.g !== undefined;
+    const x = $('admList')._rows[+(gps ? cb.dataset.g : cb.dataset.i)], msg = $('admMsg'); cb.disabled = true; clearMsg(msg);
+    const r = await api('/api/ridic/admini', { jmeno: x.jmeno, prijmeni: x.prijmeni, [gps ? 'gps' : 'admin']: cb.checked });
     cb.disabled = false;
-    if (r.data && r.data.ok) showMsg(msg, x.jmeno + ' ' + x.prijmeni + (cb.checked ? ': ikonka peněz zapnuta.' : ': ikonka peněz vypnuta.'), 'ok');
+    if (r.data && r.data.ok) showMsg(msg, x.jmeno + ' ' + x.prijmeni + (gps ? (cb.checked ? ': GPS povoleno.' : ': GPS zakázáno.') : (cb.checked ? ': ikonka peněz zapnuta.' : ': ikonka peněz vypnuta.')), 'ok');
     else { cb.checked = !cb.checked; showMsg(msg, 'Změnu se nepodařilo uložit.', 'err'); }
   });
   $('prDrv').addEventListener('change', prRender); $('prMiss').addEventListener('change', prRender); $('prSort').addEventListener('change', prRender);

@@ -605,7 +605,7 @@ function adminList_(b) {
     var p = key.split('|'); return { den: p[0], ridic: p[1], n: perDay[key] };
   });
   return { ok: true, dny: dny, rows: drivers_().map(function (d) {
-    return { jmeno: String(d.jmeno).trim(), prijmeni: String(d.prijmeni).trim(), aktivni: d.aktivni, admin: !!d.admin, pin: d.pin, pocet: cnt[norm_(d.jmeno + ' ' + d.prijmeni)] || 0 };
+    return { jmeno: String(d.jmeno).trim(), prijmeni: String(d.prijmeni).trim(), aktivni: d.aktivni, admin: !!d.admin, gps: !!d.gps, pin: d.pin, pocet: cnt[norm_(d.jmeno + ' ' + d.prijmeni)] || 0 };
   }) };
 }
 
@@ -615,15 +615,16 @@ function adminSet_(b) {
   lock.waitLock(20000);
   try {
     var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_DRIVERS);
+    var fname = b.field === 'gps' ? 'GPS' : 'Admin', fval = b.field === 'gps' ? b.value === true : (b.value === undefined ? b.admin === true : b.value === true);
     var head = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 8)).getDisplayValues()[0];
     var col = 0;
-    for (var c = 7; c < head.length; c++) if (norm_(head[c]) === 'admin') { col = c + 1; break; }
-    if (!col) { col = 8; sh.getRange(1, col).setValue('Admin'); }
+    for (var c = 7; c < head.length; c++) if (norm_(head[c]) === norm_(fname)) { col = c + 1; break; }
+    if (!col) { col = Math.max(head.length, 8) + (head.length >= 8 && String(head[head.length - 1]).trim() !== '' ? 1 : 0); if (fname === 'Admin') col = 8; sh.getRange(1, col).setValue(fname); }
     var rows = sh.getDataRange().getDisplayValues();
     var want = norm_(b.jmeno + ' ' + b.prijmeni);
     for (var i = 1; i < rows.length; i++) {
       if (norm_(rows[i][0] + ' ' + rows[i][1]) === want) {
-        sh.getRange(i + 1, col).setValue(b.admin === true ? 'ANO' : '');
+        sh.getRange(i + 1, col).setValue(fval ? 'ANO' : '');
         SpreadsheetApp.flush();
         return { ok: true };
       }
