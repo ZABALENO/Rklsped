@@ -94,7 +94,8 @@ const nk = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const PRETTY = { zapad: 'Západ', vychod: 'Východ', vnitro: 'Vnitro', jih: 'Jih' };
 const prettyName = raw => String(raw || '').trim().split(/\s+/).map(w => PRETTY[nk(w)] || (w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
 const tripBase = n => { const m = nk(n).match(/^(.*?)\s+prepravy$/); return m ? m[1] : null; };   // sloupec „Západ 1 Přepravy“ = počet přeprav relace Západ 1
-const HIDDEN = new Set(['zapad 5']);   // relace skryté všude v dashboardech
+const HIDDEN = new Set(['zapad 5']);
+const TRIP_PREFIX = { 'PV/263': 'vnitro 3', 'PV/262': 'vnitro 2', 'PV/261': 'vnitro 1' };   // předpona čísla přepravy ve sloupci Přeprava → relace   // relace skryté všude v dashboardech
 const AGENT_ORDER = ['zapad 1', 'zapad 2', 'zapad 3', 'zapad 4', 'vnitro 1', 'vnitro 2', 'vnitro 3', 'vnitro 4', 'jih', 'vychod'];
 async function updateAgents(counts) {
   if (!counts) return;
@@ -249,8 +250,9 @@ app.get('/api/agents', async (req, res) => {
   // přepravy podle čísel ve sloupci „Přeprava“ (PV/263, PZ/261…): každé unikátní číslo = 1 přeprava, po relaci a dni (datum řádku; víkend → pátek)
   const tripsSheet = {}, seenTr = new Set();
   for (const r of sheet.rows) {
-    const m = String(r.prepr || '').match(/[A-Za-z]{2}\s*\/\s*\d{2}[A-Za-z0-9]*/); if (!m || !r.relace || !r.date) continue;
-    const rk = nk(r.relace), no = m[0].replace(/\s+/g, '').toUpperCase(); if (HIDDEN.has(rk) || seenTr.has(no)) continue; seenTr.add(no);
+    const m = String(r.prepr || '').match(/[A-Za-z]{2}\s*\/\s*\d{2}[A-Za-z0-9]*/); if (!m || !r.date) continue;
+    const no = m[0].replace(/\s+/g, '').toUpperCase(), pf = Object.keys(TRIP_PREFIX).find(q => no.startsWith(q));   // známá předpona určuje relaci; ostatní podle sloupce Relace
+    const rk = pf ? TRIP_PREFIX[pf] : nk(r.relace); if (!rk) continue; if (HIDDEN.has(rk) || seenTr.has(no)) continue; seenTr.add(no);
     const dd = weekendToFriday(r.date), o = (tripsSheet[rk] = tripsSheet[rk] || {}); o[dd] = (o[dd] || 0) + 1;
   }
   const sheetTexts = {};
