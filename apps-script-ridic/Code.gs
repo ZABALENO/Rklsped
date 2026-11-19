@@ -416,13 +416,21 @@ function admin_(b) {
 }
 
 // všechny záznamy všech řidičů (nejnovější první) včetně tun a cen
+// sloupec „Příplatky“ je hned za sloupcem ID záznamu; víkendový příplatek = 500
+var VIKEND_PRIPLATEK = 500;
+function priplCol_() { return COL_ID + 1; }
+function priplEnsure_(sh) {
+  if (sh.getMaxColumns() < priplCol_()) sh.insertColumnsAfter(sh.getMaxColumns(), priplCol_() - sh.getMaxColumns());
+  var h = sh.getRange(1, priplCol_());
+  if (String(h.getDisplayValue()).trim() === '') h.setValue('Příplatky').setFontWeight('bold');
+}
 function prices_list_(b) {
   if (!admin_(b)) return { ok: false, error: 'forbidden' };
   var sh = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
   var last = sh.getLastRow();
   if (last < 2) return { ok: true, rows: [] };
   var start = Math.max(2, last - SCAN_ROWS + 1);
-  var data = sh.getRange(start, 1, last - start + 1, COL_ID).getDisplayValues();
+  var data = sh.getRange(start, 1, last - start + 1, Math.min(COL_ID + 1, sh.getMaxColumns())).getDisplayValues();
   var rts = sh.getRange(start, COL_DOC, last - start + 1, 1).getRichTextValues();
   var fms = sh.getRange(start, COL_DOC, last - start + 1, 1).getFormulas();
   var zp = zpracMap_();
@@ -437,7 +445,7 @@ function prices_list_(b) {
       id: r[COL_ID - 1], zapsano: isoDt_(r[O]), ridic: r[1+O], dopravce: r[2+O], spz: r[3+O],
       datumNakladky: isoDate_(r[5+O]), datumVykladky: isoDate_(r[7+O]),
       mistoNakladky: r[9+O], mistoVykladky: r[10+O], zakaznik: r[11+O], druh: r[12+O],
-      jizd: jz, tuny: tuny, ceny: ceny, smeny: smeny, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length, zprac: zp[r[COL_ID - 1]] ? 1 : 0
+      jizd: jz, tuny: tuny, ceny: ceny, smeny: smeny, vikend: Number(num_(r[COL_ID] || '')) === VIKEND_PRIPLATEK, poznamka: r[COL_NOTE - 1], docs: docUrls_(rts[i][0], fms[i][0]).length, zprac: zp[r[COL_ID - 1]] ? 1 : 0
     });
   }
   return { ok: true, rows: rows };
@@ -466,6 +474,12 @@ function prices_set_(b) {
       var v = ceny[k], c = sh.getRange(row, colTuny_(k) + 1);
       if (v === null || v === undefined || v === '') c.clearContent();
       else c.setNumberFormat('#,##0.00').setValue(Number(v));
+    }
+    if (b.vikend === true || b.vikend === false) {   // víkendový příplatek: zaškrtnuto = 500, odškrtnuto = smaže jen těch 500
+      priplEnsure_(sh);
+      var pc = sh.getRange(row, priplCol_());
+      if (b.vikend) pc.setNumberFormat('0').setValue(VIKEND_PRIPLATEK);
+      else if (Number(num_(pc.getDisplayValue())) === VIKEND_PRIPLATEK) pc.clearContent();
     }
     return { ok: true, row: row };
   } finally {

@@ -443,6 +443,9 @@
   .pr-docs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .pr-doc{flex:1 1 120px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border:1px solid #9db8f5;color:#e3eaf9;text-decoration:none;font:700 15px "IBM Plex Sans",system-ui,sans-serif}
   html.light .pr-doc{color:#1a2a5c;border-color:rgba(47,86,196,.6)}
+  .pr-vk{display:flex;align-items:center;gap:10px;margin:10px 0 2px;min-height:44px;cursor:pointer;font-size:15px}
+  .pr-vk input{-webkit-appearance:checkbox!important;appearance:auto!important;width:24px!important;height:24px!important;min-height:0!important;padding:0!important;flex:none;accent-color:#5b83f0}
+  .pr-vk small{opacity:.7}
   .pr-sv{margin-top:10px;width:100%;min-height:46px;background:#2c4fc2;color:#fff;border:1px solid #9db8f5;font:700 15px "IBM Plex Sans",system-ui,sans-serif;letter-spacing:1px;cursor:pointer}
   .pr-sv:disabled{opacity:.45;cursor:default}
   .pr-st{margin-top:6px;font-size:14px;min-height:18px;color:var(--ok)}.pr-st.err{color:var(--err)}
@@ -1056,6 +1059,7 @@
       '<div class="rt" style="margin:4px 0 2px;font-size:16px;font-weight:700;overflow-wrap:anywhere">' + esc(x.mistoNakladky) + ' → ' + esc(x.mistoVykladky) + '</div>' +
       '<div class="sb" style="color:#aeb9d4;font-size:14px">' + esc(x.zakaznik) + ' · ' + esc(x.druh) + (x.poznamka ? ' · ' + esc(x.poznamka) : '') + '</div>' +
       x.tuny.map((t, k) => '<div class="pr-row"><b>' + (k + 1) + '.</b><span class="pr-sm">' + smTag((x.smeny || [])[k]) + '</span><div class="pr-t">' + (t ? esc(prNum(t)) + ' t' : '– t') + '</div><div class="pr-in"><input class="pc" type="text" inputmode="decimal" autocomplete="off" placeholder="cena" data-k="' + k + '" value="' + esc(prNum(x.ceny[k])) + '"><span>Kč</span></div></div>').join('') +
+      '<label class="pr-vk"><input type="checkbox" class="vk"' + (x.vikend ? ' checked' : '') + '><span>Víkendový příplatek <small>(500 Kč)</small></span></label>' +
       (x.docs ? '<div class="pr-docs">' + docLinksAdm(x.id, x.docs) + '</div>' : '') + '<button class="pr-zp" type="button" aria-pressed="' + (x.zprac ? 'true' : 'false') + '">' + (x.zprac ? '✓ Zpracováno (zrušit)' : '✓ Označit jako zpracováno') + '</button>' + '<button class="pr-sv" type="button" disabled>Uložit</button><button class="pr-dl" type="button">Smazat přepravu</button><div class="pr-st"></div></div>';
   }
   function prRender() {
@@ -1279,6 +1283,10 @@
     else { cb.checked = !cb.checked; showMsg(msg, 'Změnu se nepodařilo uložit.', 'err'); }
   });
   $('prDrv').addEventListener('change', prRender); $('prMiss').addEventListener('change', prRender); $('prSort').addEventListener('change', prRender);
+  $('prList').addEventListener('change', (e) => {
+    if (!e.target.classList.contains('vk')) return;
+    const c = e.target.closest('.pr-card'); c.querySelector('.pr-sv').disabled = false; const st = c.querySelector('.pr-st'); st.textContent = ''; st.className = 'pr-st';
+  });
   $('prList').addEventListener('input', (e) => {
     if (!e.target.classList.contains('pc')) return;
     const c = e.target.closest('.pr-card'); c.querySelector('.pr-sv').disabled = false; const st = c.querySelector('.pr-st'); st.textContent = ''; st.className = 'pr-st';
@@ -1290,8 +1298,10 @@
     if (ceny.some(v => v !== '' && !/^\d+([.,]\d{1,2})?$/.test(v.replace(/\s/g, '')))) { st.className = 'pr-st err'; st.textContent = 'Zadejte cenu jako číslo.'; return; }
     b.disabled = true; st.className = 'pr-st'; st.textContent = 'Ukládám…';
     try {
-      const r = await api('/api/ridic/ceny', { id: x.id, ceny });
+      const vikend = c.querySelector('input.vk').checked;
+      const r = await api('/api/ridic/ceny', { id: x.id, ceny, vikend });
       if (r.data && r.data.ok) {
+        x.vikend = vikend;
         x.ceny = ceny.map(v => v.replace(/\s/g, '').replace(',', '.'));
         c.classList.toggle('miss', x.ceny.some(v => v === '')); c.classList.toggle('done', !x.ceny.some(v => v === ''));
         st.textContent = 'Uloženo ✓';
