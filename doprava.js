@@ -1,3 +1,4 @@
+process.env.NO_SHEET_STYLES = '1';   // barvy buněk (červené řádky Stavby) tady nejsou potřeba – šetří paměť
 // RKL Doprava – přehled vlastních přeprav RKL na dnešní den (rkldoprava.onrender.com)
 // Sdílí kód, heslo, pozadí i databázi (Neon) s RKL Spedice, data má ve vlastní tabulce kv_doprava.
 // Tabulka se nikam neukládá – server ji jen stahuje z veřejného odkazu.
@@ -228,7 +229,7 @@ app.post('/api/agents/plan', async (req, res) => {
   res.json({ ok: true });
 });
 app.get('/api/agents', async (req, res) => {
-  await refreshSheet(false, 8000);   // /ai a /mobil se ptají co 10 s → tabulka se stahuje nejvýše jednou za 8 s (a jen když je některá stránka otevřená)
+  if (sheet.fetchedAt) refreshSheet(false).catch(() => {}); else await refreshSheet(false);   // stránky se ptají co 10 s, ale tabulka se stahuje nejvýše jednou za minutu a odpověď na ni nečeká (jen při prvním načtení)
   const cur = new Map();
   const sheetTrips = {};
   for (const c of sheet.counts || []) {
