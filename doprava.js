@@ -32,10 +32,10 @@ let sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null
 let inflight = null;
 
 /* ---------- tabulka ---------- */
-async function refreshSheet(force) {
+async function refreshSheet(force, ttl) {
   const url = store.mem.cfg.sheet && store.mem.cfg.sheet.url;
   if (!url) { sheet = { rows: [], fetchedAt: null, error: null, sheet: null, columns: null, url: null }; return; }
-  const fresh = sheet.url === url && sheet.fetchedAt && Date.now() - Date.parse(sheet.fetchedAt) < SHEET_TTL;
+  const fresh = sheet.url === url && sheet.fetchedAt && Date.now() - Date.parse(sheet.fetchedAt) < (ttl || SHEET_TTL);
   if (!force && fresh) return;
   if (inflight) return inflight;
   inflight = (async () => {
@@ -228,7 +228,7 @@ app.post('/api/agents/plan', async (req, res) => {
   res.json({ ok: true });
 });
 app.get('/api/agents', async (req, res) => {
-  await refreshSheet(false);
+  await refreshSheet(false, 8000);   // /ai a /mobil se ptají co 10 s → tabulka se stahuje nejvýše jednou za 8 s (a jen když je některá stránka otevřená)
   const cur = new Map();
   const sheetTrips = {};
   for (const c of sheet.counts || []) {

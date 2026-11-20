@@ -229,8 +229,8 @@
     try {
       const r = await fetch('/api/agents'); if (r.status === 401) { location.href = '/ai'; return; }
       cache = await r.json(); paint();
-      $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' · automaticky každých 30 minut';
-    } catch (e) { $('upd').textContent = 'Nepodařilo se načíst, zkusím to znovu za 30 minut.'; }
+      $('upd').textContent = 'Aktualizováno ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' · automaticky každých 10 s';
+    } catch (e) { $('upd').textContent = 'Nepodařilo se načíst, zkusím to znovu za 10 s.'; }
   }
   let cache = null;
 
@@ -285,7 +285,7 @@
   $('kt').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; kind = b.dataset.k; document.querySelectorAll('#kt button').forEach(x => x.classList.toggle('on', x === b)); if (last) dayBars(...last); });
   $('pt').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if (!b) return; per = b.dataset.p; document.querySelectorAll('#pt button').forEach(x => x.classList.toggle('on', x === b)); if (last) dayBars(...last); });
   $('refBtn').addEventListener('click', async () => { const b = $('refBtn'); b.classList.add('spin'); $('upd').textContent = 'obnovuji…'; try { await load(); } finally { setTimeout(() => b.classList.remove('spin'), 400); } });
-  load(); setInterval(load, 30 * 60 * 1000);
+  load(); setInterval(load, 10000);
 })();
 </script>
 <script>

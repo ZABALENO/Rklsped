@@ -1128,7 +1128,7 @@
   $('kindTgl').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (b) { kindMode = b.dataset.k; render(); } });
   $('dayNav').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if (b && !b.disabled) { dayTouched = true; dayOff = Math.max(0, Math.min(7, dayOff + +b.dataset.d)); render(); } });
   $('weekTgl').addEventListener('click', e => { const b = e.target.closest('button[data-w]'); if (b) { weekOff = +b.dataset.w; render(); } });
-  load(); setInterval(load, 60000);
+  load(); setInterval(load, 10000);
 
   // ---------- Aktuálně agentizujeme ----------
   (() => {
