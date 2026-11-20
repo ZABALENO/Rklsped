@@ -77,6 +77,8 @@
   .dk-t tr.dk-gap td{background:#13245f!important;color:#fff;font-weight:700;padding:10px 12px;border-top:18px solid transparent;border-bottom:2px solid var(--c);max-width:none;position:sticky;left:0}
   .dk-t tr.dk-gap:first-child td,.dk-t tbody tr.dk-gap:first-child td{border-top:0}
   .dk-t tr.dk-gap small{opacity:.8;font-weight:400}
+  .dk-t tr.dk-end td{box-shadow:inset 0 -3px 0 var(--c)}
+  html.light .dk-t tr.dk-end td{box-shadow:inset 0 -3px 0 #1b46c2}
   html.light .dk-t tr.dk-gap td{background:#dfe8ff!important;color:#0a1438}
   .dk-t td.n{text-align:right;font-variant-numeric:tabular-nums}
   html.light .dk-t{color:#0a1438}html.light .dk-wrap{background:#fff}html.light .dk-t th{background:#dfe8ff;color:#0a1438}html.light .dk-tab{color:#0a1438;border-color:#1b46c2}html.light .dk-tab.on{background:#2b5cff;color:#fff}
@@ -1139,7 +1141,7 @@
       });
     }
     $('dkT').innerHTML = '<thead><tr>' + (sh.meta ? '<th class="zc" title="Zpracováno – lze předat do Lori">✓</th>' : '') + sh.head.map((h, c) => '<th data-c="' + c + '">' + esc(h) + (dkSort.c === c ? (dkSort.d > 0 ? ' ▲' : ' ▼') : '') + '</th>').join('') + '</tr></thead><tbody>' +
-      rows.map((o, ri) => dkDayRow(sh, rows, ri) + '<tr' + (sh.meta && sh.meta[o.i] && sh.meta[o.i].zprac ? ' class="zp"' : '') + '>' + (sh.meta ? '<td class="zc">' + (sh.meta[o.i] && sh.meta[o.i].id ? '<button type="button" class="dk-zp" data-i="' + o.i + '" title="Zpracováno">✓</button>' : '') + '</td>' : '') + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinksAdm(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
+      rows.map((o, ri) => dkDayRow(sh, rows, ri) + '<tr' + (() => { const k = [(sh.meta && sh.meta[o.i] && sh.meta[o.i].zprac) ? 'zp' : '', dkDayEnd(sh, rows, ri) ? 'dk-end' : ''].filter(Boolean).join(' '); return k ? ' class="' + k + '"' : ''; })() + '>' + (sh.meta ? '<td class="zc">' + (sh.meta[o.i] && sh.meta[o.i].id ? '<button type="button" class="dk-zp" data-i="' + o.i + '" title="Zpracováno">✓</button>' : '') + '</td>' : '') + o.r.map((v, c) => (sh.meta && c === sh.docCol && sh.meta[o.i] && sh.meta[o.i].docs && sh.meta[o.i].id) ? '<td class="dk-doc">' + docLinksAdm(sh.meta[o.i].id, sh.meta[o.i].docs) + '</td>' : '<td' + (dkEd(sh, c) ? ' data-i="' + o.i + '" data-c="' + c + '"' : '') + ' class="' + (isNumLike(v) ? 'n ' : '') + (dkEd(sh, c) ? 'ed' : '') + '" title="' + esc(v) + '">' + esc(v) + '</td>').join('') + '</tr>').join('') + '</tbody>';
     $('dkAddBtn').classList.toggle('hidden', !dkAddable()); if (!dkAddable()) $('dkAdd').classList.add('hidden');
     $('dkInfo').textContent = (driver && driver.ceny ? 'Úprava: dvojklik na buňku. ' : '') + 'Řádků: ' + rows.length + (q ? ' z ' + sh.rows.length : '') + (sh.total > sh.rows.length ? ' (zobrazeno posledních ' + sh.rows.length + ' z ' + sh.total + ')' : '');
   }
@@ -1191,6 +1193,13 @@
   $('pcBtn').addEventListener('click', () => setPc(!document.documentElement.classList.contains('pc')));
 
   // v Záznamech vloží před každý nový den (podle Čas zápisu) záhlaví dne, aby bylo vidět, kde začíná další den
+  // za posledním řádkem každého dne (podle Datum nakládky) vyznačí čáru
+  function dkDayEnd(sh, rows, ri) {
+    const dc = sh.head.indexOf('Datum nakládky'); if (dc < 0 || ri >= rows.length - 1) return false;
+    if (dkSort.c >= 0 && dkSort.c !== dc) return false;
+    const day = r => String(r[dc]).trim().slice(0, 10);
+    return day(rows[ri].r) !== day(rows[ri + 1].r);
+  }
   function dkDayRow(sh, rows, ri) {
     const dc = sh.meta ? sh.head.indexOf('Datum nakládky') : -1; if (dc < 0) return '';
     if (dkSort.c >= 0 && dkSort.c !== dc) return '';
