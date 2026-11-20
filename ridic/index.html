@@ -1122,6 +1122,7 @@
   });
   const docLinks = (id, n) => Array.from({ length: n }, (_, k) => '<a class="pr-doc" href="/api/ridic/doklad/' + encodeURIComponent(id) + '?n=' + k + '" target="_blank" rel="noopener">📄 Příloha' + (n > 1 ? ' ' + (k + 1) : '') + '</a>').join('');
   const isNumLike = (v) => /^-?\d+([.,]\d+)?$/.test(String(v).trim());
+  const dkDateCol = sh => { const i = sh.head.indexOf('Datum směny'); return i >= 0 ? i : sh.head.indexOf('Datum nakládky'); };   // sloupec se dnem přepravy (dříve „Datum nakládky“)
   const dkDateKey = v => { const m = /^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(String(v).trim()); return m ? +m[3] * 10000 + +m[2] * 100 + +m[1] : 0; };
   function dkRender() {
     const sh = dkData && dkData[dkSheet]; if (!sh) return;
@@ -1129,7 +1130,7 @@
     const q = $('dkQ').value.trim().toLowerCase();
     let rows = sh.rows.map((r, i) => ({ r, i }));
     if (q) rows = rows.filter(o => o.r.some(v => String(v).toLowerCase().includes(q)));
-    const dcol = sh.meta ? sh.head.indexOf('Datum nakládky') : -1;
+    const dcol = sh.meta ? dkDateCol(sh) : -1;
     if (dkSort.c < 0 && dcol >= 0) {
       rows.sort((a, b) => (dkDateKey(b.r[dcol]) - dkDateKey(a.r[dcol])) || (a.i - b.i));   // výchozí řazení: datum přepravy, nejnovější nahoře
     } else if (dkSort.c >= 0) {
@@ -1195,13 +1196,13 @@
   // v Záznamech vloží před každý nový den (podle Čas zápisu) záhlaví dne, aby bylo vidět, kde začíná další den
   // za posledním řádkem každého dne (podle Datum nakládky) vyznačí čáru
   function dkDayEnd(sh, rows, ri) {
-    const dc = sh.head.indexOf('Datum nakládky'); if (dc < 0 || ri >= rows.length - 1) return false;
+    const dc = dkDateCol(sh); if (dc < 0 || ri >= rows.length - 1) return false;
     if (dkSort.c >= 0 && dkSort.c !== dc) return false;
     const day = r => String(r[dc]).trim().slice(0, 10);
     return day(rows[ri].r) !== day(rows[ri + 1].r);
   }
   function dkDayRow(sh, rows, ri) {
-    const dc = sh.meta ? sh.head.indexOf('Datum nakládky') : -1; if (dc < 0) return '';
+    const dc = sh.meta ? dkDateCol(sh) : -1; if (dc < 0) return '';
     if (dkSort.c >= 0 && dkSort.c !== dc) return '';
     const day = r => String(r[dc]).trim().slice(0, 10);
     const d = day(rows[ri].r);
