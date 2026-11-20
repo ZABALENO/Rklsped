@@ -469,7 +469,7 @@
     <div class="panel kpi"><h3>Všechny pozice dohromady</h3>
       <div class="big" id="total">–</div><div class="lbl">pozic celkem</div><div class="meta" id="kpiMeta"></div>
 </div>
-    <div class="panel pie-p"><div class="bgg" id="pieBg" aria-hidden="true"></div><h3>Podíl dispečinků</h3><div id="pieNav" class="daynav" style="display:flex;justify-content:center;align-items:center;gap:10px;margin:2px 0 6px"></div><div id="pie"></div><div class="legend" id="legend"></div></div>
+    <div class="panel pie-p"><div class="bgg" id="pieBg" aria-hidden="true"></div><h3>Podíl dispečinků</h3><div id="pieNav" class="daynav" style="display:flex;justify-content:center;align-items:center;gap:10px;margin:2px 0 6px"></div><div id="pie"></div><div id="pieAg" style="text-align:right;font-size:12px;color:#5be39b;margin:-4px 4px 6px;letter-spacing:.3px"></div><div class="legend" id="legend"></div></div>
     <div class="panel"><h3>Pozice podle dispečinku: agent vs. ručně</h3><div class="tgl" id="barTgl"><button type="button" data-m="day">Dnes (přírůstek)</button><button type="button" data-m="week">Týdenní</button><button type="button" data-m="all">Od 12. 10. 2026 (celkem)</button></div><div class="tgl" id="kindTgl"><button type="button" data-k="all">Objednávky + přepravy</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="tgl" id="weekTgl" hidden></div><div class="tgl daynav" id="dayNav" hidden></div><div id="bars"></div></div>
     <div class="panel"><h3>Využití agenta pro zápis objednávek do Lori v % za posledních 5 pracovních dní</h3><div class="rank" id="rank"></div></div>
   </div>
@@ -841,6 +841,7 @@
     nav.innerHTML = `<span class="dlbl">${esc(P.label)}</span>`;
     $('pie').innerHTML = donut2(P.items);
     const ps = pieSort, val = { name: x => x.name, a: x => x.a, m: x => x.m, tot: x => x.a + x.m }[ps.k], it = ps.k === 'fix' ? P.items : P.items.slice().sort((x, y) => ps.dir * (ps.k === 'name' ? val(x).localeCompare(val(y), 'cs') : val(x) - val(y)) || (y.cum - x.cum)), sa = it.reduce((t, x) => t + x.a, 0), sm = it.reduce((t, x) => t + x.m, 0);
+    $('pieAg').innerHTML = 'agentem zapsáno: <b style="font-size:15px">' + nf.format(sa) + '</b>';
     lg.className = 'legend plg';
     lg.innerHTML = [['name', 'Relace', 'l'], ['a', 'Agent', ''], ['m', 'Ručně', ''], ['tot', 'Celkem', '']].map(h => `<span class="h ${h[2]} srt" data-ps="${h[0]}" title="Seřadit (další klik obrátí směr)">${h[1]}${ps.k === h[0] ? (ps.dir < 0 ? ' ▼' : ' ▲') : ''}</span>`).join('') +
       it.map(x => { const z = x.a + x.m ? '' : ' z'; return `<span class="nm${z}"><i style="background:${kcol(x.key)}"></i>${esc(x.name)}</span><span class="v${z}" style="color:${kcol(x.key)}">${nf.format(x.a)}</span><span class="v m${z}" style="color:${kcol(x.key)};opacity:${x.a + x.m ? .55 : .3}">${nf.format(x.m)}</span><span class="v t${z}">${nf.format(x.a + x.m)}</span>`; }).join('') +
