@@ -612,7 +612,7 @@
 <div id="dxBox" class="hidden" style="position:fixed;inset:0;z-index:50;background:rgba(0,6,20,.7);align-items:center;justify-content:center;padding:14px"><div class="dx-card"><h3 id="dxTitle" style="margin:0 0 10px">Příloha</h3><div id="dxPages"></div><div id="dxMsg" style="min-height:20px;margin:8px 0;font-size:14px;color:#ffb4b4"></div><button type="button" id="dxPart" class="dx-b" disabled>Smazat vybrané stránky</button><button type="button" id="dxAll" class="dx-b dx-red">Smazat celou přílohu</button><button type="button" id="dxCancel" class="dx-b">Zavřít</button></div></div>
   <section id="deskView" class="hidden">
     <div class="dk-bar" id="dkTabs"></div>
-    <div class="dk-bar"><input id="dkQ" class="dk-q" type="search" placeholder="Hledat v listu…" autocomplete="off"><button class="scn-btn" id="dkCsv" type="button" style="padding:8px 14px">Stáhnout CSV</button><button class="scn-btn" id="dkRef" type="button" style="padding:8px 14px">Obnovit</button><button class="scn-btn hidden" id="dkAddBtn" type="button" style="padding:8px 14px">+ Přidat</button><span id="dkInfo" style="opacity:.8;font-size:13px"></span></div>
+    <div class="dk-bar"><input id="dkQ" class="dk-q" type="search" placeholder="Hledat v listu…" autocomplete="off"><button class="scn-btn" id="dkCsv" type="button" style="padding:8px 14px">Stáhnout CSV</button><button class="scn-btn" id="dkRef" type="button" style="padding:8px 14px">Obnovit</button><button class="scn-btn" id="dkGps" type="button" style="padding:8px 14px" title="Polohy vozidel na mapě">GPS</button><button class="scn-btn hidden" id="dkAddBtn" type="button" style="padding:8px 14px">+ Přidat</button><span id="dkInfo" style="opacity:.8;font-size:13px"></span></div>
     <div id="dkAdd" class="hidden" style="border:1px solid rgba(94,138,255,.4);padding:12px"><div id="dkAddF" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"></div><div style="margin-top:10px;display:flex;gap:8px"><button class="scn-btn" id="dkAddSave" type="button" style="padding:8px 16px">Uložit nový řádek</button><button class="scn-btn" id="dkAddCancel" type="button" style="padding:8px 16px">Zrušit</button></div></div>
     <div id="dkMsg" class="msg" role="status"></div>
     <div class="dk-wrap"><table class="dk-t" id="dkT"></table></div>
@@ -1260,6 +1260,7 @@
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = sh.name + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
   $('tabPrice').addEventListener('click', loadPrices);
+  $('dkGps').addEventListener('click', () => { location.href = '/api/ridic/gps-go'; });
   $('tabGps').addEventListener('click', () => { location.href = (driver && driver.gps && !driver.ceny) ? '/api/ridic/gps-moje' : '/api/ridic/gps-go'; });
   $('prRef').addEventListener('click', loadPrices);
   async function loadAdmins() {
