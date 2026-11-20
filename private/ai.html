@@ -481,7 +481,7 @@
 
   <div class="sec">Trend zadávání po dnech</div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
-    <div class="panel"><h3>Agent vs. ručně – procentuální poměr po jednotlivých dnech</h3><div class="tgl" id="trKind"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="trendDay"></div></div>
+    <div class="panel"><h3>Agent vs. ručně – načítané počty od začátku období</h3><div class="tgl" id="trKind"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="trendDay"></div></div>
   </div>
 
   <div class="sec">Na co agenty využíváme nejvíce</div>
@@ -674,17 +674,17 @@
     const card = (name, col, pts) => {   // pts: počty po dnech, níže se přepočtou na procenta
       const ta = pts.reduce((a, q) => a + q.a, 0), tm = pts.reduce((a, q) => a + q.m, 0), tcol = col;
       col = ta > tm ? '#2fbf71' : '#5e8aff';   // čára agenta: modře, při převaze agentních pozic zeleně
-      // graf ukazuje procentuální poměr agent / ručně pro každý den (ne počty); počty zůstávají v popisku bodu
-      pts = pts.map(q => { const t = q.a + q.m; return { date: q.date, ra: q.a, rm: q.m, a: t ? 100 * q.a / t : 0, m: t ? 100 * q.m / t : 0 }; });
-      const W = 520, H = 190, L = 40, R_ = 12, T = 12, B = 28, ph = H - T - B, pw = W - L - R_, max = 100;
+      // graf ukazuje načítané (kumulativní) počty agent / ručně od začátku období do daného dne; denní přírůstek je v popisku bodu
+      { let ca = 0, cm = 0; pts = pts.map(q => { ca += q.a; cm += q.m; return { date: q.date, ra: q.a, rm: q.m, a: ca, m: cm }; }); }
+      const W = 520, H = 190, L = 40, R_ = 12, T = 12, B = 28, ph = H - T - B, pw = W - L - R_, max = Math.max(1, ...pts.map(q => Math.max(q.a, q.m)));
       const X = i => L + (pts.length === 1 ? pw / 2 : pw * i / (pts.length - 1)), Y = v => T + ph - ph * v / max;
       let g = '';
-      for (let k = 0; k <= 2; k++) { const y = T + ph - ph * k / 2; g += `<line x1="${L}" x2="${W - R_}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 5}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="9">${Math.round(max * k / 2)} %</text>`; }
+      for (let k = 0; k <= 2; k++) { const y = T + ph - ph * k / 2; g += `<line x1="${L}" x2="${W - R_}" y1="${y}" y2="${y}" stroke="rgba(94,138,255,.14)"/><text x="${L - 5}" y="${y + 4}" text-anchor="end" fill="#c3cfe8" font-family="Inter" font-size="9">${nf.format(Math.round(max * k / 2))}</text>`; }
       const line = key => pts.map((q, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(q[key]).toFixed(1)).join(' ');
       const area = pts.length > 1 ? `<path d="${line('a')} L${X(pts.length - 1).toFixed(1)} ${T + ph} L${X(0).toFixed(1)} ${T + ph} Z" fill="${col}" opacity=".16"/>` : '';
       const every = Math.ceil(pts.length / 8);
       const lbl = pts.map((q, i) => i % every === 0 || i === pts.length - 1 ? `<text x="${X(i)}" y="${H - 9}" text-anchor="middle" fill="#c3cfe8" font-family="Inter" font-size="9">${+q.date.slice(8)}. ${+q.date.slice(5, 7)}.</text>` : '').join('');
-      const dots = pts.map((q, i) => `<circle cx="${X(i)}" cy="${Y(q.m)}" r="3" fill="#f2a516"><title>${fmtD(q.date)} – ručně: ${Math.round(q.m)} % (${nf.format(q.rm)})</title></circle><circle cx="${X(i)}" cy="${Y(q.a)}" r="3.4" fill="${col}"><title>${fmtD(q.date)} – agent: ${Math.round(q.a)} % (${nf.format(q.ra)}), ručně: ${Math.round(q.m)} % (${nf.format(q.rm)})</title></circle>`).join('');
+      const dots = pts.map((q, i) => `<circle cx="${X(i)}" cy="${Y(q.m)}" r="3" fill="#f2a516"><title>${fmtD(q.date)} – ručně celkem: ${nf.format(q.m)} (+${nf.format(q.rm)} ten den)</title></circle><circle cx="${X(i)}" cy="${Y(q.a)}" r="3.4" fill="${col}"><title>${fmtD(q.date)} – agent celkem: ${nf.format(q.a)} (+${nf.format(q.ra)} ten den), ručně celkem: ${nf.format(q.m)} (+${nf.format(q.rm)})</title></circle>`).join('');
       const share = ta + tm ? Math.round(100 * ta / (ta + tm)) : 0;
       // popisky přímo u čar, ve stejném sklonu jako čára; na straně odvrácené od druhé čáry
       const mi = Math.max(0, Math.min(pts.length - 2, Math.floor((pts.length - 1) / 2)));
@@ -699,12 +699,13 @@
     };
     const mk = key => days.map(d => ({ date: d.date, ...val(d.rels[key]) }));
     const all = days.map(d => { let a = 0, m = 0; for (const v of Object.values(d.rels)) { const q = val(v); a += q.a; m += q.m; } return { date: d.date, a, m }; });
-    const legend = '<div class="sub" style="margin:0 0 10px"><b style="color:var(--tx)">━</b> agent (modře, při převaze agentních pozic zeleně) &nbsp; <b style="color:#f2a516">┅</b> ručně (oranžově) &nbsp;· jen dny, kdy agent dané relace zapsal alespoň 1 položku (přírůstky mezi stavy tabulky)</div>';
-    const allP = all.filter(q => q.a >= 1);
+    const legend = '<div class="sub" style="margin:0 0 10px"><b style="color:var(--tx)">━</b> agent (modře, při převaze agentních pozic zeleně) &nbsp; <b style="color:#f2a516">┅</b> ručně (oranžově) &nbsp;· součet od prvního dne, kdy agent dané relace něco zapsal, do daného dne (přírůstky mezi stavy tabulky)</div>';
+    const fromFirst = arr => { const i = arr.findIndex(q => q.a >= 1); return i < 0 ? [] : arr.slice(i); };
+    const allP = fromFirst(all);
     let html = legend + '<div class="pdgrid">' + (allP.length ? card('Všechny relace dohromady', '#5e8aff', allP) : '');
     const list = [];
     for (const r of S.rels) {
-      const pts = mk(r.key).filter(q => q.date >= r.since && q.a >= 1);   // jen dny, kdy agent zapsal alespoň 1 položku
+      const pts = fromFirst(mk(r.key).filter(q => q.date >= r.since));   // od prvního dne, kdy agent zapsal alespoň 1 položku, dál všechny dny (načítaně)
       if (!pts.length) continue;
       const ta = pts.reduce((a, q) => a + q.a, 0), tm = pts.reduce((a, q) => a + q.m, 0);
       list.push({ r, pts, share: ta / Math.max(1, ta + tm), ta });
