@@ -34,6 +34,15 @@
   .barleg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mut);margin-top:10px}.barleg i{display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
   .barleg .lb{background:var(--tx)}.barleg .lp{background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)}
   .kt{display:flex;gap:6px;margin:0 0 8px}.kt button{flex:1;background:transparent;color:var(--mut);border:1px solid var(--line);padding:7px 4px;font:600 12px Inter,sans-serif;border-radius:6px}.kt button.on{background:#1d388f;color:#fff;border-color:#1d388f}
+  .dhl{font:700 15px Inter,sans-serif;color:var(--mut);text-align:center;margin:12px 0 0;letter-spacing:.5px}
+  .hero{text-align:center;line-height:1}.hero b{display:block;font-size:92px;font-weight:800;color:#0b5d2a;letter-spacing:-.03em;margin-top:6px}.hero span{display:block;font:700 15px Inter,sans-serif;color:var(--mut);margin-top:4px;letter-spacing:.3px}
+  .sub{text-align:center;font-size:13px;color:var(--mut);margin:10px 0 2px}.sub b{color:var(--tx)}
+  .rl{margin:0 0 20px}.rh{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}.rn{font:800 22px Inter,sans-serif}.rt{font-size:14px;color:var(--mut);white-space:nowrap}.rt b{color:var(--tx);font-size:16px}
+  .bl{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;margin:5px 0}.bt{font:700 12px Inter,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  .bw.big{height:30px;border-radius:4px}.bv{font:800 22px Inter,sans-serif;min-width:34px;text-align:right}.bv small{display:block;font:600 11px Inter,sans-serif;color:var(--mut);margin-top:-2px}
+  .barleg .hat{background:repeating-linear-gradient(45deg,#555 0 2px,transparent 2px 5px)}
+  html[data-skin] .hero b{color:var(--cy);text-shadow:0 0 20px var(--cy)}
+  html[data-skin] .hero b,html[data-skin] .rn,html[data-skin] .bv,html[data-skin] .dhl{font-family:var(--fh) !important}
   .empty{color:var(--mut);font-size:14px;padding:6px 0}
   .upd{margin-top:16px;text-align:center;color:#9aa3bd;font-size:12px}
 </style>
@@ -149,7 +158,7 @@
 <canvas id="net"></canvas><div class="floor"></div><div class="skintag" id="skinTag"></div>
 <div class="wrap" id="mainWrap">
   <h1>Podíl dispečinků <button class="sbtn" id="refBtn" type="button" title="Obnovit data" aria-label="Obnovit data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button><button class="sbtn" id="avgBtn" type="button" title="Průměr pozic na den za posledních 5 pracovních dní" aria-label="Průměr na den"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button><button class="sbtn" id="skinBtn" type="button" title="Přepnout futuristický skin" aria-label="Přepnout skin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.2 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg></button><a href="/ai" style="background:rgba(255,255,255,.7)">dashboard</a><a href="/ai/logout" style="background:rgba(255,255,255,.7);margin-left:auto">Odhlásit</a></h1>
-  <div class="card"><div id="pie"></div><div class="legwrap"><div class="legend" id="legend"></div><div class="agbig" id="agbig"></div></div></div><div class="card"><h2 id="dh" style="margin-top:0">Dnes přibylo</h2><div class="pt" id="pt"><button type="button" data-p="day" class="on">Dnes</button><button type="button" data-p="week">Tento týden</button></div><div class="kt" id="kt"><button type="button" data-k="all">Vše</button><button type="button" data-k="ord" class="on">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div id="day"></div><div class="barleg"><span><i class="lb"></i>agent</span><span><i class="lp"></i>ručně</span><span>světlejší = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
+  <div class="card"><div class="pt" id="pt"><button type="button" data-p="day" class="on">Dnes</button><button type="button" data-p="week">Tento týden</button></div><div class="kt" id="kt"><button type="button" data-k="all" class="on">Obj. + přepravy</button><button type="button" data-k="ord">Objednávky</button><button type="button" data-k="trp">Přepravy</button></div><div class="dhl" id="dh"></div><div class="hero" id="hero"></div><div class="sub" id="sub"></div></div><div class="card"><div id="day"></div><div class="barleg"><span><i style="background:#5e8aff"></i>sytě = zapsal agent</span><span><i style="background:#5e8aff;opacity:.4"></i>vybledle = ručně</span><span><i class="hat"></i>šrafováno = přepravy</span></div></div><div class="upd" id="upd">načítám…</div>
 </div>
 <div class="wrap" id="tvDay"><div class="card"><div class="tvbig" id="tvBig"></div><div id="tvBars"></div></div></div>
 <script>window.RKLTV_MOBILE = true;</script><script src="/iptv.js" defer></script>
@@ -177,7 +186,7 @@
   // výchozí den: dnes, pokud agent dnes zapsal objednávku, jinak poslední den, kdy ji zapsal
   const autoDay = S => { const t = todayIso(), ok = S ? S.days.filter(d => d.date <= t && Object.values(d.rels || {}).some(q => (q.pA || 0) > 0)).map(d => d.date).sort() : []; return ok.includes(t) ? t : (ok.length ? ok[ok.length - 1] : t); };
   const DOWN = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
-  let kind = 'ord', last = null;
+  let kind = 'all', last = null;
   const short = n => { const m = String(n || '').trim().match(/^(\S+)\s*(\d+)?/); if (!m) return n; const f = m[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '')[0].toUpperCase(); return f + (m[2] || ''); };
 
   let per = 'day';
@@ -189,20 +198,24 @@
     const dl = S ? S.days.filter(x => x.date >= from && x.date <= (per === 'week' ? t : ad)) : [];
     const d = { rels: {} };
     dl.forEach(x => Object.entries(x.rels).forEach(([k, q]) => { const z = d.rels[k] || (d.rels[k] = { pA: 0, pM: 0, tA: 0, tM: 0 }); z.pA += q.pA || 0; z.pM += q.pM || 0; z.tA += q.tA || 0; z.tM += q.tM || 0; }));
-    const agentSum = Object.values(d.rels).reduce((a, q) => a + (q.pA || 0) + (q.tA || 0), 0);
     const f = from.split('-');
-    $('dh').innerHTML = per === 'week' ? 'Tento týden · ' + (+f[2]) + '.–' + (+dd) + '. ' + (+m) + '.' : (isT ? 'Dnes přibylo' : 'Přibylo ' + DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()]) + ' · ' + (+dd) + '. ' + (+m) + '.';
-    $('agbig').innerHTML = '<b title="Objednávky + přepravy zapsané agentem">' + nf.format(agentSum) + '</b><span>' + (per === 'week' ? 'týden agent' : isT ? 'dnes agent' : 'agent') + '</span>';
-    const items = S ? S.rels.map(r => { const q = d && d.rels[r.key]; return q ? { name: short(r.name), i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(x => x && (x.oA + x.tA + x.oM + x.tM) > 0) : [];
-    if (!items.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden zatím žádné nové ' : isT ? 'Dnes zatím žádné nové ' : 'Žádné nové ') + (kind === 'ord' ? 'objednávky' : kind === 'trp' ? 'přepravy' : 'pozice') + '.</div>'; return; }
-    items.sort((a, b) => ((b.oA + b.tA) - (a.oA + a.tA)) || ((b.oM + b.tM) - (a.oM + a.tM)));
-    const max = Math.max(...items.map(x => x.oA + x.tA + x.oM + x.tM));
-    $('day').innerHTML = items.map(x => {
-      const col = color(x.i), w = v => (100 * v / max) + '%', A = x.oA + x.tA, M = x.oM + x.tM;
-      return `<div class="row"><span class="n" style="color:${col}">${esc(x.name)}</span><div class="bw">` +
-        (x.oA ? `<i style="width:${w(x.oA)};background:${col}"></i>` : '') + (x.tA ? `<i style="width:${w(x.tA)};background:${col};opacity:.55"></i>` : '') +
-        (x.oM ? `<i style="width:${w(x.oM)};background:repeating-linear-gradient(45deg,#f2a516 0 2px,rgba(242,165,22,.25) 2px 5px)"></i>` : '') + (x.tM ? `<i style="width:${w(x.tM)};background:rgba(242,165,22,.6)"></i>` : '') +
-        `<span class="pc">${(A + M) ? Math.round(100 * A / (A + M)) : 0} %</span></div><span class="v"><span class="a">+${A}</span> / <span class="m">+${M}</span></span></div>`;
+    $('dh').innerHTML = per === 'week' ? 'Tento týden · ' + (+f[2]) + '.–' + (+dd) + '. ' + (+m) + '.' : (isT ? 'Dnes' : DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()]) + ' · ' + (+dd) + '. ' + (+m) + '.';
+    // jen relace, kde v období agent zapsal aspoň jednu pozici (objednávku nebo přepravu s agentní předponou)
+    const all = S ? S.rels.map(r => { const q = d.rels[r.key]; return q && (q.pA + q.tA) > 0 ? { name: r.name, i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(Boolean) : [];
+    const tot = all.reduce((a, x) => a + x.oA + x.tA, 0), unit = kind === 'ord' ? 'objednávek' : kind === 'trp' ? 'přeprav' : 'pozic (objednávky + přepravy)';
+    $('hero').innerHTML = '<b>' + nf.format(tot) + '</b><span>' + (per === 'week' ? 'tento týden' : isT ? 'dnes' : DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()]) + ' zapsal agent ' + unit + '</span>';
+    const cum = S ? S.rels.reduce((o, r) => ({ a: o.a + (r.pA || 0) + (r.tA || 0), m: o.m + (r.pM || 0) + (r.tM || 0) }), { a: 0, m: 0 }) : { a: 0, m: 0 };
+    $('sub').innerHTML = 'Od počátku celkem: <b>' + nf.format(cum.a + cum.m) + '</b> pozic · z toho agent <b>' + nf.format(cum.a) + '</b>';
+    if (!all.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden' : isT ? 'Dnes' : 'V tomto dni') + ' agent zatím nezapsal žádnou pozici.</div>'; return; }
+    all.sort((a, b) => ((b.oA + b.tA) - (a.oA + a.tA)) || ((b.oM + b.tM) - (a.oM + a.tM)));
+    const max = Math.max(1, ...all.map(x => Math.max(x.oA + x.tA, x.oM + x.tM)));
+    const w = v => (100 * v / max) + '%', hat = (col, op) => `repeating-linear-gradient(45deg,${col} 0 3px,transparent 3px 7px)`;
+    const seg = (o, t, col, op) => (o ? `<i style="width:${w(o)};background:${col};opacity:${op}"></i>` : '') + (t ? `<i style="width:${w(t)};background:${hat(col)};opacity:${op}"></i>` : '');
+    $('day').innerHTML = all.map(x => {
+      const col = color(x.i), A = x.oA + x.tA, M = x.oM + x.tM, sm = (o, t) => (kind === 'all' && (o || t)) ? `<small>${o} obj. + ${t} přep.</small>` : '';
+      return `<div class="rl"><div class="rh"><span class="rn" style="color:${col}">${esc(x.name)}</span><span class="rt">agent <b>${A}</b> · ručně <b>${M}</b></span></div>` +
+        `<div class="bl"><span class="bt">agent</span><div class="bw big">${seg(x.oA, x.tA, col, 1)}</div><span class="bv" style="color:${col}">${A}${sm(x.oA, x.tA)}</span></div>` +
+        `<div class="bl"><span class="bt">ručně</span><div class="bw big">${seg(x.oM, x.tM, col, .4)}</div><span class="bv" style="color:${col};opacity:.6">${M}${sm(x.oM, x.tM)}</span></div></div>`;
     }).join('');
   }
   // režim TV: dole jen dnešní objednávky zapsané agentem po relacích (relace, kde dnes agent zapsal) + celkové číslo dnešních pozic agentem
@@ -275,8 +288,6 @@
     {
       const j = cache;
       const rels = j.relations.map((x, i) => ({ ...x, i })), total = j.total || 0;
-      $('pie').innerHTML = donut(rels, total);
-      $('legend').innerHTML = rels.filter(x => x.count).sort((a, b) => b.count - a.count).map(x => `<div style="color:${color(x.i)}"><i style="background:${color(x.i)}"></i><span style="color:var(--tx)">${esc(short(x.name))}</span><b>${nf.format(x.count)}</b><small>${total ? Math.round(100 * x.count / total) : 0} %</small></div>`).join('') || '<div style="color:var(--mut)">zatím bez dat</div>';
       dayBars(j, rels); tvChart();
     }
   }
