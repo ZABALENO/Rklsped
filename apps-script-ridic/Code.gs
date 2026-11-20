@@ -480,6 +480,8 @@ function prices_set_(b) {
       var pc = sh.getRange(row, priplCol_());
       if (b.vikend) pc.setNumberFormat('0').setValue(VIKEND_PRIPLATEK);
       else if (Number(num_(pc.getDisplayValue())) === VIKEND_PRIPLATEK) pc.clearContent();
+      var lo = loriSheet_(false);   // už zkopírovaný řádek v listu Přepravy do Lori se aktualizuje také
+      if (lo) { var lr = loriIds_(lo)[id]; if (lr) lo.getRange(lr, LORI_PRIP_COL).setValue(String(pc.getDisplayValue() || '').trim()); }
     }
     return { ok: true, row: row };
   } finally {
@@ -898,8 +900,9 @@ function docRepl_(b) {
 
 // ---- přepravy do Lori: zaškrtnuté fajfkou se po 30 minutách zapíšou do listu „Přepravy do Lori“ ----
 // List je určený pro agenta, který objednávky přepisuje do Lori: jeden řádek = jedna přeprava, čistý text, přílohy jako odkazy.
-var LORI_HEAD = ['Datum nakládky', 'Datum vykládky', 'Zákazník', 'Místo nakládky', 'Místo vykládky', 'Druh materiálu', 'Řidič', 'Dopravce', 'SPZ', 'Počet jízd', 'Tuny po jízdách', 'Tuny celkem', 'Cena', 'Směna', 'Poznámka', 'Příloha 1', 'Příloha 2', 'Příloha 3', 'Potvrzeno (kdo, kdy)', 'Stav v Lori (vyplní agent)', 'ID záznamu'];
-var LORI_ID_COL = 21;
+var LORI_HEAD = ['Datum nakládky', 'Datum vykládky', 'Zákazník', 'Místo nakládky', 'Místo vykládky', 'Druh materiálu', 'Řidič', 'Dopravce', 'SPZ', 'Počet jízd', 'Tuny po jízdách', 'Tuny celkem', 'Cena', 'Příplatky', 'Směna', 'Poznámka', 'Příloha 1', 'Příloha 2', 'Příloha 3', 'Potvrzeno (kdo, kdy)', 'Stav v Lori (vyplní agent)', 'ID záznamu'];
+var LORI_ID_COL = 22;
+var LORI_PRIP_COL = 14;   // sloupec Příplatky v listu Přepravy do Lori (hned za Cenou)
 function loriSheet_(create) {
   var ss = SpreadsheetApp.getActive(), lo = ss.getSheetByName(SHEET_LORI);
   if (!lo && create) {
@@ -907,13 +910,29 @@ function loriSheet_(create) {
     lo.getRange(1, 1, lo.getMaxRows(), LORI_HEAD.length).setNumberFormat('@');
     lo.getRange(1, 1, 1, LORI_HEAD.length).setValues([LORI_HEAD]).setFontWeight('bold').setBackground('#1f3a6e').setFontColor('#ffffff').setWrap(true).setVerticalAlignment('middle');
     lo.setFrozenRows(1); lo.setFrozenColumns(3);
-    var w = [95, 95, 170, 150, 150, 120, 140, 120, 90, 60, 150, 80, 80, 70, 200, 110, 110, 110, 160, 170, 80];
+    var w = [95, 95, 170, 150, 150, 120, 140, 120, 90, 60, 150, 80, 80, 80, 70, 200, 110, 110, 110, 160, 170, 80];
     for (var c = 0; c < w.length; c++) lo.setColumnWidth(c + 1, w[c]);
     lo.getRange(2, 1, lo.getMaxRows() - 1, LORI_HEAD.length).setVerticalAlignment('top');
-    var rule = SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=$T2<>""').setBackground('#dcefe3').setRanges([lo.getRange(2, 1, lo.getMaxRows() - 1, LORI_HEAD.length)]).build();
+    var rule = SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=$U2<>""').setBackground('#dcefe3').setRanges([lo.getRange(2, 1, lo.getMaxRows() - 1, LORI_HEAD.length)]).build();
     lo.setConditionalFormatRules([rule]);
   }
+  if (lo) loriMigrate_(lo);
   return lo;
+}
+// starší list Přepravy do Lori bez sloupce Příplatky: vloží ho za Cenu a doplní hodnoty ze Záznamů (běží automaticky, jen jednou)
+function loriMigrate_(lo) {
+  if (String(lo.getRange(1, LORI_PRIP_COL).getDisplayValue()).trim() === 'Příplatky') return;
+  lo.insertColumnAfter(LORI_PRIP_COL - 1);
+  lo.getRange(1, LORI_PRIP_COL).setValue('Příplatky').setFontWeight('bold').setBackground('#1f3a6e').setFontColor('#ffffff').setWrap(true).setVerticalAlignment('middle');
+  lo.setColumnWidth(LORI_PRIP_COL, 80);
+  lo.getRange(1, LORI_PRIP_COL, lo.getMaxRows(), 1).setNumberFormat('@');
+  var rec = SpreadsheetApp.getActive().getSheetByName(SHEET_RECORDS);
+  priplEnsure_(rec);
+  var last = lo.getLastRow(); if (last < 2) return;
+  var recIds = rec.getRange(2, COL_ID, Math.max(1, rec.getLastRow() - 1), 2).getDisplayValues(), pr = {};
+  recIds.forEach(function (r) { if (r[0]) pr[r[0]] = String(r[1] || '').trim(); });
+  var ids = lo.getRange(2, LORI_ID_COL, last - 1, 1).getDisplayValues();
+  lo.getRange(2, LORI_PRIP_COL, last - 1, 1).setValues(ids.map(function (r) { return [pr[r[0]] || '']; }));
 }
 function loriIds_(lo) {
   var m = {}, last = lo.getLastRow();
@@ -938,7 +957,8 @@ function loriRow_(rec, pos, kdo, kdy) {
     if (cena === '' && v[colTuny_(k)] !== '' && v[colTuny_(k)] !== null) cena = String(v[colTuny_(k)]).replace('.', ',');
   }
   var smena = STRIDE >= 3 ? d[colTuny_(0) + 1] : '';
-  return [d[5 + O], d[7 + O], d[11 + O], d[9 + O], d[10 + O], d[12 + O], d[1 + O], d[2 + O], d[3 + O], String(jz), tuny.join('; '), sum ? String(Math.round(sum * 100) / 100).replace('.', ',') + ' t' : '', cena, smena, d[COL_NOTE - 1], urls[0] || '', urls[1] || '', urls[2] || '', kdo + (kdy ? ', ' + kdy : ''), '', d[COL_ID - 1]].map(function (x) { return String(x).replace(/\s+/g, ' ').trim(); });
+  var pripl = rec.getMaxColumns() >= priplCol_() ? rec.getRange(pos, priplCol_()).getDisplayValue() : '';
+  return [d[5 + O], d[7 + O], d[11 + O], d[9 + O], d[10 + O], d[12 + O], d[1 + O], d[2 + O], d[3 + O], String(jz), tuny.join('; '), sum ? String(Math.round(sum * 100) / 100).replace('.', ',') + ' t' : '', cena, pripl, smena, d[COL_NOTE - 1], urls[0] || '', urls[1] || '', urls[2] || '', kdo + (kdy ? ', ' + kdy : ''), '', d[COL_ID - 1]].map(function (x) { return String(x).replace(/\s+/g, ' ').trim(); });
 }
 function zpracTs_(row) {
   if (Number(row[3]) > 0) return Number(row[3]);
@@ -972,6 +992,7 @@ function syncLoriLocked_() {
   return n;
 }
 function syncLoriTick() {
+  layout_();
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try { syncLoriLocked_(); SpreadsheetApp.flush(); } finally { lock.releaseLock(); }
@@ -991,6 +1012,6 @@ function opravLori() {
   if (!lo || lo.getLastRow() < 2) return;
   var w = {}; dn.getRange(2, 1, Math.max(1, dn.getLastRow() - 1), 3).getDisplayValues().forEach(function (r) { if (r[0]) w[r[0]] = r[1] + ', ' + r[2]; });
   var rg = lo.getRange(2, 1, lo.getLastRow() - 1, LORI_HEAD.length), v = rg.getValues();
-  v = v.map(function (r) { r = r.map(function (x) { return String(x).replace(/\s+/g, ' ').trim(); }); if (w[r[LORI_ID_COL - 1]]) r[18] = w[r[LORI_ID_COL - 1]]; return r; });
+  v = v.map(function (r) { r = r.map(function (x) { return String(x).replace(/\s+/g, ' ').trim(); }); if (w[r[LORI_ID_COL - 1]]) r[19] = w[r[LORI_ID_COL - 1]]; return r; });
   rg.setValues(v);
 }
