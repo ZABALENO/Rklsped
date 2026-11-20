@@ -123,6 +123,23 @@ var STRIDE = 2;         // počet sloupců na jízdu: 2 = Tuny, Cena; 3 = Tuny, 
 var COL_ID = 37;        // ID záznamu (skrytý; za posledním sloupcem jízd)
 var DOC_FOLDER = 'Přílohy řidičů - Řepa';
 var DOC_FOLDER_OLD = 'Doklady řidičů - Řepa';
+// přílohy musí jít otevřít z libovolného účtu Google, kdo má odkaz
+function shareLink_(f) { try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) { Logger.log('sdílení: ' + e); } }
+// JEDNORÁZOVĚ (spustit v editoru): zpětně zpřístupní všechny už nahrané přílohy odkazem
+function prilohySdilet() {
+  var n = 0, chyb = 0;
+  [DOC_FOLDER, DOC_FOLDER_OLD].forEach(function (nm) {
+    var it = DriveApp.getFoldersByName(nm);
+    while (it.hasNext()) {
+      var fo = it.next();
+      try { fo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) { chyb++; }
+      var fi = fo.getFiles();
+      while (fi.hasNext()) { var f = fi.next(); try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); n++; } catch (e) { chyb++; Logger.log(f.getName() + ': ' + e); } }
+    }
+  });
+  Logger.log('Zpřístupněno souborů: ' + n + ', chyb: ' + chyb);
+  return n;
+}
 function colTuny_(k) { return COL_T1 + STRIDE * k; }
 function colSmena_(k) { return COL_T1 + STRIDE * k + 2; }   // jen při STRIDE 3
 var SM_DEN = 'denní', SM_NOC = 'noční';
@@ -397,6 +414,7 @@ function doc_(b) {
     var name = isoDate_(info[5+O]) + '_' + safe(driver.prijmeni) + '_' + safe(info[11+O]) + '_' + id.slice(0, 6) + '.pdf';
     var blob = Utilities.newBlob(Utilities.base64Decode(String(b.pdf)), 'application/pdf', name);
     var file = folder.createFile(blob);
+    shareLink_(file);
     var dc = sh.getRange(row, COL_DOC), urls = docUrls_(dc.getRichTextValue(), dc.getFormula());
     urls.push(file.getUrl());
     dc.setRichTextValue(docRich_(urls));
@@ -890,6 +908,7 @@ function docRepl_(b) {
     var name = (old ? old.getName().replace(/\.pdf$/i, '') : 'priloha_' + id.slice(0, 6)) + '_upr.pdf';
     var blob = Utilities.newBlob(Utilities.base64Decode(String(b.pdf)), 'application/pdf', name);
     var file = folder ? folder.createFile(blob) : DriveApp.createFile(blob);
+    shareLink_(file);
     urls[n] = file.getUrl();
     dc.setRichTextValue(docRich_(urls));
     if (old) { try { old.setTrashed(true); } catch (e) {} }
