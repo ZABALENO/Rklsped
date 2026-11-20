@@ -220,7 +220,7 @@
     // jen relace, kde v období agent zapsal aspoň jednu pozici (objednávku nebo přepravu s agentní předponou)
     const all = S ? S.rels.map(r => { const q = d.rels[r.key]; return q && (q.pA + q.tA) > 0 ? { name: r.name, i: rels.find(x => x.key === r.key)?.i ?? 0, oA: kind === 'trp' ? 0 : q.pA, tA: kind === 'ord' ? 0 : q.tA, oM: kind === 'trp' ? 0 : q.pM, tM: kind === 'ord' ? 0 : q.tM } : null; }).filter(Boolean) : [];
     const tot = all.reduce((a, x) => a + x.oA + x.tA, 0), unit = kind === 'ord' ? 'objednávek' : kind === 'trp' ? 'přeprav' : 'pozic (objednávky + přepravy)';
-    $('hero').innerHTML = '<b>' + nf.format(tot) + '</b><span>' + (per === 'week' ? 'tento týden' : isT ? 'dnes' : DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()]) + ' zapsal agent ' + unit + '</span>';
+    $('hero').innerHTML = '<b>' + nf.format(tot) + '</b><span>' + (per === 'week' ? 'Tento týden' : isT ? 'Dnes' : DOWN[new Date(ad + 'T12:00:00Z').getUTCDay()].replace(/^./, c => c.toUpperCase())) + '</span>';
     const cum = S ? S.rels.reduce((o, r) => ({ a: o.a + (r.pA || 0) + (r.tA || 0), m: o.m + (r.pM || 0) + (r.tM || 0) }), { a: 0, m: 0 }) : { a: 0, m: 0 };
     $('sub').innerHTML = 'Od počátku celkem: <b>' + nf.format(cum.a + cum.m) + '</b> pozic · z toho agent <b>' + nf.format(cum.a) + '</b>';
     if (!all.length) { $('day').innerHTML = '<div class="empty">' + (per === 'week' ? 'Tento týden' : isT ? 'Dnes' : 'V tomto dni') + ' agent zatím nezapsal žádnou pozici.</div>'; return; }
