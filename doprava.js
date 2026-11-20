@@ -220,6 +220,38 @@ app.get('/ai/mobil', (req, res) => { if (!aiOk(req)) return res.redirect('/ai');
 app.get('/ai/plan', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'plan.html')); });
 const SYSM = require('./lib/sysmetrics'); SYSM.start();
 let spSys = { at: 0, data: null, error: null };
+// historie využití (půlhodinové body, 6 dní) v databázi; upozornění, když průměr posledních 6 h vzroste o víc než 20 procentních bodů proti průměru před 5 dny
+const SYS_DAYS = 5, SYS_RISE = 20;
+const sysHist = () => (store && store.mem && store.mem.sys && store.mem.sys.hist && store.mem.sys.hist.v) || { rkldoprava: [], rklspedice: [] };
+async function recSys() {
+  try {
+    const d = await sysData(), h = sysHist(), now = Date.now();
+    for (const [k, sv] of [['rkldoprava', d.doprava], ['rklspedice', d.spedice]]) {
+      if (!sv || !sv.ring || !sv.ring.length) continue;
+      const lst = h[k] = h[k] || [], last = lst[lst.length - 1];
+      if (last && now - Date.parse(last.t) < 25 * 60 * 1000) continue;
+      const r = sv.ring.slice(-30), lim = sv.lim || Math.max(...r.map(x => x.mem)) * 1.25;
+      lst.push({ t: new Date(now).toISOString(), m: Math.round(1000 * r.reduce((a, x) => a + x.mem, 0) / r.length / lim) / 10, c: Math.round(1000 * r.reduce((a, x) => a + x.cpu, 0) / r.length) / 10, lim: sv.lim || null });
+      h[k] = lst.filter(x => now - Date.parse(x.t) < (SYS_DAYS + 1) * 86400e3);
+    }
+    await store.put('sys', 'hist', { v: h });
+  } catch (e) { console.error('Využití serverů:', e.message); }
+}
+function sysAlerts() {
+  const h = sysHist(), out = [], now = Date.now(), day = new Date(now).toISOString().slice(0, 10);
+  const avg = (a, f) => a.length ? a.reduce((s, x) => s + x[f], 0) / a.length : null;
+  for (const k of Object.keys(h)) {
+    const L = h[k] || []; if (!L.length || now - Date.parse(L[0].t) < (SYS_DAYS - 0.5) * 86400e3) continue;   // zatím není 5 dní historie
+    const cur = L.filter(x => now - Date.parse(x.t) < 6 * 3600e3), old = L.filter(x => Math.abs(now - Date.parse(x.t) - SYS_DAYS * 86400e3) < 3 * 3600e3);
+    for (const [f, nm] of [['m', 'paměť'], ['c', 'CPU']]) {
+      const a = avg(old, f), b = avg(cur, f); if (a == null || b == null) continue;
+      if (b - a > SYS_RISE) out.push({ id: k + '|' + f + '|' + day, svc: k, metric: nm, from: Math.round(a), to: Math.round(b), days: SYS_DAYS });
+    }
+  }
+  return out;
+}
+setTimeout(() => { recSys(); setInterval(recSys, 10 * 60 * 1000).unref(); }, 90000);
+
 async function sysData() {   // vlastní měření + měření služby rklspedice (interní token), restarty se ukládají
   if (Date.now() - spSys.at > 30000) {
     spSys.at = Date.now();
@@ -234,7 +266,7 @@ async function sysData() {   // vlastní měření + měření služby rklspedic
   if (dirty && store) { try { await store.put('sys', 'boots', { v: boots }); } catch (e) {} }
   return { doprava: mine, spedice: spSys.data, spediceError: spSys.error, boots };
 }
-require('./lib/dozor').setup(app, { aiOk, store: () => store, sysData });   // admin Dozor agentů: /ai/admin
+require('./lib/dozor').setup(app, { aiOk, store: () => store, sysData, sysAlerts });   // admin Dozor agentů: /ai/admin
 app.get('/api/agents/plan', (req, res) => res.json({ items: store.mem.plan || {} }));
 app.post('/api/agents/plan', async (req, res) => {
   const id = String((req.body && req.body.id) || '').slice(0, 40);
