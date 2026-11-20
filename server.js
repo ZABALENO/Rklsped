@@ -337,6 +337,8 @@ const { mem, put, refreshSheet, evaluateSales } = main;
 
 const app = express();
 app.use(express.json({ limit: '5mb' }));
+require('./lib/sysmetrics').start();
+app.get('/api/sys', (req, res) => res.json(require('./lib/sysmetrics').snapshot()));   // jen s interním tokenem (viz auth.js) – čte rkldoprava do /ai/admin
 require('./lib/auth').setup(app);   // heslo z APP_PASSWORD (hlavní) / VNITRO1_PASSWORD (relace Vnitro 1) – bez přihlášení nic nezobrazí
 app.get('/gps-go', require('./lib/polohy').gpsGo);   // tlačítko GPS v horní liště – přesměruje přihlášeného uživatele na /polohy bez dalšího hesla
 // aktuální instance podle přihlášení (req.tenantId nastavuje lib/auth)

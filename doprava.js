@@ -218,7 +218,23 @@ app.post('/api/agents/users/label', async (req, res) => {
 // skrytá stránka s přepisem souhrnu agentizace (odškrtávání + poznámky, sdílené mezi zařízeními)
 app.get('/ai/mobil', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'mobil.html')); });
 app.get('/ai/plan', (req, res) => { if (!aiOk(req)) return res.redirect('/ai'); res.sendFile(path.join(__dirname, 'private', 'plan.html')); });
-require('./lib/dozor').setup(app, { aiOk, store: () => store });   // admin Dozor agentů: /ai/admin
+const SYSM = require('./lib/sysmetrics'); SYSM.start();
+let spSys = { at: 0, data: null, error: null };
+async function sysData() {   // vlastní měření + měření služby rklspedice (interní token), restarty se ukládají
+  if (Date.now() - spSys.at > 30000) {
+    spSys.at = Date.now();
+    try { const tok = require('./lib/auth').internalToken(); if (!tok) throw new Error('chybí DATABASE_URL');
+      const r = await fetch(SPEDICE_URL + '/api/sys', { headers: { 'x-rkl-internal': tok, Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+      if (!r.ok) throw new Error('rklspedice odpověděla ' + r.status + (r.status === 401 ? ' (zatím neběží nová verze?)' : '')); spSys.data = await r.json(); spSys.error = null;
+    } catch (e) { spSys.error = e.message; }
+  }
+  const mine = SYSM.snapshot(), boots = (store && store.mem && store.mem.sys && store.mem.sys.boots && store.mem.sys.boots.v) || { rkldoprava: [], rklspedice: [] };
+  let dirty = false; const add = (k, b) => { if (b && !boots[k].includes(b)) { boots[k].push(b); boots[k] = boots[k].slice(-60); dirty = true; } };
+  add('rkldoprava', mine.boot); add('rklspedice', spSys.data && spSys.data.boot);
+  if (dirty && store) { try { await store.put('sys', 'boots', { v: boots }); } catch (e) {} }
+  return { doprava: mine, spedice: spSys.data, spediceError: spSys.error, boots };
+}
+require('./lib/dozor').setup(app, { aiOk, store: () => store, sysData });   // admin Dozor agentů: /ai/admin
 app.get('/api/agents/plan', (req, res) => res.json({ items: store.mem.plan || {} }));
 app.post('/api/agents/plan', async (req, res) => {
   const id = String((req.body && req.body.id) || '').slice(0, 40);
@@ -434,7 +450,7 @@ app.get('/api/spedice', async (req, res) => {
 
 app.get('/healthz', (req, res) => res.send('ok'));
 
-createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor', 'gps', 'gpstrk'], 'doprava.json').then(async s => {
+createStore('kv_doprava', ['cfg', 'geo', 'hist', 'agent', 'atext', 'issue', 'isnap', 'aiuser', 'alog', 'plan', 'proj', 'pfile', 'dozor', 'gps', 'gpstrk', 'sys'], 'doprava.json').then(async s => {
   store = s;
   geo.useCache(store.mem.geo, (k, v) => store.put('geo', k, v));
   app.listen(PORT, () => console.log('RKL Doprava běží na portu ' + PORT));
